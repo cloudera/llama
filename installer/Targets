@@ -1,0 +1,14 @@
+#!/usr/bin/python
+#
+# (c) Copyright 2008 Cloudera, Inc.
+#
+# Installation system for Cloudera Hadoop
+#
+
+
+
+PythonTarget(
+  sources=[ "src/install",
+            "src/com"],
+  requiredTargets=[ "python/Common" ])
+

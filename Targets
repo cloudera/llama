@@ -1,0 +1,16 @@
+#!/usr/bin/python
+#
+# (c) Copyright 2008 Cloudera, Inc.
+
+# TODO (aaron): Figure out a real target for the assembly to go here.
+# We need some sort of "distribution target" or "tarball" target
+# that assembles things together
+#   requiredTargets = projects/HadoopDist/installer:redist
+#                     thirdparty/hadoop-0.18.2:redist
+
+ProjectList(requiredTargets=[
+  "projects/HadoopDist/installer"
+    ])
+
+
+
