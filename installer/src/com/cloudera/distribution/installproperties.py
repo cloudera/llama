@@ -1,126 +1,112 @@
-#!/usr/bin/python
 # (c) Copyright 2008 Cloudera, Inc.
 #
 # @author aaron
 #
-# This class manages user settings that can be loaded in from the
-# ~/.cloudera/dev_properties file, the environment, and/or the command
-# line arguments
+# This class manages user settings that can be loaded in to the 'install'
+# program for the Cloudera Hadoop distribution
 
 import os
 import sys
 
 import com.cloudera.util.output as output
-from com.cloudera.util.argparser import ArgParser
-from com.cloudera.util.properties import Properties
+from   com.cloudera.util.argparser import ArgParser
+from   com.cloudera.util.properties import Properties
+
+
+### Here are the constants for all properties keys we use in the installer ###
+
+# if true, then we never prompt for user input
+UNATTEND_INSTALL_KEY   = "install.unattended"
+
+# if not empty, deploy the distribution to the slaves in this file
+INSTALL_SLAVES_KEY = "install.slaves.file"
+
+# select components to install
+INSTALL_HADOOP_KEY = "hadoop.install"
+INSTALL_HIVE_KEY   = "hive.install"
+INSTALL_SCRIBE_KEY = "scribe.install"
+
+# arguments controlling hadoop-specific installation
+HADOOP_MASTER_FILE_KEY = "hadoop.master.file"
+HADOOP_SLAVES_FILE_KEY = "hadoop.slaves.file"
+HADOOP_SITE_FILE_KEY   = "hadoop.site.file"
+HADOOP_USER_NAME_KEY   = "hadoop.user.name"
+
+# how do we log into other systems to perform remote setups?
+SSH_IDENTITY_KEY = "ssh.identity"
+SSH_USER_KEY     = "ssh.user"
 
 # where do we load properties from?
-defaultPropertyFileName = os.getenv("HOME",".") + "/.cloudera/dev.properties"
 PropsFileFlagLong = "--properties"
 PropsFileFlag = "-p"
 
-# what separates these properties from the next argument parser?
+# If this file is found in the cwd, we load it before parsing arguments
+defaultPropertyFileName = "install.properties"
+
+# if we get this symbol on the command line, we stop processing args
 stopParsingArgsSymbol = "--"
 
-class DevProperties(Properties):
+class InstallProperties(Properties):
 
   # If an argment sets a property, which one is it?
   cmdLineArgMap = {
-    "--identity"    : "ssh.identity",
-    "-i"            : "ssh.identity",
-    "--keypair"     : "ssh.keypair.name",
-    "-k"            : "ssh.keypair.name",
-    "--ami"         : "ec2.default.ami",
-    "--ec2-home"    : "ec2.home",
-    "--private-key" : "ec2.private.key",
-    "-K"            : "ec2.private.key",
-    "--cert"        : "ec2.cert",
-    "-C"            : "ec2.cert",
-    "--username"    : "ssh.user",
-    "-u"            : "ssh.user",
-    "--group"       : "ec2.group",
-    "-g"            : "ec2.group",
-    "--create-group" : "ec2.group.force",
-    "--no-create-group" : "ec2.group.force",
-    "-G"            : "ec2.group.force",
-    "--instance-count" : "ec2.instance.count",
-    "-n"            : "ec2.instance.count",
-    "--instance-type" : "ec2.instance.type",
-    "-t"            : "ec2.instance.type",
-    "--availability-zone"  : "ec2.availability.zone",
-    "-z"            : "ec2.availability.zone",
-    "--connection-timeout" : "ec2.connection.timeout",
-    "--request-timeout"    : "ec2.request.timeout",
-    "--boot-timeout"       : "ec2.boot.timeout",
-    "--attach-timeout"     : "ec2.attach.timeout",
-    "--login"       : "ec2.auto.login",
-    "--no-login"    : "ec2.auto.login",
-    "--ebstab"      : "ec2.ebstab",
-    "-b"            : "ec2.ebstab",
-    "--init-script" : "ec2.local.init.script",
-    "-s"            : "ec2.local.init.script",
-    "--verbose"     : "output.verbose",
-    "-v"            : "output.verbose",
-    "--quiet"       : "output.quiet",
-    "-q"            : "output.quiet",
-    "--debug"       : "output.debug",
-    "--test"        : "ec2.use.test.amis",
-    "-I"            : "ec2.instance.id",
-    "--instance"    : "ec2.instance.id"
+    "--unattend"       : UNATTEND_INSTALL_KEY,
+    "--deploy-slaves"  : INSTALL_SLAVES_KEY,
+
+    "--install-hadoop" : INSTALL_HADOOP_KEY,
+    "--without-hadoop" : INSTALL_HADOOP_KEY,
+    "--hadoop-master"  : HADOOP_MASTER_FILE_KEY,
+    "--hadoop-slaves"  : HADOOP_SLAVES_FILE_KEY,
+    "--hadoop-site"    : HADOOP_SITE_FILE_KEY,
+    "--hadoop-user"    : HADOOP_USER_NAME_KEY
+
+    "--install-hive"   : INSTALL_HIVE_KEY,
+    "--without-hive"   : INSTALL_HIVE_KEY,
+
+    "--install-scribe" : INSTALL_SCRIBE_KEY,
+    "--without-scribe" : INSTALL_SCRIBE_KEY,
+
+    "--identity"       : SSH_IDENTITY_KEY,
+    "-i"               : SSH_IDENTITY_KEY,
+    "-u"               : SSH_USER_KEY,
+    "--user"           : SSH_USER_KEY
   }
 
   # list of boolean flags (a subset of the above map).
   # Non-boolean flags take an argument;
   # these just set the property to 'true'
   booleanFlags = [
-    "--login",
-    "--create-group",
-    "-G",
-    "--verbose",
-    "-v",
-    "--quiet",
-    "-q",
-    "--debug",
-    "--test"
+    "--unattend",
+    "--install-hadoop",
+    "--install-hive",
+    "--install-scribe"
   ]
 
   # these disable boolean flags
   negativeFlags = [
-    "--no-login",
-    "--no-create-group"
+    "--without-hadoop",
+    "--without-hive",
+    "--without-scribe"
   ]
 
   # what environment variables map to which properties?
   envVarMap = {
-    "CLOUDERA_SSH_IDENTITY" : "ssh.identity",
-    "CLOUDERA_KEYPAIR_NAME" : "ssh.keypair.name",
-    "CLOUDERA_SSH_USER"     : "ssh.user",
-    "CLOUDERA_DEFAULT_AMI"  : "ec2.default.ami",
-    "EC2_HOME"              : "ec2.home",
-    "EC2_PRIVATE_KEY"       : "ec2.private.key",
-    "EC2_CERT"              : "ec2.cert",
   }
 
   # when we load the data from a file, which paths should be
   # absolutized relative to the properties file location?
   normalizePaths = [
-    "ssh.identity",
-    "ec2.private.key",
-    "ec2.cert",
-    "ec2.ebstab",
-    "ec2.local.init.script"
   ]
 
   def __init__(self):
     Properties.__init__(self)
-    devPropsArgParser = ArgParser(self.cmdLineArgMap, self.booleanFlags, \
+    installArgParser = ArgParser(self.cmdLineArgMap, self.booleanFlags, \
         self.negativeFlags, self.envVarMap)
-    devPropsArgParser.setStopSymbol(stopParsingArgsSymbol)
-    self.addArgParser(devPropsArgParser)
+    self.addArgParser(installArgParser)
 
 
 def loadAllProperties(properties, argv):
-  """ Initializes the provided DevProperties object; loads the
+  """ Initializes the provided InstallProperties object; loads the
       appropriate properties file (either the default, or one specified
       with -p), as well as any properties set on the command line or from
       the user's environment """
@@ -151,6 +137,8 @@ def loadAllProperties(properties, argv):
     elif arg == "--help":
       print "usage: " + sys.argv[0] + " [options]"
       print "Supported options:"
+      print "-p    Set properties file to load"
+      print ""
       properties.printUsage()
       sys.exit(1)
 
@@ -201,8 +189,13 @@ def loadAllProperties(properties, argv):
     handle.close()
   except IOError, ioe:
     if useDefaultFile:
-      print "Warning: Could not load default properties file" , propsFileName
+      # if the default file can't be found, we just silently ignore that..
+      if os.path.exists(propsFileName):
+        output.printlnInfo("Warning: Could not load default properties file" \
+             + propsFileName)
+        output.printlnInfo(str(ioe))
     else:
+      # If the user specified a props file, though, then any IOE is fatal.
       output.printlnError("Error: Could not load properties file " \
           + propsFileName)
       output.printlnError(ioe)

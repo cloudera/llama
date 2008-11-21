@@ -21,6 +21,13 @@ argv = sys.argv[1:]
 
 # set up configuration, init stdout/stderr
 properties = installproperties.InstallProperties()
-# TODO: attach output arg parser here.
+output.attachOutputArgParser(properties)
 output.installOutput(properties)
+
+installproperties.loadAllProperties(properties, argv)
+
+# if we are here, then properties and argv parsing succeeded
+
+
+
 
