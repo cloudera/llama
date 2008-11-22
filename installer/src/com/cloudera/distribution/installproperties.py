@@ -58,7 +58,7 @@ class InstallProperties(Properties):
     "--hadoop-master"  : HADOOP_MASTER_FILE_KEY,
     "--hadoop-slaves"  : HADOOP_SLAVES_FILE_KEY,
     "--hadoop-site"    : HADOOP_SITE_FILE_KEY,
-    "--hadoop-user"    : HADOOP_USER_NAME_KEY
+    "--hadoop-user"    : HADOOP_USER_NAME_KEY,
 
     "--install-hive"   : INSTALL_HIVE_KEY,
     "--without-hive"   : INSTALL_HIVE_KEY,
