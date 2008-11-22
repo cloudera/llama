@@ -18,6 +18,10 @@ from   com.cloudera.util.properties import Properties
 # if true, then we never prompt for user input
 UNATTEND_INSTALL_KEY   = "install.unattended"
 
+# values for UNATTEND_INSTALL_KEY
+INSTALL_UNATTENDED_VAL = True
+INSTALL_INTERACTIVE_VAL = False
+
 # if not empty, deploy the distribution to the slaves in this file
 INSTALL_SLAVES_KEY = "install.slaves.file"
 
@@ -31,6 +35,12 @@ HADOOP_MASTER_FILE_KEY = "hadoop.master.file"
 HADOOP_SLAVES_FILE_KEY = "hadoop.slaves.file"
 HADOOP_SITE_FILE_KEY   = "hadoop.site.file"
 HADOOP_USER_NAME_KEY   = "hadoop.user.name"
+
+HADOOP_PROFILE_KEY     = "hadoop.profile" # master or slave?
+
+# values for HADOOP_PROFILE_KEY
+PROFILE_MASTER_VAL = True
+PROFILE_SLAVE_VAL = False
 
 # how do we log into other systems to perform remote setups?
 SSH_IDENTITY_KEY = "ssh.identity"
@@ -51,6 +61,7 @@ class InstallProperties(Properties):
   # If an argment sets a property, which one is it?
   cmdLineArgMap = {
     "--unattend"       : UNATTEND_INSTALL_KEY,
+    "--interactive"    : UNATTEND_INSTALL_KEY,
     "--deploy-slaves"  : INSTALL_SLAVES_KEY,
 
     "--install-hadoop" : INSTALL_HADOOP_KEY,
@@ -59,6 +70,8 @@ class InstallProperties(Properties):
     "--hadoop-slaves"  : HADOOP_SLAVES_FILE_KEY,
     "--hadoop-site"    : HADOOP_SITE_FILE_KEY,
     "--hadoop-user"    : HADOOP_USER_NAME_KEY,
+    "--as-master"      : HADOOP_PROFILE_KEY,
+    "--as-slave"       : HADOOP_PROFILE_KEY,
 
     "--install-hive"   : INSTALL_HIVE_KEY,
     "--without-hive"   : INSTALL_HIVE_KEY,
@@ -76,17 +89,20 @@ class InstallProperties(Properties):
   # Non-boolean flags take an argument;
   # these just set the property to 'true'
   booleanFlags = [
-    "--unattend",
+    "--as-master",
     "--install-hadoop",
     "--install-hive",
-    "--install-scribe"
+    "--install-scribe",
+    "--unattend",
   ]
 
   # these disable boolean flags
   negativeFlags = [
+    "--as-slave",
     "--without-hadoop",
     "--without-hive",
     "--without-scribe"
+    "--interactive"
   ]
 
   # what environment variables map to which properties?

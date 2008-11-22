@@ -13,6 +13,7 @@
 import os
 import sys
 
+import com.cloudera.distribution.arch as arch
 import com.cloudera.distribution.installproperties as installproperties
 import com.cloudera.util.output as output
 
@@ -27,6 +28,44 @@ output.installOutput(properties)
 installproperties.loadAllProperties(properties, argv)
 
 # if we are here, then properties and argv parsing succeeded
+
+# determine what architecture / platform we're running on.
+archDetector = arch.getArchDetector()
+archDetector.scan()
+if archDetector.getPlatform() == arch.PLATFORM_UNKNOWN:
+  output.printlnInfo("Warning: Could not determine linux platform")
+  output.printlnInfo("This hampers my ability to determine if you "
+      + "have the correct prerequisite")
+  output.printlnInfo("packages installed.")
+
+if archDetector.getArch() == arch.ARCH_UNKNOWN:
+  # TODO: Disable this warning if we don't have any 32/64-bit libs to install
+  output.printlnInfo("Warning: Could not determine system architecture")
+  output.printlnInfo("This hampers my ability to install the correct libraries")
+
+# TODO: Assemble installation plan from command line flags
+# must support:
+#    hadoop
+#    hive
+#    scribe
+# must detect any prereqs that we cannot install:
+#    sun-java-6
+
+# TODO: Write and execute configurer for each of:
+#   hadoop
+#   hive
+#   scribe
+
+
+# execute installation plan
+# TODO: Write installer for each of:
+#   hadoop
+#   hive
+#   scribe
+
+# TODO: Perform automated deployment to additional machines
+
+# TODO: Perform some verification testing that it all installed ok?
 
 
 
