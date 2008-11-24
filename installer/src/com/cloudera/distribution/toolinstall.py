@@ -13,7 +13,7 @@ class InstallError(Exception):
     self.value = value
 
   def __str__(self):
-    retrun repr(self.value)
+    return repr(self.value)
 
 
 class ToolInstall(object):
