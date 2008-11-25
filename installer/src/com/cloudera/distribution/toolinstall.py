@@ -6,14 +6,8 @@
 # installing a single tool (e.g., "Hadoop", "Hive", etc,
 # are separate tools).
 
-class InstallError(Exception):
-  """ Errors when running a ToolInstall """
-
-  def __init__(self, value):
-    self.value = value
-
-  def __str__(self):
-    return repr(self.value)
+from   com.cloudera.distribution.installerror import InstallError
+import com.cloudera.util.output as output
 
 
 class ToolInstall(object):
@@ -26,8 +20,14 @@ class ToolInstall(object):
     return self.name
 
   def getDependencies(self):
-    """ The other ToolInstall objects which must be run first """
+    """ The names of the other ToolInstall objects which must be run first """
+    # TODO: InstallPlan needs a map from name -> object
     return self.deps
+
+  def precheck(self):
+    """ If anything must be verified before we even get going, check those
+        constraints in this method """
+    output.printlnVerbose("No preconditions for " + self.getName() + "; (ok)")
 
   def install(self):
     """ Run the installation itself. """
@@ -44,5 +44,9 @@ class ToolInstall(object):
         all ToolInstall objects have run their install() operations. """
     raise InstallError("Called postInstall() on abstract ToolInstall")
 
+  def verify(self):
+    """ Run post-installation verification tests, if configured """
+    output.printlnVerbose("No verification tests for " + self.getName() \
+      + "; (ok)")
 
 

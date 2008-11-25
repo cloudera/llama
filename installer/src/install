@@ -47,25 +47,40 @@ if archDetector.getArch() == arch.ARCH_UNKNOWN:
 # must support:
 #    hadoop
 #    hive
+#    pig
 #    scribe
-# must detect any prereqs that we cannot install:
+installPlan = manifest.createInstallPlan(properties)
+
+# TOD: must detect any prereqs that we cannot install:
 #    sun-java-6
+for tool in installPlan.getInstallItems():
+  tool.precheck()
 
 # TODO: Write and execute configurer for each of:
 #   hadoop
 #   hive
+#   pig
 #   scribe
-
+for tool in installPlan.getInstallItems():
+  tool.configure()
 
 # execute installation plan
 # TODO: Write installer for each of:
 #   hadoop
 #   hive
+#   pig
 #   scribe
+for tool in installPlan.getInstallItems():
+  tool.install()
+
+for tool in installPlan.getInstallItems():
+  tool.postInstall()
 
 # TODO: Perform automated deployment to additional machines
 
 # TODO: Perform some verification testing that it all installed ok?
+for tool in installPlan.getInstallItems():
+  tool.verify()
 
 
 

@@ -28,6 +28,7 @@ INSTALL_SLAVES_KEY = "install.slaves.file"
 # select components to install
 INSTALL_HADOOP_KEY = "hadoop.install"
 INSTALL_HIVE_KEY   = "hive.install"
+INSTALL_PIG_KEY    = "pig.install"
 INSTALL_SCRIBE_KEY = "scribe.install"
 
 # arguments controlling hadoop-specific installation
@@ -76,6 +77,9 @@ class InstallProperties(Properties):
     "--install-hive"   : INSTALL_HIVE_KEY,
     "--without-hive"   : INSTALL_HIVE_KEY,
 
+    "--install-pig"    : INSTALL_PIG_KEY,
+    "--without-pig"    : INSTALL_PIG_KEY,
+
     "--install-scribe" : INSTALL_SCRIBE_KEY,
     "--without-scribe" : INSTALL_SCRIBE_KEY,
 
@@ -92,6 +96,7 @@ class InstallProperties(Properties):
     "--as-master",
     "--install-hadoop",
     "--install-hive",
+    "--install-pig",
     "--install-scribe",
     "--unattend",
   ]
@@ -101,6 +106,7 @@ class InstallProperties(Properties):
     "--as-slave",
     "--without-hadoop",
     "--without-hive",
+    "--without-pig",
     "--without-scribe"
     "--interactive"
   ]
