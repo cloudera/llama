@@ -8,10 +8,27 @@ from   com.cloudera.distribution.installerror import InstallError
 from   com.cloudera.distribution.toolinstall import ToolInstall
 import com.cloudera.util.output as output
 
+def getJavaHomeFromUser(default):
+  """ prompt the user for a valid value for JAVA_HOME """
+
+  success = False
+  while not success:
+    javaHome = prompt.getString( \
+        "Input the value for JAVA_HOME for Sun JRE 1.6", \
+        default, False)
+    if javaHome == None:
+      output.printlnError("Error: Installing Hadoop requires " \
+          + "a copy of Sun Java 1.6")
+    else:
+      success = True
+
+  return javaHome
+
 
 class HadoopInstall(ToolInstall):
-  def __init__(self):
-    ToolInstall.__init__(self, "Hadoop")
+  def __init__(self, properties):
+    # TODO: Construct this with properties
+    ToolInstall.__init__(self, "Hadoop", properties)
 
 
   def precheck(self):
@@ -21,22 +38,37 @@ class HadoopInstall(ToolInstall):
     # TODO: Test this method
 
     # We have to check for Sun Java 1.6
-    # TODO: Where do we get properties from?
-    javaHome = java.getJavaHome(properties)
+    javaHome = java.getJavaHome(self.properties)
+    if self.isUnattended():
+      if javaHome == None:
+        output.printlnError( \
+           """JAVA_HOME is not set, and the Java installation path was not set
+  with --java-home. Please restart the installer with this configured.""")
+        raise InstallError("Could not find compatible JAVA_HOME")
+      else:
+        output.printlnVerbose("Using JAVA_HOME of " + javaHome)
+    else:
+      # confirm that our value for JAVA_HOME is correct.
+      # If the user didn't specify one, try to look for a reasonable value
+      if javaHome == None:
+        javaHomeGuess = java.guessJavaHome(self.properties)
+      else:
+        javaHomeGuess = javaHome
 
-    if javaHome == None:
-      # TODO: If we are in an interactive setup, query user for JAVA_HOME
-      output.printlnError( \
-         """JAVA_HOME is not set, and the Java installation path was not set
-with --java-home. Please restart the installer with this configured.""")
-      raise InstallError("Could not find compatible JAVA_HOME")
+      javaHome = getJavaHomeFromUser(javaHomeGuess)
 
-    if not java.canFindJDK(javaHome, properties):
+    # now that we have a value for JAVA_HOME, assert that we can find
+    # Java there.
+    while not java.canFindJDK(javaHome, properties):
       output.printlnError("An invalid JAVA_HOME was specified; " \
           + "this must point to Sun Java 1.6")
-      raise InstallError("Could not find compatible JAVA_HOME")
-      # TODO: This should loop and allow the user to specify a different
-      # Java_home
+
+      if self.isUnattended():
+        # Nothing to do but give up
+        raise InstallError("Could not find compatible JAVA_HOME")
+      else:
+        # Ask the user for a better value for JAVA_HOME.
+        javaHome = getJavaHomeFromUser(javaHome)
 
 
   def install(self):

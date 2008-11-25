@@ -82,7 +82,11 @@ def getJavaHome(properties):
     # The user specified $JAVA_HOME or --java-home
     return javaHomeProp
 
-  # Hmm.. not specified. Can we infer it from `which java` ?
+  return None
+
+def guessJavaHome(properties):
+  """ If JAVA_HOME is not specified, can we infer it from `which java`? """
+
   try:
     lines = shell.shLines("which java")
     if len(lines) > 0:

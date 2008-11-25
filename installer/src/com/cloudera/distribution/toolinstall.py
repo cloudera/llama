@@ -6,14 +6,28 @@
 # installing a single tool (e.g., "Hadoop", "Hive", etc,
 # are separate tools).
 
+from   com.cloudera.distribution.installproperties import *
 from   com.cloudera.distribution.installerror import InstallError
 import com.cloudera.util.output as output
 
 
 class ToolInstall(object):
-  def __init__(self, toolName):
+  def __init__(self, toolName, properties):
     self.name = toolName
+    # TODO (aaron): everyone needs to construct TI's with properties
+    self.properties = properties
     self.deps = []
+
+  #### "private" interface of convenience methods ####
+
+  def getProperties(self):
+    return self.properties
+
+  def isUnattended(self):
+    """ return true if this must be an unattended installation """
+    return self.properties.getProperty(UNATTEND_INSTALL_KEY, UNATTEND_DEFAULT)
+
+  #### public interface that is part of the base ToolInstall ####
 
   def getName(self):
     """ The name of the thing to be installed (e.g. "Hadoop") """
@@ -23,6 +37,9 @@ class ToolInstall(object):
     """ The names of the other ToolInstall objects which must be run first """
     # TODO: InstallPlan needs a map from name -> object
     return self.deps
+
+  #### abstract protected interface down here ####
+  #### subclasses must implement this ####
 
   def precheck(self):
     """ If anything must be verified before we even get going, check those
