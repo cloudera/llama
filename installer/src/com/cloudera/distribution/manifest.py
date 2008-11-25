@@ -3,12 +3,13 @@
 # module: com.cloudera.distribution.manifest
 # Assembles the installation plan based on the user's configuration
 
-from   com.cloudera.distribution.hadoopinstall import HadoopInstall
-from   com.cloudera.distribution.hiveinstall import HiveInstall
 from   com.cloudera.distribution.installplan import InstallPlan
 from   com.cloudera.distribution.installproperties import *
-from   com.cloudera.distribution.piginstall import PigInstall
-from   com.cloudera.distribution.scribeinstall import ScribeInstall
+
+from   com.cloudera.distribution.packages.hadoopinstall import HadoopInstall
+from   com.cloudera.distribution.packages.hiveinstall import HiveInstall
+from   com.cloudera.distribution.packages.piginstall import PigInstall
+from   com.cloudera.distribution.packages.scribeinstall import ScribeInstall
 
 def createInstallPlan(properties):
   """ Creates the installation plan based on the configured properties """
