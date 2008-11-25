@@ -17,8 +17,27 @@ class HadoopInstall(ToolInstall):
   def precheck(self):
     """ If anything must be verified before we even get going, check those
         constraints in this method """
-    # TODO precheck hadoop
-    pass
+
+    # TODO: Test this method
+
+    # We have to check for Sun Java 1.6
+    # TODO: Where do we get properties from?
+    javaHome = java.getJavaHome(properties)
+
+    if javaHome == None:
+      # TODO: If we are in an interactive setup, query user for JAVA_HOME
+      output.printlnError( \
+         """JAVA_HOME is not set, and the Java installation path was not set
+with --java-home. Please restart the installer with this configured.""")
+      raise InstallError("Could not find compatible JAVA_HOME")
+
+    if not java.canFindJDK(javaHome, properties):
+      output.printlnError("An invalid JAVA_HOME was specified; " \
+          + "this must point to Sun Java 1.6")
+      raise InstallError("Could not find compatible JAVA_HOME")
+      # TODO: This should loop and allow the user to specify a different
+      # Java_home
+
 
   def install(self):
     """ Run the installation itself. """

@@ -49,8 +49,7 @@ if archDetector.getArch() == arch.ARCH_UNKNOWN:
 # Assemble installation plan from command line flags
 installPlan = manifest.createInstallPlan(properties)
 
-# TODO: must detect any prereqs that we cannot install:
-#    sun-java-6
+# Detect any prereqs that we cannot install:
 output.printlnInfo("Checking prerequisites for installation...")
 for tool in installPlan.getInstallItems():
   tool.precheck()

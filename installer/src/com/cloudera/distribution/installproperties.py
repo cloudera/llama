@@ -47,6 +47,12 @@ PROFILE_SLAVE_VAL = False
 SSH_IDENTITY_KEY = "ssh.identity"
 SSH_USER_KEY     = "ssh.user"
 
+# Java-specific options
+JAVA_HOME_KEY = "java.home"
+
+# if we need to ask the user to do text editing of files, what editor?
+EDITOR_KEY = "editor"
+
 # where do we load properties from?
 PropsFileFlagLong = "--properties"
 PropsFileFlag = "-p"
@@ -83,6 +89,10 @@ class InstallProperties(Properties):
     "--install-scribe" : INSTALL_SCRIBE_KEY,
     "--without-scribe" : INSTALL_SCRIBE_KEY,
 
+    "--java-home"      : JAVA_HOME_KEY,
+
+    "--editor"         : EDITOR_KEY,
+
     "--identity"       : SSH_IDENTITY_KEY,
     "-i"               : SSH_IDENTITY_KEY,
     "-u"               : SSH_USER_KEY,
@@ -113,6 +123,8 @@ class InstallProperties(Properties):
 
   # what environment variables map to which properties?
   envVarMap = {
+    "JAVA_HOME" : JAVA_HOME_KEY,
+    "EDITOR"    : EDITOR_KEY
   }
 
   # when we load the data from a file, which paths should be
