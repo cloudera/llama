@@ -4,7 +4,7 @@
 # Assembles the installation plan based on the user's configuration
 
 from   com.cloudera.distribution.installplan import InstallPlan
-from   com.cloudera.distribution.installproperties import *
+from   com.cloudera.distribution.constants import *
 
 from   com.cloudera.distribution.packages.hadoopinstall import HadoopInstall
 from   com.cloudera.distribution.packages.hiveinstall import HiveInstall
@@ -12,6 +12,8 @@ from   com.cloudera.distribution.packages.piginstall import PigInstall
 from   com.cloudera.distribution.packages.scribeinstall import ScribeInstall
 from   com.cloudera.distribution.packages.globalprereq \
     import GlobalPrereqInstall
+
+import com.cloudera.util.output as output
 
 def createInstallPlan(properties):
   """ Creates the installation plan based on the configured properties """
@@ -27,20 +29,20 @@ def createInstallPlan(properties):
   #  c) catch error, print polite msg, ask if user wants to add deps,
   #     and continue either way
 
-  plan.addItem(GlobalPrereqInstall(properties))
+  plan.addTool(GlobalPrereqInstall(properties))
 
   if properties.getBoolean(INSTALL_HADOOP_KEY, True):
     output.printlnVerbose("Selecting package Hadoop")
-    plan.addItem(HadoopInstall(properties))
+    plan.addTool(HadoopInstall(properties))
   if properties.getBoolean(INSTALL_HIVE_KEY, True):
     output.printlnVerbose("Selecting package Hive")
-    plan.addItem(HiveInstall(properties))
+    plan.addTool(HiveInstall(properties))
   if properties.getBoolean(INSTALL_PIG_KEY, True):
     output.printlnVerbose("Selecting package Pig")
-    plan.addItem(PigInstall(properties))
+    plan.addTool(PigInstall(properties))
   if properties.getBoolean(INSTALL_SCRIBE_KEY, True):
     output.printlnVerbose("Selecting package Scribe")
-    plan.addItem(ScribeInstall(properties))
+    plan.addTool(ScribeInstall(properties))
 
   return plan
 

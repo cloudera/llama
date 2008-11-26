@@ -5,8 +5,10 @@
 # Detects current Java installation version and determines if it
 # meets our criteria
 
+import os
+import sys
 
-from   com.cloudera.distribution.installproperties import *
+from   com.cloudera.distribution.constants import *
 import com.cloudera.tools.shell as shell
 import com.cloudera.util.output as output
 

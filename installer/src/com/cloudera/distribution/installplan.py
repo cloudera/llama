@@ -15,20 +15,20 @@ class InstallPlan(object):
     self.properties = properties
     self.sortedItems = []
 
-  def addItem(self, item):
-    """ puts 'item' in the list after verifying that all its dependencies
-        are present first. """
+  def addTool(self, tool):
+    """ puts the ToolInstall object 'tool' in the list after
+        verifying that all its dependencies are present first. """
 
-    deps = item.getDependencies()
+    deps = tool.getDependencies()
     for dep in deps:
       try:
         output.printlnDebug("Checking dependency: " + dep)
         pos = self.sortedItems.index(toolinstall.getToolByName(dep))
       except ValueError:
-        raise InstallError("Could not find dependent item " + str(dep) \
+        raise InstallError("Could not find dependent tool " + str(dep) \
             + " in installation plan")
 
-    self.sortedItems.append(item)
+    self.sortedItems.append(tool)
 
 
   def getInstallItems(self):

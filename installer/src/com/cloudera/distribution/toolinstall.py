@@ -6,7 +6,7 @@
 # installing a single tool (e.g., "Hadoop", "Hive", etc,
 # are separate tools).
 
-from   com.cloudera.distribution.installproperties import *
+from   com.cloudera.distribution.constants import *
 from   com.cloudera.distribution.installerror import InstallError
 import com.cloudera.util.output as output
 
