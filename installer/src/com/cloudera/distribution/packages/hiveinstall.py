@@ -10,8 +10,9 @@ import com.cloudera.util.output as output
 
 
 class HiveInstall(ToolInstall):
-  def __init__(self):
-    ToolInstall.__init__(self, "Hive")
+  def __init__(self, properties):
+    ToolInstall.__init__(self, "Hive", properties)
+    self.addDependency("Hadoop")
 
 
   def precheck(self):

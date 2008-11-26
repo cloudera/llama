@@ -47,6 +47,7 @@ if archDetector.getArch() == arch.ARCH_UNKNOWN:
   output.printlnInfo("This hampers my ability to install the correct libraries")
 
 # Assemble installation plan from command line flags
+output.printlnDebug("Creating installation plan...")
 installPlan = manifest.createInstallPlan(properties)
 
 # Detect any prereqs that we cannot install:
@@ -54,31 +55,26 @@ output.printlnInfo("Checking prerequisites for installation...")
 for tool in installPlan.getInstallItems():
   tool.precheck()
 
-# TODO: Write and execute configurer for each of:
-#   hadoop
-#   hive
-#   pig
-#   scribe
 for tool in installPlan.getInstallItems():
   tool.configure()
 
+# Any user input should have occurred above this line. From this point
+# forward, we only bail out because an underlying installation item
+# chokes -- this is out of the user's hands by here.
+
 # execute installation plan
-# TODO: Write installer for each of:
-#   hadoop
-#   hive
-#   pig
-#   scribe
 for tool in installPlan.getInstallItems():
   output.printlnInfo("Installing " + tool.getName())
   tool.install()
 
+# any steps to be performed per-tool after the whole system is together
 for tool in installPlan.getInstallItems():
   output.printlnInfo("Performing postinstall for " + tool.getName())
   tool.postInstall()
 
 # TODO: Perform automated deployment to additional machines
 
-# TODO: Perform some verification testing that it all installed ok?
+# Perform any verification steps that this all installed OK
 for tool in installPlan.getInstallItems():
   output.printlnInfo("Verifying installation of " + tool.getName())
   tool.verify()

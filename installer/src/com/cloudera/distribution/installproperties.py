@@ -22,6 +22,10 @@ UNATTEND_INSTALL_KEY   = "install.unattended"
 INSTALL_UNATTENDED_VAL = True
 INSTALL_INTERACTIVE_VAL = False
 
+# we assume there's a user at the controls unless they specifically
+# tell us otherwise.
+UNATTEND_DEFAULT = False
+
 # if not empty, deploy the distribution to the slaves in this file
 INSTALL_SLAVES_KEY = "install.slaves.file"
 

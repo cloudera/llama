@@ -10,8 +10,8 @@ import com.cloudera.util.output as output
 
 
 class ScribeInstall(ToolInstall):
-  def __init__(self):
-    ToolInstall.__init__(self, "Scribe")
+  def __init__(self, properties):
+    ToolInstall.__init__(self, "Scribe", properties)
 
 
   def precheck(self):

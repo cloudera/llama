@@ -10,17 +10,21 @@ from   com.cloudera.distribution.installproperties import *
 import com.cloudera.tools.shell as shell
 import com.cloudera.util.output as output
 
-# TODO: Test this with various things pointing at Jikes, Sun Java,
-# Harmony, GCJ, etc...
+# TODO: Test this with various things pointing at Jikes, Harmony, GCJ, etc...
+# It is known to correctly match Sun JDK 1.6
 
 def canFindJDK(maybeJavaHome, properties):
   """ Determines if the JDK is installed at $maybeJavaHome with an appropriate
       version. the only version we support is sun java 1.6 """
 
+  output.printlnDebug("Looking for JDK 1.6")
   if maybeJavaHome == None or len(maybeJavaHome) == 0:
+    output.printlnDebug("No java home set")
     return False
 
-  # check that $JAVA_HOME/bin/java and java exist
+  output.printlnDebug("Looking for executables")
+
+  # check that $JAVA_HOME/bin/java and javac exist
   javaBin = os.path.join(maybeJavaHome, "bin/java")
   javacBin = os.path.join(maybeJavaHome, "bin/javac")
 
@@ -32,12 +36,15 @@ def canFindJDK(maybeJavaHome, properties):
     output.printlnError("Could not find javac binary")
     return False
 
+  output.printlnDebug("Found java and javac in " + maybeJavaHome)
+
   # check that they have the proper version number.
 
   try:
     javacLines = shell.shLines(javacBin + " -version")
     if len(javacLines) > 0:
       javacVerStr = javacLines[0].strip()
+      output.printlnDebug("Got javac version: " + javacVerStr)
       if not javacVerStr.startswith("javac 1.6."):
         # incorrect javac version
         output.printlnError("javac reports incompatible version: " \
@@ -51,12 +58,14 @@ def canFindJDK(maybeJavaHome, properties):
     javaLines = shell.shLines(javaBin + " -version")
     if len(javaLines) > 1:
       javaVerStr = javaLines[0].strip()
-      if not javacVerStr.startswith("java version \"1.6."):
+      output.printlnDebug("Got java version: " + javaVerStr)
+      if not javaVerStr.startswith("java version \"1.6."):
         # incorrect javac version
         output.printlnError("java reports incompatible version: " \
             + javaVerStr)
         return False
       runtimeStr = javaLines[1].strip()
+      output.printlnDebug("Got runtime identifier: " + runtimeStr)
       if not runtimeStr.startswith("Java(TM) SE Runtime Environment") \
           and not runtimeStr.startswith("Java(TM) EE Runtime Environment"):
         output.printlnVerbose("Got invalid runtime string: " + runtimeStr)
@@ -70,6 +79,7 @@ Hadoop requires that JAVA_HOME identify Sun Java.""")
     return False
 
   # passes all our checks!
+  output.printlnDebug("Java appears to be installed correctly.")
   return True
 
 

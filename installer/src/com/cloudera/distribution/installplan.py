@@ -6,6 +6,8 @@
 #
 
 from   com.cloudera.distribution.installerror import InstallError
+import com.cloudera.distribution.toolinstall as toolinstall
+import com.cloudera.util.output as output
 
 
 class InstallPlan(object):
@@ -20,7 +22,8 @@ class InstallPlan(object):
     deps = item.getDependencies()
     for dep in deps:
       try:
-        pos = self.sortedItems.index(dep)
+        output.printlnDebug("Checking dependency: " + dep)
+        pos = self.sortedItems.index(toolinstall.getToolByName(dep))
       except ValueError:
         raise InstallError("Could not find dependent item " + str(dep) \
             + " in installation plan")

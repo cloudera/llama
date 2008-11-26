@@ -10,6 +10,8 @@ from   com.cloudera.distribution.packages.hadoopinstall import HadoopInstall
 from   com.cloudera.distribution.packages.hiveinstall import HiveInstall
 from   com.cloudera.distribution.packages.piginstall import PigInstall
 from   com.cloudera.distribution.packages.scribeinstall import ScribeInstall
+from   com.cloudera.distribution.packages.globalprereq \
+    import GlobalPrereqInstall
 
 def createInstallPlan(properties):
   """ Creates the installation plan based on the configured properties """
@@ -25,13 +27,19 @@ def createInstallPlan(properties):
   #  c) catch error, print polite msg, ask if user wants to add deps,
   #     and continue either way
 
+  plan.addItem(GlobalPrereqInstall(properties))
+
   if properties.getBoolean(INSTALL_HADOOP_KEY, True):
+    output.printlnVerbose("Selecting package Hadoop")
     plan.addItem(HadoopInstall(properties))
   if properties.getBoolean(INSTALL_HIVE_KEY, True):
+    output.printlnVerbose("Selecting package Hive")
     plan.addItem(HiveInstall(properties))
   if properties.getBoolean(INSTALL_PIG_KEY, True):
+    output.printlnVerbose("Selecting package Pig")
     plan.addItem(PigInstall(properties))
   if properties.getBoolean(INSTALL_SCRIBE_KEY, True):
+    output.printlnVerbose("Selecting package Scribe")
     plan.addItem(ScribeInstall(properties))
 
   return plan

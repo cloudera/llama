@@ -10,15 +10,37 @@ from   com.cloudera.distribution.installproperties import *
 from   com.cloudera.distribution.installerror import InstallError
 import com.cloudera.util.output as output
 
+# map from name (string) -> ToolInstall
+toolMap = {}
+def getToolByName(name):
+  """ Returns the ToolInstall object with a given name."""
+  global toolMap
+  try:
+    return toolMap[name]
+  except KeyError:
+    return None
+
 
 class ToolInstall(object):
   def __init__(self, toolName, properties):
+    global toolMap
+
     self.name = toolName
-    # TODO (aaron): everyone needs to construct TI's with properties
     self.properties = properties
     self.deps = []
+    try:
+      # make sure a tool with this name doesn't already exist
+      toolMap[toolName]
+      raise InstallError("ToolInstall already exists for " + toolName)
+    except KeyError:
+      # good, it doesn't. Add this to the map.
+      toolMap[toolName] = self
 
   #### "private" interface of convenience methods ####
+
+  def addDependency(self, name):
+    """ Adds the name of another package which we require as a dep. """
+    self.deps.append(name)
 
   def getProperties(self):
     return self.properties
@@ -35,7 +57,6 @@ class ToolInstall(object):
 
   def getDependencies(self):
     """ The names of the other ToolInstall objects which must be run first """
-    # TODO: InstallPlan needs a map from name -> object
     return self.deps
 
   #### abstract protected interface down here ####

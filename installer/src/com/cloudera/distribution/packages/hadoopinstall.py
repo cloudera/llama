@@ -5,8 +5,10 @@
 # Defines the ToolInstall instance that installs Hadoop
 
 from   com.cloudera.distribution.installerror import InstallError
+import com.cloudera.distribution.java as java
 from   com.cloudera.distribution.toolinstall import ToolInstall
 import com.cloudera.util.output as output
+import com.cloudera.util.prompt as prompt
 
 def getJavaHomeFromUser(default):
   """ prompt the user for a valid value for JAVA_HOME """
@@ -27,15 +29,13 @@ def getJavaHomeFromUser(default):
 
 class HadoopInstall(ToolInstall):
   def __init__(self, properties):
-    # TODO: Construct this with properties
     ToolInstall.__init__(self, "Hadoop", properties)
+    self.addDependency("GlobalPrereq")
 
 
   def precheck(self):
     """ If anything must be verified before we even get going, check those
         constraints in this method """
-
-    # TODO: Test this method
 
     # We have to check for Sun Java 1.6
     javaHome = java.getJavaHome(self.properties)
@@ -59,7 +59,7 @@ class HadoopInstall(ToolInstall):
 
     # now that we have a value for JAVA_HOME, assert that we can find
     # Java there.
-    while not java.canFindJDK(javaHome, properties):
+    while not java.canFindJDK(javaHome, self.properties):
       output.printlnError("An invalid JAVA_HOME was specified; " \
           + "this must point to Sun Java 1.6")
 
@@ -81,16 +81,27 @@ class HadoopInstall(ToolInstall):
         setting up the config files and asking any questions
         of the user. The software is not installed yet """
     # TODO config hadoop
+    # TODO: Get master address
+    # make sure that this is an FQDN, not an IP address
+    # Put that in the 'master' file
+    # TODO: Slaves file
+    # TODO: Parse slaves file for line count to recommend hadoop-site vals
+    # TODO: Fill out necessary elements of hadoop-site.xml
     pass
 
   def postInstall(self):
     """ Run any post-installation activities. This occurs after
         all ToolInstall objects have run their install() operations. """
     # TODO postinstall hadoop
+    # TODO: Format DFS if the user wants it done
     pass
 
   def verify(self):
     """ Run post-installation verification tests, if configured """
     # TODO: Verify hadoop
+    # TODO: Start Hadoop daemons if the user wants it done
+    # TODO: Run  'bin/hadoop fs -ls /' to make sure it works
+    # (do a touchz, ls, rm)
+    # TODO: Run a sample 'pi' job.
 
 
