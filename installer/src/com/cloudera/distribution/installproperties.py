@@ -27,7 +27,7 @@ class InstallProperties(Properties):
 
     "--install-hadoop" : INSTALL_HADOOP_KEY,
     "--without-hadoop" : INSTALL_HADOOP_KEY,
-    "--hadoop-master"  : HADOOP_MASTER_FILE_KEY,
+    "--hadoop-master"  : HADOOP_MASTER_ADDR_KEY,
     "--hadoop-slaves"  : HADOOP_SLAVES_FILE_KEY,
     "--hadoop-site"    : HADOOP_SITE_FILE_KEY,
     "--hadoop-user"    : HADOOP_USER_NAME_KEY,
@@ -46,6 +46,8 @@ class InstallProperties(Properties):
     "--java-home"      : JAVA_HOME_KEY,
 
     "--editor"         : EDITOR_KEY,
+
+    "--prefix"         : INSTALL_PREFIX_KEY,
 
     "--identity"       : SSH_IDENTITY_KEY,
     "-i"               : SSH_IDENTITY_KEY,

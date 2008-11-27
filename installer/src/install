@@ -30,6 +30,8 @@ installproperties.loadAllProperties(properties, argv)
 
 # if we are here, then properties and argv parsing succeeded
 
+# TODO: Install a log file as well
+
 # determine what architecture / platform we're running on.
 archDetector = arch.getArchDetector()
 archDetector.scan()
