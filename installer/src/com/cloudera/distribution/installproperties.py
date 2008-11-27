@@ -48,6 +48,7 @@ class InstallProperties(Properties):
     "--editor"         : EDITOR_KEY,
 
     "--prefix"         : INSTALL_PREFIX_KEY,
+    "--upload-prefix"  : UPLOAD_PREFIX_KEY,
 
     "--identity"       : SSH_IDENTITY_KEY,
     "-i"               : SSH_IDENTITY_KEY,

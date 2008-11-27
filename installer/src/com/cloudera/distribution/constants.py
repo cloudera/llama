@@ -47,9 +47,10 @@ JAVA_HOME_KEY = "java.home"
 
 # where do we install the distribution to
 INSTALL_PREFIX_KEY = "install.prefix"
-
 INSTALL_PREFIX_DEFAULT = "/usr/share/cloudera"
 
+UPLOAD_PREFIX_KEY = "install.upload.prefix"
+UPLOAD_PREFIX_DEFAULT = "/tmp/cloudera/"
 
 # if we need to ask the user to do text editing of files, what editor?
 EDITOR_KEY = "editor"
@@ -122,6 +123,29 @@ MAPRED_TEMP_DIR = "mapred.temp.dir"
 DFS_HOSTS_FILE = "dfs.hosts"
 DFS_EXCLUDE_FILE = "dfs.hosts.exclude"
 
+# This is a list of properties we configure
+# that should be marked "final" in hadoop-site
+finalHadoopProperties = [
+  FS_TRASH_INTERVAL,
+  HADOOP_TMP_DIR,
+  DFS_DATA_DIR,
+  DFS_NAME_DIR,
+  MAPRED_LOCAL_DIR,
+  MAPS_PER_NODE,
+  REDUCES_PER_NODE,
+  MAPRED_CHILD_ULIMIT,
+  DFS_DATANODE_THREADS,
+  DFS_DATANODE_RESERVED,
+  DFS_PERMISSIONS,
+  DFS_BLOCK_SIZE,
+  DFS_NAMENODE_THREADS,
+  JOBTRACKER_THREADS,
+  TASKTRACKER_HTTP_THREADS,
+  NN2_CHECKPOINT_DIR,
+  MAPRED_TEMP_DIR,
+  DFS_HOSTS_FILE,
+  DFS_EXCLUDE_FILE ]
+
 
 # some default values we suggest for them
 DEFAULT_JT_PORT = 9001
@@ -183,4 +207,19 @@ MAX_SUBMIT_REPLICATION = DFS_MAX_REP
 
 DEFAULT_MAPRED_SYS_DIR = "/hadoop/system/mapred"
 
+# underneath of $prefix, where do the actual installs of different
+# programs get put?
+APP_SUBDIR = "apps"
+
+# Underneath of $prefix/apps/, where do all the individual programs go?
+# TODO: We should really have some way of embedding this in the build
+# process so that we don't have to manually change this every time.
+HADOOP_VERSION = "0.18.2"
+HADOOP_INSTALL_SUBDIR = "hadoop-" + HADOOP_VERSION
+
+# What subdir of the installation system (Relative to the 'install' program)
+# holds all the packages?
+PACKAGE_PATH = "../packages/"
+
+HADOOP_PACKAGE = "hadoop-" + HADOOP_VERSION + ".tar.gz"
 

@@ -57,6 +57,14 @@ output.printlnInfo("Checking prerequisites for installation...")
 for tool in installPlan.getInstallItems():
   tool.precheck()
 
+output.printlnInfo("All necessary prerequisites were found.")
+
+output.printlnInfo("""
+To set up Hadoop, we need to ask you a few basic questions about your
+cluster. When possible, acceptable defaults are provided to you, which you
+can select by pressing [enter].
+""")
+
 for tool in installPlan.getInstallItems():
   tool.configure()
 

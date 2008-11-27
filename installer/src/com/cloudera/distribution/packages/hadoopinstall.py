@@ -8,12 +8,12 @@ import math
 import os
 import re
 import sys
-import tempfile
+import time
 
 from   com.cloudera.distribution.constants import *
 from   com.cloudera.distribution.installerror import InstallError
 import com.cloudera.distribution.java as java
-from   com.cloudera.distribution.toolinstall import ToolInstall
+import com.cloudera.distribution.toolinstall as toolinstall
 import com.cloudera.tools.shell as shell
 import com.cloudera.util.output as output
 import com.cloudera.util.prompt as prompt
@@ -35,11 +35,21 @@ def getJavaHomeFromUser(default):
   return javaHome
 
 
-class HadoopInstall(ToolInstall):
+class HadoopInstall(toolinstall.ToolInstall):
   def __init__(self, properties):
-    ToolInstall.__init__(self, "Hadoop", properties)
+    toolinstall.ToolInstall.__init__(self, "Hadoop", properties)
+
     self.addDependency("GlobalPrereq")
 
+    self.configuredHadoopSiteOnline = False
+    self.javaHome = None
+    self.hadoopSiteDict = {}
+
+
+  def getHadoopSiteProperty(self, propName):
+    """ If the user configured hadoop-site in this tool, extract
+        a property from the map the user created """
+    return self.hadoopSiteDict[propName]
 
   def precheckJava(self):
     """ Check that Java 1.6 is installed """
@@ -76,6 +86,13 @@ class HadoopInstall(ToolInstall):
         # Ask the user for a better value for JAVA_HOME.
         javaHome = getJavaHomeFromUser(javaHome)
 
+    self.javaHome = javaHome
+
+
+  def getJavaHome(self):
+    """ Return the value for JAVA_HOME we solicited and verified """
+    return self.javaHome
+
 
   def precheckLzoLibs(self):
     """ Check that liblzo2.so.2 is installed in one of /lib, /usr/lib,
@@ -105,24 +122,28 @@ class HadoopInstall(ToolInstall):
     # TODO: Destubify
     return False
 
-  def precheck(self):
-    """ If anything must be verified before we even get going, check those
-        constraints in this method """
-
-    self.precheckJava()
-    self.precheckLzoLibs()
-    self.precheckBzipLibs()
-
 
   def getHadoopInstallPrefix(self):
     """ Return the installation prefix for Hadoop, underneath the
         distribution-wide installation prefix. """
-    # TODO: Implement getHadoopInstallPrefix
-    return "/some/hadoop/prefix"
+
+    return os.path.join( \
+        toolinstall.getToolByName("GlobalPrereq").getAppsPrefix(), \
+        HADOOP_INSTALL_SUBDIR)
+
+  def getConfDir(self):
+    """ return the dir where the hadoop config files go. """
+    return os.path.join(self.getHadoopInstallPrefix(), "conf")
+
 
   def configMasterAddress(self):
     """ Sets the masterHost property of this object to point to the
         master server address for Hadoop, querying the user if necessary """
+
+    # TODO (aaron): We currently conflate the master address here with the
+    # address used for the secondary namenode. we should have a better
+    # system which actually differentiates between the two, and puts scribe,
+    # and the 2NN on a separate machine.
 
     # regex for IP address: between 1 and 4 dot-separated numeric groups
     # which can be between 1 and 10 digits each (this is slightly more
@@ -181,132 +202,16 @@ class HadoopInstall(ToolInstall):
     # we're good.
     self.masterHost = maybeMasterHost
 
+
   def getMasterHost(self):
     return self.masterHost
 
-  def configSlavesFile(self):
-    """ Configure the slaves file. This involves actually forking an
-        editor up for the user if we're in interactive mode. """
-
-    # get a temp file name for us to put the slaves file contents into.
-    (oshandle, tmpFilename) = tempfile.mkstemp()
-    handle = os.fdopen(oshandle, "w")
-
-    # check: did the user also provide a slaves file from the start?
-    userSlavesFile = self.properties.getProperty(HADOOP_SLAVES_FILE_KEY)
-    userSlavesSuccess = False
-    if userSlavesFile != None:
-      # we have a user's slaves file. Copy this into the temp file
-      # read their data in first....
-      try:
-        userFileHandle = open(userSlavesFile)
-        userSlaveLines = userFileHandle.readlines()
-        userFileHandle.close()
-      except IOError, ioe:
-        output.printlnError("Could not open provided slaves file: " \
-            + userSlavesFile)
-        output.printlnError(str(ioe))
-
-      # now write ours out
-      try:
-        for line in userSlaveLines:
-          handle.write(line)
-        handle.close()
-        userSlavesSuccess = True
-      except IOError, ioe:
-        output.printlnError("Unexpected error copying slave file contents")
-        output.printlnError(ioe)
-    else:
-      # don't need the open file handle associated with this file
-      # (we'll need to reopen it after the user edits it)
-      try:
-        handle.close()
-      except IOError:
-        pass # irrelevant.
-
-    if self.isUnattended():
-      # if we don't have a user slaves file, bail.
-      if userSlavesFile == None:
-        output.printlnError("No slaves file specified with --hadoop-slaves")
-        output.printlnError("You must specify a file (even if it is empty)")
-        raise InstallError("No slaves file specified")
-      elif not userSlavesSuccess:
-        # the reading/writing of this file was problematic.
-        output.printlnError("Error accessing user slaves file")
-        raise InstallError("Error accessing user slaves file")
-    else:
-      # interactive mode. Give them a chance to edit this file.
-
-      output.printlnInfo(\
-"""You must now provide the addresses of all slaves which are part of this
-cluster. This installer will install the Cloudera Hadoop distribution to all
-of these machines. This file should contain one address per line, with no
-extra whitespace, blank lines, comments or punctuation. The master
-server's address should not be in this file.
-
-If you do not want to install Cloudera Hadoop on some slaves, then omit these
-addresses for now. You can add these nodes to the slaves file
-%(slavesFile)s
-after installation is complete.
-
-Press [enter] to continue.""" % {  \
-    "slavesFile" : os.path.join(self.getHadoopInstallPrefix(), "conf/slaves") })
-
-      # Just wait for the user to hit enter.
-      raw_input()
-
-      # Run whatever editor the user specified with $EDITOR or --editor
-      editorPrgm = self.properties.getProperty(EDITOR_KEY, EDITOR_DEFAULT)
-      editorString = editorPrgm + " \"" + tmpFilename + "\""
-      ret = os.system(editorString)
-      if ret > 0:
-        output.printlnError("Encountered error return value from editor")
-        raise InstallError("Editor returned " + str(ret))
-
-    # validation: the file shouldn't be empty. It certainly *can*, but
-    # that's a very boring Hadoop cluster. We should print a warning msg
-    # but continue running.
-
-    # when we're parsing this file, also cache the number of lines
-    # in the file
-
-    slaveLines = []
-    try:
-      handle = open(tmpFilename)
-      slaveLines = handle.readlines()
-      handle.close()
-    except IOError, ioe:
-      output.printlnError("Cannot read installer copy of slaves file " \
-          + tmpFilename)
-      output.printlnError(str(ioe))
-      raise InstallError(ioe)
-
-    self.numSlaves = len(slaveLines)
-    if self.numSlaves == 0:
-      output.printlnInfo( \
-"""Warning: Your slaves file appears to be empty. Installation will continue
-locally, but your cluster won't be able to do much like this :) You will need
-to add nodes to the slaves file at
-%(slavesFile)s
-after installation is complete""" \
-      % { "slavesFile" :  \
-          os.path.join(self.getHadoopInstallPrefix(), "conf/slaves") })
-
-
-    # TODO (aaron): we were planning on using the slaves file here as the
-    # list of hosts to use to scp to for slave installs. Is there a problem
-    # if the user puts localhost in this list? I don't think so; we currently
-    # don't really do anything different configuration-wise -- it'll just
-    # wind up copying a bunch of files into the install prefix, and then
-    # overwriting those same files with identical copies via scp
-
-
   def getNumSlaves(self):
-    return self.numSlaves
+    return toolinstall.getToolByName("GlobalPrereq").getNumSlaves()
 
   def getTempSlavesFileName(self):
-    # TODO: Delete this file when the installer is cleaning up.
-    return self.slavesFileName
+    return toolinstall.getToolByName("GlobalPrereq").getTempSlavesFileName()
+
 
   def configHadoopSite(self):
     """ The hadoop-site.xml file is the place where all the magic happens.
@@ -330,24 +235,34 @@ after installation is complete""" \
 
     if not self.isUnattended() and userHadoopSiteFile == None:
       # time to actually query the user about these things.
-      self.hadoopSiteDict = {}
+      self.configuredHadoopSiteOnline = True
 
-      output.printlnInfo("""
-To set up Hadoop, we need to ask you a few basic questions about your
-cluster. When possible, acceptable defaults are provided to you, which you
-can select by pressing [enter].
+      output.printlnInfo("\nMaster server addresses:")
 
-Master server addresses:""")
+      daemonAddrsOk = False
+      while not daemonAddrsOk:
+        defaultJobTracker = self.getMasterHost() + ":" + str(DEFAULT_JT_PORT)
+        self.hadoopSiteDict[MAPRED_JOB_TRACKER] = \
+            prompt.getString("Enter the hostname:port for the JobTracker", \
+            defaultJobTracker, True)
 
-      defaultJobTracker = self.getMasterHost() + ":" + str(DEFAULT_JT_PORT)
-      self.hadoopSiteDict[MAPRED_JOB_TRACKER] = \
-          prompt.getString("Enter the hostname:port for the JobTracker", \
-          defaultJobTracker, True)
+        defaultNameNode = self.getMasterHost() + ":" + str(DEFAULT_NN_PORT)
+        self.hadoopSiteDict[FS_DEFAULT_NAME] = "hdfs://" + \
+            prompt.getString("Enter the hostname:port for the HDFS NameNode", \
+            defaultNameNode, True) + "/"
 
-      defaultNameNode = self.getMasterHost() + ":" + str(DEFAULT_NN_PORT)
-      self.hadoopSiteDict[FS_DEFAULT_NAME] = "hdfs://" + \
-          prompt.getString("Enter the hostname:port for the HDFS NameNode", \
-          defaultNameNode, True) + "/"
+        if self.hadoopSiteDict[MAPRED_JOB_TRACKER].startswith("localhost:") \
+            or self.hadoopSiteDict[FS_DEFAULT_NAME].startswith( \
+            "hdfs://localhost:"):
+          output.printlnInfo("""
+WARNING: Master server address of 'localhost' will not be accessible by other
+nodes.
+""")
+          daemonAddrsOk = prompt.getBoolean( \
+              "Are you sure you want to use these addresses?", False, True)
+        else:
+          # looks good; proceed.
+          daemonAddrsOk = True
 
       output.printlnInfo("""
 When HDFS files are deleted using the command-line tools, they are moved
@@ -422,9 +337,6 @@ configured:""")
       numSlaveCores = prompt.getInteger("Number of CPU cores", 1, None, \
           DEFAULT_CORES_GUESS, True)
 
-      ramPerCore = int(math.floor(0.95 * slaveRamMb / numSlaveCores))
-      ramPerCore = max(MIN_CHILD_HEAP, ramPerCore)
-
       # Expert installation steps follow
 
       output.printlnInfo("""
@@ -436,17 +348,23 @@ to do, just accept the default values.""")
       self.hadoopSiteDict[REDUCES_PER_JOB] = prompt.getInteger( \
           REDUCES_PER_JOB, 0, None, defReducesPerJob, True)
 
-      defMapsPerNode = numSlaveCores
+      defMapsPerNode = int(math.ceil(0.75 * numSlaveCores))
       self.hadoopSiteDict[MAPS_PER_NODE] = prompt.getInteger( \
           MAPS_PER_NODE, 1, None, defMapsPerNode, True)
 
-      defReducesPerNode = int(math.ceil(0.75 * numSlaveCores))
+      defReducesPerNode = int(math.ceil(0.5 * numSlaveCores))
       self.hadoopSiteDict[REDUCES_PER_NODE] = prompt.getInteger( \
           REDUCES_PER_NODE, 1, None, defReducesPerNode, True)
 
 
+      taskSlotsPerNode = self.hadoopSiteDict[MAPS_PER_NODE] \
+          + self.hadoopSiteDict[REDUCES_PER_NODE]
+
+      defRamPerTaskInMb = int(math.floor(0.95 * slaveRamMb / taskSlotsPerNode))
+      defRamPerTaskInMb = max(MIN_CHILD_HEAP, defRamPerTaskInMb)
+
       ramPerTaskInMb = prompt.getInteger("Heap size per task child (in MB)",
-          MIN_CHILD_HEAP, None, ramPerCore, True)
+          MIN_CHILD_HEAP, None, defRamPerTaskInMb, True)
 
       self.hadoopSiteDict[MAPRED_CHILD_JAVA_OPTS] = prompt.getString( \
           MAPRED_CHILD_JAVA_OPTS, "-Xmx" + str(ramPerTaskInMb) + "m")
@@ -485,7 +403,7 @@ to do, just accept the default values.""")
           JOBTRACKER_THREADS, 1, None, defaultMasterThreads, True)
 
       # TODO (aaron): Handle IO_SORT_FACTOR, IO_SORT_MB and
-      # recommend something for these as well?
+      # and fs.inmemory.size.mb; recommend something for these as well?
 
       self.hadoopSiteDict[IO_FILEBUF_SIZE] = prompt.getInteger( \
           IO_FILEBUF_SIZE, 4096, None, DEFAULT_FILEBUF_SIZE, True)
@@ -524,18 +442,98 @@ to do, just accept the default values.""")
       self.hadoopSiteDict[MAPRED_SYSTEM_DIR] = prompt.getString( \
           MAPRED_SYSTEM_DIR, DEFAULT_MAPRED_SYS_DIR, True)
 
-    # TODO: Always write in the following keys; don't poll the user for this
-    extraProperties = """
-<property>
-  <name>dfs.hosts</name>
-  <value>%(dfsHostsFile)s</value>
-  <final>true</final>
-</property>
-<property>
-  <name>dfs.hosts.exclude</name>
-  <value>%(dfsHostsExcludeFile)s</value>
-  <final>true</final>
-</property>
+      defaultHostsFile = os.path.join(self.getConfDir(), "dfs.hosts")
+      self.hadoopSiteDict[DFS_HOSTS_FILE] = prompt.getString( \
+          DFS_HOSTS_FILE, defaultHostsFile, True)
+
+      defaultExcludeFile = os.path.join(self.getConfDir(), "dfs.hosts.exclude")
+      self.hadoopSiteDict[DFS_EXCLUDE_FILE] = prompt.getString( \
+          DFS_EXCLUDE_FILE, defaultExcludeFile, True)
+
+    # TODO: Figure out where the hadoop log dir should go to make things easiest
+    # for alex. does this need to live anyplace in particular? can we allow the
+    # user to customize this?
+
+
+  def installMastersFile(self):
+    """ Put the 'masters' file in hadoop conf dir """
+    mastersFileName = os.path.join(self.getConfDir, "masters")
+    try:
+      handle = open(mastersFileName, "w")
+      handle.write(self.getMasterHost())
+      handle.close()
+    except IOError, ioe:
+      output.printlnError("Could not write masters file: " + mastersFileName)
+      raise InstallError(ioe)
+
+
+  def writeSlavesList(self, handle):
+    """ Write the list of slaves out to the given file handle """
+    slavesInputFileName = self.getTempSlavesFileName()
+
+    try:
+      inHandle = open(slavesInputFileName)
+      slaves = inHandle.readLines()
+      inHandle.close()
+    except IOError, ioe:
+      output.printlnError("Error reading the slaves file: " \
+          + slavesInputFileName)
+      raise InstallError(ioe)
+
+    return slaves
+
+  def installSlavesFile(self):
+    """ Put the slaves file in hadoop conf dir """
+    slavesFileName = os.path.join(self.getConfDir, "slaves")
+    try:
+      handle = open(slavesFileName, "w")
+      self.writeSlavesList(handle)
+      handle.close()
+    except IOError, ioe:
+      output.printlnError("Could not write slaves file: " + slavesFileName)
+      raise InstallError(ioe)
+
+
+  def installDfsHostsFile(self):
+    """ write the dfs.hosts file (same contents as slaves) """
+    try:
+      dfsHostsFileName = self.getHadoopSiteProperty(DFS_HOSTS_FILE)
+      if dfsHostsFileName != None and len(dfsHostsFileName) > 0:
+        dfsHostsHandle = open(dfsHostsFileName, "w")
+        self.writeSlavesList(dfsHostsHandle)
+        dfsHostsHandle.close()
+    except IOError, ioe:
+      output.printlnError("Could not write DFS hosts file: " + dfsHostsFileName)
+      raise InstallError(ioe)
+    except KeyError:
+      # we didn't do this part of the configuration in-tool.
+      # If the user specified their own dfs.hosts file, install that.
+      # TODO (aaron): Future versions of this tool should allow --dfs-hosts
+      # So just let this slide for now.
+      pass
+
+
+  def installDfsExcludesFile(self):
+    """ Create an empty file that will be the user's excludes file. """
+    try:
+      excludeFileName = self.getHadoopSiteProperty(DFS_EXCLUDE_FILE)
+      if excludeFileName != None and len(excludeFileName) > 0:
+        handle = open(excludeFileName, "w")
+        handle.close()
+    except IOError, ioe:
+      output.printlnError("Could not create DFS exclude file: " \
+          + excludeFileName)
+      raise InstallError(ioe)
+    except KeyError:
+      # we didn't do this part of the configuration in-tool.
+      # If the user specified their own dfs.hosts.exclude file, install that.
+      # TODO (aaron): Future versions of this tool should allow --dfs-exclude
+      # So just let this slide for now.
+      pass
+
+  def writeHadoopSiteEpilogue(self, handle):
+    """ Always write in the following keys; don't poll the user for this """
+    handle.write("""
 <property>
   <name>mapred.output.compression.type</name>
   <value>BLOCK</value>
@@ -544,12 +542,30 @@ to do, just accept the default values.""")
                Cloudera Hadoop switches this default to BLOCK for better
                performance.
   </description>
-</property>""" % {
-        "dfsHostsFile" : os.path.join(prefix + "conf/hosts"),
-        "dfsHostsExcludeFile" : os.path.join(prefix + "conf/hosts.exclude") }
+</property>
+<property>
+  <description>If users connect through a SOCKS proxy, we don't want their
+   SocketFactory settings interfering with the socket factory associated
+   with the actual daemons.</description>
+  <name>hadoop.rpc.socket.factory.class.default</name>
+  <value>org.apache.hadoop.net.StandardSocketFactory</value>
+  <final>true</final>
+</property>
+<property>
+  <name>hadoop.rpc.socket.factory.class.ClientProtocol</name>
+  <value></value>
+  <final>true</final>
+</property>
+<property>
+  <name>hadoop.rpc.socket.factory.class.JobSubmissionProtocol</name>
+  <value></value>
+  <final>true</final>
+</property>
+""")
 
     if self.canUseLzo():
-      lzoProperties = """
+      # TODO (aaron): include bzip2 in official codec list in 0.2
+      handle.write("""
 <property>
   <name>mapred.map.output.compression.codec</name>
   <value>org.apache.hadoop.io.compress.LzoCodec</value>
@@ -560,18 +576,147 @@ to do, just accept the default values.""")
   </description>
 </property>
 <property>
+  <name>mapred.compress.map.output</name>
+  <value>true</value>
+</property>
+<property>
+  <name>mapred.compress.map.output.codec</name>
+  <value>org.apache.hadoop.io.compress.LzoCodec</value>
+</property>
+<property>
   <name>io.compression.codecs</name>
   <value>org.apache.hadoop.io.compress.DefaultCodec,org.apache.hadoop.io.compress.GzipCodec,org.apache.hadoop.io.compress.LzoCodec</value>
   <description>A list of the compression codec classes that can be used
                for compression/decompression.</description>
 </property>
-"""
+""")
 
-    # TODO: Figure out where the hadoop log dir should go to make things easiest
-    # for alex. does this need to live anyplace in particular? can we allow the
-    # user to customize this?
+    # This must be the last line in the file.
+    handle.write("</configuration>\n")
+
+  def installHadoopSiteFile(self):
+    """ Write out the hadoop-site.xml file that the user configured. """
+
+    def writeHadoopSiteKey(handle, key):
+      try:
+        finalHadoopProperties.index(key)
+        # it's in the list of 'final' things. Mark is that way.
+        finalStr = "\n  <final>true</final>"
+      except ValueError:
+        # not a final value, just a default.
+        finalStr = ""
+
+      handle.write("""<property>
+  <name>%(name)s</name>
+  <value>%(val)s</value>%(final)s
+</property>
+""" % {   "name"  : key,
+          "val"   : self.getHadoopSiteProperty(key),
+          "final" : finalStr })
 
 
+    destFileName = os.path.join(self.getConfDir(), "hadoop-site.xml")
+    if self.configuredHadoopSiteOnline:
+      # the user gave this to us param-by-param online. Write this out.
+
+      dateStr = time.asctime()
+      try:
+        handle = open(destFileName, "w")
+
+        # Write the preamble
+        handle.write("""<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<!--
+     Autogenerated by Cloudera Hadoop Installer on
+     %(thedate)s
+
+     You *may* edit this file. Put site-specific property overrides below.
+-->
+<configuration>
+""" % { "thedate" : dateStr })
+
+        # Write out everything the user configured for us.
+        for key in self.hadoopSiteDict:
+          writeHadoopSiteKey(handle, key)
+
+        # Write prologue of "fixed parameters" that we always include.
+        self.writeHadoopSiteEpilogue(self, handle)
+
+        handle.close()
+      except IOError, ioe:
+        output.printlnError("Could not write hadoop-site.xml file")
+        raise InstallError(ioe)
+    else:
+      # The user provided us with a hadoop-site file. write that out.
+      hadoopSiteFileName = self.properties.getProperty(HADOOP_SITE_FILE_KEY)
+      shutil.copyfile(hadoopSiteFileName, destFileName)
+
+  def installHadoopEnvFile(self):
+    """ Hadoop installs a file in conf/hadoop-env.sh; we need to augment
+        this with our own settings to initialize JAVA_HOME and JMX """
+    # See https://wiki.cloudera.com/display/engineering/Hadoop+Configuration
+
+    # We need to open the file for append and, at minimum,  add JAVA_HOME
+    # Also enable JMX on all the daemons.
+    # TODO (aaron): Also allow overriding of the logging stuff?
+    # TODO (aaron): Eventually we'll just want to overwrite the whole thing.
+
+    destFileName = os.path.join(self.getConfDir(), "hadoop-env.sh")
+    try:
+      handle = open(destFileName, "a")
+      handle.write("# Additional configuration properties written by\n")
+      handle.write("# Cloudera Hadoop installer\n")
+      handle.write("export JAVA_HOME=\"" + self.getJavaHome() + "\"\n")
+      handle.write("export " \
+          + "HADOOP_NAMENODE_OPTS=\"" \
+          + "-Dcom.sun.management.jmxremote.port=1091 "\
+          + "-Dcom.sun.management.jmxremote.authenticate=false "\
+          + "-Dcom.sun.management.jmxremote.ssl=false " \
+          + "$HADOOP_NAMENODE_OPTS\"\n")
+      handle.write("export " \
+          + "HADOOP_SECONDARYNAMENODE_OPTS=\"" \
+          + "-Dcom.sun.management.jmxremote.port=1092 "\
+          + "-Dcom.sun.management.jmxremote.authenticate=false "\
+          + "-Dcom.sun.management.jmxremote.ssl=false " \
+          + "$HADOOP_SECONDARYNAMENODE_OPTS\"\n")
+      handle.write("export " \
+          + "HADOOP_DATANODE_OPTS=\"" \
+          + "-Dcom.sun.management.jmxremote.port=1093 "\
+          + "-Dcom.sun.management.jmxremote.authenticate=false "\
+          + "-Dcom.sun.management.jmxremote.ssl=false " \
+          + "$HADOOP_DATANODE_OPTS\"\n")
+      handle.write("export " \
+          + "HADOOP_JOBTRACKER_OPTS=\"" \
+          + "-Dcom.sun.management.jmxremote.port=1094 "\
+          + "-Dcom.sun.management.jmxremote.authenticate=false "\
+          + "-Dcom.sun.management.jmxremote.ssl=false " \
+          + "$HADOOP_JOBTRACKER_OPTS\"\n")
+      handle.write("export " \
+          + "HADOOP_TASKTRACKER_OPTS=\"" \
+          + "-Dcom.sun.management.jmxremote.port=1095 "\
+          + "-Dcom.sun.management.jmxremote.authenticate=false "\
+          + "-Dcom.sun.management.jmxremote.ssl=false " \
+          + "$HADOOP_TASKTRACKER_OPTS\"\n")
+
+      handle.close()
+    except IOError, ioe:
+      output.printlnError("Could not edit hadoop-env.sh")
+      raise InstallError(ioe)
+
+  def createPaths(self):
+    """ Create any paths needed by this installation (e.g., dfs.data.dir) """
+    # TODO: Create hadoop.tmp.dir, dfs.data.dir, dfs.name.dir, mapred.local.dir
+    # TODO: How does this work if we are given preassigned directories?
+    # does hadoop create these in advance?
+
+  def precheck(self):
+    """ If anything must be verified before we even get going, check those
+        constraints in this method """
+
+    self.precheckJava()
+    self.precheckLzoLibs()
+    self.precheckBzipLibs()
 
   def configure(self):
     """ Run the configuration stage. This is responsible for
@@ -579,24 +724,44 @@ to do, just accept the default values.""")
         of the user. The software is not installed yet """
 
     self.configMasterAddress()
-    self.configSlavesFile()
     self.configHadoopSite()
-    # TODO: configure hadoop-env.sh
-    # see
-    # https://cloudera.onconfluence.com/display/engineering/Hadoop+Configuration
 
   def install(self):
     """ Run the installation itself. """
-    pass
-    # TODO install hadoop
-    # TODO: Write the master file
-    # TODO: Write the slaves file
-    # TODO: Write the dfs.hosts file
-    # (same as the slaves file)
-    # TODO: Write the dfs.hosts.exclude file (empty)
-    # TODO: Write the hadoop-site.xml file
-    # TODO: Write the hadoop-env.sh file
-    # TODO: Create hadoop.tmp.dir, dfs.data.dir, dfs.name.dir, mapred.local.dir
+
+    # Install the hadoop package itself
+    hadoopPackageName = os.path.abspath(os.path.join(PACKAGE_PATH, \
+        HADOOP_PACKAGE))
+    if not os.path.exists(hadoopPackageName):
+      output.printlnError("Error: Missing hadoop install package " + \
+          hadoopPackageName)
+      raise InstallError("Missing hadoop installation package")
+
+    installPath = toolinstall.getToolByName("GlobalPrereq").getAppsPrefix(),
+
+    if self.properties.getBoolean("output.verbose", False):
+      verboseChar = "v"
+    else:
+      verboseChar = ""
+    cmd = "tar -" + verboseChar + "zxf " + hadoopPackageName \
+        + " -C " + installPath
+
+    try:
+      shell.sh(cmd)
+    except CommandError, ce:
+      output.printlnError("Could not install hadoop! tar returned error")
+      raise InstallError("Error unpacking hadoop")
+
+    # write the config files out.
+    if self.properties.getProperty(HADOOP_PROFILE_KEY) == PROFILE_MASTER_VAL:
+      self.installMastersFile()
+      self.installSlavesFile()
+      self.installDfsHostsFile()
+      self.installDFsExcludesFile()
+
+    self.installHadoopSiteFile()
+    self.installHadoopEnvFile()
+    self.createPaths()
 
 
   def postInstall(self):
@@ -613,5 +778,6 @@ to do, just accept the default values.""")
     # TODO: Run  'bin/hadoop fs -ls /' to make sure it works
     # (do a touchz, ls, rm)
     # TODO: Run a sample 'pi' job.
+    pass
 
 
