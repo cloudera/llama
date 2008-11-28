@@ -189,6 +189,10 @@ MAX_DAEMON_THREADS = 128
 # io.file.buffer.size should be much bigger than 4K
 DEFAULT_FILEBUF_SIZE = 65536
 
+# minimum ulimit we will allow for a child is 512 MB
+# to ensure that Java definitely has room to launch
+MIN_ULIMIT = 512 * 1024
+
 # mapred.parallel.copies recommendation bounds
 MIN_PARALLEL_COPIES = 5
 MAX_PARALLEL_COPIES = 100

@@ -343,19 +343,19 @@ configured:""")
 The following settings are here for experts only. If you're unsure of what
 to do, just accept the default values.""")
 
-      defReducesPerJob = int(math.ceil(0.95 * numSlaves * numSlaveCores))
-      defReducesPerJob = max(1, defReducesPerJob)
-      self.hadoopSiteDict[REDUCES_PER_JOB] = prompt.getInteger( \
-          REDUCES_PER_JOB, 0, None, defReducesPerJob, True)
-
       defMapsPerNode = int(math.ceil(0.75 * numSlaveCores))
       self.hadoopSiteDict[MAPS_PER_NODE] = prompt.getInteger( \
           MAPS_PER_NODE, 1, None, defMapsPerNode, True)
 
       defReducesPerNode = int(math.ceil(0.5 * numSlaveCores))
-      self.hadoopSiteDict[REDUCES_PER_NODE] = prompt.getInteger( \
+      numReducesPerNode = prompt.getInteger( \
           REDUCES_PER_NODE, 1, None, defReducesPerNode, True)
+      self.hadoopSiteDict[REDUCES_PER_NODE] = numReducesPerNode
 
+      defReducesPerJob = int(math.ceil(0.95 * numSlaves * numReducesPerNode))
+      defReducesPerJob = max(1, defReducesPerJob)
+      self.hadoopSiteDict[REDUCES_PER_JOB] = prompt.getInteger( \
+          REDUCES_PER_JOB, 0, None, defReducesPerJob, True)
 
       taskSlotsPerNode = self.hadoopSiteDict[MAPS_PER_NODE] \
           + self.hadoopSiteDict[REDUCES_PER_NODE]
@@ -374,8 +374,9 @@ to do, just accept the default values.""")
       # be totally safe and keep the system from completely freaking out
       ramPerTaskInKb = ramPerTaskInMb * 1024
       defTaskUlimit = ramPerTaskInKb * 2
+      defTaskUlimit = max(defTaskUlimit, MIN_ULIMIT)
       self.hadoopSiteDict[MAPRED_CHILD_ULIMIT] = prompt.getInteger( \
-          MAPRED_CHILD_ULIMIT, 0, None, defTaskUlimit, True)
+          MAPRED_CHILD_ULIMIT, MIN_ULIMIT, None, defTaskUlimit, True)
 
       self.hadoopSiteDict[DFS_DATANODE_THREADS] = prompt.getInteger( \
           DFS_DATANODE_THREADS, 1, None, DEFAULT_DATANODE_THREADS, True)
@@ -580,7 +581,7 @@ to do, just accept the default values.""")
   <value>true</value>
 </property>
 <property>
-  <name>mapred.compress.map.output.codec</name>
+  <name>mapred.output.compression.codec</name>
   <value>org.apache.hadoop.io.compress.LzoCodec</value>
 </property>
 <property>
@@ -698,6 +699,12 @@ to do, just accept the default values.""")
           + "-Dcom.sun.management.jmxremote.authenticate=false "\
           + "-Dcom.sun.management.jmxremote.ssl=false " \
           + "$HADOOP_TASKTRACKER_OPTS\"\n")
+      handle.write("export " \
+          + "HADOOP_BALANCER_OPTS=\"" \
+          + "-Dcom.sun.management.jmxremote.port=1096 "\
+          + "-Dcom.sun.management.jmxremote.authenticate=false "\
+          + "-Dcom.sun.management.jmxremote.ssl=false " \
+          + "$HADOOP_BALANCER_OPTS\"\n")
 
       handle.close()
     except IOError, ioe:
