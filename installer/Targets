@@ -7,8 +7,14 @@
 
 
 
-PythonTarget(
+installerTarget = PythonTarget(
   sources=[ "src/install",
             "src/com"],
   requiredTargets=[ "python/Common" ])
+
+installerTest = PythonTestTarget(
+  sources = ["test/com/"],
+  mainModule = "com.cloudera.distribution.alltests",
+  requiredTargets = [":installerTarget",
+                     "python/Common"])
 
