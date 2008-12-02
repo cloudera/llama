@@ -7,8 +7,14 @@
 
 
 
-PythonTarget(
+installer = PythonTarget(
   sources=[ "src/install",
             "src/com"],
   requiredTargets=[ "python/Common" ])
+
+
+# packaging the installer up for use in the tarball
+release = PythonRedistTarget(
+  distribName     = "installer",
+  requiredTargets = [ ":installer" ])
 

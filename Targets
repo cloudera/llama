@@ -1,16 +1,50 @@
 #!/usr/bin/python
 #
 # (c) Copyright 2008 Cloudera, Inc.
+#
+# Master Targets file for Cloudera Hadoop distribution (CH) system
 
-# TODO (aaron): Figure out a real target for the assembly to go here.
-# We need some sort of "distribution target" or "tarball" target
-# that assembles things together
-#   requiredTargets = projects/HadoopDist/installer:redist
-#                     thirdparty/hadoop-0.18.2:redist
 
+# Compile a Hadoop redist tarball to put in the distribution
+supportedHadoopPackage = HadoopPackageTarget(
+  packageName   = "supported-hadoop",
+  baseHadoopDir = "thirdparty/hadoop-0.18.2",
+  baseVersion   = "0.18.2",
+  patchPlan     = [])
+
+# components for packaging
+
+# Hadoop itself!
+hadoopComponent = PackageComponent(
+  targetName = ":supportedHadoopPackage",
+  includeZip = True,
+  destDir    = "packages")
+
+# the installation system
+installerComponent = PackageComponent(
+  targetName = "projects/HadoopDist/installer:release",
+  includeZip = False, # we need this unpackacked
+  destDir    = "bin")
+
+# TODO: documentation component, any other scripts, etc
+
+# There may be several versions of how we package the distribution.
+# supportedDistro is the one released to support clients
+supportedDistro = PackageTarget(
+  packageName = "cloudera-hadoop",
+  version     = "0.1.0",
+  components  = [
+    hadoopComponent,
+    installerComponent])
+
+
+# subtargets:
+#   installer -- guided and noattend python installation system
 ProjectList(requiredTargets=[
   "projects/HadoopDist/installer"
     ])
 
 
+
+defaultTarget(supportedDistro)
 
