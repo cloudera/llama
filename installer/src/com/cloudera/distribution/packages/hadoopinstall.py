@@ -14,6 +14,7 @@ from   com.cloudera.distribution.constants import *
 from   com.cloudera.distribution.installerror import InstallError
 import com.cloudera.distribution.java as java
 import com.cloudera.distribution.toolinstall as toolinstall
+import com.cloudera.tools.dirutils as dirutils
 import com.cloudera.tools.shell as shell
 import com.cloudera.util.output as output
 import com.cloudera.util.prompt as prompt
@@ -744,18 +745,20 @@ to do, just accept the default values.""")
           hadoopPackageName)
       raise InstallError("Missing hadoop installation package")
 
-    installPath = toolinstall.getToolByName("GlobalPrereq").getAppsPrefix(),
+    installPath = toolinstall.getToolByName("GlobalPrereq").getAppsPrefix()
+
+    dirutils.mkdirRecursive(installPath)
 
     if self.properties.getBoolean("output.verbose", False):
       verboseChar = "v"
     else:
       verboseChar = ""
-    cmd = "tar -" + verboseChar + "zxf " + hadoopPackageName \
-        + " -C " + installPath
+    cmd = "tar -" + verboseChar + "zxf \"" + hadoopPackageName + "\"" \
+        + " -C \"" + installPath + "\""
 
     try:
       shell.sh(cmd)
-    except CommandError, ce:
+    except shell.CommandError, ce:
       output.printlnError("Could not install hadoop! tar returned error")
       raise InstallError("Error unpacking hadoop")
 

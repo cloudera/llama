@@ -5,6 +5,12 @@
 # Master Targets file for Cloudera Hadoop distribution (CH) system
 
 
+# List of all distribution editions we compile from this tree.
+# This is the default target.
+allDistributions = EmptyPackageTarget(
+  requiredTargets = [ ":supportedDistro" ])
+
+
 # Compile a Hadoop redist tarball to put in the distribution
 supportedHadoopPackage = HadoopPackageTarget(
   packageName   = "supported-hadoop",
@@ -38,7 +44,7 @@ supportedDistro = PackageTarget(
     installerComponent])
 
 
-# subtargets:
+# subdirectory targets:
 #   installer -- guided and noattend python installation system
 ProjectList(requiredTargets=[
   "projects/HadoopDist/installer"
@@ -46,5 +52,5 @@ ProjectList(requiredTargets=[
 
 
 
-defaultTarget(supportedDistro)
+defaultTarget(allDistributions)
 
