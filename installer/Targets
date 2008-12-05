@@ -5,13 +5,16 @@
 # Installation system for Cloudera Hadoop
 #
 
-
-
 installer = PythonTarget(
   sources=[ "src/install",
             "src/com"],
   requiredTargets=[ "python/Common" ])
 
+installerTest = PythonTestTarget(
+  sources = ["test/com/"],
+  mainModule = "com.cloudera.distribution.alltests",
+  requiredTargets = [":installer",
+                     "python/Common"])
 
 # packaging the installer up for use in the tarball
 release = PythonRedistTarget(

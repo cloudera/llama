@@ -11,6 +11,7 @@ import sys
 import time
 
 from   com.cloudera.distribution.constants import *
+import com.cloudera.distribution.dnsregex as dnsregex
 from   com.cloudera.distribution.installerror import InstallError
 import com.cloudera.distribution.java as java
 import com.cloudera.distribution.toolinstall as toolinstall
@@ -146,17 +147,6 @@ class HadoopInstall(toolinstall.ToolInstall):
     # system which actually differentiates between the two, and puts scribe,
     # and the 2NN on a separate machine.
 
-    # regex for IP address: between 1 and 4 dot-separated numeric groups
-    # which can be between 1 and 10 digits each (this is slightly more
-    # liberal than required; but this captures dotted quads and dotted halves
-    # and a single 32-bit value... and some other non-RFC-1035-compliant
-    # values.
-
-    ipAddrRegex = re.compile("[0-9]{1,10}(\.[0-9]{1,10}){0,3}")
-
-    # regex for DNS addresses; this is slightly more liberal than RFC 1035
-    dnsNameRegex = re.compile("[A-Za-z][0-9A-Za-z\._-]*")
-
     defHostName = self.properties.getProperty(HADOOP_MASTER_ADDR_KEY)
     if defHostName == None:
       # look up the fqdn of this machine; we assume it's the master
@@ -181,10 +171,10 @@ class HadoopInstall(toolinstall.ToolInstall):
       while not set:
         maybeMasterHost = prompt.getString( \
             "Input the master host DNS address", defHostName, True)
-        if ipAddrRegex.match(maybeMasterHost):
+        if dnsregex.isIpAddress(maybeMasterHost):
           output.printlnError("The master address must be a DNS name, " \
               + "not an IP address")
-        elif not dnsNameRegex.match(maybeMasterHost):
+        elif not dnsregex.isDnsName(maybeMasterHost):
           output.printlnError("This does not appear to be a DNS address")
         else:
           set = True # this address seems legit.
@@ -192,11 +182,11 @@ class HadoopInstall(toolinstall.ToolInstall):
 
     # make sure that this is an FQDN, not an IP address
     # Check again here regardless of what codepath we took to get here
-    if ipAddrRegex.match(maybeMasterHost):
+    if dnsregex.isIpAddress(maybeMasterHost):
       output.printlnError("The master address must be a DNS name, " \
           + "not an IP address")
       raise InstallError("Master address format error")
-    if not dnsNameRegex.match(maybeMasterHost):
+    if not dnsregex.isDnsName(maybeMasterHost):
       output.printlnError("Master address does not appear to be a DNS name")
       raise InstallError("Master address format error")
 
@@ -241,26 +231,51 @@ class HadoopInstall(toolinstall.ToolInstall):
       output.printlnInfo("\nMaster server addresses:")
 
       daemonAddrsOk = False
+      localHostAddrRegex = re.compile("localhost\:")
+      legalHostPortRegex = re.compile(dnsregex.getDnsNameRegexStr() \
+          + "\:[0-9]+")
+
       while not daemonAddrsOk:
         defaultJobTracker = self.getMasterHost() + ":" + str(DEFAULT_JT_PORT)
-        self.hadoopSiteDict[MAPRED_JOB_TRACKER] = \
+        jobTrackerName = \
             prompt.getString("Enter the hostname:port for the JobTracker", \
             defaultJobTracker, True)
+        self.hadoopSiteDict[MAPRED_JOB_TRACKER] = jobTrackerName
 
         defaultNameNode = self.getMasterHost() + ":" + str(DEFAULT_NN_PORT)
-        self.hadoopSiteDict[FS_DEFAULT_NAME] = "hdfs://" + \
+        nameNodeName = \
             prompt.getString("Enter the hostname:port for the HDFS NameNode", \
-            defaultNameNode, True) + "/"
+            defaultNameNode, True)
+        self.hadoopSiteDict[FS_DEFAULT_NAME] = "hdfs://" + nameNodeName + "/"
 
-        if self.hadoopSiteDict[MAPRED_JOB_TRACKER].startswith("localhost:") \
-            or self.hadoopSiteDict[FS_DEFAULT_NAME].startswith( \
-            "hdfs://localhost:"):
+        # check to make sure they didn't put 'localhost' in either of these
+        # and that they're legal host:port pairs
+        jtMatch = localHostAddrRegex.match(jobTrackerName)
+        jobTrackerIsLocalhost = jtMatch != None and jtMatch.start() == 0
+
+        jtDnsMatch = legalHostPortRegex.match(jobTrackerName)
+        jobTrackerIsDns = jtDnsMatch != None and jtDnsMatch.start() == 0 \
+            and jtDnsMatch.end() == len(jobTrackerName)
+
+        nnMatch = localHostAddrRegex.match(nameNodeName)
+        nameNodeIsLocalhost = nnMatch != None and nnMatch.start() == 0
+
+        nnDnsMatch = legalHostPortRegex.match(nameNodeName)
+        nameNodeIsDns = nnDnsMatch != None and nnDnsMatch.start() == 0 \
+            and nnDnsMatch.end() == len(nameNodeName)
+
+        if jobTrackerIsLocalhost or nameNodeIsLocalhost:
           output.printlnInfo("""
 WARNING: Master server address of 'localhost' will not be accessible by other
 nodes.
 """)
           daemonAddrsOk = prompt.getBoolean( \
               "Are you sure you want to use these addresses?", False, True)
+        elif not jobTrackerIsDns or not nameNodeIsDns:
+          output.printlnInfo("""
+WARNING: You must enter a hostname:port pair for both of these entries.
+Please enter a valid address for both the JobTracker and the NameNode.
+""")
         else:
           # looks good; proceed.
           daemonAddrsOk = True
