@@ -42,7 +42,7 @@ class DnsRegexTest(TestCaseWithAsserts):
   def testAlphaNoMatch2(self):
     self.assertFalse(dnsregex.isIpAddress("A12.123.123.123"))
 
-  def testAlphaNoMatch2(self):
+  def testAlphaNoMatch3(self):
     self.assertFalse(dnsregex.isIpAddress("12.123.123.12a"))
 
   def testFiveQuadsNoMatch(self):
@@ -53,6 +53,16 @@ class DnsRegexTest(TestCaseWithAsserts):
 
   def testMultiDotsNotIp(self):
     self.assertFalse(dnsregex.isIpAddress("123..123"))
+
+  def testOneDotNotIp(self):
+    self.assertFalse(dnsregex.isIpAddress("."))
+
+  def testTwoDotsNotIp(self):
+    self.assertFalse(dnsregex.isIpAddress(".."))
+
+  def testThreeDotsNotIp(self):
+    self.assertFalse(dnsregex.isIpAddress("..."))
+
 
   # Note: we currently do not check that the values are actually
   # in [0, 255] per segment, nor do we rule out multi-cast addresses,
@@ -99,6 +109,18 @@ class DnsRegexTest(TestCaseWithAsserts):
 
   def testMultiDotsNotDns(self):
     self.assertFalse(dnsregex.isDnsName("foo..bar"))
+
+  def testJustDotsNotDns(self):
+    self.assertFalse(dnsregex.isDnsName("."))
+
+  def testJustDotsNotDns2(self):
+    self.assertFalse(dnsregex.isDnsName(".."))
+
+  def testJustDotsNotDns3(self):
+    self.assertFalse(dnsregex.isDnsName("..."))
+
+  def testTheLuggageCode(self):
+    self.assertTrue(dnsregex.isDnsName("one.two.three.four.five"))
 
 
 if __name__ == '__main__':
