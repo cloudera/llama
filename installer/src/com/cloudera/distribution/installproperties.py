@@ -164,6 +164,7 @@ def loadAllProperties(properties, argv):
     except ValueError:
       propsFlagFound = False
 
+
   # now actually check that we use all the flags
   if not properties.usesAllFlags(argv):
     output.printlnError("Try " + sys.argv[0] + " --help")
@@ -195,6 +196,7 @@ def loadAllProperties(properties, argv):
   # finally, read the command line arguments on top of all of this.
   properties.parseArgs(argv)
 
+  output.setupConsole(properties)
   properties.printTable(output.DEBUG)
 
   return properties
