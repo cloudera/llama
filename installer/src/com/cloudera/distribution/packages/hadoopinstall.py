@@ -46,7 +46,15 @@ class HadoopInstall(toolinstall.ToolInstall):
     self.configuredHadoopSiteOnline = False
     self.javaHome = None
     self.hadoopSiteDict = {}
+    self.libLzoFound = False
+    self.libBzipFound = False
 
+  def isMaster(self):
+    """ Return true if we are installing on a master server, as opposed to
+        a slave server."""
+    # For the time being, the 'hadoop profile' is a bool true/false for
+    # isMaster
+    return self.properties.getBoolean(HADOOP_PROFILE_KEY) == PROFILE_MASTER_VAL
 
   def getHadoopSiteProperty(self, propName):
     """ If the user configured hadoop-site in this tool, extract
@@ -102,13 +110,23 @@ class HadoopInstall(toolinstall.ToolInstall):
         this is not here, but we disable support for native LZO
         compression in Hadoop if it is missing. (And display a warning
         to the user)"""
-    # TODO (aaron): This
-    pass
+
+    testDirs = [ "/lib", "/usr/lib", "/usr/local/lib" ]
+    ldLibraryPath = os.getenv("LD_LIBRARY_PATH", "")
+    if len(ldLibraryPath) > 0:
+      ldLibraryParts = ldLibraryPath.split(":")
+      testDirs.extend(ldLibraryPaths)
+
+    for dir in testDirs:
+      libPath = os.path.join(dir, "liblzo2.so.2")
+      if os.path.exists(libPath):
+        output.printlnVerbose("Found LZO compression lib at " + libPath)
+        self.libLzoFound = True
+        return
 
   def canUseLzo(self):
     """ Return True if precheckLzoLibs detected the correct LZO libraries """
-    # TODO: Destubify
-    return False
+    return self.libLzoFound
 
   def precheckBzipLibs(self):
     """ Check that libbz2.so.1 is installed in one of /lib, /usr/lib,
@@ -116,13 +134,23 @@ class HadoopInstall(toolinstall.ToolInstall):
         this is not here, but we disable support for native LZO
         compression in Hadoop if it is missing. (And display a warning
         to the user)"""
-    # TODO (aaron): This (for 0.2 maybe)
-    pass
+
+    testDirs = [ "/lib", "/usr/lib", "/usr/local/lib" ]
+    ldLibraryPath = os.getenv("LD_LIBRARY_PATH", "")
+    if len(ldLibraryPath) > 0:
+      ldLibraryParts = ldLibraryPath.split(":")
+      testDirs.extend(ldLibraryPaths)
+
+    for dir in testDirs:
+      libPath = os.path.join(dir, "libbz2.so.1")
+      if os.path.exists(libPath):
+        output.printlnVerbose("Found bzip2 compression lib at " + libPath)
+        self.libBzipFound = True
+        return
 
   def canUseBzip(self):
     """ Return True if precheckBzipLibs detected the correct bzip libraries """
-    # TODO: Destubify
-    return False
+    return self.libBzipFound
 
 
   def getHadoopInstallPrefix(self):
@@ -145,7 +173,7 @@ class HadoopInstall(toolinstall.ToolInstall):
     # TODO (aaron): We currently conflate the master address here with the
     # address used for the secondary namenode. we should have a better
     # system which actually differentiates between the two, and puts scribe,
-    # and the 2NN on a separate machine.
+    # and the 2NN on a separate machine. This is an 0.2+ feature.
 
     defHostName = self.properties.getProperty(HADOOP_MASTER_ADDR_KEY)
     if defHostName == None:
@@ -187,8 +215,7 @@ class HadoopInstall(toolinstall.ToolInstall):
           + "not an IP address")
       raise InstallError("Master address format error")
     if not dnsregex.isDnsName(maybeMasterHost):
-      output.printlnError("Master address does not appear to be a DNS name")
-      raise InstallError("Master address format error")
+      raise InstallError("Master address does not appear to be a DNS name")
 
     # we're good.
     self.masterHost = maybeMasterHost
@@ -221,8 +248,8 @@ class HadoopInstall(toolinstall.ToolInstall):
       output.printlnError("Please restart installation with --hadoop-site")
       raise InstallError("No hadoop site file specified")
     elif userHadoopSiteFile != None and not os.path.exists(userHadoopSiteFile):
-      output.printlnError("Could not find " + userHadoopSiteFile)
-      raise InstallError("Could not find hadoop site file")
+      raise InstallError("Could not find hadoop site file: " \
+          + userHadoopSiteFile)
 
     if not self.isUnattended() and userHadoopSiteFile == None:
       # time to actually query the user about these things.
@@ -474,41 +501,43 @@ to do, just accept the default values.""")
 
   def installMastersFile(self):
     """ Put the 'masters' file in hadoop conf dir """
-    mastersFileName = os.path.join(self.getConfDir, "masters")
+    mastersFileName = os.path.join(self.getConfDir(), "masters")
     try:
       handle = open(mastersFileName, "w")
       handle.write(self.getMasterHost())
       handle.close()
     except IOError, ioe:
-      output.printlnError("Could not write masters file: " + mastersFileName)
-      raise InstallError(ioe)
+      raise InstallError("Could not write masters file: " + mastersFileName \
+          + " (" + str(ioe) + ")")
 
 
   def writeSlavesList(self, handle):
     """ Write the list of slaves out to the given file handle """
     slavesInputFileName = self.getTempSlavesFileName()
+    output.printlnDebug("Reading slaves input list from " + slavesInputFileName)
 
     try:
       inHandle = open(slavesInputFileName)
-      slaves = inHandle.readLines()
+      slaves = inHandle.readlines()
       inHandle.close()
     except IOError, ioe:
-      output.printlnError("Error reading the slaves file: " \
-          + slavesInputFileName)
-      raise InstallError(ioe)
+      raise InstallError("Error reading the slaves file: " \
+          + slavesInputFileName + " (" + str(ioe) + ")")
 
-    return slaves
+    for slave in slaves:
+      handle.write(slave)
+
 
   def installSlavesFile(self):
     """ Put the slaves file in hadoop conf dir """
-    slavesFileName = os.path.join(self.getConfDir, "slaves")
+    slavesFileName = os.path.join(self.getConfDir(), "slaves")
     try:
       handle = open(slavesFileName, "w")
       self.writeSlavesList(handle)
       handle.close()
     except IOError, ioe:
-      output.printlnError("Could not write slaves file: " + slavesFileName)
-      raise InstallError(ioe)
+      raise InstallError("Could not write slaves file: " + slavesFileName \
+          + " (" + str(ioe) + ")")
 
 
   def installDfsHostsFile(self):
@@ -520,8 +549,8 @@ to do, just accept the default values.""")
         self.writeSlavesList(dfsHostsHandle)
         dfsHostsHandle.close()
     except IOError, ioe:
-      output.printlnError("Could not write DFS hosts file: " + dfsHostsFileName)
-      raise InstallError(ioe)
+      raise InstallError("Could not write DFS hosts file: " + dfsHostsFileName \
+          + " (" + str(ioe) + ")")
     except KeyError:
       # we didn't do this part of the configuration in-tool.
       # If the user specified their own dfs.hosts file, install that.
@@ -538,9 +567,8 @@ to do, just accept the default values.""")
         handle = open(excludeFileName, "w")
         handle.close()
     except IOError, ioe:
-      output.printlnError("Could not create DFS exclude file: " \
-          + excludeFileName)
-      raise InstallError(ioe)
+      raise InstallError("Could not create DFS exclude file: " \
+          + excludeFileName + " (" + str(ioe) + ")")
     except KeyError:
       # we didn't do this part of the configuration in-tool.
       # If the user specified their own dfs.hosts.exclude file, install that.
@@ -580,8 +608,8 @@ to do, just accept the default values.""")
 </property>
 """)
 
+    # if LZO is available, turn this on by default.
     if self.canUseLzo():
-      # TODO (aaron): include bzip2 in official codec list in 0.2
       handle.write("""
 <property>
   <name>mapred.map.output.compression.codec</name>
@@ -600,13 +628,23 @@ to do, just accept the default values.""")
   <name>mapred.output.compression.codec</name>
   <value>org.apache.hadoop.io.compress.LzoCodec</value>
 </property>
+""")
+
+    # Write out the whole list of compression codecs we support
+    codecList = "org.apache.hadoop.io.compress.DefaultCodec," \
+        + "org.apache.hadoop.io.compress.GzipCodec"
+    if self.canUseLzo():
+      codecList = codecList + ",org.apache.hadoop.io.compress.LzoCodec"
+    # TODO (aaron): include bzip2 in official codec list in 0.2
+    # (does this require 0.19?)
+    handle.write("""
 <property>
   <name>io.compression.codecs</name>
-  <value>org.apache.hadoop.io.compress.DefaultCodec,org.apache.hadoop.io.compress.GzipCodec,org.apache.hadoop.io.compress.LzoCodec</value>
+  <value>%(codecs)s</value>
   <description>A list of the compression codec classes that can be used
                for compression/decompression.</description>
 </property>
-""")
+""" % { "codecs" : codecList })
 
     # This must be the last line in the file.
     handle.write("</configuration>\n")
@@ -654,7 +692,9 @@ to do, just accept the default values.""")
 """ % { "thedate" : dateStr })
 
         # Write out everything the user configured for us.
-        for key in self.hadoopSiteDict:
+        keys = self.hadoopSiteDict.keys()
+        keys.sort()
+        for key in keys:
           writeHadoopSiteKey(handle, key)
 
         # Write prologue of "fixed parameters" that we always include.
@@ -662,8 +702,8 @@ to do, just accept the default values.""")
 
         handle.close()
       except IOError, ioe:
-        output.printlnError("Could not write hadoop-site.xml file")
-        raise InstallError(ioe)
+        raise InstallError("Could not write hadoop-site.xml file (" \
+            + str(ioe) + ")")
     else:
       # The user provided us with a hadoop-site file. write that out.
       hadoopSiteFileName = self.properties.getProperty(HADOOP_SITE_FILE_KEY)
@@ -682,6 +722,7 @@ to do, just accept the default values.""")
     destFileName = os.path.join(self.getConfDir(), "hadoop-env.sh")
     try:
       handle = open(destFileName, "a")
+      handle.write("\n")
       handle.write("# Additional configuration properties written by\n")
       handle.write("# Cloudera Hadoop installer\n")
       handle.write("export JAVA_HOME=\"" + self.getJavaHome() + "\"\n")
@@ -724,14 +765,46 @@ to do, just accept the default values.""")
 
       handle.close()
     except IOError, ioe:
-      output.printlnError("Could not edit hadoop-env.sh")
-      raise InstallError(ioe)
+      raise InstallError("Could not edit hadoop-env.sh (" + str(ioe) + ")")
 
   def createPaths(self):
     """ Create any paths needed by this installation (e.g., dfs.data.dir) """
-    # TODO: Create hadoop.tmp.dir, dfs.data.dir, dfs.name.dir, mapred.local.dir
-    # TODO: How does this work if we are given preassigned directories?
-    # does hadoop create these in advance?
+    # Create hadoop.tmp.dir, dfs.data.dir, dfs.name.dir, mapred.local.dir
+    # Hadoop itself will actually create at least dfs.data.dir, dfs.name.dir
+    # if they are needed, so this isn't too critical if the user hasn't
+    # specifically identified them
+
+    def makeSinglePath(path):
+      try:
+        dirutils.mkdirRecursive(path.strip())
+      except OSError, ose:
+        raise InstallError("Could not create directory: " + path + " (" \
+            + str(ose) + ")")
+
+    def makeMultiPaths(paths):
+      pathList = paths.split(",")
+      for path in pathLits:
+        makesinglePath(path)
+
+    def makePathForProperty(prop):
+      try:
+        path = self.hadoopSiteDict[prop]
+        makeSinglePath(path)
+      except KeyError:
+        pass # don't make this one; not a big deal.
+
+    def makePathsForProperty(prop):
+      try:
+        paths = self.hadoopSiteDict[prop]
+        makeMultiPaths(paths)
+      except KeyError:
+        pass # don't make this one; not a big deal.
+
+    makePathForProperty(HADOOP_TMP_DIR)
+    makePathsForProperty(DFS_DATA_DIR)
+    makePathsForProperty(DFS_NAME_DIR)
+    makePathsForProperty(MAPRED_LOCAL_DIR)
+
 
   def precheck(self):
     """ If anything must be verified before we even get going, check those
@@ -749,6 +822,9 @@ to do, just accept the default values.""")
     self.configMasterAddress()
     self.configHadoopSite()
 
+  def getFinalInstallPath(self):
+    return os.path.join(self.getInstallBasePath(), HADOOP_INSTALL_SUBDIR)
+
   def install(self):
     """ Run the installation itself. """
 
@@ -756,12 +832,10 @@ to do, just accept the default values.""")
     hadoopPackageName = os.path.abspath(os.path.join(PACKAGE_PATH, \
         HADOOP_PACKAGE))
     if not os.path.exists(hadoopPackageName):
-      output.printlnError("Error: Missing hadoop install package " + \
-          hadoopPackageName)
-      raise InstallError("Missing hadoop installation package")
+      raise InstallError("Missing hadoop installation package " \
+          + hadoopPackageName)
 
-    installPath = toolinstall.getToolByName("GlobalPrereq").getAppsPrefix()
-
+    installPath = self.getInstallBasePath()
     dirutils.mkdirRecursive(installPath)
 
     if self.properties.getBoolean("output.verbose", False):
@@ -774,28 +848,78 @@ to do, just accept the default values.""")
     try:
       shell.sh(cmd)
     except shell.CommandError, ce:
-      output.printlnError("Could not install hadoop! tar returned error")
-      raise InstallError("Error unpacking hadoop")
+      raise InstallError("Error unpacking hadoop (tar returned error)")
 
     # write the config files out.
-    # TODO: Are these happening?
-    if self.properties.getProperty(HADOOP_PROFILE_KEY) == PROFILE_MASTER_VAL:
+    if self.isMaster():
+      output.printlnDebug("Performing master-specific Hadoop setup")
       self.installMastersFile()
       self.installSlavesFile()
       self.installDfsHostsFile()
-      self.installDFsExcludesFile()
+      self.installDfsExcludesFile()
 
     self.installHadoopSiteFile()
     self.installHadoopEnvFile()
     self.createPaths()
 
 
+  def doFormatHdfs(self):
+    """ Format DFS if the user wants it done. Default is false,
+        as the user must specifically enable this. """
+
+    maybeFormatHdfs = self.properties.getBoolean(FORMAT_HDFS_KEY, \
+        FORMAT_HDFS_DEFAULT)
+    if self.isUnattended():
+      formatHdfs = maybeFormatHdfs
+    else:
+      output.printlnInfo("""
+Before your Hadoop cluster is usable, the distributed filesystem must be
+formatted. If this is a new cluster, you should select "yes" to format HDFS
+and prepare the cluster for use. If you are installing this distribution on
+an existing Hadoop cluster, all existing HDFS data will be destroyed by
+this process.""")
+      formatHdfs = prompt.getBoolean("Format HDFS now?", maybeFormatHdfs, \
+          False)
+
+
+    # Hadoop itself will prompt iff there is already a directory there.
+    # If we are in unattended mode, then we want to disable that prompt
+    # as the user has already provided --format-hdfs (and presumably
+    # knows what he's doing). Otherwise, we allow the prompt to continue
+    if self.isUnattended():
+      echoPrefix = "echo Y | "
+    else:
+      echoPrefix = ""
+
+    formatCmd = "\"" + hadoopExec + "\" namenode -format"
+    if formatHdfs:
+      output.printlnVerbose("Formatting HDFS instance...")
+      hadoopExec = os.path.join(self.getFinalInstallPath(), "bin/hadoop")
+      cmd = echoPrefix + formatCmd
+      try:
+        shell.sh(cmd)
+      except shell.CommandError, ce:
+        output.printlnError("Could not format HDFS; Hadoop returned error")
+        raise InstalError("Error formatting HDFS")
+    else:
+      output.printlnInfo( \
+"""Skipping HDFS format. If you have not done this before, you must format
+HDFS before using Hadoop, by running the command:
+%(cmd)s""" % { "cmd" : formatCmd })
+
+
   def postInstall(self):
     """ Run any post-installation activities. This occurs after
         all ToolInstall objects have run their install() operations. """
-    # TODO postinstall hadoop
-    # TODO: Format DFS if the user wants it done
-    pass
+
+    if self.isMaster():
+      self.doFormatHdfs()
+
+    self.createInstallSymlink("hadoop")
+
+    configDirSrc = os.path.join(self.getFinalInstallPath(), "conf")
+    self.createEtcSymlink("hadoop", configDirSrc)
+
 
   def verify(self):
     """ Run post-installation verification tests, if configured """

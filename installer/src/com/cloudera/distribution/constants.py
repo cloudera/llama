@@ -35,8 +35,8 @@ HADOOP_USER_NAME_KEY   = "hadoop.user.name"
 HADOOP_PROFILE_KEY     = "hadoop.profile" # master or slave?
 
 # values for HADOOP_PROFILE_KEY
-PROFILE_MASTER_VAL = True
-PROFILE_SLAVE_VAL = False
+PROFILE_MASTER_VAL = False
+PROFILE_SLAVE_VAL = True
 
 # how do we log into other systems to perform remote setups?
 SSH_IDENTITY_KEY = "ssh.identity"
@@ -51,6 +51,14 @@ INSTALL_PREFIX_DEFAULT = "/usr/share/cloudera"
 
 UPLOAD_PREFIX_KEY = "install.upload.prefix"
 UPLOAD_PREFIX_DEFAULT = "/tmp/cloudera/"
+
+# do we format hdfs?
+FORMAT_DFS_KEY = "hadoop.hdfs.format"
+FORMAT_DFS_DEFAULT = False
+
+# where do we set up the 'etc' dir ?
+CONFIG_DIR_KEY = "cloudera.etc.dir"
+CONFIG_DIR_DEFAULT = "/etc/cloudera"
 
 # if we need to ask the user to do text editing of files, what editor?
 EDITOR_KEY = "editor"
@@ -211,6 +219,10 @@ MAX_SUBMIT_REPLICATION = DFS_MAX_REP
 
 DEFAULT_MAPRED_SYS_DIR = "/hadoop/system/mapred"
 
+# What subdir of the installation system (Relative to the 'install' program)
+# holds all the packages?
+PACKAGE_PATH = "../packages/"
+
 # underneath of $prefix, where do the actual installs of different
 # programs get put?
 APP_SUBDIR = "apps"
@@ -221,9 +233,15 @@ APP_SUBDIR = "apps"
 HADOOP_VERSION = "0.18.2"
 HADOOP_INSTALL_SUBDIR = "hadoop-" + HADOOP_VERSION
 
-# What subdir of the installation system (Relative to the 'install' program)
-# holds all the packages?
-PACKAGE_PATH = "../packages/"
-
 HADOOP_PACKAGE = "hadoop-" + HADOOP_VERSION + ".tar.gz"
+
+# Hive and Pig don't have formal releases; we track their svn repository
+# version numbers from when we froze their commits.
+
+HIVE_VERSION = "r724015"
+HIVE_INSTALL_SUBDIR = "hive- " + HIVE_VERSION
+
+PIG_VERSION = "r724015"
+PIG_INSTALL_SUBDIR = "pig-" + PIG_VERSION
+
 

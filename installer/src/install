@@ -14,6 +14,7 @@ import os
 import sys
 
 import com.cloudera.distribution.arch as arch
+from   com.cloudera.distribution.installerror import InstallError
 import com.cloudera.distribution.installproperties as installproperties
 import com.cloudera.distribution.manifest as manifest
 import com.cloudera.util.output as output
@@ -57,45 +58,51 @@ if archDetector.getArch() == arch.ARCH_UNKNOWN:
   output.printlnInfo("Warning: Could not determine system architecture")
   output.printlnInfo("This hampers my ability to install the correct libraries")
 
-# Assemble installation plan from command line flags
-output.printlnDebug("Creating installation plan...")
-installPlan = manifest.createInstallPlan(properties)
+try:
+  # Assemble installation plan from command line flags
+  output.printlnDebug("Creating installation plan...")
+  installPlan = manifest.createInstallPlan(properties)
 
-# Detect any prereqs that we cannot install:
-output.printlnInfo("Checking prerequisites for installation...")
-for tool in installPlan.getInstallItems():
-  tool.precheck()
+  # Detect any prereqs that we cannot install:
+  output.printlnInfo("Checking prerequisites for installation...")
+  for tool in installPlan.getInstallItems():
+    tool.precheck()
 
-output.printlnInfo("All necessary prerequisites were found.")
+  output.printlnInfo("All necessary prerequisites were found.")
 
-output.printlnInfo("""
+  output.printlnInfo("""
 To set up Hadoop, we need to ask you a few basic questions about your
 cluster. When possible, acceptable defaults are provided to you, which you
 can select by pressing [enter].
 """)
 
-for tool in installPlan.getInstallItems():
-  tool.configure()
+  for tool in installPlan.getInstallItems():
+    tool.configure()
 
-# Any user input should have occurred above this line. From this point
-# forward, we only bail out because an underlying installation item
-# chokes -- this is out of the user's hands by here.
+  # Any user input should have occurred above this line. From this point
+  # forward, we only bail out because an underlying installation item
+  # chokes -- this is out of the user's hands by here.
 
-# execute installation plan
-for tool in installPlan.getInstallItems():
-  output.printlnInfo("Installing " + tool.getName())
-  tool.install()
+  # execute installation plan
+  for tool in installPlan.getInstallItems():
+    output.printlnInfo("Installing " + tool.getName())
+    tool.install()
 
-# any steps to be performed per-tool after the whole system is together
-for tool in installPlan.getInstallItems():
-  output.printlnInfo("Performing postinstall for " + tool.getName())
-  tool.postInstall()
+  # any steps to be performed per-tool after the whole system is together
+  for tool in installPlan.getInstallItems():
+    output.printlnInfo("Performing postinstall for " + tool.getName())
+    tool.postInstall()
 
-# TODO: Perform automated deployment to additional machines
+  # TODO: Perform automated deployment to additional machines
 
-# Perform any verification steps that this all installed OK
-for tool in installPlan.getInstallItems():
-  output.printlnInfo("Verifying installation of " + tool.getName())
-  tool.verify()
+  # Perform any verification steps that this all installed OK
+  for tool in installPlan.getInstallItems():
+    output.printlnInfo("Verifying installation of " + tool.getName())
+    tool.verify()
 
+except InstallError, ie:
+  output.printlnError("An error occurred during the installation process:")
+  output.printlnError(str(ie))
+  otuput.printlnError("Installation has been aborted")
+  sys.exit(1)
 

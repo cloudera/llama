@@ -12,6 +12,7 @@ import tempfile
 from   com.cloudera.distribution.constants import *
 from   com.cloudera.distribution.installerror import InstallError
 from   com.cloudera.distribution.toolinstall import ToolInstall
+import com.cloudera.tools.dirutils as dirutils
 import com.cloudera.util.output as output
 import com.cloudera.util.prompt as prompt
 
@@ -25,6 +26,27 @@ class GlobalPrereqInstall(ToolInstall):
     self.sshKey = None
     self.uploadPrefix = None
     self.uploadUser = None
+    self.configDir = None
+
+  def configEtcDir(self):
+    """ Determine the dir where we put the links to the config directories """
+
+    maybeConfigDir = self.properties.getProperty(CONFIG_DIR_KEY, \
+        CONFIG_DIR_DEFAULT)
+
+    if self.isUnattended():
+      self.configDir = maybeConfigDir
+    else:
+      self.configDir = prompt.getString( \
+          "What path should the distribution configuration be in?", \
+          maybeConfigDir, True)
+
+    output.printlnVerbose("Setting config dir to " + self.configDir)
+
+
+  def getConfigDir(self):
+    return self.configDir
+
 
   def configSlavesFile(self):
     """ Configure the slaves file. This involves calling up an editor
@@ -124,20 +146,17 @@ Press [enter] to continue.""")
       output.printlnError(str(ioe))
       raise InstallError(ioe)
 
-    self.numSlaves = len(slaveLines)
+    numSlaves = 0
+    for slaveLine in slaveLines:
+      if len(slaveLine.strip()) > 0:
+        numSlaves = numSlaves + 1
+    self.numSlaves = numSlaves
     if self.numSlaves == 0:
       output.printlnInfo( \
 """Warning: Your slaves file appears to be empty. Installation will continue
 locally, but your cluster won't be able to do much like this :) You will need
 to add nodes to the slaves file after installation is complete.
 """)
-
-    # TODO (aaron): we were planning on using the slaves file here as the
-    # list of hosts to use to scp to for slave installs. Is there a problem
-    # if the user puts localhost in this list? I don't think so; we currently
-    # don't really do anything different configuration-wise -- it'll just
-    # wind up copying a bunch of files into the install prefix, and then
-    # overwriting those same files with identical copies via scp
 
     # in any case, we've successfully acquired a slaves file. memorize
     # its name.
@@ -163,7 +182,7 @@ to add nodes to the slaves file after installation is complete.
           "What path should the distribution be installed to?", \
           maybeInstallPrefix, True)
 
-    output.printlnVerbose("Installing to " + maybeInstallPrefix)
+    output.printlnVerbose("Installing to " + self.installPrefix)
 
 
   def getInstallPrefix(self):
@@ -265,7 +284,7 @@ to add nodes to the slaves file after installation is complete.
   def precheck(self):
     """ If anything must be verified before we even get going, check those
         constraints in this method """
-    # TODO: Any globally-required prerequisites are checked here.
+    # Any globally-required prerequisites are checked here.
     pass
 
   def configure(self):
@@ -280,6 +299,7 @@ to add nodes to the slaves file after installation is complete.
     # - installation username on all slave machines
     # - upload prefix on slave machines (e.g., /tmp/)
     self.configInstallPrefix()
+    self.configEtcDir()
     self.configSlavesFile()
     if self.getNumSlaves() > 0:
       self.configInstallUser()
@@ -289,8 +309,12 @@ to add nodes to the slaves file after installation is complete.
   def install(self):
     """ Run the installation itself. """
 
-    # TODO: Create the install root dir and floorplan
-    pass
+    installDir = self.getAppsPrefix()
+    try:
+      dirutils.mkdirRecursive(installDir)
+    except OSError, ose:
+      raise InstallError("Error creating installation directory " \
+          + installDir + " (" + str(ose) + ")")
 
   def postInstall(self):
     """ Run any post-installation activities. This occurs after
@@ -301,7 +325,12 @@ to add nodes to the slaves file after installation is complete.
     if slavesFileName != None and os.path.exists(slavesFileName):
       os.unlink(slavesFileName)
 
-    # TODO: Create /etc/cloudera and set the links up
+    # create /etc/cloudera so we can hang symlinks off of it.
+    try:
+      dirutils.mkdirRecursive(self.getConfigDir())
+    except OSError, ose:
+      raise InstallError("Error creating configuration directory " \
+          + self.getConfigDir() + " (" + str(ose) + ")")
 
   def verify(self):
     """ Run post-installation verification tests, if configured """

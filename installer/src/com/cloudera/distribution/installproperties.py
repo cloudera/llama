@@ -43,6 +43,9 @@ class InstallProperties(Properties):
     "--install-scribe" : INSTALL_SCRIBE_KEY,
     "--without-scribe" : INSTALL_SCRIBE_KEY,
 
+    "--format-hdfs"    : FORMAT_HDFS_KEY,
+    "--no-format-hdfs" : FORMAT_HDFS_KEY,
+
     "--java-home"      : JAVA_HOME_KEY,
 
     "--editor"         : EDITOR_KEY,
@@ -60,21 +63,23 @@ class InstallProperties(Properties):
   # Non-boolean flags take an argument;
   # these just set the property to 'true'
   booleanFlags = [
-    "--as-master",
+    "--as-slave",
     "--install-hadoop",
     "--install-hive",
     "--install-pig",
     "--install-scribe",
+    "--format-hdfs",
     "--unattend",
   ]
 
   # these disable boolean flags
   negativeFlags = [
-    "--as-slave",
+    "--as-master",
     "--without-hadoop",
     "--without-hive",
     "--without-pig",
-    "--without-scribe"
+    "--without-scribe",
+    "--no-format-hdfs",
     "--interactive"
   ]
 

@@ -6,6 +6,8 @@
 # installing a single tool (e.g., "Hadoop", "Hive", etc,
 # are separate tools).
 
+import os
+
 from   com.cloudera.distribution.constants import *
 from   com.cloudera.distribution.installerror import InstallError
 import com.cloudera.util.output as output
@@ -59,23 +61,74 @@ class ToolInstall(object):
     """ The names of the other ToolInstall objects which must be run first """
     return self.deps
 
+  def getInstallBasePath(self):
+    """ Where do all the applications get installed to? This method
+        assumes that the GlobalPrereq tool instance is first in the list"""
+    return getToolByName("GlobalPrereq").getAppsPrefix()
+
+  def createInstallSymlink(self, appName):
+    "Create a symlink from $INSTALLROOT/appName to the app's install path"
+
+    # create soft links to installed application; remove the
+    # existing install symlink if there is one
+    linkDest = os.path.join(self.getInstallBasePath(), appName)
+    if os.path.exists(linkDest):
+      try:
+        os.unlink(linkDest)
+      except OSError, ose:
+        raise InstallError("Cannot remove link " + linkDest + " (" + str(ose) \
+            + ")")
+
+    linkSrc = self.getFinalInstallPath()
+    try:
+      os.symlink(linkSrc, linkDest)
+    except OSError, ose:
+      raise InstallError("Cannot create link " + linkDest + " (" + str(ose) \
+         + ")")
+
+
+  def createEtcSymlink(self, appName, confDir):
+    """ Create a symlink from /etc/cloudera/$appName to $confDir """
+
+    # remove the existing symlink first if it exists.
+
+    configDirRoot = toolinstall.getToolByName("GlobalPrereq").getConfigDir()
+    configDirDest = os.path.join(configDirRoot, appName)
+    if os.path.exists(configDirDest):
+      try:
+        os.unlink(configDirDest)
+      except OSError, ose:
+        raise InstallError("Cannot remove link " + configDirDest + " (" \
+            + str(ose) + ")")
+
+    try:
+      os.symlink(confDir, configDirDest)
+    except OSError, ose:
+      raise InstallError("Cannot create link " + configDirDest + " (" \
+          + str(ose) + ")")
+
+
   #### abstract protected interface down here ####
   #### subclasses must implement this ####
+
+  def getFinalInstallPath(self):
+    """ Where do we install our tool to? """
+    raise InstallError("Called getFinalInstallPath() on abstract ToolInstall")
 
   def precheck(self):
     """ If anything must be verified before we even get going, check those
         constraints in this method """
     output.printlnVerbose("No preconditions for " + self.getName() + "; (ok)")
 
-  def install(self):
-    """ Run the installation itself. """
-    raise InstallError("Called install() on abstract ToolInstall")
-
   def configure(self):
     """ Run the configuration stage. This is responsible for
         setting up the config files and asking any questions
         of the user. The software is not installed yet """
     raise InstallError("Called configure() on abstract ToolInstall")
+
+  def install(self):
+    """ Run the installation itself. """
+    raise InstallError("Called install() on abstract ToolInstall")
 
   def postInstall(self):
     """ Run any post-installation activities. This occurs after
