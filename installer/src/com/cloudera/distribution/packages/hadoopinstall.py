@@ -658,7 +658,7 @@ to do, just accept the default values.""")
           writeHadoopSiteKey(handle, key)
 
         # Write prologue of "fixed parameters" that we always include.
-        self.writeHadoopSiteEpilogue(self, handle)
+        self.writeHadoopSiteEpilogue(handle)
 
         handle.close()
       except IOError, ioe:
@@ -778,6 +778,7 @@ to do, just accept the default values.""")
       raise InstallError("Error unpacking hadoop")
 
     # write the config files out.
+    # TODO: Are these happening?
     if self.properties.getProperty(HADOOP_PROFILE_KEY) == PROFILE_MASTER_VAL:
       self.installMastersFile()
       self.installSlavesFile()
