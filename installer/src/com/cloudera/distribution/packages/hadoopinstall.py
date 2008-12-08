@@ -13,29 +13,11 @@ import time
 from   com.cloudera.distribution.constants import *
 import com.cloudera.distribution.dnsregex as dnsregex
 from   com.cloudera.distribution.installerror import InstallError
-import com.cloudera.distribution.java as java
 import com.cloudera.distribution.toolinstall as toolinstall
 import com.cloudera.tools.dirutils as dirutils
 import com.cloudera.tools.shell as shell
 import com.cloudera.util.output as output
 import com.cloudera.util.prompt as prompt
-
-def getJavaHomeFromUser(default):
-  """ prompt the user for a valid value for JAVA_HOME """
-
-  success = False
-  while not success:
-    javaHome = prompt.getString( \
-        "Input the value for JAVA_HOME for Sun JRE 1.6", \
-        default, False)
-    if javaHome == None:
-      output.printlnError("Error: Installing Hadoop requires " \
-          + "a copy of Sun Java 1.6")
-    else:
-      success = True
-
-  return javaHome
-
 
 class HadoopInstall(toolinstall.ToolInstall):
   def __init__(self, properties):
@@ -44,7 +26,6 @@ class HadoopInstall(toolinstall.ToolInstall):
     self.addDependency("GlobalPrereq")
 
     self.configuredHadoopSiteOnline = False
-    self.javaHome = None
     self.hadoopSiteDict = {}
     self.libLzoFound = False
     self.libBzipFound = False
@@ -60,50 +41,6 @@ class HadoopInstall(toolinstall.ToolInstall):
     """ If the user configured hadoop-site in this tool, extract
         a property from the map the user created """
     return self.hadoopSiteDict[propName]
-
-  def precheckJava(self):
-    """ Check that Java 1.6 is installed """
-    # We have to check for Sun Java 1.6
-    javaHome = java.getJavaHome(self.properties)
-    if self.isUnattended():
-      if javaHome == None:
-        output.printlnError( \
-           """JAVA_HOME is not set, and the Java installation path was not set
-  with --java-home. Please restart the installer with this configured.""")
-        raise InstallError("Could not find compatible JAVA_HOME")
-      else:
-        output.printlnVerbose("Using JAVA_HOME of " + javaHome)
-    else:
-      # confirm that our value for JAVA_HOME is correct.
-      # If the user didn't specify one, try to look for a reasonable value
-      if javaHome == None:
-        javaHomeGuess = java.guessJavaHome(self.properties)
-      else:
-        javaHomeGuess = javaHome
-
-      javaHome = getJavaHomeFromUser(javaHomeGuess)
-
-    # now that we have a value for JAVA_HOME, assert that we can find
-    # Java there.
-    while not java.canFindJDK(javaHome, self.properties):
-      output.printlnError("An invalid JAVA_HOME was specified; " \
-          + "this must point to Sun Java 1.6")
-
-      if self.isUnattended():
-        # Nothing to do but give up
-        raise InstallError("Could not find compatible JAVA_HOME")
-      else:
-        # Ask the user for a better value for JAVA_HOME.
-        javaHome = getJavaHomeFromUser(javaHome)
-
-    self.javaHome = javaHome
-
-
-  # TODO: This is a global prereq; move it there.
-  def getJavaHome(self):
-    """ Return the value for JAVA_HOME we solicited and verified """
-    return self.javaHome
-
 
   def precheckLzoLibs(self):
     """ Check that liblzo2.so.2 is installed in one of /lib, /usr/lib,
@@ -152,6 +89,11 @@ class HadoopInstall(toolinstall.ToolInstall):
   def canUseBzip(self):
     """ Return True if precheckBzipLibs detected the correct bzip libraries """
     return self.libBzipFound
+
+
+  def getJavaHome(self):
+    """ Return the location of JAVA_HOME (retrieved from global prereq) """
+    return toolinstall.getToolByName("GlobalPrereq").getJavaHome()
 
 
   def getHadoopInstallPrefix(self):
@@ -811,7 +753,6 @@ to do, just accept the default values.""")
     """ If anything must be verified before we even get going, check those
         constraints in this method """
 
-    self.precheckJava()
     self.precheckLzoLibs()
     self.precheckBzipLibs()
 
@@ -926,6 +867,7 @@ HDFS before using Hadoop, by running the command:
     """ Run post-installation verification tests, if configured """
     # TODO: Verify hadoop
     # TODO: Start Hadoop daemons if the user wants it done
+    # We should use properties(HADOOP_USER_KEY) for this
     # TODO: Run  'bin/hadoop fs -ls /' to make sure it works
     # (do a touchz, ls, rm)
     # TODO: Run a sample 'pi' job.

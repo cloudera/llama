@@ -11,6 +11,25 @@ import sys
 from   com.cloudera.distribution.constants import *
 import com.cloudera.tools.shell as shell
 import com.cloudera.util.output as output
+import com.cloudera.util.prompt as prompt
+
+
+def getJavaHomeFromUser(default):
+  """ prompt the user for a valid value for JAVA_HOME """
+
+  success = False
+  while not success:
+    javaHome = prompt.getString( \
+        "Input the value for JAVA_HOME for Sun JRE 1.6", \
+        default, False)
+    if javaHome == None:
+      output.printlnError("Error: Installing Hadoop requires " \
+          + "a copy of Sun Java 1.6")
+    else:
+      success = True
+
+  return javaHome
+
 
 # TODO: Test this with various things pointing at Jikes, Harmony, GCJ, etc...
 # It is known to correctly match Sun JDK 1.6

@@ -11,6 +11,7 @@ import tempfile
 
 from   com.cloudera.distribution.constants import *
 from   com.cloudera.distribution.installerror import InstallError
+import com.cloudera.distribution.java as java
 from   com.cloudera.distribution.toolinstall import ToolInstall
 import com.cloudera.tools.dirutils as dirutils
 import com.cloudera.util.output as output
@@ -27,6 +28,50 @@ class GlobalPrereqInstall(ToolInstall):
     self.uploadPrefix = None
     self.uploadUser = None
     self.configDir = None
+    self.javaHome = None
+
+
+  def precheckJava(self):
+    """ Check that Java 1.6 is installed """
+    # We have to check for Sun Java 1.6
+    javaHome = java.getJavaHome(self.properties)
+    if self.isUnattended():
+      if javaHome == None:
+        output.printlnError( \
+           """JAVA_HOME is not set, and the Java installation path was not set
+  with --java-home. Please restart the installer with this configured.""")
+        raise InstallError("Could not find compatible JAVA_HOME")
+      else:
+        output.printlnVerbose("Using JAVA_HOME of " + javaHome)
+    else:
+      # confirm that our value for JAVA_HOME is correct.
+      # If the user didn't specify one, try to look for a reasonable value
+      if javaHome == None:
+        javaHomeGuess = java.guessJavaHome(self.properties)
+      else:
+        javaHomeGuess = javaHome
+
+      javaHome = java.getJavaHomeFromUser(javaHomeGuess)
+
+    # now that we have a value for JAVA_HOME, assert that we can find
+    # Java there.
+    while not java.canFindJDK(javaHome, self.properties):
+      output.printlnError("An invalid JAVA_HOME was specified; " \
+          + "this must point to Sun Java 1.6")
+
+      if self.isUnattended():
+        # Nothing to do but give up
+        raise InstallError("Could not find compatible JAVA_HOME")
+      else:
+        # Ask the user for a better value for JAVA_HOME.
+        javaHome = getJavaHomeFromUser(javaHome)
+
+    self.javaHome = javaHome
+
+
+  def getJavaHome(self):
+    """ Return the value for JAVA_HOME we solicited and verified """
+    return self.javaHome
 
   def configEtcDir(self):
     """ Determine the dir where we put the links to the config directories """
@@ -284,8 +329,9 @@ to add nodes to the slaves file after installation is complete.
   def precheck(self):
     """ If anything must be verified before we even get going, check those
         constraints in this method """
+
     # Any globally-required prerequisites are checked here.
-    pass
+    self.precheckJava() # Java 1.6 is one of these.
 
   def configure(self):
     """ Run the configuration stage. This is responsible for

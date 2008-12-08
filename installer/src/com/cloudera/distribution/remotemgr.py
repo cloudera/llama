@@ -172,13 +172,10 @@ def getRemoteDeployArgs(hadoopSiteFilename, properties):
   argList.append("--prefix")
   argList.append(installPrefix)
 
-  # TODO: What's the --deploy-slaves argument for? is this needed? used?
-
   # wild assumption; java is installed in the same place on the master, slaves
   javaHome = globalPrereqInstaller.getJavaHome()
   argList.append("--java-home")
   argList.append(javaHome)
-
 
   # Assuming we're installing Hadoop, configure options specific to Hadoop
   hadoopInstaller = toolinstall.getToolByName("Hadoop")
@@ -191,8 +188,6 @@ def getRemoteDeployArgs(hadoopSiteFilename, properties):
     # that to all the slaves.
     argList.append("--hadoop-site")
     argList.append(hadoopSiteFilename)
-
-  # TODO: Is --hadoop-user / HADOOP_USER_NAME_KEY used?
 
   # fold down the argument list into a string
   def concat(x, y):

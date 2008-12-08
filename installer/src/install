@@ -37,6 +37,7 @@ output.setupConsole(properties)
 # if we are here, then properties and argv parsing succeeded
 
 # TODO: Install a log file as well
+# TODO: Location should be configured by a command line arg.
 
 # Where are we? Switch into installer's base dir
 binName = sys.argv[0]
@@ -95,6 +96,9 @@ can select by pressing [enter].
     tool.postInstall()
 
   # Perform automated deployment to additional machines
+  # TODO: Unattended installation should only do this if DEPLOY_SLAVES_KEY
+  # is true; interactive installation should prompt for whether/not to do this
+  # in either case, only do this if we are in the "master" profile.
   remotemgr.deployRemotes()
 
   # Perform any verification steps that this all installed OK
@@ -107,4 +111,27 @@ except InstallError, ie:
   output.printlnError(str(ie))
   otuput.printlnError("Installation has been aborted")
   sys.exit(1)
+
+# TODO: Find the real hadoop start command
+hadoopStartCmd = "foo/bar/baz/bin/start-all.sh"
+output.printlnInfo( \
+"""The Cloudera Hadoop Distribution installation process is complete! You
+can start Hadoop by running:
+$ %(hadoopStart)s
+
+You can deploy on additional slaves by running:
+TODO: Determine command to use to allow no-attend remote deploy""" %
+    { "hadoopStart" : hadoopStartCmd })
+
+# TODO: If did not do deployRemotes(), should inform the user that they
+# need to run a remote deployment. (give them the command to do so)
+
+# TODO: If there were warnings, list the follow-up actions that must be taken.
+
+# TODO: Print the list of components installed and any other summary info
+
+# TODO: If HADOOP_USER_KEY is set and this username does not exist on all nodes
+# we should tell the user that they should create the account.
+
+sys.exit(0)
 
