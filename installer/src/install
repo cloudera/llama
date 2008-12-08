@@ -148,8 +148,5 @@ if hadoopInstaller != None:
 
 # TODO: If there were warnings, list the follow-up actions that must be taken.
 
-# TODO: If HADOOP_USER_KEY is set and this username does not exist on all nodes
-# we should tell the user that they should create the account.
-
 sys.exit(0)
 

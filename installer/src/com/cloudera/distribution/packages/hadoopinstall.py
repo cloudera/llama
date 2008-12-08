@@ -41,6 +41,25 @@ class HadoopInstall(toolinstall.ToolInstall):
         a property from the map the user created """
     return self.hadoopSiteDict[propName]
 
+  def getHadoopUsername(self):
+    return self.properties.getProperty(HADOOP_USER_NAME_KEY, \
+        HADOOP_USER_NAME_DEFAULT)
+
+  def precheckUsername(self):
+    """ Check that the configured hadoop username exists on this machine """
+
+    output.printlnVerbose("Checking for Hadoop username")
+    username = self.getHadoopUsername()
+    try:
+      shell.shLines("getent passwd \"" + username + "\"")
+    except shell.CommandError:
+      output.printlnError("You must create the 'hadoop' username, or specify")
+      output.printlnError("an alternate username with --hadoop-user")
+      raise InstallError("Could not find username: " + username)
+
+    output.printlnVerbose("Found username: " + username)
+
+
   def precheckLzoLibs(self):
     """ Check that liblzo2.so.2 is installed in one of /lib, /usr/lib,
         /usr/local/lib, anything on $LD_LIBRARY_PATH. It is okay if
@@ -282,9 +301,10 @@ exist.) Data will be mirrored to all paths. These
 should all be on separate physical devices. For reliability, you may want
 to add a remote NFS-mounted directory to this list. Enter one or more
 directories separated by commas.""")
+      nameDirDefault = "/home/" + self.getHadoopUsername() + "/hdfs/name"
       self.hadoopSiteDict[DFS_NAME_DIR] = \
           prompt.getString("Enter the HDFS metadata dir(s)", \
-          HDFS_NAME_DIR_DEFAULT, True)
+          nameDirDefault, True)
 
       output.printlnInfo("""
 You must choose one or more paths on each of the slave nodes where
@@ -292,9 +312,10 @@ the HDFS data will be written. Data is split evenly over these paths. (These
 will be created if they do not exist.) These should all be on separate
 physical devices. For good performance, never put any NFS-mounted directories
 in this list. Enter one or more directories separated by commas.""")
+      dataDirDefault = "/home/" + self.getHadoopUsername() + "/hdfs/data"
       self.hadoopSiteDict[DFS_DATA_DIR] = \
           prompt.getString("Enter the HDFS data dir(s)", \
-          HDFS_DATA_DIR_DEFAULT, True)
+          dataDirDefault, True)
 
       output.printlnInfo("""
 You must choose one or more paths on each of the slave nodes where
@@ -424,10 +445,11 @@ to do, just accept the default values.""")
           MAPRED_SUBMIT_REPLICATION, 1, DFS_MAX_REP, \
           defaultSubmitReplication, True)
 
-
+      secondaryNamenodeDirDefault = "/home/" + self.getHadoopUsername() \
+          + "/hdfs/secondary"
       self.hadoopSiteDict[NN2_CHECKPOINT_DIR] = prompt.getString( \
           "Enter one or more comma-delimited directories for " \
-          + "the secondary NameNode's data", HDFS_2NN_DIR_DEFAULT, True)
+          + "the secondary NameNode's data", secondaryNamenodeDirDefault, True)
 
       self.hadoopSiteDict[MAPRED_SYSTEM_DIR] = prompt.getString( \
           MAPRED_SYSTEM_DIR, DEFAULT_MAPRED_SYS_DIR, True)
@@ -767,6 +789,7 @@ to do, just accept the default values.""")
     """ If anything must be verified before we even get going, check those
         constraints in this method """
 
+    self.precheckUsername()
     self.precheckLzoLibs()
     self.precheckBzipLibs()
 
@@ -794,11 +817,7 @@ to do, just accept the default values.""")
     installPath = self.getInstallBasePath()
     dirutils.mkdirRecursive(installPath)
 
-    if self.properties.getBoolean("output.verbose", False):
-      verboseChar = "v"
-    else:
-      verboseChar = ""
-    cmd = "tar -" + verboseChar + "zxf \"" + hadoopPackageName + "\"" \
+    cmd = "tar -zxf \"" + hadoopPackageName + "\"" \
         + " -C \"" + installPath + "\""
 
     try:
@@ -883,8 +902,7 @@ HDFS before using Hadoop, by running the command:
   def verify(self):
     """ Run post-installation verification tests, if configured """
     # TODO: Verify hadoop
-    # TODO: Start Hadoop daemons if the user wants it done
-    # We should use properties(HADOOP_USER_KEY) for this
+    # TODO: Start Hadoop daemons if the user wants it done, with getUsername()
     # TODO: Run  'bin/hadoop fs -ls /' to make sure it works
     # (do a touchz, ls, rm)
     # TODO: Run a sample 'pi' job.

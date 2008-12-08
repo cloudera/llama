@@ -53,6 +53,9 @@ HADOOP_SLAVES_FILE_KEY = "hadoop.slaves.file"
 HADOOP_SITE_FILE_KEY   = "hadoop.site.file"
 HADOOP_USER_NAME_KEY   = "hadoop.user.name"
 
+# what username do we run hadoop as?
+HADOOP_USER_NAME_DEFAULT = "hadoop"
+
 HADOOP_PROFILE_KEY     = "hadoop.profile" # master or slave?
 
 # values for HADOOP_PROFILE_KEY
@@ -214,9 +217,6 @@ ONE_DAY_IN_MINUTES = 24 * 60
 DEFAULT_TRASH_INTERVAL = ONE_DAY_IN_MINUTES
 
 HADOOP_TMP_DEFAULT = "/tmp/hadoop"
-HDFS_DATA_DIR_DEFAULT = "/home/hadoop/hdfs/data"
-HDFS_NAME_DIR_DEFAULT = "/home/hadoop/hdfs/name"
-HDFS_2NN_DIR_DEFAULT  = "/home/hadoop/hdfs/secondary"
 
 DEFAULT_RAM_GUESS = 2048
 DEFAULT_CORES_GUESS = 2

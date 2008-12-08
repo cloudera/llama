@@ -28,7 +28,7 @@ rm -f /tmp/distro-*.tar.gz
   --remote-prefix /tmp/slave --without-scribe --without-hive --without-pig \
   --hadoop-site ${bin}/../testdata/hadoop-site.xml \
   --hadoop-slaves ${bin}/../testdata/localhost-slaves \
-  --config-prefix /tmp/etc/cloudera
-
+  --config-prefix /tmp/etc/cloudera \
+  --debug
 
 

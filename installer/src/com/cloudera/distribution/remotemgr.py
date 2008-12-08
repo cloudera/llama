@@ -230,6 +230,9 @@ def getRemoteDeployArgs(hadoopSiteFilename, slavesFilename, properties):
     argList.append("--hadoop-site")
     argList.append(hadoopSiteFilename)
 
+    argList.append("--hadoop-user")
+    argList.append(hadoopInstaller.getHadoopUsername())
+
   argList.append("--hadoop-slaves")
   argList.append(slavesFilename)
 
