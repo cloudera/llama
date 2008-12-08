@@ -54,11 +54,13 @@ if archDetector.getPlatform() == arch.PLATFORM_UNKNOWN:
   output.printlnInfo("packages installed.")
 
 if archDetector.getArch() == arch.ARCH_UNKNOWN:
-  # TODO: Disable this warning if we don't have any 32/64-bit libs to install
-  # TODO: Hadoop should give a warning if we can't lock down the arch, b/c
-  #       otherwise we won't get native compression.
+  # if we can't figure out the arch, then we disable allowing native
+  # compression, because we don't want to enable in-Java compression by default
+  # by mistake.
   output.printlnInfo("Warning: Could not determine system architecture")
   output.printlnInfo("This hampers my ability to install the correct libraries")
+  output.printlnInfo("Disabling native compression libraries in MapReduce")
+  properties.setProperty(ALLOW_NATIVE_COMPRESSION_KEY, False)
 
 try:
   # Assemble installation plan from command line flags

@@ -32,7 +32,7 @@ installerComponent = PackageComponent(
   includeZip = False, # we need this unpackacked
   destDir    = "bin")
 
-# TODO: documentation component, any other scripts, etc
+# TODO: documentation component, any other scripts, pig, hive, scribe, etc
 
 # There may be several versions of how we package the distribution.
 # supportedDistro is the one released to support clients

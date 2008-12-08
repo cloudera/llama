@@ -21,13 +21,8 @@ def createInstallPlan(properties):
 
   # Note that this is an ordered list.
   # The plan will not add an installer if its dependencies are not
-  # also in the install list.
-  # TODO (aaron): Currently this will throw an InstallError if you try
-  #  to install hive or pig without Hadoop. Other options include:
-  #  a) catch error and print a warning to the user and continue install
-  #  b) catch error, print polite msg, terminate
-  #  c) catch error, print polite msg, ask if user wants to add deps,
-  #     and continue either way
+  # also in the install list. InstallPlan.addTool() throws an InstallError
+  # if this happens.
 
   plan.addTool(GlobalPrereqInstall(properties))
 
@@ -45,6 +40,7 @@ def createInstallPlan(properties):
     plan.addTool(ScribeInstall(properties))
 
   return plan
+
 
 def getInstallFlags(properties):
   """ Return the list of flags that completely describes the set of tools

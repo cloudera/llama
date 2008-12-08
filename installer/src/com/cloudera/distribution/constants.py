@@ -70,6 +70,10 @@ FORMAT_DFS_DEFAULT = False
 CONFIG_DIR_KEY = "cloudera.etc.dir"
 CONFIG_DIR_DEFAULT = "/etc/cloudera"
 
+# if True, we allow enabling of native compression
+ALLOW_NATIVE_COMPRESSION_KEY = "mapred.compression.allow"
+ALLOW_NATIVE_COMPRESSION_DEFAULT = True
+
 # if we need to ask the user to do text editing of files, what editor?
 EDITOR_KEY = "editor"
 
@@ -88,7 +92,7 @@ defaultPropertyFileName = "install.properties"
 #######################################################################
 ### Some more constants affecting the installer system itself
 
-# TODO: Arguably, these should be tweakable by the user too
+# TODO (aaron): 0.2 - Allow the user to change these settings
 
 # how many tries do we make when uploading to any given host
 NUM_SCP_RETRIES = 3
@@ -272,8 +276,8 @@ INSTALLER_SUBDIR = "bin"
 APP_SUBDIR = "apps"
 
 # Underneath of $prefix/apps/, where do all the individual programs go?
-# TODO: We should really have some way of embedding this in the build
-# process so that we don't have to manually change this every time.
+# TODO (aaron): 0.2 Need some way of embedding this in the build process
+# so that we don't have to manually change this every time.
 HADOOP_VERSION = "0.18.2"
 HADOOP_INSTALL_SUBDIR = "hadoop-" + HADOOP_VERSION
 

@@ -64,7 +64,11 @@ class HadoopInstall(toolinstall.ToolInstall):
 
   def canUseLzo(self):
     """ Return True if precheckLzoLibs detected the correct LZO libraries """
-    return self.libLzoFound
+    nativeAllowed = self.properties.getBoolean(ALLOW_NATIVE_COMPRESSION_KEY, \
+        ALLOW_NATIVE_COMPRESSION_DEFAULT)
+
+    return self.libLzoFound  and nativeAllowed
+
 
   def precheckBzipLibs(self):
     """ Check that libbz2.so.1 is installed in one of /lib, /usr/lib,
@@ -113,8 +117,8 @@ class HadoopInstall(toolinstall.ToolInstall):
     """ Sets the masterHost property of this object to point to the
         master server address for Hadoop, querying the user if necessary """
 
-    # TODO (aaron): We currently conflate the master address here with the
-    # address used for the secondary namenode. we should have a better
+    # TODO (aaron): 0.2 - We currently conflate the master address here with
+    # the address used for the secondary namenode. we should have a better
     # system which actually differentiates between the two, and puts scribe,
     # and the 2NN on a separate machine. This is an 0.2+ feature.
 
@@ -270,7 +274,7 @@ Make sure there is plenty of space available here.""")
           prompt.getString("Enter the Hadoop temp dir", HADOOP_TMP_DEFAULT, \
           True)
 
-      # TODO (aaron): future versions of this should scan for devices on the
+      # TODO (aaron): 0.2 - future versions should scan for devices on the
       # name node  and auto-recommend a comma-separated list
       output.printlnInfo("""
 You must choose one or more paths on the master node where the HDFS
@@ -389,7 +393,7 @@ to do, just accept the default values.""")
       self.hadoopSiteDict[JOBTRACKER_THREADS] = prompt.getInteger( \
           JOBTRACKER_THREADS, 1, None, defaultMasterThreads, True)
 
-      # TODO (aaron): Handle IO_SORT_FACTOR, IO_SORT_MB and
+      # TODO (aaron): 0.2 - Handle IO_SORT_FACTOR, IO_SORT_MB and
       # and fs.inmemory.size.mb; recommend something for these as well?
 
       self.hadoopSiteDict[IO_FILEBUF_SIZE] = prompt.getInteger( \
@@ -497,7 +501,7 @@ to do, just accept the default values.""")
     except KeyError:
       # we didn't do this part of the configuration in-tool.
       # If the user specified their own dfs.hosts file, install that.
-      # TODO (aaron): Future versions of this tool should allow --dfs-hosts
+      # TODO (aaron): 0.2 - Future versions should allow --dfs-hosts
       # So just let this slide for now.
       pass
 
@@ -515,7 +519,7 @@ to do, just accept the default values.""")
     except KeyError:
       # we didn't do this part of the configuration in-tool.
       # If the user specified their own dfs.hosts.exclude file, install that.
-      # TODO (aaron): Future versions of this tool should allow --dfs-exclude
+      # TODO (aaron): 0.2 - Future versions of this tool --dfs-exclude
       # So just let this slide for now.
       pass
 
@@ -578,8 +582,7 @@ to do, just accept the default values.""")
         + "org.apache.hadoop.io.compress.GzipCodec"
     if self.canUseLzo():
       codecList = codecList + ",org.apache.hadoop.io.compress.LzoCodec"
-    # TODO (aaron): include bzip2 in official codec list in 0.2
-    # (does this require 0.19?)
+    # TODO (aaron): 0.2 - include bzip2 in official codec list after Hadoop .19
     handle.write("""
 <property>
   <name>io.compression.codecs</name>
@@ -664,7 +667,7 @@ to do, just accept the default values.""")
     # We need to open the file for append and, at minimum,  add JAVA_HOME
     # Also enable JMX on all the daemons.
     # TODO (aaron): Also allow overriding of the logging stuff?
-    # TODO (aaron): Eventually we'll just want to overwrite the whole thing.
+    # TODO (aaron): 0.2 -Eventually we'll want to overwrite the whole thing.
 
     destFileName = os.path.join(self.getConfDir(), "hadoop-env.sh")
     try:

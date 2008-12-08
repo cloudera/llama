@@ -25,8 +25,11 @@ class InstallPlan(object):
         output.printlnDebug("Checking dependency: " + dep)
         pos = self.sortedItems.index(toolinstall.getToolByName(dep))
       except ValueError:
-        raise InstallError("Could not find dependent tool " + str(dep) \
-            + " in installation plan")
+        raise InstallError( \
+"""Dependency %(dep) required for component %(src)s is not included
+in the installation plan.""" %
+            { "dep" : str(dep),
+              "src" : tool.getName() })
 
     self.sortedItems.append(tool)
 
