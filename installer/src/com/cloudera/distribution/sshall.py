@@ -9,8 +9,6 @@
 #
 # The public interface to this module is the sshMultiHosts() method.
 
-
-# TODO: Unit test this module.
 import threading
 
 import com.cloudera.tools.shell as shell
