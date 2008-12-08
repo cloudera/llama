@@ -117,7 +117,6 @@ can select by pressing [enter].
 
 except InstallError, ie:
   output.printlnError("An error occurred during the installation process:")
-  # TODO: Why do multi-line ie strings get fully escaped when printed?
   output.printlnError(str(ie))
   output.printlnError("Installation has been aborted")
   sys.exit(1)
