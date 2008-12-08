@@ -11,6 +11,7 @@
 
 
 # TODO: Unit test this module.
+import threading
 
 import com.cloudera.tools.shell as shell
 import com.cloudera.util.output as output
@@ -19,6 +20,9 @@ import com.cloudera.util.output as output
 # this "return code" is used in SshResult objects to denote when an SshError
 # was thrown by our ssh launcher during execution.
 SSH_ERR_STATUS = 255
+
+# return code we expect when things go well.
+RET_SUCCESS = 0
 
 class SshResult(object):
   """ An object describing the result of running an ssh command.
@@ -70,6 +74,7 @@ class SshResult(object):
 class SshWorker(threading.Thread):
   """ Worker thread that performs ssh actions """
   def __init__(self, cmd, user, hostList, properties, numRetries):
+    threading.Thread.__init__(self)
     self.cmd = cmd
     self.user = user
     self.hostList = hostList
@@ -91,29 +96,33 @@ class SshWorker(threading.Thread):
     for host in self.hostList:
       attempt = 0
       success = False
-      result = SshResult(self.user, self.host, self.command)
-      while attempt < self.numRetries and not success:
-        attempt = attempt + 1
-        try:
-          (lines, ret) = shell.sshLinesAndRet(self.user, self.host, \
-              self.command, self.properties)
-        except shell.SshError, se:
-          result.setStatus(SSH_ERR_STATUS) # we use status
-          output.printlnError("Error executing on " + host)
-          output.printlnError(str(se))
-          if attempt < self.numRetries:
-            output.printlnError("Retrying...")
-          continue
+      result = SshResult(self.user, host, self.cmd)
+      try:
+        while attempt < self.numRetries and not success:
+          attempt = attempt + 1
+          try:
+            (lines, ret) = shell.sshLinesAndRet(self.user, host, \
+                self.cmd, self.properties)
+          except shell.SshError, se:
+            result.setStatus(SSH_ERR_STATUS) # we use status
+            output.printlnError("Error executing on " + host)
+            output.printlnError(str(se))
+            if attempt < self.numRetries:
+              output.printlnError("Retrying...")
+            continue
 
-        result.setOutLines(lines)
-        result.setStatus(ret)
-        success = (ret == RET_SUCCESS)
+          result.setOutLines(lines)
+          result.setStatus(ret)
+          success = (ret == RET_SUCCESS)
 
-        if not success:
-          output.printlnError("Error executing on " + host)
-          badHosts.append(host)
-          if attempt < self.numRetries:
-            output.printlnError("Retrying...")
+          if not success:
+            output.printlnError("Error executing on " + host)
+            if attempt < self.numRetries:
+              output.printlnError("Retrying...")
+      except Exception, e:
+        output.printlnError("Caught exception in ssh thread:" + str(e))
+        result.setOutLines([])
+        result.setStatus(SSH_ERR_STATUS)
 
       self.resultList.append(result)
 
@@ -149,6 +158,7 @@ def sshMultiHosts(user, hostList, command, properties,
 
     worker = SshWorker(command, user, sublist, properties, numRetries)
     workers.append(worker)
+    worker.start()
 
     start = end
 
@@ -156,7 +166,7 @@ def sshMultiHosts(user, hostList, command, properties,
   allResults = []
   for thread in workers:
     thread.join()
-    allResults.extend(thread.getResultList)
+    allResults.extend(thread.getResultList())
 
   return allResults
 

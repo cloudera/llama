@@ -1,0 +1,34 @@
+#!/bin/bash
+# (c) Copyright 2008 Cloudera, Inc.
+#
+# Run the installer in unattended mode
+
+# you must pass the path to the package's "install" program to this
+installerPrgm="$1"
+if [ -z "$installerPrgm" ]; then
+  echo "Usage: $0 path/to/distrib/install"
+  exit 1
+fi
+
+bin=`dirname $0`
+bin=`cd $bin && pwd`
+
+# remove all the directories that this will create
+rm -rf /tmp/master
+rm -rf /tmp/slave
+rm -rf /tmp/cloudera
+rm -rf /tmp/etc/cloudera
+
+# remove extraneous trash slaves files.
+rm -f /tmp/slaves-*
+rm -f /tmp/distro-*.tar.gz
+
+# and launch the program
+"$installerPrgm" --unattend --test-mode --prefix /tmp/master \
+  --remote-prefix /tmp/slave --without-scribe --without-hive --without-pig \
+  --hadoop-site ${bin}/../testdata/hadoop-site.xml \
+  --hadoop-slaves ${bin}/../testdata/localhost-slaves \
+  --config-prefix /tmp/etc/cloudera
+
+
+

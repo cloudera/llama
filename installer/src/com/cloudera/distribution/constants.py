@@ -20,6 +20,17 @@ INSTALL_INTERACTIVE_VAL = False
 # tell us otherwise.
 UNATTEND_DEFAULT = False
 
+# by default, if localhost is in the slaves file, the installer will
+# not deploy to this host. Hadoop's start/stop scripts also depend on
+# Hadoop being installed on the same path on all machines. But for
+# testing purposes, we want to be able to override both of these.
+TEST_MODE_KEY = "test.mode"
+TEST_MODE_DEFAULT = False
+
+# this is set in global prereq config phase; this is ordinarily set to
+# the same as install.prefix, unless test.mode is True
+REMOTE_PREFIX_KEY = "remote.prefix"
+
 # if not empty, deploy the distribution to the slaves in this file
 INSTALL_SLAVES_KEY = "install.slaves.file"
 
@@ -61,6 +72,11 @@ INSTALL_PREFIX_DEFAULT = "/usr/share/cloudera"
 
 UPLOAD_PREFIX_KEY = "install.upload.prefix"
 UPLOAD_PREFIX_DEFAULT = "/tmp/cloudera/"
+
+# it is important in the general case that this be the same as the local
+# install prefix, but for testing purposes we will want to be able to override
+REMOTE_PREFIX_KEY = "remote.prefix"
+REMOTE_PREFIX_DEFAULT = INSTALL_PREFIX_DEFAULT
 
 # do we format hdfs?
 FORMAT_DFS_KEY = "hadoop.hdfs.format"
@@ -280,7 +296,6 @@ APP_SUBDIR = "apps"
 # so that we don't have to manually change this every time.
 HADOOP_VERSION = "0.18.2"
 HADOOP_INSTALL_SUBDIR = "hadoop-" + HADOOP_VERSION
-
 HADOOP_PACKAGE = "hadoop-" + HADOOP_VERSION + ".tar.gz"
 
 # Hive and Pig don't have formal releases; we track their svn repository
@@ -288,8 +303,10 @@ HADOOP_PACKAGE = "hadoop-" + HADOOP_VERSION + ".tar.gz"
 
 HIVE_VERSION = "r724015"
 HIVE_INSTALL_SUBDIR = "hive- " + HIVE_VERSION
+HIVE_PACKAGE = "hive-" + HIVE_VERSION + ".tar.gz"
 
 PIG_VERSION = "r724015"
 PIG_INSTALL_SUBDIR = "pig-" + PIG_VERSION
+PIG_PACKAGE = "pig-" + PIG_VERSION + ".tar.gz"
 
 

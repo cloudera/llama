@@ -14,6 +14,7 @@ import com.cloudera.distribution.manifest as manifest
 import com.cloudera.distribution.scpall as scpall
 import com.cloudera.distribution.sshall as sshall
 import com.cloudera.distribution.toolinstall as toolinstall
+import com.cloudera.tools.shell as shell
 import com.cloudera.util.output as output
 
 remoteDeployError = False
@@ -31,7 +32,13 @@ def isLocalHost(hostname):
       or hostname == "localhost.localdomain"
 
 
-def getConfiguredSlaveList(slavesFileName):
+def allowLocalhost(properties):
+  """ returns True if we're configured to allow redeployment on the localhost
+      (this is done just for test-harness purposes) """
+  return properties.getBoolean(TEST_MODE_KEY, TEST_MODE_DEFAULT)
+
+
+def getConfiguredSlaveList(slavesFileName, properties):
   """ read the slaves file provided by the user at config time, and
       return the list of slave computers on which we should deploy. We filter
       out any references to localhost (as best we can) to avoid installing
@@ -51,7 +58,7 @@ reason: %(ioe)s""" % \
   slaves = []
   for line in slaveLines:
     line = line.strip()
-    if len(line) > 0 and not isLocalHost(line):
+    if len(line) > 0 and (not isLocalHost(line) or allowLocalhost(properties)):
       try:
         # test -- is this slave already in the list? if so, ignore it.
         slaves.index(line)
@@ -65,7 +72,11 @@ reason: %(ioe)s""" % \
 def removeHosts(hostList, failedHosts):
   """ remove all elements of the failed host list from the hostList """
   for failedHost in failedHosts:
-    hostList.remove(failedHost)
+    try:
+      hostList.remove(failedHost)
+    except ValueError:
+      # failedHost wasn't in the hostList; ignore this.
+      pass
 
 
 def doSshAll(user, slaveList, cmd, properties):
@@ -75,7 +86,7 @@ def doSshAll(user, slaveList, cmd, properties):
       slave list. """
 
   sshResults = sshall.sshMultiHosts(user, slaveList, cmd, properties, \
-      NUM_SSH_RETRIES, NUM_SSH_PARALLEL)
+      NUM_SSH_RETRIES, NUM_SSH_PARALLEL_THREADS)
 
   failedHosts = []
   for result in sshResults:
@@ -94,7 +105,7 @@ def doSshAll(user, slaveList, cmd, properties):
     # the hosts from the list of hosts eligible to continue future commands
     output.printlnError( \
 """An error occurred executing a command on remote hosts:
-command: %(cmd)
+command: %(cmd)s
 hosts:""" % { "cmd" : cmd })
     for host in failedHosts:
       output.printlnError("  " + host)
@@ -111,8 +122,8 @@ def doScpAll(localFile, user, slaveList, remoteFile, fileDesc, properties):
         NUM_SCP_RETRIES, NUM_SCP_PARALLEL_THREADS)
   except scpall.MultiScpError, mse:
     setRemoteDeployError()
-    output.printlnError("Unable to send %(desc)s to " \
-        + "the following machines:" % { "desc" : fileDesc })
+    output.printlnError("Unable to send %(desc)s to " % { "desc" : fileDesc } \
+        + "the following machines:")
     failedHosts = mse.getFailedHostList()
     for host in failedHosts:
       output.printlnError("  " + str(host))
@@ -124,7 +135,7 @@ def zipInstallerDistribution():
       and return the filename where we put it. """
 
   # Create a uniquely-named temporary file to hold the tgz
-  (oshandle, tmpFilename) = tempfile.mkstemp("", "distro-")
+  (oshandle, tmpFilename) = tempfile.mkstemp(".tar.gz", "distro-")
   try:
     handle = os.fdopen(oshandle, "w")
     handle.close()
@@ -143,7 +154,7 @@ def zipInstallerDistribution():
 
   # run the tar-up command
   output.printlnVerbose("Recompressing distribution for deployment")
-  cmd = "tar -czf \"" + tmpFilename + "\" \"" + distribBaseDir + "\""
+  cmd = "tar -czf \"" + tmpFilename + "\" -C \"" + distribBaseDir + "\" ."
   try:
     shell.sh(cmd)
   except shell.CommandError, ce:
@@ -161,13 +172,15 @@ error: %(ret)s""" % {
   return tmpFilename
 
 
-def getRemoteDeployArgs(hadoopSiteFilename, properties):
+def getRemoteDeployArgs(hadoopSiteFilename, slavesFilename, properties):
   """ return the string of arguments which should be passed to the installer
       when run on the remote deploying end.
 
       arguments:
         hadoopSiteFilename - the filename on the remote hosts where
                              hadoop-site.xml has been uploaded
+        slavesFilename     - the filename on the remote hosts where
+                             the slaves list has been uploaded
         properties         - Properties object governing the installer
   """
 
@@ -180,14 +193,27 @@ def getRemoteDeployArgs(hadoopSiteFilename, properties):
   toolFlags = manifest.getInstallFlags(properties)
   argList.extend(toolFlags)
 
+  # if we're in testing mode, enable that on the remote host as well
+  if properties.getBoolean(TEST_MODE_KEY, TEST_MODE_DEFAULT):
+    argList.append("--test-mode")
+
+  if properties.getBoolean(output.VERBOSE_PROP):
+    argList.append(output.VERBOSE_FLAG)
+  if properties.getBoolean(output.DEBUG_PROP):
+    argList.append(output.DEBUG_FLAG)
+  if properties.getBoolean(output.QUIET_PROP):
+    argList.append(output.QUIET_FLAG)
+
   # figure out the global configuration settings that guide the
   # remote deployment process
   globalPrereqInstaller = toolinstall.getToolByName("GlobalPrereq")
 
-  # note: currently the remote install prefix is the same as the local one
-  installPrefix = globalPrereqInstaller.getInstallPrefix()
+  installPrefix = globalPrereqInstaller.getRemoteInstallPrefix()
   argList.append("--prefix")
   argList.append(installPrefix)
+
+  argList.append("--config-prefix")
+  argList.append(globalPrereqInstaller.getConfigDir())
 
   # wild assumption; java is installed in the same place on the master, slaves
   javaHome = globalPrereqInstaller.getJavaHome()
@@ -203,6 +229,9 @@ def getRemoteDeployArgs(hadoopSiteFilename, properties):
 
     argList.append("--hadoop-site")
     argList.append(hadoopSiteFilename)
+
+  argList.append("--hadoop-slaves")
+  argList.append(slavesFilename)
 
   # fold down the argument list into a string
   def concat(x, y):
@@ -237,27 +266,36 @@ def deployRemotes(properties):
 
   # figure out the global configuration settings that guide the
   # remote deployment process
+  output.printlnDebug("Performing remote deployment")
+  output.printlnDebug("Getting global prereq configuration")
   globalPrereqInstaller = toolinstall.getToolByName("GlobalPrereq")
 
   # get the list of hosts to deploy on
+  output.printlnDebug("Loading remote host list")
   slavesFileName = globalPrereqInstaller.getTempSlavesFileName()
-  slaveList = getConfiguredSlaveList(slavesFileName)
+  slaveList = getConfiguredSlaveList(slavesFileName, properties)
+  output.printlnDebug("Got %(n)i slaves" % { "n" : len(slaveList) })
 
   # rezip our distribution up, and get the filename where we put it.
+  output.printlnDebug("Compressing installer distribution")
   localFile = zipInstallerDistribution()
   localBaseName = os.path.basename(localFile)
+  output.printlnDebug("Created deployment object at " + localFile)
 
   # figure out where it's going to on the remote ends
   uploadPrefix = globalPrereqInstaller.getUploadPrefix()
   user = globalPrereqInstaller.getUploadUser()
+  output.printlnDebug("Uploading to " + uploadPrefix + " as " + user)
 
   remoteFile = os.path.join(uploadPrefix, localBaseName)
 
   # mkdir -p the uploadPrefix on all the remote nodes
+  output.printlnDebug("Creating remote upload prefix")
   cmd = "mkdir -p \"" + uploadPrefix + "\""
   doSshAll(user, slaveList, cmd, properties)
 
   # scp the whole package to all the nodes
+  output.printlnDebug("Uploading installation package")
   doScpAll(localFile, user, slaveList, remoteFile, "installation packages", \
       properties)
 
@@ -269,25 +307,35 @@ def deployRemotes(properties):
   hadoopInstaller = toolinstall.getToolByName("Hadoop")
   remoteHadoopSite = None
   if hadoopInstaller != None:
+    output.printlnDebug("Uploading hadoop-site.xml")
     localHadoopSite = hadoopInstaller.getHadoopSiteFilename()
     remoteHadoopSite = os.path.join(uploadPrefix, "hadoop-site.xml")
     doScpAll(localHadoopSite, user, slaveList, remoteHadoopSite, \
         "hadoop-site.xml", properties)
 
+  # scp the slaves file around
+  output.printlnDebug("Uploading common slaves list")
+  remoteSlavesName = os.path.join(uploadPrefix, "slaves")
+  doScpAll(slavesFileName, user, slaveList, remoteSlavesName, "slaves", \
+      properties)
+
+
   # Unzip the installation tarball.
+  output.printlnDebug("Unzipping installation tarball on remotes")
   cmd = "tar -xzf \"" + remoteFile + "\" -C \"" + uploadPrefix + "\""
   doSshAll(user, slaveList, cmd, properties)
 
   # come up with the remote install cmd line
   installerFilename = os.path.basename(sys.argv[0])
   prgm = os.path.join(uploadPrefix, INSTALLER_SUBDIR, installerFilename)
-  cmd = "\"" + prgm + "\" " + getRemoteDeployArgs(remoteHadoopSite, properties)
+  installerArgs = getRemoteDeployArgs(remoteHadoopSite, remoteSlavesName, \
+      properties)
+  cmd = "\"" + prgm + "\" " + installerArgs
+  output.printlnDebug("Remote execution command: " + cmd)
 
   # ... here we go - execute that on all nodes
+  output.printlnDebug("Executing remote installation program")
   doSshAll(user, slaveList, cmd, properties)
-
-  # TODO (aaron): Do we want to delete the tarball on these nodes?
-  # Or even the whole upload prefix?
 
   # report status back to the user at the end of this
   if isRemoteDeployError():

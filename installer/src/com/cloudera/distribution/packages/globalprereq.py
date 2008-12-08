@@ -24,11 +24,19 @@ class GlobalPrereqInstall(ToolInstall):
     self.slavesFileName = None
     self.numSlaves = 0
     self.installPrefix = None
+    self.remotePrefix = None
     self.sshKey = None
     self.uploadPrefix = None
     self.uploadUser = None
     self.configDir = None
     self.javaHome = None
+
+  def isMaster(self):
+    """ Return true if we are installing on a master server, as opposed to
+        a slave server."""
+    # For the time being, the 'hadoop profile' is a bool true/false for
+    # isMaster
+    return self.properties.getBoolean(HADOOP_PROFILE_KEY) == PROFILE_MASTER_VAL
 
 
   def precheckJava(self):
@@ -206,6 +214,7 @@ to add nodes to the slaves file after installation is complete.
     # in any case, we've successfully acquired a slaves file. memorize
     # its name.
     self.slavesFileName = tmpFilename
+    output.printlnDebug("Slaves input file: " + self.slavesFileName)
 
   def getNumSlaves(self):
     return self.numSlaves
@@ -227,11 +236,29 @@ to add nodes to the slaves file after installation is complete.
           "What path should the distribution be installed to?", \
           maybeInstallPrefix, True)
 
+    if self.properties.getBoolean(TEST_MODE_KEY, TEST_MODE_DEFAULT):
+      # we allow installation to a separate prefix on remote hosts in testing
+      maybeRemotePrefix = self.properties.getProperty(REMOTE_PREFIX_KEY, \
+          self.installPrefix)
+      if self.isUnattended():
+        self.remotePrefix = maybeRemotePrefix
+      else:
+        self.remotePrefix = prompt.getString( \
+            "What remote path should the distribution install to?", \
+            maybeRemotePrefix, True)
+    else:
+      # set the remote installation prefix to match.
+      self.remotePrefix = self.installPrefix
+
     output.printlnVerbose("Installing to " + self.installPrefix)
+    output.printlnVerbose("Remote install to " + self.remotePrefix)
 
 
   def getInstallPrefix(self):
     return self.installPrefix
+
+  def getRemoteInstallPrefix(self):
+    return self.remotePrefix
 
   def getAppsPrefix(self):
     """ Where under the install prefix do the actual app packages go? """
@@ -366,11 +393,6 @@ to add nodes to the slaves file after installation is complete.
     """ Run any post-installation activities. This occurs after
         all ToolInstall objects have run their install() operations. """
 
-    # remove the temp slaves file that we created
-    slavesFileName = self.getTempSlavesFileName()
-    if slavesFileName != None and os.path.exists(slavesFileName):
-      os.unlink(slavesFileName)
-
     # create /etc/cloudera so we can hang symlinks off of it.
     try:
       dirutils.mkdirRecursive(self.getConfigDir())
@@ -380,6 +402,7 @@ to add nodes to the slaves file after installation is complete.
 
   def verify(self):
     """ Run post-installation verification tests, if configured """
-    # This does nothing globally
 
+    # This does nothing globally
+    pass
 

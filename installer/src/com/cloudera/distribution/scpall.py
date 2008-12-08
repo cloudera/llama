@@ -11,6 +11,7 @@
 
 
 # TODO: Unit test this module.
+import threading
 
 import com.cloudera.tools.shell as shell
 import com.cloudera.util.output as output
@@ -31,10 +32,11 @@ class ScpWorker(threading.Thread):
   """ Worker thread that scps files """
   def __init__(self, localFile, user, hostList, remoteFile, properties,
                numRetries):
+    threading.Thread.__init__(self)
     self.localFile = localFile
     self.user = user
     self.hostList = hostList
-    self.remoteFile = remotefile
+    self.remoteFile = remoteFile
     self.properties = properties
     self.numRetries = numRetries
     self.failedHosts = []
@@ -52,25 +54,29 @@ class ScpWorker(threading.Thread):
     for host in self.hostList:
       attempt = 0
       success = False
-      while attempt < self.numRetries and not success:
-        attempt = attempt + 1
-        try:
-          shell.scp(self.localFile, self.user, host, self.remoteFile, \
-              self.properties)
-          success = True
-        except shell.SshError, se:
-          output.printlnError("Error transfering to " + host)
-          output.printlnError(str(se))
-          if attempt < self.numRetries:
-            output.printlnError("Retrying...")
-        except shell.CommandError, ce:
-          output.printlnError("Error transfering to " + host)
-          output.printlnError(str(ce))
-          if attempt < self.numRetries:
-            output.printlnError("Retrying...")
+      try:
+        while attempt < self.numRetries and not success:
+          attempt = attempt + 1
+          try:
+            shell.scp(self.localFile, self.user, host, self.remoteFile, \
+                self.properties)
+            success = True
+          except shell.SshError, se:
+            output.printlnError("Error transfering to " + host)
+            output.printlnError(str(se))
+            if attempt < self.numRetries:
+              output.printlnError("Retrying...")
+          except shell.CommandError, ce:
+            output.printlnError("Error transfering to " + host)
+            output.printlnError(str(ce))
+            if attempt < self.numRetries:
+              output.printlnError("Retrying...")
 
         if not success:
           self.failedHosts.append(host)
+      except Exception, e:
+        output.printlnError("Exception in scp thread: " + str(e))
+        self.failedHosts.append(host)
 
 
 
@@ -97,6 +103,7 @@ def scpMultiHosts(localFile, user, hostList, remoteFile, properties,
     worker = ScpWorker(localFile, user, sublist, remoteFile, properties, \
         numRetries)
     workers.append(worker)
+    worker.start()
 
     start = end
 

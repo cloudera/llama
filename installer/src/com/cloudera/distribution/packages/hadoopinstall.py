@@ -7,6 +7,7 @@
 import math
 import os
 import re
+import shutil
 import sys
 import time
 
@@ -33,9 +34,7 @@ class HadoopInstall(toolinstall.ToolInstall):
   def isMaster(self):
     """ Return true if we are installing on a master server, as opposed to
         a slave server."""
-    # For the time being, the 'hadoop profile' is a bool true/false for
-    # isMaster
-    return self.properties.getBoolean(HADOOP_PROFILE_KEY) == PROFILE_MASTER_VAL
+    return toolinstall.getToolByName("GlobalPrereq").isMaster()
 
   def getHadoopSiteProperty(self, propName):
     """ If the user configured hadoop-site in this tool, extract
@@ -725,16 +724,18 @@ to do, just accept the default values.""")
     # specifically identified them
 
     def makeSinglePath(path):
+      path = path.strip()
       try:
-        dirutils.mkdirRecursive(path.strip())
+        output.printlnDebug("Creating path: " + path)
+        dirutils.mkdirRecursive(path)
       except OSError, ose:
         raise InstallError("Could not create directory: " + path + " (" \
             + str(ose) + ")")
 
     def makeMultiPaths(paths):
       pathList = paths.split(",")
-      for path in pathLits:
-        makesinglePath(path)
+      for path in pathList:
+        makeSinglePath(path)
 
     def makePathForProperty(prop):
       try:
@@ -817,13 +818,20 @@ to do, just accept the default values.""")
     self.installHadoopEnvFile()
     self.createPaths()
 
+  def getHadoopBinDir(self):
+    """ Return the path to the hadoop executables """
+    return os.path.join(self.getFinalInstallPath(), "bin")
+
+  def getHadoopExecCmd(self):
+    """ Return the path to the executable to run hadoop """
+    return os.path.join(self.getHadoopBinDir(), "hadoop")
 
   def doFormatHdfs(self):
     """ Format DFS if the user wants it done. Default is false,
         as the user must specifically enable this. """
 
-    maybeFormatHdfs = self.properties.getBoolean(FORMAT_HDFS_KEY, \
-        FORMAT_HDFS_DEFAULT)
+    maybeFormatHdfs = self.properties.getBoolean(FORMAT_DFS_KEY, \
+        FORMAT_DFS_DEFAULT)
     if self.isUnattended():
       formatHdfs = maybeFormatHdfs
     else:
@@ -838,24 +846,20 @@ this process.""")
 
 
     # Hadoop itself will prompt iff there is already a directory there.
-    # If we are in unattended mode, then we want to disable that prompt
-    # as the user has already provided --format-hdfs (and presumably
-    # knows what he's doing). Otherwise, we allow the prompt to continue
-    if self.isUnattended():
-      echoPrefix = "echo Y | "
-    else:
-      echoPrefix = ""
-
+    # But since we have already sent the user a warning in interactive mode
+    # (or the user selected --format-hdfs in unattend mode, and presumably
+    # knows what he's doing), we just sidestep this prompt.
+    echoPrefix = "echo Y | "
+    hadoopExec = self.getHadoopExecCmd()
     formatCmd = "\"" + hadoopExec + "\" namenode -format"
     if formatHdfs:
       output.printlnVerbose("Formatting HDFS instance...")
-      hadoopExec = os.path.join(self.getFinalInstallPath(), "bin/hadoop")
       cmd = echoPrefix + formatCmd
       try:
         shell.sh(cmd)
       except shell.CommandError, ce:
         output.printlnError("Could not format HDFS; Hadoop returned error")
-        raise InstalError("Error formatting HDFS")
+        raise InstallError("Error formatting HDFS")
     else:
       output.printlnInfo( \
 """Skipping HDFS format. If you have not done this before, you must format

@@ -97,9 +97,12 @@ class ToolInstall(object):
     """ The names of the other ToolInstall objects which must be run first """
     return self.deps
 
+  def getInstallPrefix(self):
+    """ Get the top-level directory where the distribution is installed """
+    return getToolByName("GlobalPrereq").getInstallPrefix()
+
   def getInstallBasePath(self):
-    """ Where do all the applications get installed to? This method
-        assumes that the GlobalPrereq tool instance is first in the list"""
+    """ Get the directory where individual apps should attach themselves """
     return getToolByName("GlobalPrereq").getAppsPrefix()
 
   def createInstallSymlink(self, appName):
@@ -107,7 +110,7 @@ class ToolInstall(object):
 
     # create soft links to installed application; remove the
     # existing install symlink if there is one
-    linkDest = os.path.join(self.getInstallBasePath(), appName)
+    linkDest = os.path.join(self.getInstallPrefix(), appName)
     if os.path.exists(linkDest):
       try:
         os.unlink(linkDest)
@@ -128,7 +131,7 @@ class ToolInstall(object):
 
     # remove the existing symlink first if it exists.
 
-    configDirRoot = toolinstall.getToolByName("GlobalPrereq").getConfigDir()
+    configDirRoot = getToolByName("GlobalPrereq").getConfigDir()
     configDirDest = os.path.join(configDirRoot, appName)
     if os.path.exists(configDirDest):
       try:

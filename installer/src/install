@@ -18,6 +18,7 @@ from   com.cloudera.distribution.installerror import InstallError
 import com.cloudera.distribution.installproperties as installproperties
 import com.cloudera.distribution.manifest as manifest
 import com.cloudera.distribution.remotemgr as remotemgr
+import com.cloudera.distribution.toolinstall as toolinstall
 import com.cloudera.util.output as output
 
 # do this before doing anything else.
@@ -62,10 +63,13 @@ if archDetector.getArch() == arch.ARCH_UNKNOWN:
   output.printlnInfo("Disabling native compression libraries in MapReduce")
   properties.setProperty(ALLOW_NATIVE_COMPRESSION_KEY, False)
 
+globalPrereqInstaller = None
+
 try:
   # Assemble installation plan from command line flags
   output.printlnDebug("Creating installation plan...")
   installPlan = manifest.createInstallPlan(properties)
+  globalPrereqInstaller = toolinstall.getToolByName("GlobalPrereq")
 
   # Detect any prereqs that we cannot install:
   output.printlnInfo("Checking prerequisites for installation...")
@@ -93,15 +97,18 @@ can select by pressing [enter].
     tool.install()
 
   # any steps to be performed per-tool after the whole system is together
+  # on the local machine
   for tool in installPlan.getInstallItems():
     output.printlnInfo("Performing postinstall for " + tool.getName())
     tool.postInstall()
 
-  # Perform automated deployment to additional machines
-  # TODO: Unattended installation should only do this if DEPLOY_SLAVES_KEY
-  # is true; interactive installation should prompt for whether/not to do this
-  # in either case, only do this if we are in the "master" profile.
-  remotemgr.deployRemotes()
+  # If we're the master, perform automated deployment to additional machines
+  if globalPrereqInstaller.isMaster():
+    # TODO: Unattended installation should only do this if DEPLOY_SLAVES_KEY
+    # is true; interactive installation should prompt for whether/not to do this
+    output.printlnInfo("Deploying distribution to remote hosts.")
+    output.printlnInfo("(This may take a few minutes)")
+    remotemgr.deployRemotes(properties)
 
   # Perform any verification steps that this all installed OK
   for tool in installPlan.getInstallItems():
@@ -110,27 +117,36 @@ can select by pressing [enter].
 
 except InstallError, ie:
   output.printlnError("An error occurred during the installation process:")
+  # TODO: Why do multi-line ie strings get fully escaped when printed?
   output.printlnError(str(ie))
-  otuput.printlnError("Installation has been aborted")
+  output.printlnError("Installation has been aborted")
   sys.exit(1)
 
-# TODO: Find the real hadoop start command
-hadoopStartCmd = "foo/bar/baz/bin/start-all.sh"
 output.printlnInfo( \
-"""The Cloudera Hadoop Distribution installation process is complete! You
-can start Hadoop by running:
-$ %(hadoopStart)s
+    "The Cloudera Hadoop Distribution installation process is complete!")
 
-You can deploy on additional slaves by running:
-TODO: Determine command to use to allow no-attend remote deploy""" %
-    { "hadoopStart" : hadoopStartCmd })
+globalPrereqName = None
+if globalPrereqInstaller != None:
+  output.printlnInfo("Distribution installed to %(installdir)s." % \
+      { "installdir" : globalPrereqInstaller.getInstallPrefix() })
+  output.printlnInfo("Distribution config files are in %(confdir)s." % \
+      { "confdir" : globalPrereqInstaller.getConfigDir() } )
+  globalPrereqName = globalPrereqInstaller.getName()
 
-# TODO: If did not do deployRemotes(), should inform the user that they
-# need to run a remote deployment. (give them the command to do so)
+output.printlnVerbose("Installed components:")
+for tool in installPlan.getInstallItems():
+  if tool.getName() != globalPrereqName:
+    output.printlnVerbose("  " + tool.getName())
+
+hadoopInstaller = toolinstall.getToolByName("Hadoop")
+if hadoopInstaller != None:
+  hadoopStartCmd = os.path.join(hadoopInstaller.getHadoopBinDir(), \
+      "start-all.sh")
+  output.printlnInfo("You can start Hadoop by running:\n$ %(hadoopStart)s" % \
+      { "hadoopStart" : hadoopStartCmd })
+
 
 # TODO: If there were warnings, list the follow-up actions that must be taken.
-
-# TODO: Print the list of components installed and any other summary info
 
 # TODO: If HADOOP_USER_KEY is set and this username does not exist on all nodes
 # we should tell the user that they should create the account.

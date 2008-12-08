@@ -46,11 +46,16 @@ class InstallProperties(Properties):
     "--java-home"      : JAVA_HOME_KEY,
 
     "--prefix"         : INSTALL_PREFIX_KEY,
+    "--config-prefix"  : CONFIG_DIR_KEY,
+
+    # used for debugging
+    "--test-mode"      : TEST_MODE_KEY,
+    "--remote-prefix"  : REMOTE_PREFIX_KEY,
 
     # the following settings apply to master only
 
-    "--format-hdfs"    : FORMAT_HDFS_KEY,
-    "--no-format-hdfs" : FORMAT_HDFS_KEY,
+    "--format-hdfs"    : FORMAT_DFS_KEY,
+    "--no-format-hdfs" : FORMAT_DFS_KEY,
 
     "--editor"         : EDITOR_KEY,
 
@@ -73,6 +78,7 @@ class InstallProperties(Properties):
     "--install-scribe",
     "--format-hdfs",
     "--unattend",
+    "--test-mode"
   ]
 
   # these disable boolean flags
