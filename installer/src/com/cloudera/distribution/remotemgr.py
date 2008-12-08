@@ -101,6 +101,23 @@ hosts:""" % { "cmd" : cmd })
     setRemoteDeployError()
     removeHosts(slaveList, failedHosts)
 
+def doScpAll(localFile, user, slaveList, remoteFile, fileDesc, properties):
+  """ perform an scpall for the specified file, to the slaves. set the
+      error flag if an error was encountered, and remove any failed hosts
+      from the slave list. Print a message to the user if this happens """
+
+  try:
+    scpall.scpMultiHosts(localFile, user, slaveList, remoteFile, properties, \
+        NUM_SCP_RETRIES, NUM_SCP_PARALLEL_THREADS)
+  except scpall.MultiScpError, mse:
+    setRemoteDeployError()
+    output.printlnError("Unable to send %(desc)s to " \
+        + "the following machines:" % { "desc" : fileDesc })
+    failedHosts = mse.getFailedHostList()
+    for host in failedHosts:
+      output.printlnError("  " + str(host))
+    removeHosts(slaveList, failedHosts)
+
 
 def zipInstallerDistribution():
   """ zip up the distribution into a tgz (so we can upload it to the slaves)
@@ -184,8 +201,6 @@ def getRemoteDeployArgs(hadoopSiteFilename, properties):
     argList.append("--hadoop-master")
     argList.append(hadoopMaster)
 
-    # TODO: Write out the hadoop-site.xml file locally and then upload
-    # that to all the slaves.
     argList.append("--hadoop-site")
     argList.append(hadoopSiteFilename)
 
@@ -243,20 +258,21 @@ def deployRemotes(properties):
   doSshAll(user, slaveList, cmd, properties)
 
   # scp the whole package to all the nodes
-  try:
-    scpall.scpMultiHosts(localFile, user, slaveList, remoteFile, properties, \
-        NUM_SCP_RETRIES, NUM_SCP_PARALLEL_THREADS)
-  except scpall.MultiScpError, mse:
-    setRemoteDeployError()
-    output.printlnError("Unable to send installation packages to " \
-        + "the following machines:")
-    failedHosts = mse.getFailedHostList()
-    for host in failedHosts:
-      output.printlnError("  " + str(host))
-    removeHosts(slaveList, failedHosts)
+  doScpAll(localFile, user, slaveList, remoteFile, "installation packages", \
+      properties)
 
   # now that we're done using the local copy, remove the local tarball
   os.remove(localFile)
+
+  # scp the local hadoop-site file to the remote machines
+  # so they can copy it into its final location.
+  hadoopInstaller = toolinstall.getToolByName("Hadoop")
+  remoteHadoopSite = None
+  if hadoopInstaller != None:
+    localHadoopSite = hadoopInstaller.getHadoopSiteFilename()
+    remoteHadoopSite = os.path.join(uploadPrefix, "hadoop-site.xml")
+    doScpAll(localHadoopSite, user, slaveList, remoteHadoopSite, \
+        "hadoop-site.xml", properties)
 
   # Unzip the installation tarball.
   cmd = "tar -xzf \"" + remoteFile + "\" -C \"" + uploadPrefix + "\""
@@ -265,10 +281,13 @@ def deployRemotes(properties):
   # come up with the remote install cmd line
   installerFilename = os.path.basename(sys.argv[0])
   prgm = os.path.join(uploadPrefix, INSTALLER_SUBDIR, installerFilename)
-  cmd = "\"" + prgm + "\" " + getRemoteDeployArgs(properties)
+  cmd = "\"" + prgm + "\" " + getRemoteDeployArgs(remoteHadoopSite, properties)
 
   # ... here we go - execute that on all nodes
   doSshAll(user, slaveList, cmd, properties)
+
+  # TODO (aaron): Do we want to delete the tarball on these nodes?
+  # Or even the whole upload prefix?
 
   # report status back to the user at the end of this
   if isRemoteDeployError():

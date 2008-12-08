@@ -592,6 +592,10 @@ to do, just accept the default values.""")
     # This must be the last line in the file.
     handle.write("</configuration>\n")
 
+  def getHadoopSiteFilename(self):
+    """ Return the filename where we installed hadoop-site.xml """
+    return os.path.join(self.getConfDir(), "hadoop-site.xml")
+
   def installHadoopSiteFile(self):
     """ Write out the hadoop-site.xml file that the user configured. """
 
@@ -613,7 +617,7 @@ to do, just accept the default values.""")
           "final" : finalStr })
 
 
-    destFileName = os.path.join(self.getConfDir(), "hadoop-site.xml")
+    destFileName = self.getHadoopSiteFilename()
     if self.configuredHadoopSiteOnline:
       # the user gave this to us param-by-param online. Write this out.
 
@@ -744,9 +748,15 @@ to do, just accept the default values.""")
         pass # don't make this one; not a big deal.
 
     makePathForProperty(HADOOP_TMP_DIR)
-    makePathsForProperty(DFS_DATA_DIR)
-    makePathsForProperty(DFS_NAME_DIR)
-    makePathsForProperty(MAPRED_LOCAL_DIR)
+
+    # This assumes that master is not also a worker. This is ok though;
+    # Hadoop should really actually make the appropriate directories itself
+    # if necessary.
+    if self.isMaster():
+      makePathsForProperty(DFS_NAME_DIR)
+    else:
+      makePathsForProperty(DFS_DATA_DIR)
+      makePathsForProperty(MAPRED_LOCAL_DIR)
 
 
   def precheck(self):
