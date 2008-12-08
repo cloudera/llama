@@ -37,6 +37,11 @@ class ScpWorker(threading.Thread):
     self.remoteFile = remotefile
     self.properties = properties
     self.numRetries = numRetries
+    self.failedHosts = []
+
+  def getFailedHostList(self):
+    """ return the list of hosts for which the scp command failed """
+    return self.failedHosts
 
   def run(self):
     """ keep running until we finish our entire work list. Any entries
@@ -44,7 +49,6 @@ class ScpWorker(threading.Thread):
         we can. We throw an exn at the end containing the list of bad
         hosts. """
 
-    badHosts = []
     for host in self.hostList:
       attempt = 0
       success = False
@@ -66,10 +70,8 @@ class ScpWorker(threading.Thread):
             output.printlnError("Retrying...")
 
         if not success:
-          badHosts.append(host)
+          self.failedHosts.append(host)
 
-    if len(badHosts) > 0:
-      raise MultiSshError(badHosts)
 
 
 def scpMultiHosts(localFile, user, hostList, remoteFile, properties,
@@ -99,7 +101,11 @@ def scpMultiHosts(localFile, user, hostList, remoteFile, properties,
     start = end
 
   # wait for all these threads to finish up.
+  badHosts = []
   for thread in workers:
     thread.join()
+    badHosts.extend(thread.getFailedHostList())
 
+  if len(badHosts) > 0:
+    raise MultiScpError(badHosts)
 

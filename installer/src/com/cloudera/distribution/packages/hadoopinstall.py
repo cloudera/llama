@@ -99,6 +99,7 @@ class HadoopInstall(toolinstall.ToolInstall):
     self.javaHome = javaHome
 
 
+  # TODO: This is a global prereq; move it there.
   def getJavaHome(self):
     """ Return the value for JAVA_HOME we solicited and verified """
     return self.javaHome

@@ -17,6 +17,7 @@ import com.cloudera.distribution.arch as arch
 from   com.cloudera.distribution.installerror import InstallError
 import com.cloudera.distribution.installproperties as installproperties
 import com.cloudera.distribution.manifest as manifest
+import com.cloudera.distribution.remotemgr as remotemgr
 import com.cloudera.util.output as output
 
 # do this before doing anything else.
@@ -93,7 +94,8 @@ can select by pressing [enter].
     output.printlnInfo("Performing postinstall for " + tool.getName())
     tool.postInstall()
 
-  # TODO: Perform automated deployment to additional machines
+  # Perform automated deployment to additional machines
+  remotemgr.deployRemotes()
 
   # Perform any verification steps that this all installed OK
   for tool in installPlan.getInstallItems():

@@ -23,7 +23,43 @@ def getToolByName(name):
     return None
 
 
+def getToolList():
+  """ returns the list of ToolInstall objects """
+  global toolMap
+  toolMap.values()
+
+
 class ToolInstall(object):
+  """ Abstract class that defines an installer responsible for configuring
+      and installing a single tool.
+
+      These objects may define (during their c'tor phase) the dependencies
+      they hold on other tools. Dependencies are indicated by specifying
+      the toolName(s) they depend on. The ToolInstall objects must be
+      instantiated in-order (it is up to you to define the topological
+      sort over the implicit DAG). The dependencies are checked that the
+      required prerequisite ToolInstalls already are in the lits.
+
+      The installation process is conducted in 5 stages. These stages are
+      applied "horizontally": one phase is applied to all ToolInstall objects
+      before the next phase is applied to any of them.
+
+        precheck     - check any system-wide preconditions
+        configure    - any configuration for the tool, solicit all user input
+        install      - do the installation itself.
+          (implicit stage: run any remote deployment here by running the
+           installer tool with appropriate --unattend cmdline args on remote
+           machines here)
+        postInstall  - any final setup stages that depend on everything being
+                       installed
+        verify       - any unit tests to run on the user system to ensure that
+                       everything works right.
+
+      Constructor arguments:
+      toolName - the name of the tool (e.g., "Hadoop")
+      properties - the global properties object
+  """
+
   def __init__(self, toolName, properties):
     global toolMap
 

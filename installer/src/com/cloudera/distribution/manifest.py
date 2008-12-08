@@ -31,18 +31,45 @@ def createInstallPlan(properties):
 
   plan.addTool(GlobalPrereqInstall(properties))
 
-  if properties.getBoolean(INSTALL_HADOOP_KEY, True):
+  if properties.getBoolean(INSTALL_HADOOP_KEY, INSTALL_HADOOP_DEFAULT):
     output.printlnVerbose("Selecting package Hadoop")
     plan.addTool(HadoopInstall(properties))
-  if properties.getBoolean(INSTALL_HIVE_KEY, True):
+  if properties.getBoolean(INSTALL_HIVE_KEY, INSTALL_HIVE_DEFAULT):
     output.printlnVerbose("Selecting package Hive")
     plan.addTool(HiveInstall(properties))
-  if properties.getBoolean(INSTALL_PIG_KEY, True):
+  if properties.getBoolean(INSTALL_PIG_KEY, INSTALL_PIG_DEFAULT):
     output.printlnVerbose("Selecting package Pig")
     plan.addTool(PigInstall(properties))
-  if properties.getBoolean(INSTALL_SCRIBE_KEY, True):
+  if properties.getBoolean(INSTALL_SCRIBE_KEY, INSTALL_SCRIBE_DEFAULT):
     output.printlnVerbose("Selecting package Scribe")
     plan.addTool(ScribeInstall(properties))
 
   return plan
+
+def getInstallFlags(properties):
+  """ Return the list of flags that completely describes the set of tools
+      the user has chosen to install or exclude """
+  flags = []
+
+  if properties.getBoolean(INSTALL_HADOOP_KEY, INSTALL_HADOOP_DEFAULT):
+    flags.append("--install-hadoop")
+  else:
+    flags.append("--without-hadoop")
+
+  if properties.getBoolean(INSTALL_HIVE_KEY, INSTALL_HIVE_DEFAULT):
+    flags.append("--install-hive")
+  else:
+    flags.append("--without-hive")
+
+  if properties.getBoolean(INSTALL_PIG_KEY, INSTALL_PIG_DEFAULT):
+    flags.append("--install-pig")
+  else:
+    flags.append("--without-pig")
+
+  if properties.getBoolean(INSTALL_SCRIBE_KEY, INSTALL_SCRIBE_DEFAULT):
+    flags.append("--install-scribe")
+  else:
+    flags.append("--without-scribe")
+
+  return flags
 

@@ -4,6 +4,9 @@
 #
 # All system-wide constants used in the distribution installer
 
+import os
+
+#######################################################################
 ### Here are the constants for all properties keys we use in the installer ###
 
 # if true, then we never prompt for user input
@@ -25,6 +28,13 @@ INSTALL_HADOOP_KEY = "hadoop.install"
 INSTALL_HIVE_KEY   = "hive.install"
 INSTALL_PIG_KEY    = "pig.install"
 INSTALL_SCRIBE_KEY = "scribe.install"
+
+# by default, we install all packages. Doing this just for good practice
+# in case we include some "optional" packages later.
+INSTALL_HADOOP_DEFAULT = True
+INSTALL_HIVE_DEFAULT   = True
+INSTALL_PIG_DEFAULT    = True
+INSTALL_SCRIBE_DEFAULT = True
 
 # arguments controlling hadoop-specific installation
 HADOOP_MASTER_ADDR_KEY = "hadoop.master.addr"
@@ -75,6 +85,26 @@ PropsFileFlag = "-p"
 defaultPropertyFileName = "install.properties"
 
 
+#######################################################################
+### Some more constants affecting the installer system itself
+
+# TODO: Arguably, these should be tweakable by the user too
+
+# how many tries do we make when uploading to any given host
+NUM_SCP_RETRIES = 3
+
+# How many hosts do we access at the same time when doing scpall's
+NUM_SCP_PARALLEL_THREADS = 8
+
+# since ssh returns the exit status of the underlying program too,
+# we actually don't perform retries of ssh commands. If the command
+# fails the first time, that's all there is to it.
+NUM_SSH_RETRIES = 1
+
+# How many hosts do we access at the same time when doing sshall's?
+NUM_SSH_PARALLEL_THREADS = 16
+
+#######################################################################
 ### The following constants are from hadoop itself, relating to its config
 ### in hadoop-default.xml, hadoop-site.xml, etc.
 
@@ -219,9 +249,23 @@ MAX_SUBMIT_REPLICATION = DFS_MAX_REP
 
 DEFAULT_MAPRED_SYS_DIR = "/hadoop/system/mapred"
 
+
+#######################################################################
+# The following section deals with paths associated with the layout of
+# the packages within the installer itself and their destinations relative
+# to the install prefix
+
+# Given the path to the 'installer' program via sys.argv[0], what path,
+# when joined with dirname(installer) gives us the base of the installation
+# system?
+DISTRIB_BASE_PATH = ".."
+
 # What subdir of the installation system (Relative to the 'install' program)
 # holds all the packages?
-PACKAGE_PATH = "../packages/"
+PACKAGE_PATH = os.path.join(DISTRIB_BASE_PATH, "packages/")
+
+# relative to the distribution base path, where is the installer program?
+INSTALLER_SUBDIR = "bin"
 
 # underneath of $prefix, where do the actual installs of different
 # programs get put?
