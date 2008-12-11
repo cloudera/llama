@@ -66,6 +66,9 @@ PROFILE_SLAVE_VAL = True
 SSH_IDENTITY_KEY = "ssh.identity"
 SSH_USER_KEY     = "ssh.user"
 
+# which JT do we connect pig jobs to?
+PIG_JOBTRACKER_KEY = "pig.job.tracker"
+
 # Java-specific options
 JAVA_HOME_KEY = "java.home"
 

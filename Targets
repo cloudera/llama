@@ -35,7 +35,7 @@ installerComponent = PackageComponent(
 # take the pig tgz package we assembled above and include that
 # in our distribution package.
 pigPackageComponent = PackageComponent(
-  targetName = "thirdparty/pig-0.1.1/pigPackage",
+  targetName = "thirdparty/pig-0.1.1:pigPackage",
   includeZip = True,
   destDir    = "packages")
 

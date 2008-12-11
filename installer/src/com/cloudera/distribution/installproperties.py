@@ -52,6 +52,9 @@ class InstallProperties(Properties):
     "--test-mode"      : TEST_MODE_KEY,
     "--remote-prefix"  : REMOTE_PREFIX_KEY,
 
+    # pig configuration options
+    "--pig-jobtracker" : PIG_JOBTRACKER_KEY,
+
     # the following settings apply to master only
 
     "--format-hdfs"    : FORMAT_DFS_KEY,

@@ -233,6 +233,14 @@ def getRemoteDeployArgs(hadoopSiteFilename, slavesFilename, properties):
     argList.append("--hadoop-user")
     argList.append(hadoopInstaller.getHadoopUsername())
 
+  # If we're installing Pig, configure options specific to Pig
+  pigInstaller = toolinstall.getToolByName("Pig")
+  if pigInstaller != None:
+    pigJobTracker = pigInstaller.getJobTrackerAddr()
+    if pigJobTracker != None:
+      argList.append("--pig-jobtracker")
+      argList.append(pigJobTracker)
+
   argList.append("--hadoop-slaves")
   argList.append(slavesFilename)
 
