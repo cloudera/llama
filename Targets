@@ -13,10 +13,19 @@ allDistributions = EmptyPackageTarget(
 
 # Compile a Hadoop redist tarball to put in the distribution
 supportedHadoopPackage = HadoopPackageTarget(
-  packageName   = "supported-hadoop",
+  packageName   = "distrib-hadoop",
   baseHadoopDir = "thirdparty/hadoop-0.18.2",
   baseVersion   = "0.18.2",
   patchPlan     = [])
+
+# Compile a pig redist tarball to put in the distribution
+pigJarComponent = OutputComponent(
+  targetName = "thirdparty/pig-0.1.1")
+
+supportedPigPackage = PackageTarget(
+  packageName = "pig",
+  version     = "0.1.1",
+  components = [ pigJarComponent ])
 
 # components for packaging
 
@@ -32,6 +41,13 @@ installerComponent = PackageComponent(
   includeZip = False, # we need this unpackacked
   destDir    = "bin")
 
+# take the pig tgz package we assembled above and include that
+# in our distribution package.
+pigPackageComponent = PackageComponent(
+  targetName = ":supportedPigPackage",
+  includeZip = True,
+  destDir    = "packages")
+
 # TODO: documentation component, any other scripts, pig, hive, scribe, etc
 
 # There may be several versions of how we package the distribution.
@@ -41,7 +57,8 @@ supportedDistro = PackageTarget(
   version     = "0.1.0",
   components  = [
     hadoopComponent,
-    installerComponent])
+    installerComponent,
+    pigPackageComponent])
 
 
 # subdirectory targets:
