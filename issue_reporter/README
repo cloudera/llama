@@ -1,0 +1,79 @@
+This README describes how the issue reporting web app works.
+
+This project is written with the Django rapid development
+framework, which is a Python-based alternative to Ruby
+on Rails.
+
+Project Description
+=========================
+There are two main components to this project: the main
+web app and the admin web app.  The admin web app comes
+free with Django and allows for CRUD operations on issues
+using Django's admin interface.  The admin web app is
+accessible from /admin, and the credentials to log in
+are defined when you first run `python manage.py syncdb`.
+
+The main web app is a standard Django web app, whose
+implementation is described in more detail below.  The
+main web app allows our customers to create issues
+and view issues that have already been created.
+
+Django Documentation
+=========================
+Django is insanely well documented.  This issue reporting
+project uses v1.0.2.  Here is the documentation:
+
+  http://docs.djangoproject.com/en/dev/
+
+Static Files
+=========================
+Static files such as images, JavaScript, and CSS files are
+all hosted in src/static/.  There is nothing special about this
+directory or those files.
+
+Django Files
+=========================
+All Django files are located in the thirdparty/ folder, and
+the src/thirdparty/LICENSE file discusses Django's license.  The
+actualy web app lives in src/thirdparty/ir_webapp.  The list
+below describes each file and directory within
+src/thirdparty/ir_webapp:
+
+  settings.py
+  -------------
+  This file has all of the Django-specific settings, such as
+  MySQL connectivity information, static file locations, etc.
+  Refer to the Django documentation when fiddling with this
+  file.
+
+  manage.py
+  -------------
+  This file invokes Django's built in utilities such as
+  schema creation, development server starting, etc.  Refer
+  to the Django documentation to learn more about this file.
+
+  urls.py
+  -------------
+  This file describes the URL structure of the issue
+  reporting project.  Look within the file to learn
+  about its structure.  The Django documentation also
+  has a lot to say about the format of this file.
+
+  home
+  -------------
+  Contains the home web app, which simply redirects all top-level
+  (/) requests to the issues web app (/issues/).  All Django
+  web apps consist of views and models.
+
+  issues
+  -------------
+  Contains the issues web app, which allows one to view and create
+  issues.
+
+  templates
+  -------------
+  Contains all template files, which are the files that actually
+  display HTML.
+
+TODO: once we have a production and development environment, write
+instructions on how to switch between these environments.
