@@ -32,14 +32,21 @@ installerComponent = PackageComponent(
   includeZip = False, # we need this unpackacked
   destDir    = "bin")
 
-# take the pig tgz package we assembled above and include that
+# take the pig tgz package we assembled in thirdparty/pig/ and include that
 # in our distribution package.
 pigPackageComponent = PackageComponent(
   targetName = "thirdparty/pig-0.1.1:pigPackage",
   includeZip = True,
   destDir    = "packages")
 
-# TODO: documentation component, any other scripts, hive, scribe, etc
+# take the hive tgz package we assembled in thirdparty/hive/ and include
+# this in our distribution package
+hivePackageComponent = PackageComponent(
+  targetName = "thirdparty/hive-chd-0.1.0:hivePackage",
+  includeZip = True,
+  destDir    = "packages")
+
+# TODO: documentation component, any other scripts, scribe, etc
 
 # There may be several versions of how we package the distribution.
 # supportedDistro is the one released to support clients
@@ -49,7 +56,9 @@ supportedDistro = PackageTarget(
   components  = [
     hadoopComponent,
     installerComponent,
-    pigPackageComponent])
+    pigPackageComponent,
+    hivePackageComponent
+  ])
 
 
 # subdirectory targets:
@@ -57,7 +66,6 @@ supportedDistro = PackageTarget(
 ProjectList(requiredTargets=[
   "projects/HadoopDist/installer"
     ])
-
 
 
 defaultTarget(allDistributions)
