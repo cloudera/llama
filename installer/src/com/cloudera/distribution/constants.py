@@ -304,11 +304,11 @@ HADOOP_PACKAGE = "hadoop-" + HADOOP_VERSION + ".tar.gz"
 # Hive and Pig don't have formal releases; we track their svn repository
 # version numbers from when we froze their commits.
 
-HIVE_VERSION = "r724015"
+HIVE_VERSION = "r725920"
 HIVE_INSTALL_SUBDIR = "hive- " + HIVE_VERSION
 HIVE_PACKAGE = "hive-" + HIVE_VERSION + ".tar.gz"
 
-PIG_VERSION = "r724015"
+PIG_VERSION = "0.1.1"
 PIG_INSTALL_SUBDIR = "pig-" + PIG_VERSION
 PIG_PACKAGE = "pig-" + PIG_VERSION + ".tar.gz"
 

@@ -97,12 +97,6 @@ can select by pressing [enter].
     output.printlnInfo("Installing " + tool.getName())
     tool.install()
 
-  # any steps to be performed per-tool after the whole system is together
-  # on the local machine
-  for tool in installPlan.getInstallItems():
-    output.printlnInfo("Performing postinstall for " + tool.getName())
-    tool.postInstall()
-
   # If we're the master, perform automated deployment to additional machines
   if globalPrereqInstaller.isMaster():
     # TODO: Unattended installation should only do this if DEPLOY_SLAVES_KEY
@@ -110,6 +104,11 @@ can select by pressing [enter].
     output.printlnInfo("Deploying distribution to remote hosts.")
     output.printlnInfo("(This may take a few minutes)")
     remotemgr.deployRemotes(properties)
+
+  # any steps to be performed per-tool after the whole system is together
+  for tool in installPlan.getInstallItems():
+    output.printlnInfo("Performing postinstall for " + tool.getName())
+    tool.postInstall()
 
   # Perform any verification steps that this all installed OK
   for tool in installPlan.getInstallItems():
