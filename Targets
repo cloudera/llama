@@ -10,13 +10,36 @@
 allDistributions = EmptyPackageTarget(
   requiredTargets = [ ":supportedDistro" ])
 
+# Scribe required libraries
+libfb303Component = FileComponent(
+  srcFile = "scribe-log4j/lib/libfb303.jar",
+  destDir = "build/hadoop-0.18.2/src/contrib/scribe-log4j/lib",)
+
+libthriftComponent = FileComponent(
+  srcFile = "scribe-log4j/lib/libthrift.jar",
+  destDir = "build/hadoop-0.18.2/src/contrib/scribe-log4j/lib",)
+
+libfb303Component2 = FileComponent(
+  srcFile = "scribe-log4j/lib/libfb303.jar",
+  destDir = "src/contrib/scribe-log4j/lib",)
+
+libthriftComponent2 = FileComponent(
+  srcFile = "scribe-log4j/lib/libthrift.jar",
+  destDir = "src/contrib/scribe-log4j/lib",)
 
 # Compile a Hadoop redist tarball to put in the distribution
 supportedHadoopPackage = HadoopPackageTarget(
-  packageName   = "supported-hadoop",
-  baseHadoopDir = "thirdparty/hadoop-0.18.2",
-  baseVersion   = "0.18.2",
-  patchPlan     = [])
+  packageName     = "supported-hadoop",
+  baseHadoopDir   = "thirdparty/hadoop-0.18.2",
+  baseVersion     = "0.18.2",
+  patchPlan       = [
+                     "projects/HadoopDist/scribe-log4j/scribe_hadoop_trunk_v3.patch",
+                     ],
+  components      = [libfb303Component,
+                     libthriftComponent,
+                     libfb303Component2,
+                     libthriftComponent2,
+                     ])
 
 # components for packaging
 
@@ -47,7 +70,7 @@ supportedDistro = PackageTarget(
 # subdirectory targets:
 #   installer -- guided and noattend python installation system
 ProjectList(requiredTargets=[
-  "projects/HadoopDist/installer"
+  "projects/HadoopDist/installer",
     ])
 
 
