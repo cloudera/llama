@@ -958,8 +958,8 @@ HDFS before using Hadoop, by running the command:
 
     if self.isMaster():
       try:
-        self.ensureHdfs()
-        self.ensureMapRed()
+        self.ensureHdfsStarted()
+        self.ensureMapRedStarted()
       except InstallError, ie:
         output.printlnError("Error starting Hadoop services: " + str(ie))
         output.printlnError("Cannot verify correct Hadoop installation")

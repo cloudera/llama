@@ -26,7 +26,7 @@ def getToolByName(name):
 def getToolList():
   """ returns the list of ToolInstall objects """
   global toolMap
-  toolMap.values()
+  return toolMap.values()
 
 
 class ToolInstall(object):

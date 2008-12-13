@@ -42,7 +42,7 @@ class HiveInstall(toolinstall.ToolInstall):
 
   def getHadoopHome(self):
     """ return the value for $HADOOP_HOME, where Hadoop is installed """
-    return getHadoopInstaller().getFinalInstallPath()
+    return self.getHadoopInstaller().getFinalInstallPath()
 
 
   def getHiveInstallPrefix(self):
@@ -99,8 +99,8 @@ class HiveInstall(toolinstall.ToolInstall):
           + "Please re-run this tool with --namenode set")
 
     # Check this against the regex.
-    m = nameNodeRegex.match(self.hdfsServer):
-    if m == None or m.start() != 0 or m.end() != len(Self.hdfsServer):
+    m = nameNodeRegex.match(self.hdfsServer)
+    if m == None or m.start() != 0 or m.end() != len(self.hdfsServer):
       raise InstallError("Error: NameNode address must match the form " \
           + "hdfs://address:port/")
 
@@ -140,7 +140,7 @@ class HiveInstall(toolinstall.ToolInstall):
     self.hiveParams["hive.exec.compress.output"] = "false"
 
     # enable intermediate compression if we're going to enable it for MR.
-    lzoEnabled = getHadoopInstaller().canUseLzo()
+    lzoEnabled = self.getHadoopInstaller().canUseLzo()
     self.hiveParams["hive.exec.compress.intermediate"] = str(lzoEnabled)
 
 

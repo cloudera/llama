@@ -9,17 +9,18 @@ import sys
 
 from   com.cloudera.distribution.constants import *
 import com.cloudera.distribution.dnsregex as dnsregex
+import com.cloudera.distribution.env as env
 from   com.cloudera.distribution.installerror import InstallError
-from   com.cloudera.distribution.toolinstall import ToolInstall
+import com.cloudera.distribution.toolinstall as toolinstall
 import com.cloudera.tools.dirutils as dirutils
 import com.cloudera.tools.shell as shell
 import com.cloudera.util.output as output
 import com.cloudera.util.prompt as prompt
 
 
-class PigInstall(ToolInstall):
+class PigInstall(toolinstall.ToolInstall):
   def __init__(self, properties):
-    ToolInstall.__init__(self, "Pig", properties)
+    toolinstall.ToolInstall.__init__(self, "Pig", properties)
     self.addDependency("Hadoop")
     self.addDependency("GlobalPrereq")
 
@@ -172,7 +173,7 @@ Reason: %(ioe)s""" % { "ioe" : str(ioe) })
     if None == globalPrereq:
       raise InstallError("Missing global prereq installer")
 
-    javaDir = globalPrerq.getJavaHome()
+    javaDir = globalPrereq.getJavaHome()
     hadoopDir = os.path.join(hadoopInstaller.getFinalInstallPath(), "conf")
     pigDir = self.getFinalInstallPath()
 
@@ -180,7 +181,7 @@ Reason: %(ioe)s""" % { "ioe" : str(ioe) })
     env.addToEnvironment("HADOOPDIR", hadoopDir)
     env.addToEnvironment("PIGDIR", pigDir)
     env.addToEnvironment("PIG_CLASSPATH", \
-        os.path.join(pigDir+ "pig-" + PIG_VERSION + "-core.jar") + ":" \
+        os.path.join(pigDir, "pig-" + PIG_VERSION + "-core.jar") + ":" \
         + hadoopDir)
 
 

@@ -320,7 +320,7 @@ HADOOP_PACKAGE = "hadoop-" + HADOOP_VERSION + ".tar.gz"
 # version numbers from when we froze their commits.
 
 HIVE_VERSION = "r725920"
-HIVE_INSTALL_SUBDIR = "hive- " + HIVE_VERSION
+HIVE_INSTALL_SUBDIR = "hive-" + HIVE_VERSION
 HIVE_PACKAGE = "hive-" + HIVE_VERSION + ".tar.gz"
 
 PIG_VERSION = "0.1.1"

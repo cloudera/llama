@@ -7,6 +7,8 @@
 # this list; it throws an InstallError if the same entry must be set
 # to multiple conflicting values.
 
+import os
+
 from    com.cloudera.distribution.installerror import InstallError
 import  com.cloudera.distribution.toolinstall as toolinstall
 import  com.cloudera.util.output as output

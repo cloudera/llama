@@ -57,8 +57,8 @@ def isDnsName(name):
   return m != None and m.start() == 0 and m.end() == len(name)
 
 def getDnsNameAndPortRegexStr():
-  global dnsNameAndPortRegexStr
-  return dnsNameAndPortRegexStr
+  global dnsNameAndPortStr
+  return dnsNameAndPortStr
 
 def getDnsNameAndPortRegex():
   global dnsNameAndPortRegex
