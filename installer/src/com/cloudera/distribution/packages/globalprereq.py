@@ -406,3 +406,18 @@ to add nodes to the slaves file after installation is complete.
     # This does nothing globally
     pass
 
+  def getRedeployArgs(self):
+    argList = []
+    installPrefix = self.getRemoteInstallPrefix()
+    argList.append("--prefix")
+    argList.append(installPrefix)
+
+    argList.append("--config-prefix")
+    argList.append(self.getConfigDir())
+
+    # assume java is installed in the same place on the master, slaves
+    javaHome = self.getJavaHome()
+    argList.append("--java-home")
+    argList.append(javaHome)
+
+    return argList

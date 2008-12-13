@@ -8,6 +8,7 @@ import os
 import sys
 
 from   com.cloudera.distribution.constants import *
+import com.cloudera.distribution.dnsregex as dnsregex
 from   com.cloudera.distribution.installerror import InstallError
 from   com.cloudera.distribution.toolinstall import ToolInstall
 import com.cloudera.tools.dirutils as dirutils
@@ -38,8 +39,6 @@ class PigInstall(ToolInstall):
     """ Run the configuration stage. This is responsible for
         setting up the config files and asking any questions
         of the user. The software is not installed yet """
-    # TODO: Config pig Hadoop version (pig-types defaults to '17') in bin/pig
-    # pig-env.sh ?
 
     # First, try to read from cmdline option for hadoop jobtracker
     self.jobTrackerAddr = self.properties.getProperty(PIG_JOBTRACKER_KEY)
@@ -57,10 +56,24 @@ class PigInstall(ToolInstall):
         pass
 
     if self.jobTrackerAddr == None and not self.isUnattended():
-      self.jobTrackerAddr = prompt.getString( \
-          "Input the JobTracker address for Pig to connect to", \
-          None, False)
+      matchesRegex = False
+      while not matchesRegex:
+        self.jobTrackerAddr = prompt.getString( \
+            "Input the JobTracker address for Pig to connect to", \
+            None, True)
+        if not dnsregex.isDnsNameAndPort(self.jobTrackerAddr):
+          output.printlnError("Error: must be of the form dnsname:port")
+        else:
+          matchesRegex = True
 
+    if self.jobTrackerAddr == None:
+      raise InstallError("Installing Pig requires that you specify a " \
+          + "JobTracker address with --jobtracker")
+
+    # Verify this address against dns:port
+    if not dnsregex.isDnsNameAndPort(self.jobTrackerAddr):
+      raise InstallError("JobTracker address " + self.jobTrackerAddr \
+          + " must be of the form dnsname:port")
 
   def getFinalInstallPath(self):
     return os.path.join(self.getInstallBasePath(), PIG_INSTALL_SUBDIR)
@@ -174,5 +187,15 @@ Reason: %(ioe)s""" % { "ioe" : str(ioe) })
   def verify(self):
     """ Run post-installation verification tests, if configured """
     # TODO: Verify Pig
+    pass
 
 
+  def getRedeployArgs(self):
+    argList = []
+
+    jobTrackerAddr = self.getJobTrackerAddr()
+    if jobTrackerAddr != None:
+      argList.append("--jobtracker")
+      argList.append(jobTrackerAddr)
+
+    return argList

@@ -204,42 +204,15 @@ def getRemoteDeployArgs(hadoopSiteFilename, slavesFilename, properties):
   if properties.getBoolean(output.QUIET_PROP):
     argList.append(output.QUIET_FLAG)
 
-  # figure out the global configuration settings that guide the
-  # remote deployment process
-  globalPrereqInstaller = toolinstall.getToolByName("GlobalPrereq")
+  # Get any command-line arguments specific to each tool.
+  tools = toolinstall.getToolList()
+  for tool in tools:
+    toolArgs = tool.getRedeployArgs()
+    argList.extend(toolArgs)
 
-  installPrefix = globalPrereqInstaller.getRemoteInstallPrefix()
-  argList.append("--prefix")
-  argList.append(installPrefix)
-
-  argList.append("--config-prefix")
-  argList.append(globalPrereqInstaller.getConfigDir())
-
-  # wild assumption; java is installed in the same place on the master, slaves
-  javaHome = globalPrereqInstaller.getJavaHome()
-  argList.append("--java-home")
-  argList.append(javaHome)
-
-  # Assuming we're installing Hadoop, configure options specific to Hadoop
-  hadoopInstaller = toolinstall.getToolByName("Hadoop")
-  if hadoopInstaller != None:
-    hadoopMaster = hadoopInstaller.getMasterHost()
-    argList.append("--hadoop-master")
-    argList.append(hadoopMaster)
-
-    argList.append("--hadoop-site")
-    argList.append(hadoopSiteFilename)
-
-    argList.append("--hadoop-user")
-    argList.append(hadoopInstaller.getHadoopUsername())
-
-  # If we're installing Pig, configure options specific to Pig
-  pigInstaller = toolinstall.getToolByName("Pig")
-  if pigInstaller != None:
-    pigJobTracker = pigInstaller.getJobTrackerAddr()
-    if pigJobTracker != None:
-      argList.append("--pig-jobtracker")
-      argList.append(pigJobTracker)
+  # pass along the locations where we stashed the files we generated
+  argList.append("--hadoop-site")
+  argList.append(hadoopSiteFilename)
 
   argList.append("--hadoop-slaves")
   argList.append(slavesFilename)

@@ -13,6 +13,7 @@ import time
 
 from   com.cloudera.distribution.constants import *
 import com.cloudera.distribution.dnsregex as dnsregex
+import com.cloudera.distribution.hadoopconf as hadoopconf
 from   com.cloudera.distribution.installerror import InstallError
 import com.cloudera.distribution.toolinstall as toolinstall
 import com.cloudera.tools.dirutils as dirutils
@@ -30,6 +31,8 @@ class HadoopInstall(toolinstall.ToolInstall):
     self.hadoopSiteDict = {}
     self.libLzoFound = False
     self.libBzipFound = False
+    self.startedHdfs = False
+    self.startedMapRed = False
 
   def isMaster(self):
     """ Return true if we are installing on a master server, as opposed to
@@ -44,6 +47,85 @@ class HadoopInstall(toolinstall.ToolInstall):
   def getHadoopUsername(self):
     return self.properties.getProperty(HADOOP_USER_NAME_KEY, \
         HADOOP_USER_NAME_DEFAULT)
+
+  def ensureHdfsStarted(self):
+    """ Ensures that the HDFS cluster that we just put together is started
+        (starting it if necessary). This must be run in postinstall or
+        later. """
+
+    if self.startedHdfs:
+      # already running.
+      return
+
+    hadoopBinPath = os.path.join(self.getFinalInstallPath(), "bin")
+    startDfsCmd = os.path.join(hadoopBinPath, "start-dfs.sh")
+    cmd = "sudo -H -i -u " + self.getHadoopUsername() + " \"" + startDfsCmd \
+        + "\""
+    try:
+      shell.sh(cmd)
+    except shell.CommandError:
+      raise InstallError("Can't start HDFS")
+
+    self.startedHdfs = True
+
+  def ensureMapRedStarted(self):
+    """ Ensures that the MapReduce cluster is started, starting it if
+        necessary. Also starts HDFS at this time if need be. This must be
+        run in postinstall or later. """
+
+    if self.startedMapRed:
+      return
+
+    self.ensureHdfsStarted()
+
+    hadoopBinPath = os.path.join(self.getFinalInstallPath(), "bin")
+    startMrCmd = os.path.join(hadoopBinPath, "start-mapred.sh")
+    cmd = "sudo -H -i -u " + self.getHadoopUsername() + " \"" + startMrCmd \
+        + "\""
+    try:
+      shell.sh(cmd)
+    except shell.CommandError:
+      raise InstallError("Can't start Hadoop MapReduce")
+
+    self.startedMapRed = True
+
+  def hadoopCmd(self, args):
+    """ Run a hadoop command with "bin/hadoop args" as the hadoop user.
+        You are responsible for ensuring that the appropriate services
+        are started by calling ensure*Started() yourself, first.
+        Returns all lines returned by the hadoop command. """
+
+    hadoopBinPath = os.path.join(self.getFinalInstallPath(), "bin")
+    hadoopCmd = os.path.join(hadoopBinPath, "hadoop")
+    cmd = "sudo -H -i -u " + self.getHadoopUsername() + " \"" + hadoopCmd \
+        + "\" " + args
+    try:
+      lines = shell.shLines(cmd)
+    except shell.CommandError:
+      raise InstallError("Error executing command: " + cmd)
+
+    return lines
+
+  def waitForSafemode(self):
+    """ Return when safemode is exited, or throw InstallError if we
+        can't do this within our timeout interval. You are responsible
+        for starting HDFS first yourself. """
+
+    startTime = time.time()
+
+    while time.time() < startTime + MAX_SAFE_MODE_WAIT_TIME:
+      # determine whether we're in or out of safe mode.
+      lines = self.hadoopCmd("dfsadmin -safemode get")
+      if len(lines) > 0:
+        statusLine = lines[0].strip()
+        if statusLine == "Safe mode is OFF":
+          return
+
+      # wait a few seconds before polling again.
+      time.sleep(3)
+
+    raise InstallError("Timeout waiting for safemode to exit")
+
 
   def precheckUsername(self):
     """ Check that the configured hadoop username exists on this machine """
@@ -224,8 +306,7 @@ class HadoopInstall(toolinstall.ToolInstall):
 
       daemonAddrsOk = False
       localHostAddrRegex = re.compile("localhost\:")
-      legalHostPortRegex = re.compile(dnsregex.getDnsNameRegexStr() \
-          + "\:[0-9]+")
+      legalHostPortRegex = dnsregex.getDnsNameAndPortRegex()
 
       while not daemonAddrsOk:
         defaultJobTracker = self.getMasterHost() + ":" + str(DEFAULT_JT_PORT)
@@ -462,10 +543,6 @@ to do, just accept the default values.""")
       self.hadoopSiteDict[DFS_EXCLUDE_FILE] = prompt.getString( \
           DFS_EXCLUDE_FILE, defaultExcludeFile, True)
 
-    # TODO: Figure out where the hadoop log dir should go to make things easiest
-    # for alex. does this need to live anyplace in particular? can we allow the
-    # user to customize this?
-
 
   def installMastersFile(self):
     """ Put the 'masters' file in hadoop conf dir """
@@ -613,60 +690,28 @@ to do, just accept the default values.""")
 </property>
 """ % { "codecs" : codecList })
 
-    # This must be the last line in the file.
-    handle.write("</configuration>\n")
+    # and write the really-last lines out
+    hadoopconf.writePropertiesFooter(handle)
+
 
   def getHadoopSiteFilename(self):
     """ Return the filename where we installed hadoop-site.xml """
     return os.path.join(self.getConfDir(), "hadoop-site.xml")
 
+
   def installHadoopSiteFile(self):
     """ Write out the hadoop-site.xml file that the user configured. """
-
-    def writeHadoopSiteKey(handle, key):
-      try:
-        finalHadoopProperties.index(key)
-        # it's in the list of 'final' things. Mark is that way.
-        finalStr = "\n  <final>true</final>"
-      except ValueError:
-        # not a final value, just a default.
-        finalStr = ""
-
-      handle.write("""<property>
-  <name>%(name)s</name>
-  <value>%(val)s</value>%(final)s
-</property>
-""" % {   "name"  : key,
-          "val"   : self.getHadoopSiteProperty(key),
-          "final" : finalStr })
-
 
     destFileName = self.getHadoopSiteFilename()
     if self.configuredHadoopSiteOnline:
       # the user gave this to us param-by-param online. Write this out.
 
-      dateStr = time.asctime()
       try:
         handle = open(destFileName, "w")
 
-        # Write the preamble
-        handle.write("""<?xml version="1.0"?>
-<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
-
-<!--
-     Autogenerated by Cloudera Hadoop Installer on
-     %(thedate)s
-
-     You *may* edit this file. Put site-specific property overrides below.
--->
-<configuration>
-""" % { "thedate" : dateStr })
-
-        # Write out everything the user configured for us.
-        keys = self.hadoopSiteDict.keys()
-        keys.sort()
-        for key in keys:
-          writeHadoopSiteKey(handle, key)
+        hadoopconf.writePropertiesHeader(handle)
+        hadoopconf.writePropertiesBody(handle, self.hadoopSiteDict, \
+            finalHadoopProperties)
 
         # Write prologue of "fixed parameters" that we always include.
         self.writeHadoopSiteEpilogue(handle)
@@ -679,6 +724,7 @@ to do, just accept the default values.""")
       # The user provided us with a hadoop-site file. write that out.
       hadoopSiteFileName = self.properties.getProperty(HADOOP_SITE_FILE_KEY)
       shutil.copyfile(hadoopSiteFileName, destFileName)
+
 
   def installHadoopEnvFile(self):
     """ Hadoop installs a file in conf/hadoop-env.sh; we need to augment
@@ -738,6 +784,7 @@ to do, just accept the default values.""")
     except IOError, ioe:
       raise InstallError("Could not edit hadoop-env.sh (" + str(ioe) + ")")
 
+
   def createPaths(self):
     """ Create any paths needed by this installation (e.g., dfs.data.dir) """
     # Create hadoop.tmp.dir, dfs.data.dir, dfs.name.dir, mapred.local.dir
@@ -793,6 +840,7 @@ to do, just accept the default values.""")
     self.precheckLzoLibs()
     self.precheckBzipLibs()
 
+
   def configure(self):
     """ Run the configuration stage. This is responsible for
         setting up the config files and asking any questions
@@ -801,8 +849,10 @@ to do, just accept the default values.""")
     self.configMasterAddress()
     self.configHadoopSite()
 
+
   def getFinalInstallPath(self):
     return os.path.join(self.getInstallBasePath(), HADOOP_INSTALL_SUBDIR)
+
 
   def install(self):
     """ Run the installation itself. """
@@ -837,13 +887,16 @@ to do, just accept the default values.""")
     self.installHadoopEnvFile()
     self.createPaths()
 
+
   def getHadoopBinDir(self):
     """ Return the path to the hadoop executables """
     return os.path.join(self.getFinalInstallPath(), "bin")
 
+
   def getHadoopExecCmd(self):
     """ Return the path to the executable to run hadoop """
     return os.path.join(self.getHadoopBinDir(), "hadoop")
+
 
   def doFormatHdfs(self):
     """ Format DFS if the user wants it done. Default is false,
@@ -902,10 +955,28 @@ HDFS before using Hadoop, by running the command:
   def verify(self):
     """ Run post-installation verification tests, if configured """
     # TODO: Verify hadoop
-    # TODO: Start Hadoop daemons if the user wants it done, with getUsername()
-    # TODO: Run  'bin/hadoop fs -ls /' to make sure it works
-    # (do a touchz, ls, rm)
-    # TODO: Run a sample 'pi' job.
-    pass
 
+    if self.isMaster():
+      try:
+        self.ensureHdfs()
+        self.ensureMapRed()
+      except InstallError, ie:
+        output.printlnError("Error starting Hadoop services: " + str(ie))
+        output.printlnError("Cannot verify correct Hadoop installation")
+
+      # TODO: Run  'bin/hadoop fs -ls /' to make sure it works
+      # (do a touchz, ls, rm)
+      # TODO: Run a sample 'pi' job.
+
+
+  def getRedeployArgs(self):
+    argList = []
+    hadoopMaster = self.getMasterHost()
+    argList.append("--hadoop-master")
+    argList.append(hadoopMaster)
+
+    argList.append("--hadoop-user")
+    argList.append(self.getHadoopUsername())
+
+    return argList
 

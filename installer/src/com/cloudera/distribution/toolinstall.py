@@ -154,6 +154,12 @@ class ToolInstall(object):
     """ Where do we install our tool to? """
     raise InstallError("Called getFinalInstallPath() on abstract ToolInstall")
 
+  def getRedeployArgs(self):
+    """ When this installer is invoking itself on another machine, what
+        arguments should we pass to the installer for this package?
+        Returns a list of strings """
+    return []
+
   def precheck(self):
     """ If anything must be verified before we even get going, check those
         constraints in this method """

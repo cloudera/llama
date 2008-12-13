@@ -52,8 +52,12 @@ class InstallProperties(Properties):
     "--test-mode"      : TEST_MODE_KEY,
     "--remote-prefix"  : REMOTE_PREFIX_KEY,
 
-    # pig configuration options
-    "--pig-jobtracker" : PIG_JOBTRACKER_KEY,
+    # Options used to tell apps (pig, hive, etc) how to connect
+    # to the main daemons.
+    # These are used in conjunction with a pre-supplied hadoop-site,
+    # when we can't poll the user for these values directly.
+    "--jobtracker"     : JOB_TRACKER_KEY,
+    "--namenode"       : NAMENODE_KEY,
 
     # the following settings apply to master only
 

@@ -42,4 +42,8 @@ class ScribeInstall(ToolInstall):
     """ Run post-installation verification tests, if configured """
     # TODO: Verify Scribe
 
+  def getRedeployArgs(self):
+    """ Provide any command-line arguments to the installer on the slaves """
+    # TODO: Return anything necessary.
+    return []
 

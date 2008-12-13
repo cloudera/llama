@@ -66,8 +66,14 @@ PROFILE_SLAVE_VAL = True
 SSH_IDENTITY_KEY = "ssh.identity"
 SSH_USER_KEY     = "ssh.user"
 
+JOB_TRACKER_KEY = "job.tracker"
+NAMENODE_KEY     = "namenode"
+
 # which JT do we connect pig jobs to?
-PIG_JOBTRACKER_KEY = "pig.job.tracker"
+PIG_JOBTRACKER_KEY = JOB_TRACKER_KEY
+
+# which HDFS does Hive's metastore live in
+HIVE_NAMENODE_KEY = NAMENODE_KEY
 
 # Java-specific options
 JAVA_HOME_KEY = "java.home"
@@ -129,6 +135,9 @@ NUM_SSH_RETRIES = 1
 
 # How many hosts do we access at the same time when doing sshall's?
 NUM_SSH_PARALLEL_THREADS = 16
+
+# Wait at most 300 seconds (5 minutes) for safe mode to exit.
+MAX_SAFE_MODE_WAIT_TIME = 300
 
 #######################################################################
 ### The following constants are from hadoop itself, relating to its config
@@ -271,6 +280,12 @@ MIN_SUBMIT_REPLICATION = 10
 MAX_SUBMIT_REPLICATION = DFS_MAX_REP
 
 DEFAULT_MAPRED_SYS_DIR = "/hadoop/system/mapred"
+
+
+#######################################################################
+# Hive configuration
+
+HIVE_WAREHOUSE_DIR = "/user/hive/warehouse"
 
 
 #######################################################################
