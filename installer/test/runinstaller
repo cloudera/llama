@@ -29,6 +29,7 @@ rm -f /tmp/distro-*.tar.gz
   --hadoop-site ${bin}/../testdata/hadoop-site.xml \
   --hadoop-slaves ${bin}/../testdata/localhost-slaves \
   --config-prefix /tmp/etc/cloudera \
+  --namenode "hdfs://localhost:9000/" --jobtracker "localhost:9001" \
   --debug
 
 
