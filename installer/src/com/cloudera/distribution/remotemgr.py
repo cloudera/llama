@@ -259,6 +259,12 @@ def deployRemotes(properties):
   slavesFileName = globalPrereqInstaller.getTempSlavesFileName()
   slaveList = getConfiguredSlaveList(slavesFileName, properties)
   output.printlnDebug("Got %(n)i slaves" % { "n" : len(slaveList) })
+  if len(slaveList) == 0:
+    # There's no sense in executing any of this, since there's nobody to
+    # send data to. In addition, various variables we depend on will not
+    # have been configured.
+    output.printlnDebug("No remote slaves; exiting remote deployment")
+    return
 
   # rezip our distribution up, and get the filename where we put it.
   output.printlnDebug("Compressing installer distribution")

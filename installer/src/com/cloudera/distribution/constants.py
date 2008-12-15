@@ -53,7 +53,8 @@ HADOOP_SLAVES_FILE_KEY = "hadoop.slaves.file"
 HADOOP_SITE_FILE_KEY   = "hadoop.site.file"
 HADOOP_USER_NAME_KEY   = "hadoop.user.name"
 
-# what username do we run hadoop as?
+# what username do we run hadoop as if we are running this as root?
+# (We run as the current user if non-root)
 HADOOP_USER_NAME_DEFAULT = "hadoop"
 
 HADOOP_PROFILE_KEY     = "hadoop.profile" # master or slave?
@@ -105,9 +106,9 @@ ALLOW_NATIVE_COMPRESSION_DEFAULT = True
 # if we need to ask the user to do text editing of files, what editor?
 EDITOR_KEY = "editor"
 
-# if this is unspecified, run '/usr/bin/vi', since Single Unix Spec
+# if this is unspecified, run vi, since Linux Standards Base
 # says it must exist. (Only editor we can bank on)
-EDITOR_DEFAULT = "/usr/bin/vi"
+EDITOR_DEFAULT = "vi"
 
 # where do we load properties from?
 PropsFileFlagLong = "--properties"

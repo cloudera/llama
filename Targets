@@ -12,10 +12,17 @@ allDistributions = EmptyPackageTarget(
 
 
 # Compile a Hadoop redist tarball to put in the distribution
+
+# include the pre-compiled native libs, since we don't build those ourselves
+hadoopNativeLibs = DirComponent(
+  srcDir  = "native",
+  destDir = "build/hadoop-0.18.2/lib/native")
+
 supportedHadoopPackage = HadoopPackageTarget(
   packageName   = "distrib-hadoop",
   baseHadoopDir = "thirdparty/hadoop-0.18.2",
   baseVersion   = "0.18.2",
+  components    = [ hadoopNativeLibs ],
   patchPlan     = [])
 
 # components for packaging

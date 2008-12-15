@@ -141,8 +141,14 @@ hadoopInstaller = toolinstall.getToolByName("Hadoop")
 if hadoopInstaller != None:
   hadoopStartCmd = os.path.join(hadoopInstaller.getHadoopBinDir(), \
       "start-all.sh")
+  hadoopStopCmd = os.path.join(hadoopInstaller.getHadoopBinDir(), \
+      "stop-all.sh")
   output.printlnInfo("You can start Hadoop by running:\n$ %(hadoopStart)s" % \
       { "hadoopStart" : hadoopStartCmd })
+  if hadoopInstaller.isHadoopVerified():
+    output.printlnInfo("(Note: Hadoop has already been started for you.)")
+  output.printlnInfo("You can stop Hadoop by running:\n$ %(hadoopStop)s" % \
+      { "hadoopStop" : hadoopStopCmd })
 
 
 # TODO: If there were warnings, list the follow-up actions that must be taken.

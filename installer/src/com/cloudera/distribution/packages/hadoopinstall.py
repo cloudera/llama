@@ -33,6 +33,13 @@ class HadoopInstall(toolinstall.ToolInstall):
     self.libBzipFound = False
     self.startedHdfs = False
     self.startedMapRed = False
+    self.hadoopUser = None  # who should we run hadoop as?
+    self.curUsername = None # who are we running as? (`whoami`)
+    self.verified = False
+
+  def isHadoopVerified(self):
+    """ return True if verification tests passed."""
+    return self.verified
 
   def isMaster(self):
     """ Return true if we are installing on a master server, as opposed to
@@ -45,8 +52,32 @@ class HadoopInstall(toolinstall.ToolInstall):
     return self.hadoopSiteDict[propName]
 
   def getHadoopUsername(self):
-    return self.properties.getProperty(HADOOP_USER_NAME_KEY, \
-        HADOOP_USER_NAME_DEFAULT)
+    """ Return the username we should run hadoop as. This returns the value
+        of --hadoop-user. If that's not set, returns your current username
+        if you're not root, or "hadoop" if you are. This user is guaranteed
+        to exist locally. This field is populated in the precheckUsername()
+        method. """
+    return self.hadoopUser
+
+
+  def isRoot(self):
+    """ Return true if you're running as root. The curUsername field is
+        populated in the precheckUsername() method."""
+    return self.curUsername == "root"
+
+  def getUserSwitchCmdStr(self):
+    """ If we are root, or running in interactive mode, we can sudo to
+        another user to run hadoop. Return the sudo cmd prefix to do so
+        here if we're using a different username. Return an empty string
+        if we're using the current username."""
+
+    hadoopUser = self.getHadoopUsername()
+    curUser = self.curUsername
+
+    if self.isRoot() or (not self.isUnattended() and curUSer != hadoopUser):
+      return "sudo -H -u " + hadoopUser + " "
+    else:
+      return ""
 
   def ensureHdfsStarted(self):
     """ Ensures that the HDFS cluster that we just put together is started
@@ -57,16 +88,18 @@ class HadoopInstall(toolinstall.ToolInstall):
       # already running.
       return
 
+    output.printlnVerbose("Starting HDFS")
     hadoopBinPath = os.path.join(self.getFinalInstallPath(), "bin")
     startDfsCmd = os.path.join(hadoopBinPath, "start-dfs.sh")
-    cmd = "sudo -H -i -u " + self.getHadoopUsername() + " \"" + startDfsCmd \
-        + "\""
+    cmd = self.getUserSwitchCmdStr() + "\"" + startDfsCmd + "\""
+
     try:
       shell.sh(cmd)
     except shell.CommandError:
       raise InstallError("Can't start HDFS")
 
     self.startedHdfs = True
+
 
   def ensureMapRedStarted(self):
     """ Ensures that the MapReduce cluster is started, starting it if
@@ -78,16 +111,18 @@ class HadoopInstall(toolinstall.ToolInstall):
 
     self.ensureHdfsStarted()
 
+    output.printlnVerbose("Starting MapReduce")
     hadoopBinPath = os.path.join(self.getFinalInstallPath(), "bin")
     startMrCmd = os.path.join(hadoopBinPath, "start-mapred.sh")
-    cmd = "sudo -H -i -u " + self.getHadoopUsername() + " \"" + startMrCmd \
-        + "\""
+    cmd = self.getUserSwitchCmdStr() + "\"" + startMrCmd  + "\""
+
     try:
       shell.sh(cmd)
     except shell.CommandError:
       raise InstallError("Can't start Hadoop MapReduce")
 
     self.startedMapRed = True
+
 
   def hadoopCmd(self, args):
     """ Run a hadoop command with "bin/hadoop args" as the hadoop user.
@@ -97,14 +132,15 @@ class HadoopInstall(toolinstall.ToolInstall):
 
     hadoopBinPath = os.path.join(self.getFinalInstallPath(), "bin")
     hadoopCmd = os.path.join(hadoopBinPath, "hadoop")
-    cmd = "sudo -H -i -u " + self.getHadoopUsername() + " \"" + hadoopCmd \
-        + "\" " + args
+    cmd = self.getUserSwitchCmdStr() + "\"" + hadoopCmd + "\" " + args
+
     try:
       lines = shell.shLines(cmd)
     except shell.CommandError:
       raise InstallError("Error executing command: " + cmd)
 
     return lines
+
 
   def waitForSafemode(self):
     """ Return when safemode is exited, or throw InstallError if we
@@ -128,18 +164,49 @@ class HadoopInstall(toolinstall.ToolInstall):
 
 
   def precheckUsername(self):
-    """ Check that the configured hadoop username exists on this machine """
+    """ Check that the configured hadoop username exists on this machine.
+        Also, if we are in unattend mode, you can only configure Hadoop
+        as a different username iff you are currently root. """
 
     output.printlnVerbose("Checking for Hadoop username")
-    username = self.getHadoopUsername()
-    try:
-      shell.shLines("getent passwd \"" + username + "\"")
-    except shell.CommandError:
-      output.printlnError("You must create the 'hadoop' username, or specify")
-      output.printlnError("an alternate username with --hadoop-user")
-      raise InstallError("Could not find username: " + username)
 
-    output.printlnVerbose("Found username: " + username)
+    cmd = "whoami"
+    try:
+      whoamiLines = shell.shLines("whoami")
+    except shell.CommandError:
+      raise InstallError("Could not determine username with 'whoami'")
+
+    if len(whoamiLines) == 0:
+      raise InstallError("'whoami' returned no result.")
+    self.curUsername = whoamiLines[0].strip()
+
+    self.hadoopUser = self.properties.getProperty(HADOOP_USER_NAME_KEY, None)
+    if self.hadoopUser == None:
+      if self.curUsername == "root":
+        # don't run hadoop as root; run it as "hadoop"
+        self.hadoopUser = HADOOP_USER_NAME_DEFAULT
+      else:
+        # non-root install: run hadoop as yourself.
+        self.hadoopUser = self.curUsername
+    elif self.curUsername != "root" and self.hadoopUser != self.curUsername \
+        and self.isUnattended():
+      raise InstallError( \
+"""In unattended mode, you cannot specify another username to run hadoop
+if you are not installing as root. Please re-run the installer as root,
+or specify your own username with --hadoop-user""")
+
+
+    # Now make sure the hadoop username exists.
+    try:
+      shell.shLines("getent passwd \"" + self.hadoopUser + "\"")
+    except shell.CommandError:
+      output.printlnError("You must create the '%(username)s' username, " % \
+         { "username" : self.hadoopUser } \
+         + "or specify")
+      output.printlnError("an alternate username with --hadoop-user")
+      raise InstallError("Could not find username: " + self.hadoopUser)
+
+    output.printlnVerbose("Found username: " + self.hadoopUser)
 
 
   def precheckLzoLibs(self):
@@ -792,6 +859,8 @@ to do, just accept the default values.""")
     # if they are needed, so this isn't too critical if the user hasn't
     # specifically identified them
 
+    hadoopUser = self.getHadoopUsername()
+
     def makeSinglePath(path):
       path = path.strip()
       try:
@@ -800,6 +869,12 @@ to do, just accept the default values.""")
       except OSError, ose:
         raise InstallError("Could not create directory: " + path + " (" \
             + str(ose) + ")")
+      cmd = "chown " + hadoopUser + " \"" + path + "\""
+      try:
+        shell.sh(cmd)
+      except shell.CommandError:
+        output.printlnError("Warning: could not change " + path + " owner to " \
+            + hadoopUser)
 
     def makeMultiPaths(paths):
       pathList = paths.split(",")
@@ -830,6 +905,10 @@ to do, just accept the default values.""")
     else:
       makePathsForProperty(DFS_DATA_DIR)
       makePathsForProperty(MAPRED_LOCAL_DIR)
+
+    # Now make the log dir and chown it to the hadoop username.
+    logDir = os.path.join(self.getFinalInstallPath(), "logs")
+    makeSinglePath(logDir)
 
 
   def precheck(self):
@@ -922,11 +1001,12 @@ this process.""")
     # (or the user selected --format-hdfs in unattend mode, and presumably
     # knows what he's doing), we just sidestep this prompt.
     echoPrefix = "echo Y | "
+    sudoPrefix = self.getUserSwitchCmdStr()
     hadoopExec = self.getHadoopExecCmd()
     formatCmd = "\"" + hadoopExec + "\" namenode -format"
     if formatHdfs:
       output.printlnVerbose("Formatting HDFS instance...")
-      cmd = echoPrefix + formatCmd
+      cmd = echoPrefix + sudoPrefix + formatCmd
       try:
         shell.sh(cmd)
       except shell.CommandError, ce:
@@ -960,13 +1040,13 @@ HDFS before using Hadoop, by running the command:
       try:
         self.ensureHdfsStarted()
         self.ensureMapRedStarted()
+        self.hadoopCmd("fs -ls /")
+        self.verified = True
       except InstallError, ie:
         output.printlnError("Error starting Hadoop services: " + str(ie))
         output.printlnError("Cannot verify correct Hadoop installation")
 
-      # TODO: Run  'bin/hadoop fs -ls /' to make sure it works
-      # (do a touchz, ls, rm)
-      # TODO: Run a sample 'pi' job.
+      # TODO: Run a sample 'pi' job. Also, do a touchz, ls, rm
 
 
   def getRedeployArgs(self):

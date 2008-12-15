@@ -209,14 +209,14 @@ class HiveInstall(toolinstall.ToolInstall):
 
     tmpPath = "/tmp"
     if hadoopInstaller.isMaster():
+      safemodeOff = False
       try:
         output.printlnVerbose("Starting HDFS...")
         hadoopInstaller.ensureHdfsStarted()
 
         output.printlnVerbose("Waiting for HDFS Safemode exit...")
         hadoopInstaller.waitForSafemode()
-        self.waitForSafemode(hadoopInstaller)
-        hadoopInstaller.hadoopCmd("dfsadmin -safemode wait")
+        safemodeOff = True
 
         output.printlnVerbose("Creating directories...")
         hadoopInstaller.hadoopCmd("fs -mkdir " + HIVE_WAREHOUSE_DIR)
@@ -230,15 +230,21 @@ class HiveInstall(toolinstall.ToolInstall):
 Configuration of Hive requires starting Hadoop HDFS and creating the following
 directories:
   %(warehousepath)s
-  $(tmppath)s
+  %(tmppath)s
 
 This installer was unable to successfully start HDFS and create these paths.
 Reason: %(err)s
 
-Installation will continue, but you must perform thes steps manually before
-using Hive. """ % { "warehousepath" : HIVE_WAREHOUSE_DIR,
-                    "tmppath"       : tmpPath,
-                    "err"           : str(ie) })
+Installation will continue, but you must perform these steps manually before
+using Hive.""" % \
+            { "warehousepath" : HIVE_WAREHOUSE_DIR,
+              "tmppath"       : tmpPath,
+              "err"           : str(ie) })
+        if not safemodeOff and self.properties.getBoolean(FORMAT_DFS_KEY, \
+            FORMAT_DFS_DEFAULT):
+          output.printlnError("""
+(This may be because you did not format HDFS on installation. You can specify
+--format-hdfs to allow this to occur automatically.)""")
 
 
   def verify(self):

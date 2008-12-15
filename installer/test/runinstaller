@@ -13,7 +13,20 @@ fi
 bin=`dirname $0`
 bin=`cd $bin && pwd`
 
+hadoopuser=`whoami`
+if [ "$hadoopuser" == "root" ]; then
+  hadoopuser="hadoop"
+  sudoPrefix="sudo -H -u $hadoopuser"
+else
+  sudoPrefix=""
+fi
+
+# stop hadoop if it was already running.
+$sudoPrefix /tmp/master/hadoop/bin/stop-all.sh
+
 # remove all the directories that this will create
+rm -rf /tmp/name
+rm -rf /tmp/data
 rm -rf /tmp/master
 rm -rf /tmp/slave
 rm -rf /tmp/cloudera
@@ -29,6 +42,8 @@ rm -f /tmp/distro-*.tar.gz
   --hadoop-site ${bin}/../testdata/hadoop-site.xml \
   --hadoop-slaves ${bin}/../testdata/localhost-slaves \
   --config-prefix /tmp/etc/cloudera \
+  --java-home /usr/java/jdk1.6.0_10 \
+  --format-hdfs \
   --namenode "hdfs://localhost:9000/" --jobtracker "localhost:9001" \
   --debug
 

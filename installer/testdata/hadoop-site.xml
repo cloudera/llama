@@ -28,6 +28,9 @@
   <value>3</value>
   <final>true</final>
 </property>
+<!--
+   Won't autoinstall dfs.hosts(.exclude) files, so it won't auto-start
+   with these enabled.
 <property>
   <name>dfs.hosts</name>
   <value>/tmp/master/apps/hadoop-0.18.2/conf/dfs.hosts</value>
@@ -38,6 +41,7 @@
   <value>/tmp/master/apps/hadoop-0.18.2/conf/dfs.hosts.exclude</value>
   <final>true</final>
 </property>
+-->
 <property>
   <name>dfs.name.dir</name>
   <value>/tmp/name</value>

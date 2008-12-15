@@ -297,6 +297,14 @@ to add nodes to the slaves file after installation is complete.
 
     self.sshKey = maybeSshKey
 
+    if self.isUnattended():
+      # ensure that we don't attempt to use a password if the key fails.
+      # 'ssh.options' is respected by shell.ssh*(); set this property
+      # here so that it gets carried through to the uses of ssh later.
+      sshOpts = self.properties.getProperty("ssh.options", "")
+      sshOpts = sshOpts + " -o PasswordAuthentication=no"
+      self.properties.setProperty("ssh.options", sshOpts)
+
 
   def getSshKey(self):
     """ Return the ssh key (if any) to be used to ssh/scp to the slave nodes.
