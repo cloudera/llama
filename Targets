@@ -27,6 +27,13 @@ libthriftComponent2 = FileComponent(
   srcFile = "scribe-log4j/lib/libthrift.jar",
   destDir = "src/contrib/scribe-log4j/lib",)
 
+# remove log4j.properties
+log4jpropComponent = ExcludeComponent(
+  name = "conf/log4j.properties",)
+
+log4jpropComponent2 = ExcludeComponent(
+  name = "build/hadoop-0.18.2/conf/log4j.properties",)
+
 #nn and jt JSP change dependencies
 bluebarComponent = FileComponent(
   srcFile = "nn+jt_jsp/static/images/bluebar.png",
@@ -61,6 +68,8 @@ supportedHadoopPackage = HadoopPackageTarget(
                      logoComponent,
                      bluebarComponent2,
                      logoComponent2,
+                     log4jpropComponent,
+                     log4jpropComponent2,
                      ])
 
 # components for packaging
