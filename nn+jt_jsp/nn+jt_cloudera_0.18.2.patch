@@ -1,0 +1,584 @@
+Index: src/webapps/static/images/bluebar.png
+===================================================================
+Cannot display: file marked as a binary type.
+svn:mime-type = application/octet-stream
+
+Property changes on: src/webapps/static/images/bluebar.png
+___________________________________________________________________
+Name: svn:mime-type
+   + application/octet-stream
+
+Index: src/webapps/static/images/logo.png
+===================================================================
+Cannot display: file marked as a binary type.
+svn:mime-type = application/octet-stream
+
+Property changes on: src/webapps/static/images/logo.png
+___________________________________________________________________
+Name: svn:mime-type
+   + application/octet-stream
+
+Index: src/webapps/static/style.css
+===================================================================
+--- src/webapps/static/style.css	(revision 0)
++++ src/webapps/static/style.css	(revision 0)
+@@ -0,0 +1,414 @@
++body {
++  background-color : #fff;
++  font-family : sans-serif;
++  margin:0px !important;
++  padding:0px;
++  font-size:12px;
++  line-height:19px;
++}
++
++a { 
++	color: #148bcf !important; 
++	text-decoration:none !important;
++}
++
++a:hover {
++	text-decoration:underline;
++}
++
++a.more {
++	background:url(/static/images/more_arrow.png) no-repeat right center;
++	padding-right:8px;
++}
++
++div.detail {
++	color:#999;
++	margin:3px 0;
++}
++
++hr {
++	border:1px solid #ddd;
++	border-top:0px;
++}
++
++form input.inputtext {
++               border-color:#777 #ccc #ddd #999;
++               border-width:1px;
++               padding:2px;
++               width:170px;
++               margin:2px 0;
++               font-size:12px;
++               border-style:solid;
++       }
++       
++       form label {
++               float:left;
++               width:80px;
++               display:block;
++               padding-top:4px;
++       }
++       
++       form span {
++               display:block;
++               color:#999;
++       }
++       
++       form h3 {
++               font-size:13px;
++               margin:5px 0;
++               padding:0px;
++       }
++
++div#topbar {
++	background:url(/static/images/bluebar.png) repeat-x;
++	height:29px;
++	padding:2px 0;
++	color:white;
++}
++	
++
++	div#topbar_inner {
++		width: 1030px;
++		margin: 0 auto;
++	}
++
++	div#topbar ul {
++		margin:0px;
++		padding:0px;
++		margin-left:10px;
++		font-family:Monaco,monospace;
++	}
++	
++	div#topbar li {
++		padding:0px 15px;
++		float:left;
++		text-align:center;
++		display:block;
++		margin-top:3px;
++	}
++	
++	div#topbar li.last { border:0px; }
++	
++		div#topbar li a {
++			color:white !important;
++			text-decoration:none;
++			display:block;
++		}
++		
++		div#topbar li a:hover {
++			text-decoration:underline !important;
++		}
++
++div#wrapper {
++	margin:0px auto;
++	width:980px;
++	margin-top:10px;
++	padding:15px;
++	padding-top:0px;
++	background:white;
++}
++
++	div#logo {
++		float:right;
++		width:208px;
++		height:53px;
++		padding:10px 0;
++	}
++	
++	div#logo.left {
++		float:none;
++		margin-top:20px;
++		padding:0 0 10px 0;
++		margin-bottom:25px;
++	}
++
++ul#tabs {
++	list-style-type:none;
++	margin:30px 0 30px 0;
++	padding:0px;
++	height:26px;
++}
++
++	ul#tabs li {
++		display:block;
++		float:left;
++		margin:0 15px 0 0px;
++	}
++	
++		ul#tabs li a {
++			font-size:12px;
++			background:#999 url(/static/images/no_arrow.png) no-repeat bottom center;;
++			color:white !important;
++			display:block;
++			width:120px;
++			padding:5px 0 10px 0;
++			text-align:center;
++		}
++		
++		ul#tabs li a.active {
++			color:white !important;
++			border:none;
++			background:#148bcf url(/static/images/arrow.png) no-repeat bottom center;
++		}
++		
++		ul#tabs li a:hover {
++			background-color:#3ba2db;
++			color:#eee;
++		}
++		
++	div#main {
++		width:630px;
++	}
++	
++		div#main.border {
++			 border-right:1px solid #ccc;
++			 padding-right:10px;
++		}
++	
++	p.medium {
++		font-size:14px;
++		line-height:19px;
++		color:#444;
++	}
++	
++		p.medium span {
++			color:black;
++			font-weight:bold;
++			font-size:16px;
++		}
++		
++	p.large {
++		color:#bbb;
++		font-size:22px;
++		line-height:27px;
++		font-weight:normal;
++	}
++	
++		p.large span { 
++			color:#999;
++		}
++	
++	p.blue {
++		margin:15px 0;
++		color:#148bcf;
++	}
++	
++		p.blue span { 
++			color: #222; 
++		}
++
++div#title h1 {
++	font-size:20px;
++	margin:20px 0 10px 0;
++	padding:0px;
++	font-weight:bold;
++}
++	
++	div#title div#status {
++		color:#333;
++		padding:5px;
++		border-left:5px solid #888;
++		padding-left:10px;
++		margin:10px 0;
++		border-bottom:1px solid #ddd;
++	}
++	
++	div#title div#status.short {
++		width:350px;
++	}
++	
++	div#title div#status span {
++		float:left;
++		width:90px;
++		color:#aaa;
++	}
++	
++	div#wrapper h2 {
++		font-size:17px;
++	}
++	
++		div#wrapper div.section {
++			border-left:5px solid #148bcf;
++			padding-left:10px;
++			padding-bottom:10px;
++			border-bottom:1px solid #ddd;
++			margin:15px 0;
++		}
++		
++		div#wrapper div.section h2 {
++			margin:0px;
++			padding:0px;
++			color:#333;
++			font-size:17px;
++		}
++		
++		div#wrapper div.section h2 a {
++			margin:0px;
++			padding:0px;
++			color:#148bcf;
++			font-size:17px;
++			text-decoration:none;
++		}
++		
++		div#wrapper div.section h3 {
++			color:#333;
++			margin:0 0 20px 0;
++			padding:0px;
++			font-weight:normal;
++			font-size:12px;
++			font-family:Monaco,monospace;
++		}
++
++			div#wrapper div.section.gray {
++				border-left:5px solid #999;
++			}
++			
++			a.feed {
++				background:url(/static/images/feed.png) no-repeat left center;
++				padding-left:25px;
++			}
++		
++			div#wrapper div.section p { margin:0px; }
++
++	div#wrapper table {
++		border-collapse:collapse;
++		width:auto;
++		border:0px;
++		font-size:13px;
++	}
++	
++	div#wrapper td {
++		border:1px solid #ddd;
++		font-family:"Monaco",Courier;
++		font-size:11px;
++		padding:3px;
++	}
++	
++		div#wrapper td span.none {
++			color:#999 !important;
++		}
++	
++	div#wrapper th {
++		border:1px solid #ddd;
++		background:#eee;
++		text-align:left;
++		padding:3px;
++		font-weight:bold;
++		color:#333;
++	}
++	
++	div#sidebar {
++		float:right;
++		width:280px;
++		margin-top:20px;
++		position:relative;
++	}
++	
++		div#sidebar h1 {
++			text-transform:uppercase;
++			margin:0 0 15px 0;
++			padding:0px;
++			font-size:15px;
++			color:#222;
++		}
++		
++		div#sidebar input.search {
++			border-color:#777 #ccc #ddd #999;
++			border-width:1px;
++			padding:2px;
++			width:200px;
++			font-size:12px;
++			border-style:solid;
++		}
++		
++		div#sidebar input.button {
++			border-color:#ccc #777 #999 #ddd;
++			border-width:1px;
++			padding:2px 8px;
++			font-size:12px;
++			border-style:solid;
++			background:#ddd;
++		}
++		
++		div#sidebar input.button:active {
++			border-color:#777 #ccc #ddd #999;
++		}
++			
++		div#sidebar ul {
++			list-style-type:none;
++			margin:0px;
++			padding:0px;
++		}
++		
++		div#sidebar ul.detail {
++			list-style-type:none;
++			margin:5px 0 0 20px;
++			padding:0px;
++			font-family:Monaco,monospace;
++		}
++		
++			div#sidebar ul.detail li {
++				border:0px;
++				padding:0px;
++				margin:0px;
++			}
++		
++			div#sidebar ul.detail li a {
++				border-left:3px solid #999;
++				border-bottom:1px solid #ddd;
++				width:180px;
++				padding-left:5px;
++				display:block;
++				margin-bottom:4px;
++			}
++			
++			div#sidebar ul.detail li a:hover {
++				border-left:3px solid #148bcf;
++			}
++	
++		div#sidebar li {
++			border-left:5px solid #148bcf;
++			border-bottom:1px solid #ddd;
++			padding:0 0 0 10px;
++			line-height:normal;
++			margin-bottom:15px;
++		}
++		
++			div#sidebar li h2 {
++				color:#148bcf;
++				margin:0px;
++				padding:0px;
++				font-size:14px;
++			}
++			
++			div#sidebar li h3 {
++				color:#999;
++				margin:0px;
++				padding-top:5px;
++				font-size:13px;
++				font-weight:normal;
++			}
++			
++			div#sidebar li p {
++				font-size:12px;
++				color:#111;
++				line-height:14px;
++			}
++	
++	div#clear { clear:both; }
++	
++	div#footer {
++		color:#aaa;
++		width:980px;
++		padding:10px 0;
++		clear:both;
++		text-align:center;
++		margin:0 auto;
++		margin-top:5px;
++		font-size:11px;
++	}
++	
++		div#footer a {
++			color:#888 !important;
++			margin:0 5px;
++		}
+Index: src/webapps/job/jobtracker.jsp
+===================================================================
+--- src/webapps/job/jobtracker.jsp	(revision 726123)
++++ src/webapps/job/jobtracker.jsp	(working copy)
+@@ -88,55 +88,83 @@
+   }%>
+ 
+ <%@page import="org.apache.hadoop.dfs.JspHelper"%>
++
+ <html>
+ <head>
+ <title><%= trackerName %> Hadoop Map/Reduce Administration</title>
+ <link rel="stylesheet" type="text/css" href="/static/hadoop.css">
++<link rel="stylesheet" type="text/css" href="/static/style.css">
+ </head>
+ <body>
+-<h1><%= trackerName %> Hadoop Map/Reduce Administration</h1>
+ 
+-<b>State:</b> <%= tracker.getClusterStatus().getJobTrackerState() %><br>
+-<b>Started:</b> <%= new Date(tracker.getStartTime())%><br>
+-<b>Version:</b> <%= VersionInfo.getVersion()%>,
++<div id="topbar">
++<div id="topbar_inner">
++  <ul>
++    <li><a href="http://www.cloudera.com/">Home</a></li>
++    <li><a href="http://www.cloudera.com/about">About</a></li>
++    <li><a href="http://community.cloudera.com">Community</a></li>
++    <li><a href="http://www.cloudera.com/hadoop-training">Training</a></li>
++    <li><a href="http://www.cloudera.com/hadoop-support">Support</a></li>
++    <li><a href="http://www.cloudera.com/blog">Blog</a></li>
++  </ul>
++</div>
++</div>
++
++<div id="wrapper">
++  <div id="logo"><a href="http://www.cloudera.com"><img src="/static/images/logo.png" border="0"></a></div>
++  <div id="title">
++    <div id="status">
++
++<span>State:</span> <%= tracker.getClusterStatus().getJobTrackerState() %><br>
++<span>Started:</span> <%= new Date(tracker.getStartTime())%><br>
++<span>Version:</span> <%= VersionInfo.getVersion()%>,
+                 r<%= VersionInfo.getRevision()%><br>
+-<b>Compiled:</b> <%= VersionInfo.getDate()%> by 
++<span>Compiled:</span> <%= VersionInfo.getDate()%> by 
+                  <%= VersionInfo.getUser()%><br>
+-<b>Identifier:</b> <%= tracker.getTrackerIdentifier()%><br>                 
++<span>Identifier:</span> <%= tracker.getTrackerIdentifier()%><br>
++
++    </div>
++  </div>
++
+                    
+-<hr>
+ <h2>Cluster Summary</h2>
+ <center>
+ <% 
+    generateSummaryTable(out, tracker); 
+ %>
+ </center>
+-<hr>
+ 
++<div class="section">
+ <h2>Running Jobs</h2>
+ <%
+     generateJobTable(out, "Running", tracker.runningJobs(), 30);
+ %>
+-<hr>
++</div>
+ 
++<div class="section">
+ <h2>Completed Jobs</h2>
+ <%
+     generateJobTable(out, "Completed", tracker.completedJobs(), 0);
+ %>
+ 
+-<hr>
++</div>
+ 
++<div class="section">
+ <h2>Failed Jobs</h2>
+ <%
+     generateJobTable(out, "Failed", tracker.failedJobs(), 0);
+ %>
+ 
+-<hr>
++</div>
+ 
++<div class="section">
+ <h2>Local logs</h2>
+ <a href="logs/">Log</a> directory, <a href="jobhistory.jsp">
+ Job Tracker History</a>
+ 
++</div>
++</div>
++
+ <%
+ out.println(ServletUtil.htmlFooter());
+-%>
++%>
+\ No newline at end of file
+Index: src/webapps/dfs/dfshealth.jsp
+===================================================================
+--- src/webapps/dfs/dfshealth.jsp	(revision 726123)
++++ src/webapps/dfs/dfshealth.jsp	(working copy)
+@@ -223,12 +223,29 @@
+ <html>
+ 
+ <link rel="stylesheet" type="text/css" href="/static/hadoop.css">
++<link rel="stylesheet" type="text/css" href="/static/style.css">
+ <title>Hadoop NameNode <%=namenodeLabel%></title>
+     
+ <body>
+-<h1>NameNode '<%=namenodeLabel%>'</h1>
++<div id="topbar">
++<div id="topbar_inner">
++  <ul>
++    <li><a href="http://www.cloudera.com/">Home</a></li>
++    <li><a href="http://www.cloudera.com/about">About</a></li>
++    <li><a href="http://community.cloudera.com">Community</a></li>
++    <li><a href="http://www.cloudera.com/hadoop-training">Training</a></li>
++    <li><a href="http://www.cloudera.com/hadoop-support">Support</a></li>
++    <li><a href="http://www.cloudera.com/blog">Blog</a></li>
++  </ul>
++</div>
++</div>
+ 
++<div id="wrapper">
++  <div id="logo"><a href="http://www.cloudera.com"><img src="/static/images/logo.png" border="0"></a></div>
++  <div id="title">
++    <h1>NameNode '<%=namenodeLabel%>'</h1>
+ 
++
+ <div id="dfstable"> <table>	  
+ <tr> <td id="col1"> Started: <td> <%= fsn.getStartTime()%>
+ <tr> <td id="col1"> Version: <td> <%= VersionInfo.getVersion()%>, r<%= VersionInfo.getRevision()%>
+@@ -249,7 +266,7 @@
+ 
+ <h3>Local logs</h3>
+ <a href="/logs/">Log</a> directory
+-
++</div>
+ <%
+ out.println(ServletUtil.htmlFooter());
+ %>

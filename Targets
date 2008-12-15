@@ -27,6 +27,23 @@ libthriftComponent2 = FileComponent(
   srcFile = "scribe-log4j/lib/libthrift.jar",
   destDir = "src/contrib/scribe-log4j/lib",)
 
+#nn and jt JSP change dependencies
+bluebarComponent = FileComponent(
+  srcFile = "nn+jt_jsp/static/images/bluebar.png",
+  destDir = "build/hadoop-0.18.2/src/webapps/static/images/",)
+
+logoComponent = FileComponent(
+  srcFile = "nn+jt_jsp/static/images/logo.png",
+  destDir = "build/hadoop-0.18.2/src/webapps/static/images/",)
+
+bluebarComponent2 = FileComponent(
+  srcFile = "nn+jt_jsp/static/images/bluebar.png",
+  destDir = "src/webapps/static/images/",)
+
+logoComponent2 = FileComponent(
+  srcFile = "nn+jt_jsp/static/images/logo.png",
+  destDir = "src/webapps/static/images/",)
+
 # Compile a Hadoop redist tarball to put in the distribution
 supportedHadoopPackage = HadoopPackageTarget(
   packageName     = "supported-hadoop",
@@ -34,11 +51,16 @@ supportedHadoopPackage = HadoopPackageTarget(
   baseVersion     = "0.18.2",
   patchPlan       = [
                      "projects/HadoopDist/scribe-log4j/scribe_hadoop_trunk_v3.patch",
+                     "projects/HadoopDist/nn+jt_jsp/nn+jt_cloudera_0.18.2.patch",
                      ],
   components      = [libfb303Component,
                      libthriftComponent,
                      libfb303Component2,
                      libthriftComponent2,
+                     bluebarComponent,
+                     logoComponent,
+                     bluebarComponent2,
+                     logoComponent2,
                      ])
 
 # components for packaging
