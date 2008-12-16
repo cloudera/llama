@@ -170,15 +170,7 @@ class HadoopInstall(toolinstall.ToolInstall):
 
     output.printlnVerbose("Checking for Hadoop username")
 
-    cmd = "whoami"
-    try:
-      whoamiLines = shell.shLines("whoami")
-    except shell.CommandError:
-      raise InstallError("Could not determine username with 'whoami'")
-
-    if len(whoamiLines) == 0:
-      raise InstallError("'whoami' returned no result.")
-    self.curUsername = whoamiLines[0].strip()
+    self.curUsername = self.getCurrUser()
 
     self.hadoopUser = self.properties.getProperty(HADOOP_USER_NAME_KEY, None)
     if self.hadoopUser == None:
