@@ -15,7 +15,7 @@
 </property>
 <property>
   <name>dfs.data.dir</name>
-  <value>/tmp/data</value>
+  <value>/mnt/tmp/data</value>
   <final>true</final>
 </property>
 <property>
@@ -33,18 +33,18 @@
    with these enabled.
 <property>
   <name>dfs.hosts</name>
-  <value>/tmp/master/apps/hadoop-0.18.2/conf/dfs.hosts</value>
+  <value>/mnt/tmp/master/apps/hadoop-0.18.2/conf/dfs.hosts</value>
   <final>true</final>
 </property>
 <property>
   <name>dfs.hosts.exclude</name>
-  <value>/tmp/master/apps/hadoop-0.18.2/conf/dfs.hosts.exclude</value>
+  <value>/mnt/tmp/master/apps/hadoop-0.18.2/conf/dfs.hosts.exclude</value>
   <final>true</final>
 </property>
 -->
 <property>
   <name>dfs.name.dir</name>
-  <value>/tmp/name</value>
+  <value>/mnt/tmp/name</value>
   <final>true</final>
 </property>
 <property>
@@ -68,7 +68,7 @@
 </property>
 <property>
   <name>fs.default.name</name>
-  <value>hdfs://dev-desktop-v1:9000/</value>
+  <value>hdfs://MASTER_HOST:9000/</value>
 </property>
 <property>
   <name>fs.trash.interval</name>
@@ -77,7 +77,7 @@
 </property>
 <property>
   <name>hadoop.tmp.dir</name>
-  <value>/tmp/hadoop</value>
+  <value>/mnt/tmp/hadoop</value>
   <final>true</final>
 </property>
 <property>
@@ -95,7 +95,7 @@
 </property>
 <property>
   <name>mapred.job.tracker</name>
-  <value>dev-desktop-v1:9001</value>
+  <value>MASTER_HOST:9001</value>
 </property>
 <property>
   <name>mapred.job.tracker.handler.count</name>
@@ -104,7 +104,7 @@
 </property>
 <property>
   <name>mapred.local.dir</name>
-  <value>/tmp/hadoop/mapred/local</value>
+  <value>/mnt/tmp/hadoop/mapred/local</value>
   <final>true</final>
 </property>
 <property>

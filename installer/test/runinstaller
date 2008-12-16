@@ -6,9 +6,10 @@
 # you must pass the path to the package's "install" program to this
 installerPrgm="$1"
 if [ -z "$installerPrgm" ]; then
-  echo "Usage: $0 path/to/distrib/install"
+  echo "Usage: $0 path/to/distrib/install [extra args]"
   exit 1
 fi
+shift
 
 bin=`dirname $0`
 bin=`cd $bin && pwd`
@@ -25,28 +26,33 @@ fi
 $sudoPrefix /tmp/master/hadoop/bin/stop-all.sh
 
 # remove all the directories that this will create
-rm -rf /tmp/name
-rm -rf /tmp/data
-rm -rf /tmp/master
-rm -rf /tmp/slave
+rm -rf /mnt/tmp/name
+rm -rf /mnt/tmp/data
+rm -rf /mnt/tmp/master
+rm -rf /mnt/tmp/slave
+rm -rf /mnt/tmp/etc/cloudera
 rm -rf /tmp/cloudera
-rm -rf /tmp/etc/cloudera
 
 # remove extraneous trash slaves files.
 rm -f /tmp/slaves-*
 rm -f /tmp/distro-*.tar.gz
 
+thishost=`hostname`
+cp ../testdata/hadoop-site.xml /tmp/install-hadoop-site.xml
+sed -i -e "s/MASTER_HOST/$thishost/g" /tmp/install-hadoop-site.xml
+
 # and launch the program
-"$installerPrgm" --unattend --test-mode --prefix /tmp/master \
-  --remote-prefix /tmp/slave --without-scribe \
-  --hadoop-site ${bin}/../testdata/hadoop-site.xml \
+"$installerPrgm" --unattend --test-mode --prefix /mnt/tmp/master \
+  --remote-prefix /mnt/tmp/slave --without-scribe \
+  --hadoop-site /tmp/install-hadoop-site.xml \
   --hadoop-slaves ${bin}/../testdata/localhost-slaves \
-  --config-prefix /tmp/etc/cloudera \
+  --config-prefix /mnt/tmp/etc/cloudera \
   --java-home /usr/java/jdk1.6.0_10 \
   --format-hdfs \
   --install-bindir \
   ../../../../bin/redist/projects/HadoopDist_supportedDistro/cloudera-hadoop-0.1.0/bin\
   --namenode "hdfs://localhost:9000/" --jobtracker "localhost:9001" \
-  --debug
+  --debug \
+  "$@"
 
 
