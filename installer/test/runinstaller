@@ -44,6 +44,8 @@ rm -f /tmp/distro-*.tar.gz
   --config-prefix /tmp/etc/cloudera \
   --java-home /usr/java/jdk1.6.0_10 \
   --format-hdfs \
+  --install-bindir \
+  ../../../../bin/redist/projects/HadoopDist_supportedDistro/cloudera-hadoop-0.1.0/bin\
   --namenode "hdfs://localhost:9000/" --jobtracker "localhost:9001" \
   --debug
 

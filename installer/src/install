@@ -14,6 +14,7 @@ import os
 import sys
 
 import com.cloudera.distribution.arch as arch
+from   com.cloudera.distribution.constants import *
 import com.cloudera.distribution.env as env
 from   com.cloudera.distribution.installerror import InstallError
 import com.cloudera.distribution.installproperties as installproperties
@@ -43,7 +44,7 @@ output.setupConsole(properties)
 
 # Where are we? Switch into installer's base dir
 binName = sys.argv[0]
-binDir = os.path.dirname(binName)
+binDir = properties.getProperty(INSTALL_BINDIR_KEY, os.path.dirname(binName))
 os.chdir(binDir)
 
 # determine what architecture / platform we're running on.

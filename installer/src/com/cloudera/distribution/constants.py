@@ -86,6 +86,12 @@ INSTALL_PREFIX_DEFAULT = "/usr/share/cloudera"
 UPLOAD_PREFIX_KEY = "install.upload.prefix"
 UPLOAD_PREFIX_DEFAULT = "/tmp/cloudera/"
 
+# where is the installer itself located? We assume other files are in
+# various locations relative to the directory of the "install" python script
+# itself. For debugging purposes, we may want to override this.
+INSTALL_BINDIR_KEY = "install.bin.dir"
+
+
 # it is important in the general case that this be the same as the local
 # install prefix, but for testing purposes we will want to be able to override
 REMOTE_PREFIX_KEY = "remote.prefix"

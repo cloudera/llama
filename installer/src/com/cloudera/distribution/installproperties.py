@@ -48,9 +48,10 @@ class InstallProperties(Properties):
     "--prefix"         : INSTALL_PREFIX_KEY,
     "--config-prefix"  : CONFIG_DIR_KEY,
 
-    # used for debugging
+    # options used only for debugging
     "--test-mode"      : TEST_MODE_KEY,
     "--remote-prefix"  : REMOTE_PREFIX_KEY,
+    "--install-bindir" : INSTALL_BINDIR_KEY,
 
     # Options used to tell apps (pig, hive, etc) how to connect
     # to the main daemons.

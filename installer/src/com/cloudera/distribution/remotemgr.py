@@ -146,9 +146,9 @@ def zipInstallerDistribution():
     # irrelevant
     pass
 
-  # what is the dir we should zip up? calculate that based on how we
-  # were launched.
-  installerBaseDir = os.path.abspath(os.path.dirname(sys.argv[0]))
+  # what is the dir we should zip up? calculate that based on the current
+  # directory (The installer has chdir'd into the directory where it lives.)
+  installerBaseDir = os.path.abspath(os.getcwd())
   distribBaseDir = os.path.abspath(os.path.join( \
       installerBaseDir, DISTRIB_BASE_PATH))
 
