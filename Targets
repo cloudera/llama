@@ -10,6 +10,46 @@
 allDistributions = EmptyPackageTarget(
   requiredTargets = [ ":supportedDistro" ])
 
+# Scribe required libraries
+libfb303Component = FileComponent(
+  srcFile = "scribe-log4j/lib/libfb303.jar",
+  destDir = "build/hadoop-0.18.2/src/contrib/scribe-log4j/lib",)
+
+libthriftComponent = FileComponent(
+  srcFile = "scribe-log4j/lib/libthrift.jar",
+  destDir = "build/hadoop-0.18.2/src/contrib/scribe-log4j/lib",)
+
+libfb303Component2 = FileComponent(
+  srcFile = "scribe-log4j/lib/libfb303.jar",
+  destDir = "src/contrib/scribe-log4j/lib",)
+
+libthriftComponent2 = FileComponent(
+  srcFile = "scribe-log4j/lib/libthrift.jar",
+  destDir = "src/contrib/scribe-log4j/lib",)
+
+# remove log4j.properties
+log4jpropComponent = ExcludeComponent(
+  name = "conf/log4j.properties",)
+
+log4jpropComponent2 = ExcludeComponent(
+  name = "build/hadoop-0.18.2/conf/log4j.properties",)
+
+#nn and jt JSP change dependencies
+bluebarComponent = FileComponent(
+  srcFile = "nn+jt_jsp/static/images/bluebar.png",
+  destDir = "build/hadoop-0.18.2/src/webapps/static/images/",)
+
+logoComponent = FileComponent(
+  srcFile = "nn+jt_jsp/static/images/logo.png",
+  destDir = "build/hadoop-0.18.2/src/webapps/static/images/",)
+
+bluebarComponent2 = FileComponent(
+  srcFile = "nn+jt_jsp/static/images/bluebar.png",
+  destDir = "src/webapps/static/images/",)
+
+logoComponent2 = FileComponent(
+  srcFile = "nn+jt_jsp/static/images/logo.png",
+  destDir = "src/webapps/static/images/",)
 
 # Compile a Hadoop redist tarball to put in the distribution
 
@@ -22,8 +62,22 @@ supportedHadoopPackage = HadoopPackageTarget(
   packageName   = "distrib-hadoop",
   baseHadoopDir = "thirdparty/hadoop-0.18.2",
   baseVersion   = "0.18.2",
-  components    = [ hadoopNativeLibs ],
-  patchPlan     = [])
+  patchPlan     = [
+      "projects/HadoopDist/scribe-log4j/scribe_hadoop_trunk_v3.patch",
+      "projects/HadoopDist/nn+jt_jsp/nn+jt_cloudera_0.18.2.patch",
+                  ],
+  components    = [ libfb303Component,
+                    libthriftComponent,
+                    libfb303Component2,
+                    libthriftComponent2,
+                    bluebarComponent,
+                    logoComponent,
+                    bluebarComponent2,
+                    logoComponent2,
+                    log4jpropComponent,
+                    log4jpropComponent2,
+                    hadoopNativeLibs
+                   ])
 
 # components for packaging
 
@@ -53,7 +107,7 @@ hivePackageComponent = PackageComponent(
   includeZip = True,
   destDir    = "packages")
 
-# TODO: documentation component, any other scripts, scribe, etc
+# TODO: documentation component, any other scripts, etc
 
 # There may be several versions of how we package the distribution.
 # supportedDistro is the one released to support clients
@@ -72,7 +126,7 @@ supportedDistro = PackageTarget(
 #   installer -- guided and noattend python installation system
 ProjectList(requiredTargets=[
   "projects/HadoopDist/installer"
-    ])
+  ])
 
 
 defaultTarget(allDistributions)
