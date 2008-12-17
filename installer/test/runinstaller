@@ -32,6 +32,7 @@ rm -rf /mnt/tmp/master
 rm -rf /mnt/tmp/slave
 rm -rf /mnt/tmp/etc/cloudera
 rm -rf /tmp/cloudera
+rm -rf /tmp/cloudera-installer.log
 
 # remove extraneous trash slaves files.
 rm -f /tmp/slaves-*
@@ -48,6 +49,7 @@ sed -i -e "s/MASTER_HOST/$thishost/g" /tmp/install-hadoop-site.xml
   --hadoop-slaves ${bin}/../testdata/localhost-slaves \
   --config-prefix /mnt/tmp/etc/cloudera \
   --java-home /usr/java/jdk1.6.0_10 \
+  --log-filename /tmp/cloudera-installer.log \
   --format-hdfs \
   --install-bindir \
   ../../../../bin/redist/projects/HadoopDist_supportedDistro/cloudera-hadoop-0.1.0/bin\

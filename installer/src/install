@@ -35,12 +35,21 @@ output.attachOutputArgParser(properties)
 
 installproperties.loadAllProperties(properties, argv)
 
+# if the user has not selected a log file name, and a log level, force
+# a log file in here; also, set the default log level to verbose.
+setLogName = properties.getProperty(output.LOG_FILENAME_PROP)
+if setLogName == None:
+  properties.setProperty(output.LOG_FILENAME_PROP, DEFAULT_LOG_FILENAME)
+
+setLogVerbosity = properties.getProperty(output.LOG_VERBOSITY_PROP)
+if setLogVerbosity == None:
+  properties.setProperty(output.LOG_VERBOSITY_PROP, DEFAULT_LOG_VERBOSITY)
+
+
+# set up the console. Also starts logging to the specified file
 output.setupConsole(properties)
 
 # if we are here, then properties and argv parsing succeeded
-
-# TODO: Install a log file as well
-# TODO: Location should be configured by a command line arg.
 
 # Where are we? Switch into installer's base dir
 binName = sys.argv[0]

@@ -5,6 +5,7 @@
 # All system-wide constants used in the distribution installer
 
 import os
+import com.cloudera.util.output as output
 
 #######################################################################
 ### Here are the constants for all properties keys we use in the installer ###
@@ -123,6 +124,12 @@ PropsFileFlag = "-p"
 # If this file is found in the cwd, we load it before parsing arguments
 defaultPropertyFileName = "install.properties"
 
+# The installer maintains a log file...
+# where should it go, by default?
+DEFAULT_LOG_FILENAME = "cloudera-installer.log"
+
+# this should hold more information than is printed to the screen by default.
+DEFAULT_LOG_VERBOSITY = output.VERBOSE
 
 #######################################################################
 ### Some more constants affecting the installer system itself
