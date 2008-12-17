@@ -125,8 +125,10 @@ supportedDistro = PackageTarget(
 
 # subdirectory targets:
 #   installer -- guided and noattend python installation system
+#   test      -- Cluster Test tool
 ProjectList(requiredTargets=[
-  "projects/HadoopDist/installer"
+  "projects/HadoopDist/installer",
+  "projects/HadoopDist/test"
   ])
 
 

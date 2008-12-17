@@ -1,0 +1,86 @@
+#!/usr/bin/env python
+#
+# (c) Copyright 2008 Cloudera, Inc
+# testdistrib  -- runs test processes across the Cloudera Hadoop Distribution
+
+import os
+import sys
+
+import com.cloudera.tools.ec2 as ec2
+import com.cloudera.util.output as output
+
+from   distrotester.constants import *
+import distrotester.platform as platform
+from   distrotester.testerror import TestError
+import distrotester.testproperties as testproperties
+
+# do this first
+output.initLogging()
+
+# use all args except program name
+argv = sys.argv[1:]
+
+properties = testproperties.TestProperties()
+output.attachOutputArgParser(properties)
+
+testproperties.loadAllProperties(properties, argv)
+
+
+# if the user has not selected a log file name and a log level,
+# force a log file here. Also set the default log level to verbose.
+setLogName = properties.getProperty(output.LOG_FILENAME_PROP)
+if setLogName == None:
+  properties.setProperty(output.LOG_FILENAME_PROP, DEFAULT_LOG_FILENAME)
+
+setLogVerbosity = properties.getProperty(output.LOG_VERBOSITY_PROP)
+if setLogVerbosity == None:
+  properties.setProperty(output.LOG_VERBOSITY_PROP, DEFAULT_LOG_VERBOSITY)
+
+# set up the console. Also starts logging to the specified file
+output.setupConsole(properties)
+
+# if we are here, then properties and argv parsing succeeded
+
+# Where are we? Switch into test program's base dir
+binName = sys.argv[0]
+binDir = properties.getProperty(TEST_BINDIR_KEY, os.path.dirname(binName))
+os.chdir(binDir)
+
+# Did the user ask for --list-platforms? If so, list 'em and exit.
+if properties.getBoolean(LIST_PLATFORMS_KEY):
+  platform.listPlatforms()
+  sys.exit(1)
+
+# ok, time to actually make the work.
+
+# start an EC2 instance for this process.
+platformName = properties.getProperty(TEST_PLATFORM_KEY)
+if platformName == None:
+  output.printlnError("Error: No platform specified with " + TEST_PLATFORM_ARG)
+  sys.exit(1)
+
+# TODO: Documentation: We need to set EC2_HOME, EC2_PRIVATE_KEY, EC2_CERT
+# for any user who will be running this tool (Including autotest users)
+output.printlnInfo("Launching tests on platform: " + platformName)
+instances = platform.launchInstances(platformName, properties)
+output.printlnInfo("Started instances:")
+for instance in instances:
+  output.printlnInfo("  " + instance)
+instanceLines = listInstances(None, properties)
+dnsMap = ec2.getInstanceDnsNames(instanceLines, instances)
+
+try:
+  # TODO: Run platform-specific installation functions
+
+  # TODO: Run the global test battery loop.
+
+finally:
+  # shut down any instances we started. We're responsible for them.
+  # TODO: If this was run by a user, only shut down on success.
+  # If this is run in unattended mode, always shut down.
+  output.printlnInfo("Shutting down instances...")
+  ec2.terminateInstances(instances, properties)
+
+
+sys.exit(0)
+
