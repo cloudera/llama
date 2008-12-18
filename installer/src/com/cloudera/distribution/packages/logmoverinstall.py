@@ -32,6 +32,9 @@ class LogMoverInstall(ToolInstall):
     # - install MySQL
     # - bootstrap MySQL with .sql files
     # - Setup cron jobs on NN only to run log movers
+    # - Create the log directory specified in settings.py
+    #   the logging module will break the script if the
+    #   directory it is trying to log to doesn't exist
 
   def configure(self):
     """ Run the configuration stage. This is responsible for
