@@ -27,6 +27,7 @@ class PortalInstall(ToolInstall):
     # - install Portal only on NN
     # - update hadoop-site-location with the right location of hadoop-site.xml
     # - install Lighttpd with PHP5 and MySQL support on NN
+    # - put the portal code in default htdocs for Lighttpd
 
   def configure(self):
     """ Run the configuration stage. This is responsible for
