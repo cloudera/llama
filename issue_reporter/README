@@ -1,3 +1,7 @@
+IMPORTANT: this project is not used right now.  It was going
+to be used, and now it's kept around in case it gets picked
+back up later.
+
 This README describes how the issue reporting web app works.
 
 This project is written with the Django rapid development

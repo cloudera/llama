@@ -58,6 +58,11 @@ hadoopNativeLibs = DirComponent(
   srcDir  = "native",
   destDir = "build/hadoop-0.18.2-patched/lib/native")
 
+# include the portal source code
+portalComponent = DirComponent(
+  srcDir  = "portal/src",
+  destDir = "portal")
+
 supportedHadoopPackage = HadoopPackageTarget(
   packageName   = "distrib-hadoop",
   baseHadoopDir = "thirdparty/hadoop-0.18.2",
@@ -77,7 +82,8 @@ supportedHadoopPackage = HadoopPackageTarget(
                     logoComponent2,
                     log4jpropComponent,
                     log4jpropComponent2,
-                    hadoopNativeLibs
+                    hadoopNativeLibs,
+                    portalComponent
                    ])
 
 # components for packaging
@@ -91,6 +97,12 @@ hadoopComponent = PackageComponent(
 # the installation system
 installerComponent = PackageComponent(
   targetName = "projects/HadoopDist/installer:release",
+  includeZip = False, # we need this unpackacked
+  destDir    = "bin")
+
+# the log mover system
+logMoverComponent = PackageComponent(
+  targetName = "projects/HadoopDist/log_mover:release",
   includeZip = False, # we need this unpackacked
   destDir    = "bin")
 
@@ -118,6 +130,7 @@ supportedDistro = PackageTarget(
   components  = [
     hadoopComponent,
     installerComponent,
+    logMoverComponent,
     pigPackageComponent,
     hivePackageComponent
   ])
