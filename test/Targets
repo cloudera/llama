@@ -14,7 +14,7 @@ tester = PythonTarget(
   dataPaths = [ "profiles" ])
 
 release = PythonRedistTarget(
-  distribName     = "installertest",
+  distribName     = "distrotest",
   requiredTargets = [ ":tester" ])
 
 defaultTarget(release)

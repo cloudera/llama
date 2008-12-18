@@ -1,6 +1,6 @@
 # (c) Copyright 2008 Cloudera, Inc.
 #
-# module: distrotester.platform
+# module: distrotester.platforms
 #
 # Represents platform-specific launch and installation capabilities.
 # Here is where we control what EC2 image we launch for, and where we
@@ -12,11 +12,13 @@ import sys
 import unittest
 
 import com.cloudera.tools.ec2 as ec2
+import com.cloudera.tools.shell as shell
 from   com.cloudera.util.properties import Properties
 
 from   distrotester.setup.fedora8 import Fedora8Setup
 from   distrotester.constants import *
 from   distrotester.testerror import TestError
+from   distrotester.installtests.standalone import StandaloneTest
 
 
 def listPlatforms():
@@ -70,8 +72,18 @@ def testSuiteForPlatform(platformName, properties):
     raise TestError("No test suite available for platform: " + platformName)
 
 
-def launchInstances(platformName, properties):
-  """ Launch one or more EC2 instances and return a list of instance ids. """
+def launchInstances(platformName, properties, configOnly=False):
+  """ Launch one or more EC2 instances and return a list of instance ids.
+      The instance launch process is governed by loading in the dev.properties
+      file associated with platformName. This is loaded "underneath" the
+      primary properties object -- anything that the user set via an external
+      properties file, command line switches, etc, are preserved, but this
+      sets new properties that the user left unset.
+
+      If configOnly is true, loads all the config for the platform,
+      but doesn't actually launch the instances. Just set up params as if
+      we did.
+  """
 
   profileFilename = profileForPlatform(platformName)
   profileProps = Properties()
@@ -86,6 +98,11 @@ def launchInstances(platformName, properties):
   userKeys = properties.keys()
   for key in userKeys:
     profileProps.setProperty(key, properties.getProperty(key))
+
+  # Now copy the merged results back.
+  allKeys = profileProps.keys()
+  for key in allKeys:
+    properties.setProperty(key, profileProps.getProperty(key))
 
   # now determine the args to use when creating the instances
 
@@ -111,6 +128,16 @@ def launchInstances(platformName, properties):
 
   if profileProps.getBoolean(ec2.EC2_CREATE_GROUP_PROP):
     ec2.ensureGroup(group, profileProps)
+
+  # The chdtest identity file may not be chmod'd to 0600 (git does not
+  # track permissions except a+x/a-x). We need to do that here.
+  identityFile = profileProps.getProperty("ssh.identity")
+  if identityFile != None:
+    shell.sh("chmod 0600 " + identityFile)
+
+  if configOnly:
+    # That's as far as we go!
+    return []
 
   # throws shell.CommandError on failure.
   instances = ec2.runInstances(ami, instanceCount, group, keyPair, userData, \

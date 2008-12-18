@@ -21,14 +21,14 @@ class Fedora8Setup(PlatformSetup):
   """
 
   def __init__(self, arch, properties):
-    PlatformSetup.__init__(properties)
+    PlatformSetup.__init__(self, properties)
     self.arch = arch
 
     self.bucket = properties.getProperty(PACKAGE_BUCKET_KEY, \
         PACKAGE_BUCKET_DEFAULT)
 
 
-  def remoteBootstrap():
+  def remoteBootstrap(self):
     """ Remote bootstrap for Fedora 8 """
 
     # Need to make sure we can use python!
@@ -38,17 +38,17 @@ class Fedora8Setup(PlatformSetup):
     ]
 
 
-  def setup():
+  def setup(self):
     """ Install on Fedora 8. """
 
     # We download java with s3cmd. We need that first.
     s3dest = os.path.join(PACKAGE_TARGET, S3CMD_PACKAGE_NAME)
     self.wget(S3CMD_URL, s3dest)
 
-    self.unzip(S3CMD_PACKAGE, PACKAGE_TARGET)
+    self.untar(s3dest, PACKAGE_TARGET)
 
     s3destDir = os.path.join(PACKAGE_TARGET, "s3sync/*.rb")
-    shell.sh("cp \"" + s3destDir + "\" /usr/bin")
+    shell.sh("cp " + s3destDir + " /usr/bin")
 
     # now install Java.
     if self.arch == "x86_64":
@@ -60,7 +60,7 @@ class Fedora8Setup(PlatformSetup):
 
     jdkPackageDest = os.path.join(PACKAGE_TARGET, jdkPackage)
 
-    self.s3get(self.bucket, "packages/" + jdkPackage, PACKAGE_TARGET)
+    self.s3get(self.bucket, "packages/" + jdkPackage, jdkPackageDest)
     shell.sh("yum -y install yum-allowdowngrade")
     shell.sh("yum -y remove \"java-*-icedtea\" \"java-*-icedtea-devel\" " \
         + "\"java-*-icedtea-plugin\"")

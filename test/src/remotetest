@@ -13,7 +13,7 @@ import unittest
 import com.cloudera.util.output as output
 
 from   distrotester.constants import *
-import distrotester.platform as platform
+import distrotester.platforms as platforms
 from   distrotester.testerror import TestError
 import distrotester.testproperties as testproperties
 
@@ -48,11 +48,11 @@ platformName = properties.getProperty(TEST_PLATFORM_KEY)
 
 if properties.getBoolean(SETUP_KEY):
   # Do the remote setup steps on this machine for the current platform
-  platformSetup = platform.setupForPlatform(platformName)
+  platformSetup = platforms.setupForPlatform(platformName, properties)
   platformSetup.setup()
 
 if properties.getBoolean(RUN_TESTS_KEY):
-  testSuite = platform.testSuiteForPlatform(platformName, properties)
+  testSuite = platforms.testSuiteForPlatform(platformName, properties)
   runner = unittest.TextTestRunner()
   if not runner.run(testSuite).wasSuccessful():
     logging.error("Some test cases failed!")

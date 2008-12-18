@@ -16,7 +16,7 @@ import com.cloudera.distribution.sshall as sshall
 import com.cloudera.distribution.scpall as scpall
 
 from   distrotester.constants import *
-import distrotester.platform as platform
+import distrotester.platforms as platforms
 from   distrotester.testerror import TestError
 import distrotester.testproperties as testproperties
 
@@ -59,7 +59,7 @@ os.chdir(binDir)
 
 # Did the user ask for --list-platforms? If so, list 'em and exit.
 if properties.getBoolean(LIST_PLATFORMS_KEY):
-  platform.listPlatforms()
+  platforms.listPlatforms()
   sys.exit(1)
 
 # Make sure we have AWS credentials; we'll need these after we make an instance
@@ -116,20 +116,25 @@ if platformName == None:
 logging.info("Launching tests on platform: " + platformName)
 
 existingInstanceNames = properties.getProperty(EXISTING_INSTANCES_KEY)
+userSuppliedInstances = False
 if existingInstanceNames != None:
   instances = existingInstanceNames.split(",")
   userSuppliedInstances = True
   logging.info("Using instances:")
-else:
-  instances = platform.launchInstances(platformName, properties)
-  userSuppliedInstances = False
+
+# call this method regardless of whether it actually does the launch;
+# at minimum it sets up properties in our global configuation
+newInstances = platforms.launchInstances(platformName, properties, \
+    userSuppliedInstances)
+if existingInstanceNames == None:
+  instances = newInstances
   logging.info("Started instances:")
 
 # TODO: Documentation: We need to set EC2_HOME, EC2_PRIVATE_KEY, EC2_CERT
 # for any user who will be running this tool (Including autotest users)
 for instance in instances:
   logging.info("  " + instance)
-instanceLines = listInstances(None, properties)
+instanceLines = ec2.listInstances(None, properties)
 
 dnsMap = ec2.getInstanceDnsNames(instanceLines, instances)
 
@@ -140,7 +145,7 @@ dnsMap = ec2.getInstanceDnsNames(instanceLines, instances)
 # 10.x.y.z address for. TODO (aaron): This is not a foolproof method)
 useInternal = False
 try:
-  myHostNameLines = shell.sh("hostname -i")
+  myHostNameLines = shell.shLines("hostname -i")
   if len(myHostNameLines) > 0:
     hostLine = myHostNameLines[0].strip()
   if hostLine.startswith("10."):
@@ -163,6 +168,8 @@ if len(hostList) == 0:
 try:
 
   # Upload test harness tarball.
+  remoteHarnessTarFile = os.path.join("/mnt/", \
+      os.path.basename(tarballFilename))
   try:
     try:
       scpall.scpMultiHosts(tarballFilename, "root", hostList, \
@@ -176,11 +183,19 @@ try:
   finally:
     os.remove(tarballFilename)
 
+  # Upload distro tarball to master host.
+  remoteDistribTarball = os.path.join("/mnt/", \
+      os.path.basename(localDistribTarball))
+  if not properties.getBoolean(BYPASS_UPLOAD_KEY):
+    shell.scp(localDistribTarball, "root", masterHost, remoteDistribTarball, \
+        properties)
+
   # Run platform-specific bootstrap commands. Append the unzip commands here
   # so that at the end of this, we know that we're ready to go on all nodes.
-  platformSetup = platform.setupForPlatform(platformName)
+  platformSetup = platforms.setupForPlatform(platformName, properties)
   bootstrapCmds = platformSetup.remoteBootstrap()
-  bootstrapCmds.append("tar -zxf \"/mnt/" + tarballFilename + "\" -C /mnt")
+  bootstrapCmds.append("tar -zxf \"" + remoteHarnessTarFile + "\" -C /mnt")
+  bootstrapCmds.append("tar -zxf \"" + remoteDistribTarball + "\" -C /mnt")
 
   for cmd in bootstrapCmds:
     results = sshall.sshMultiHosts("root", hostList, cmd, properties, \
@@ -191,13 +206,18 @@ try:
         logging.error("Got error result executing bootstrap cmd on: " \
             + result.getHost())
         logging.error("Command was: " + result.getCommand())
+        logging.error("Output:")
+        for line in result.getOutput():
+          logging.error("  " + line.rstrip())
+        raise TestError("Error running command.")
 
   # Run platform-specific installation functions on all nodes.
   cmd = REMOTE_SETUP_COMMAND + " " + TEST_PLATFORM_ARG + " " + platformName \
       + " " + AWS_SECRET_KEY_ARG + " '" + awsSecretKey + "'" \
       + " " + AWS_ACCESS_KEY_ARG + " '" + awsAccessKey + "'" \
       + " " + AWS_ACCOUNT_ID_ARG + " '" + awsAccountId + "'" \
-      + " " + PACKAGE_BUCKET_ARG + " " + packageBucket
+      + " " + PACKAGE_BUCKET_ARG + " " + packageBucket \
+      + " --debug"
 
   results = sshall.sshMultiHosts("root", hostList, cmd, properties, \
       SSH_RETRIES, SSH_PARALLEL)
@@ -207,6 +227,10 @@ try:
       logging.error("Got error result running platform install on: " \
           + result.getHost())
       logging.error("Command was: " + result.getCommand())
+      logging.error("Output:")
+      for line in result.getOutput():
+        logging.error("  " + line.rstrip())
+      raise TestError("Error running command.")
 
   # Pick one node to the "master" node.
   masterHost = hostList[0]
@@ -226,13 +250,6 @@ try:
   # we no longer need the list of slave addrs locally.
   os.remove(tmpFilename)
 
-  # Upload distro tarball to master host.
-  remoteDistribTarball = os.path.join("/mnt/", \
-      os.path.basename(localDistribTarball))
-  if not properties.getBoolean(BYPASS_UPLOAD_KEY):
-    shell.scp(localDistribTarball, "root", masterHost, remoteDistribTarball, \
-        properties)
-
   # Run the global test battery loop on the master node
   cmd = REMOTE_TEST_COMMAND + " " + TEST_PLATFORM_ARG + " " + platformName \
       + " " + AWS_SECRET_KEY_ARG + " '" + awsSecretKey + "'" \
@@ -240,7 +257,8 @@ try:
       + " " + AWS_ACCOUNT_ID_ARG + " '" + awsAccountId + "'" \
       + " " + PACKAGE_BUCKET_ARG + " " + packageBucket \
       + " " + SLAVES_FILE_ARG + " " + remoteSlavesName \
-      + " " + DISTRIB_TARBALL_ARG + " " + remoteDistribTarball
+      + " " + DISTRIB_TARBALL_ARG + " " + remoteDistribTarball \
+      + " --debug"
   shell.ssh("root", masterHost, cmd, properties)
 
 finally:

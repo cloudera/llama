@@ -24,7 +24,7 @@ class PlatformSetup(object):
 
   ### public abstract interface; subclasses must implement these ###
 
-  def remoteBootstrap():
+  def remoteBootstrap(self):
     """ Returns a list of commands (one per string) to run via ssh, as root
         on the instance to start the setup process. This can do things like
         ensure that python is installed. e.g., [ "yum install python" ] """
@@ -32,7 +32,7 @@ class PlatformSetup(object):
     # default implementation does nothing.
     return []
 
-  def setup():
+  def setup(self):
     """ Perform platform-specific setup actions; executed on the remote
         instance after the distrotester has been uploaded and unzipped
     """
@@ -43,12 +43,12 @@ class PlatformSetup(object):
 
   ### methods which provide useful functionality to subclasses
 
-  def wget(url, destFile):
+  def wget(self, url, destFile):
     """ wgets a url to a file """
     shell.sh("wget '" + url + "' -O \"" + destFile + "\"")
 
 
-  def s3get(bucket, key, targetFile):
+  def s3get(self, bucket, key, targetFile):
     """ Uses s3cmd.rb to retrieve an object specified by bucket:key and
         places it in targetFile """
 
@@ -72,7 +72,7 @@ class PlatformSetup(object):
     shell.sh(cmd)
 
 
-  def untar(tarball, destDir=None, doUnzip=True):
+  def untar(self, tarball, destDir=None, doUnzip=True):
     """ expands a tarball. tar xf[z] tarball [-C destdir] """
 
     cmd = "tar xf"
