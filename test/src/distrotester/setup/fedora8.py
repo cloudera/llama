@@ -34,7 +34,7 @@ class Fedora8Setup(PlatformSetup):
     # Need to make sure we can use python!
     # Also, ruby for s3cmd
     return [
-      "yum -y install python python-devel ruby"
+      "yum -y install python python-devel ruby rsync"
     ]
 
 
@@ -83,7 +83,7 @@ class Fedora8Setup(PlatformSetup):
     shell.sh("mv /bin/no.more /bin/more")
 
     # install other packages that make this a more sane system to use.
-    shell.sh("yum -y install screen rsync lzo")
+    shell.sh("yum -y install screen lzo")
     shell.sh("yum -y install xeyes xauth")
     shell.sh("yum -y install xml-commons-apis")
 

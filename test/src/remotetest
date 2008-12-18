@@ -8,6 +8,7 @@ import logging
 import os
 import sys
 import tempfile
+import unittest
 
 import com.cloudera.util.output as output
 
@@ -51,6 +52,9 @@ if properties.getBoolean(SETUP_KEY):
   platformSetup.setup()
 
 if properties.getBoolean(RUN_TESTS_KEY):
-  # TODO: Actually run the test harness
-  pass
+  testSuite = platform.testSuiteForPlatform(platformName, properties)
+  runner = unittest.TextTestRunner()
+  if not runner.run(testSuite).wasSuccessful():
+    logging.error("Some test cases failed!")
+    sys.exit(1)
 

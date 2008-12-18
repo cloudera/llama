@@ -73,12 +73,17 @@ RUN_TESTS_ARG = "--test"
 RUN_TESTS_KEY = "remote.runtests"
 
 
+# If we know that the distribution has already been uploaded, don't
+# need to wait for it to happen a second time.
+BYPASS_UPLOAD_ARG = "--bypass-upload"
+BYPASS_UPLOAD_KEY = "bypass.upload"
+
 # Where are the clouderadev ec2 profiles stored, relative to the bindir?
-PROFILE_DIR = "../profiles"
+PROFILE_DIR = "profiles"
 
 # What's the base directory containing the test harness, relative
 # to the bindir?
-HARNESS_BASE_DIR = ".."
+HARNESS_BASE_DIR = "."
 
 # default instance count is 1.
 DEFAULT_INSTANCES = 1
@@ -89,6 +94,8 @@ SSH_PARALLEL = 5 # Do a command on up to five hosts in parallel
 SCP_RETRIES  = 3 # Retry upload up to 3 times
 SCP_PARALLEL = 5 # Upload to at most 5 hosts concurrently.
 
+# Wait five minutes for instances to start.
+DEFAULT_BOOT_TIMEOUT = 300
 
 # What command do we use to execute the PlatformSetup.setup() command
 # on the remote hosts?

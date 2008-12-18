@@ -9,6 +9,7 @@ import sys
 import tempfile
 
 import com.cloudera.tools.ec2 as ec2
+import com.cloudera.tools.shell as shell
 import com.cloudera.util.output as output
 
 import com.cloudera.distribution.sshall as sshall
@@ -98,7 +99,7 @@ except IOError:
   pass
 
 harnessBaseDir = os.path.abspath(os.path.join(os.getcwd(), HARNESS_BASE_DIR))
-harnessParentDir = os.path.abspath(os.path.join(harnessBaseDir, "..")
+harnessParentDir = os.path.abspath(os.path.join(harnessBaseDir, ".."))
 baseName = os.path.basename(harnessBaseDir)
 
 # Actually tar it up.
@@ -179,7 +180,7 @@ try:
   # so that at the end of this, we know that we're ready to go on all nodes.
   platformSetup = platform.setupForPlatform(platformName)
   bootstrapCmds = platformSetup.remoteBootstrap()
-  bootstrapCmds.append(["tar -zxf \"/mnt/" + tarballFilename + \" -C /mnt")
+  bootstrapCmds.append("tar -zxf \"/mnt/" + tarballFilename + "\" -C /mnt")
 
   for cmd in bootstrapCmds:
     results = sshall.sshMultiHosts("root", hostList, cmd, properties, \
@@ -227,9 +228,10 @@ try:
 
   # Upload distro tarball to master host.
   remoteDistribTarball = os.path.join("/mnt/", \
-      os.path.basename(localDistribTarball)
-  shell.scp(localDistribTarball, "root", masterHost, remoteDistribTarball, \
-      properties)
+      os.path.basename(localDistribTarball))
+  if not properties.getBoolean(BYPASS_UPLOAD_KEY):
+    shell.scp(localDistribTarball, "root", masterHost, remoteDistribTarball, \
+        properties)
 
   # Run the global test battery loop on the master node
   cmd = REMOTE_TEST_COMMAND + " " + TEST_PLATFORM_ARG + " " + platformName \

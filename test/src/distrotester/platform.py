@@ -9,6 +9,7 @@
 import logging
 import os
 import sys
+import unittest
 
 import com.cloudera.tools.ec2 as ec2
 from   com.cloudera.util.properties import Properties
@@ -54,6 +55,19 @@ def setupForPlatform(platformName, properties):
   else:
     raise TestError("No Setup object available for platform: " + platformName)
 
+
+def testSuiteForPlatform(platformName, properties):
+  """ return a pyunit TestSuite for execution on the remote platform """
+
+  # TODO (aaron): New platform? Add it to this list.
+  if platformName == "fc8.i386":
+    suite = unittest.makeSuite(StandaloneTest, 'test')
+    return unittest.TestSuite([suite])
+  elif platformName == "fc8.x86_64":
+    suite = unittest.makeSuite(StandaloneTest, 'test')
+    return unittest.TestSuite([suite])
+  else:
+    raise TestError("No test suite available for platform: " + platformName)
 
 
 def launchInstances(platformName, properties):

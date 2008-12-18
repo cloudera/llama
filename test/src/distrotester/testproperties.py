@@ -31,8 +31,8 @@ class TestProperties(Properties):
     EC2_HOME_ARG        : ec2.EC2_HOME_PROP,
     EC2_CERT_ARG        : ec2.EC2_CERT_PROP,
     "-C"                : ec2.EC2_CERT_PROP,
-    EC2_PRIVATE_KEY_ARG : ec2.PRIV_KEY_PROP,
-    "-K"                : ec2.PRIV_KEY_PROP,
+    EC2_PRIVATE_KEY_ARG : ec2.EC2_PRIV_KEY_PROP,
+    "-K"                : ec2.EC2_PRIV_KEY_PROP,
 
     SSH_IDENTITY_ARG    : SSH_IDENTITY_KEY,
     "-i"                : SSH_IDENTITY_KEY,
@@ -44,7 +44,9 @@ class TestProperties(Properties):
     SLAVES_FILE_ARG     : SLAVES_FILE_KEY,
     DISTRIB_TARBALL_ARG : DISTRIB_TARBALL_KEY,
 
+    # Options related to restarting the test harness and debugging
     EXISTING_INSTANCES_ARG : EXISTING_INSTANCES_KEY,
+    BYPASS_UPLOAD_ARG      : BYPASS_UPLOAD_KEY,
 
     # args specific to remotetest
     RUN_TESTS_ARG       : RUN_TESTS_KEY,
@@ -57,7 +59,8 @@ class TestProperties(Properties):
   booleanFlags = [
     LIST_PLATFORMS_ARG,
     RUN_TESTS_ARG,
-    SETUP_ARG
+    SETUP_ARG,
+    BYPASS_UPLOAD_ARG
   ]
 
   # these disable boolean flags
@@ -96,6 +99,9 @@ def loadAllProperties(properties, argv):
       with -p), as well as any properties set on the command line or from
       the user's environment """
 
+  PropsFileFlag = "-p"
+  PropsFileFlagLong = "--properties"
+
   # first, load initial vals from environment
   properties.loadFromEnvironment()
 
@@ -103,7 +109,7 @@ def loadAllProperties(properties, argv):
   # specifies a props file in particular, use that. otherwise
   # use the default props file.
   # Also in this initial scan of the arg list, look for --help.
-  propsFileName = defaultPropertyFileName
+  propsFileName = None
   useDefaultFile = True
   i = 0
   while i < len(argv):
@@ -165,27 +171,28 @@ def loadAllProperties(properties, argv):
     sys.exit(1)
 
   # actually load the properties file here now that we know its name
-  logging.debug("Reading properties file: " + propsFileName)
-  try:
-    # Relative paths loaded here must be normalized to be relative
-    # to dirname(propsfilename)
-    propsDir = os.path.dirname(os.path.realpath(propsFileName))
-    handle = open(propsFileName)
-    properties.load(handle, propsDir, properties.normalizePaths)
-    handle.close()
-  except IOError, ioe:
-    if useDefaultFile:
-      # if the default file can't be found, we just silently ignore that..
-      if os.path.exists(propsFileName):
-        logging.info("Warning: Could not load default properties file" \
-             + propsFileName)
-        logging.info(str(ioe))
-    else:
-      # If the user specified a props file, though, then any IOE is fatal.
-      logging.error("Error: Could not load properties file " \
-          + propsFileName)
-      logging.error(ioe)
-      sys.exit(1)
+  if propsFileName != None:
+    logging.debug("Reading properties file: " + propsFileName)
+    try:
+      # Relative paths loaded here must be normalized to be relative
+      # to dirname(propsfilename)
+      propsDir = os.path.dirname(os.path.realpath(propsFileName))
+      handle = open(propsFileName)
+      properties.load(handle, propsDir, properties.normalizePaths)
+      handle.close()
+    except IOError, ioe:
+      if useDefaultFile:
+        # if the default file can't be found, we just silently ignore that..
+        if os.path.exists(propsFileName):
+          logging.info("Warning: Could not load default properties file" \
+               + propsFileName)
+          logging.info(str(ioe))
+      else:
+        # If the user specified a props file, though, then any IOE is fatal.
+        logging.error("Error: Could not load properties file " \
+            + propsFileName)
+        logging.error(ioe)
+        sys.exit(1)
 
   # finally, read the command line arguments on top of all of this.
   properties.parseArgs(argv)
