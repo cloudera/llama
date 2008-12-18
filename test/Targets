@@ -7,7 +7,9 @@
 
 tester = PythonTarget(
   sources=[ "src/distrotester",
+            "src/remotetest",
             "src/testdistrib"],
-  requiredTargets=[ "python/Common" ],
+  requiredTargets=[ "python/Common",
+                    "projects/HadoopDist/installer" ],
   dataPaths = [ "profiles" ])
 

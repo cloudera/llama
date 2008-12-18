@@ -1,0 +1,56 @@
+#!/usr/bin/env python
+#
+# (c) Copyright 2008 Cloudera, Inc
+# remotetest  -- runs test processes across the Cloudera Hadoop Distribution
+#                This is the program entry point used on the remote server
+
+import logging
+import os
+import sys
+import tempfile
+
+import com.cloudera.util.output as output
+
+from   distrotester.constants import *
+import distrotester.platform as platform
+from   distrotester.testerror import TestError
+import distrotester.testproperties as testproperties
+
+# do this first
+output.initLogging()
+
+# use all args except program name
+argv = sys.argv[1:]
+
+properties = testproperties.TestProperties()
+output.attachOutputArgParser(properties)
+
+testproperties.loadAllProperties(properties, argv)
+
+
+# if the user has not selected a log file name and a log level,
+# force a log file here. Also set the default log level to verbose.
+setLogName = properties.getProperty(output.LOG_FILENAME_PROP)
+if setLogName == None:
+  properties.setProperty(output.LOG_FILENAME_PROP, DEFAULT_LOG_FILENAME)
+
+setLogVerbosity = properties.getProperty(output.LOG_VERBOSITY_PROP)
+if setLogVerbosity == None:
+  properties.setProperty(output.LOG_VERBOSITY_PROP, DEFAULT_LOG_VERBOSITY)
+
+# set up the console. Also starts logging to the specified file
+output.setupConsole(properties)
+
+# if we are here, then properties and argv parsing succeeded
+
+platformName = properties.getProperty(TEST_PLATFORM_KEY)
+
+if properties.getBoolean(SETUP_KEY):
+  # Do the remote setup steps on this machine for the current platform
+  platformSetup = platform.setupForPlatform(platformName)
+  platformSetup.setup()
+
+if properties.getBoolean(RUN_TESTS_KEY):
+  # TODO: Actually run the test harness
+  pass
+

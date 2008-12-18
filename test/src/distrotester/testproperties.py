@@ -5,6 +5,7 @@
 # This class manages user settings that can be loaded in to the distribution
 # testing program for the Cloudera Hadoop distribution
 
+import logging
 import os
 import sys
 
@@ -34,15 +35,29 @@ class TestProperties(Properties):
     "-K"                : ec2.PRIV_KEY_PROP,
 
     SSH_IDENTITY_ARG    : SSH_IDENTITY_KEY,
-    "-i"                : SSH_IDENTITY_KEY
+    "-i"                : SSH_IDENTITY_KEY,
 
+    AWS_ACCESS_KEY_ARG  : AWS_ACCESS_KEY_ID,
+    AWS_SECRET_KEY_ARG  : AWS_SECRET_ACCESS_KEY,
+    AWS_ACCOUNT_ID_ARG  : AWS_ACCOUNT_ID_KEY,
+
+    SLAVES_FILE_ARG     : SLAVES_FILE_KEY,
+    DISTRIB_TARBALL_ARG : DISTRIB_TARBALL_KEY,
+
+    EXISTING_INSTANCES_ARG : EXISTING_INSTANCES_KEY,
+
+    # args specific to remotetest
+    RUN_TESTS_ARG       : RUN_TESTS_KEY,
+    SETUP_ARG           : SETUP_KEY
   }
 
   # list of boolean flags (a subset of the above map).
   # Non-boolean flags take an argument;
   # these just set the property to 'true'
   booleanFlags = [
-    LIST_PLATFORMS_KEY
+    LIST_PLATFORMS_ARG,
+    RUN_TESTS_ARG,
+    SETUP_ARG
   ]
 
   # these disable boolean flags
@@ -51,9 +66,13 @@ class TestProperties(Properties):
 
   # what environment variables map to which properties?
   envVarMap = {
-    "EC2_HOME"        : ec2.EC2_HOME_PROP,
-    "EC2_PRIVATE_KEY" : ec2.EC2_PRIV_KEY_PROP,
-    "EC2_CERT"        : ec2.EC2_CERT_PROP
+    "EC2_HOME"         : ec2.EC2_HOME_PROP,
+    "EC2_PRIVATE_KEY"  : ec2.EC2_PRIV_KEY_PROP,
+    "EC2_CERT"         : ec2.EC2_CERT_PROP,
+
+    AWS_ACCESS_KEY_ENV : AWS_ACCESS_KEY_ID,
+    AWS_SECRET_KEY_ENV : AWS_SECRET_ACCESS_KEY,
+    AWS_ACCOUNT_ID_ENV : AWS_ACCOUNT_ID_KEY
   }
 
   # when we load the data from a file, which paths should be
@@ -98,7 +117,7 @@ def loadAllProperties(properties, argv):
       try:
         propsFileName = argv[i]
       except IndexError:
-        output.printlnError("Error: expected properties file name for " + arg)
+        logging.error("Error: expected properties file name for " + arg)
         sys.exit(1)
     elif arg == "--help":
       print "usage: " + sys.argv[0] + " [options]"
@@ -142,11 +161,11 @@ def loadAllProperties(properties, argv):
 
   # now actually check that we use all the flags
   if not properties.usesAllFlags(argv):
-    output.printlnError("Try " + sys.argv[0] + " --help")
+    logging.error("Try " + sys.argv[0] + " --help")
     sys.exit(1)
 
   # actually load the properties file here now that we know its name
-  output.printlnDebug("Reading properties file: " + propsFileName)
+  logging.debug("Reading properties file: " + propsFileName)
   try:
     # Relative paths loaded here must be normalized to be relative
     # to dirname(propsfilename)
@@ -158,14 +177,14 @@ def loadAllProperties(properties, argv):
     if useDefaultFile:
       # if the default file can't be found, we just silently ignore that..
       if os.path.exists(propsFileName):
-        output.printlnInfo("Warning: Could not load default properties file" \
+        logging.info("Warning: Could not load default properties file" \
              + propsFileName)
-        output.printlnInfo(str(ioe))
+        logging.info(str(ioe))
     else:
       # If the user specified a props file, though, then any IOE is fatal.
-      output.printlnError("Error: Could not load properties file " \
+      logging.error("Error: Could not load properties file " \
           + propsFileName)
-      output.printlnError(ioe)
+      logging.error(ioe)
       sys.exit(1)
 
   # finally, read the command line arguments on top of all of this.

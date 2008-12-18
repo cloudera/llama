@@ -6,13 +6,14 @@
 # Here is where we control what EC2 image we launch for, and where we
 # select the proper module to use to run the system setup procedures.
 
+import logging
 import os
 import sys
 
 import com.cloudera.tools.ec2 as ec2
-import com.cloudera.util.output as output
 from   com.cloudera.util.properties import Properties
 
+from   distrotester.setup.fedora8 import Fedora8Setup
 from   distrotester.constants import *
 from   distrotester.testerror import TestError
 
@@ -20,7 +21,7 @@ from   distrotester.testerror import TestError
 def listPlatforms():
   """ Lists the platforms available to select for testing on. """
 
-  output.printlnInfo("Available platforms (select with " \
+  logging.info("Available platforms (select with " \
       + TEST_PLATFORM_ARG + ")")
 
   profileDirEntries = os.listdir(PROFILE_DIR)
@@ -28,7 +29,7 @@ def listPlatforms():
     if entry.endswith(".properties"):
       # This is a $profileName.properties file that we can use
       platform = entry[0:len(entry) - 11]
-      output.printlnInfo("  " + platform)
+      logging.info("  " + platform)
 
 
 def profileForPlatform(platformName):
@@ -39,6 +40,20 @@ def profileForPlatform(platformName):
     raise TestError("No such platform: " + platformName)
 
   return profileFileName
+
+
+def setupForPlatform(platformName, properties):
+  """ Return a PlatformSetup object specific to the intended platform.
+      This is a factory method from string -> PlatformSetup """
+
+  # TODO (aaron): New platform? Add it to this list.
+  if platformName == "fc8.i386":
+    return Fedora8Setup("i386", properties)
+  elif platformName == "fc8.x86_64":
+    return Fedora8Setup("x86_64", properties)
+  else:
+    raise TestError("No Setup object available for platform: " + platformName)
+
 
 
 def launchInstances(platformName, properties):
