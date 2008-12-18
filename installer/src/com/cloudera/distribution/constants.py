@@ -326,7 +326,7 @@ APP_SUBDIR = "apps"
 # Underneath of $prefix/apps/, where do all the individual programs go?
 # TODO (aaron): 0.2 Need some way of embedding this in the build process
 # so that we don't have to manually change this every time.
-HADOOP_VERSION = "0.18.2"
+HADOOP_VERSION = "0.18.2-patched"
 HADOOP_INSTALL_SUBDIR = "hadoop-" + HADOOP_VERSION
 HADOOP_PACKAGE = "hadoop-" + HADOOP_VERSION + ".tar.gz"
 

@@ -11,7 +11,8 @@ tester = PythonTarget(
             "src/testdistrib"],
   requiredTargets=[ "python/Common",
                     "projects/HadoopDist/installer" ],
-  dataPaths = [ "profiles" ])
+  dataPaths = [ "profiles",
+                "hadoop-configs" ])
 
 release = PythonRedistTarget(
   distribName     = "distrotest",

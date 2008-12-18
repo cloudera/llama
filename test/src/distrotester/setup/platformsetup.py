@@ -32,6 +32,12 @@ class PlatformSetup(object):
     # default implementation does nothing.
     return []
 
+  def initProperties(self):
+    """ Populate the properties object with any key, val pairs specific
+        to this architecture """
+    # Default: do nothing.
+    pass
+
   def setup(self):
     """ Perform platform-specific setup actions; executed on the remote
         instance after the distrotester has been uploaded and unzipped

@@ -37,6 +37,16 @@ class Fedora8Setup(PlatformSetup):
       "yum -y install python python-devel ruby rsync"
     ]
 
+  def initProperties(self):
+    """ Set any properties specific to this platform """
+
+    # set the java home location
+    if self.arch == "x86_64":
+      self.properties.setProperty(JAVA_HOME_KEY, "/usr/java/jdk1.6.0_07")
+    elif self.arch == "i386":
+      self.properties.setProperty(JAVA_HOME_KEY, "/usr/java/jdk1.6.0_10")
+
+
 
   def setup(self):
     """ Install on Fedora 8. """
@@ -53,11 +63,10 @@ class Fedora8Setup(PlatformSetup):
     # now install Java.
     if self.arch == "x86_64":
       jdkPackage = "jdk-6u7-linux-" + self.arch + "-rpm.bin"
-      jdkPath = "/usr/java/jdk1.6.0_07"
     elif self.arch == "i386":
       jdkPackage = "jdk-6u10-linux-" + self.arch + "-rpm.bin"
-      jdkPath = "/usr/java/jdk1.6.0_10"
 
+    jdkPath = self.properties.getProperty(JAVA_HOME_KEY)
     jdkPackageDest = os.path.join(PACKAGE_TARGET, jdkPackage)
 
     self.s3get(self.bucket, "packages/" + jdkPackage, jdkPackageDest)
@@ -86,5 +95,19 @@ class Fedora8Setup(PlatformSetup):
     shell.sh("yum -y install screen lzo")
     shell.sh("yum -y install xeyes xauth")
     shell.sh("yum -y install xml-commons-apis")
+
+    # configure ssh so that it doesn't raise a fuss about unknwon hosts
+    handle = open("/root/.ssh/config", "w")
+    handle.write("""
+Host *
+  StrictHostKeyChecking no
+  PasswordAuthentication no
+  GSSAPIAuthentication no
+  NoHostAuthenticationForLocalhost yes
+  ServerAliveInterval 60
+  ServerAliveCountMax 60
+""")
+
+    handle.close()
 
 

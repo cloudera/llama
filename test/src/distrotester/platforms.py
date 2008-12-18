@@ -63,11 +63,9 @@ def testSuiteForPlatform(platformName, properties):
 
   # TODO (aaron): New platform? Add it to this list.
   if platformName == "fc8.i386":
-    suite = unittest.makeSuite(StandaloneTest, 'test')
-    return unittest.TestSuite([suite])
+    return unittest.makeSuite(StandaloneTest, 'test')
   elif platformName == "fc8.x86_64":
-    suite = unittest.makeSuite(StandaloneTest, 'test')
-    return unittest.TestSuite([suite])
+    return unittest.makeSuite(StandaloneTest, 'test')
   else:
     raise TestError("No test suite available for platform: " + platformName)
 

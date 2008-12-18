@@ -19,6 +19,20 @@ from   com.cloudera.util.properties import Properties
 # if we get this symbol on the command line, we stop processing args
 stopParsingArgsSymbol = "--"
 
+
+# well-defined location for primary Properties object
+mainProperties = None
+def getProperties():
+  """ Returns the singleton primary properties object """
+  global mainProperties
+  return mainProperties
+
+def setProperties(props):
+  """ Sets the primary properties object """
+  global mainProperties
+  mainProperties = props
+
+
 class TestProperties(Properties):
 
   # If an argment sets a property, which one is it?
@@ -47,6 +61,7 @@ class TestProperties(Properties):
     # Options related to restarting the test harness and debugging
     EXISTING_INSTANCES_ARG : EXISTING_INSTANCES_KEY,
     BYPASS_UPLOAD_ARG      : BYPASS_UPLOAD_KEY,
+    BYPASS_SETUP_ARG       : BYPASS_SETUP_KEY,
 
     # args specific to remotetest
     RUN_TESTS_ARG       : RUN_TESTS_KEY,
@@ -60,7 +75,8 @@ class TestProperties(Properties):
     LIST_PLATFORMS_ARG,
     RUN_TESTS_ARG,
     SETUP_ARG,
-    BYPASS_UPLOAD_ARG
+    BYPASS_UPLOAD_ARG,
+    BYPASS_SETUP_ARG
   ]
 
   # these disable boolean flags

@@ -27,6 +27,7 @@ properties = testproperties.TestProperties()
 output.attachOutputArgParser(properties)
 
 testproperties.loadAllProperties(properties, argv)
+testproperties.setProperties(properties)
 
 
 # if the user has not selected a log file name and a log level,
@@ -43,12 +44,17 @@ if setLogVerbosity == None:
 output.setupConsole(properties)
 
 # if we are here, then properties and argv parsing succeeded
+binName = sys.argv[0]
+binDir = os.path.dirname(binName)
+os.chdir(binDir)
 
 platformName = properties.getProperty(TEST_PLATFORM_KEY)
 
+platformSetup = platforms.setupForPlatform(platformName, properties)
+platformSetup.initProperties()
+
 if properties.getBoolean(SETUP_KEY):
   # Do the remote setup steps on this machine for the current platform
-  platformSetup = platforms.setupForPlatform(platformName, properties)
   platformSetup.setup()
 
 if properties.getBoolean(RUN_TESTS_KEY):
