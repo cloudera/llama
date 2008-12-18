@@ -126,7 +126,7 @@ Index: src/webapps/static/style.css
 +
 +div#wrapper {
 +	margin:0px auto;
-+	width:980px;
++	width:930px;
 +	margin-top:10px;
 +	padding:15px;
 +	padding-top:0px;
@@ -441,7 +441,7 @@ Index: src/webapps/job/jobtracker.jsp
 ===================================================================
 --- src/webapps/job/jobtracker.jsp	(revision 726123)
 +++ src/webapps/job/jobtracker.jsp	(working copy)
-@@ -88,55 +88,83 @@
+@@ -88,55 +88,70 @@
    }%>
  
  <%@page import="org.apache.hadoop.dfs.JspHelper"%>
@@ -453,29 +453,15 @@ Index: src/webapps/job/jobtracker.jsp
 +<link rel="stylesheet" type="text/css" href="/static/style.css">
  </head>
  <body>
--<h1><%= trackerName %> Hadoop Map/Reduce Administration</h1>
++
++<div id="wrapper">
++  <div id="title">
+ <h1><%= trackerName %> Hadoop Map/Reduce Administration</h1>
++    <div id="status">
  
 -<b>State:</b> <%= tracker.getClusterStatus().getJobTrackerState() %><br>
 -<b>Started:</b> <%= new Date(tracker.getStartTime())%><br>
 -<b>Version:</b> <%= VersionInfo.getVersion()%>,
-+<div id="topbar">
-+<div id="topbar_inner">
-+  <ul>
-+    <li><a href="http://www.cloudera.com/">Home</a></li>
-+    <li><a href="http://www.cloudera.com/about">About</a></li>
-+    <li><a href="http://community.cloudera.com">Community</a></li>
-+    <li><a href="http://www.cloudera.com/hadoop-training">Training</a></li>
-+    <li><a href="http://www.cloudera.com/hadoop-support">Support</a></li>
-+    <li><a href="http://www.cloudera.com/blog">Blog</a></li>
-+  </ul>
-+</div>
-+</div>
-+
-+<div id="wrapper">
-+  <div id="logo"><a href="http://www.cloudera.com"><img src="/static/images/logo.png" border="0"></a></div>
-+  <div id="title">
-+    <div id="status">
-+
 +<span>State:</span> <%= tracker.getClusterStatus().getJobTrackerState() %><br>
 +<span>Started:</span> <%= new Date(tracker.getStartTime())%><br>
 +<span>Version:</span> <%= VersionInfo.getVersion()%>,
@@ -542,7 +528,7 @@ Index: src/webapps/dfs/dfshealth.jsp
 ===================================================================
 --- src/webapps/dfs/dfshealth.jsp	(revision 726123)
 +++ src/webapps/dfs/dfshealth.jsp	(working copy)
-@@ -223,12 +223,29 @@
+@@ -223,12 +223,16 @@
  <html>
  
  <link rel="stylesheet" type="text/css" href="/static/hadoop.css">
@@ -551,21 +537,8 @@ Index: src/webapps/dfs/dfshealth.jsp
      
  <body>
 -<h1>NameNode '<%=namenodeLabel%>'</h1>
-+<div id="topbar">
-+<div id="topbar_inner">
-+  <ul>
-+    <li><a href="http://www.cloudera.com/">Home</a></li>
-+    <li><a href="http://www.cloudera.com/about">About</a></li>
-+    <li><a href="http://community.cloudera.com">Community</a></li>
-+    <li><a href="http://www.cloudera.com/hadoop-training">Training</a></li>
-+    <li><a href="http://www.cloudera.com/hadoop-support">Support</a></li>
-+    <li><a href="http://www.cloudera.com/blog">Blog</a></li>
-+  </ul>
-+</div>
-+</div>
  
 +<div id="wrapper">
-+  <div id="logo"><a href="http://www.cloudera.com"><img src="/static/images/logo.png" border="0"></a></div>
 +  <div id="title">
 +    <h1>NameNode '<%=namenodeLabel%>'</h1>
  
@@ -573,7 +546,7 @@ Index: src/webapps/dfs/dfshealth.jsp
  <div id="dfstable"> <table>	  
  <tr> <td id="col1"> Started: <td> <%= fsn.getStartTime()%>
  <tr> <td id="col1"> Version: <td> <%= VersionInfo.getVersion()%>, r<%= VersionInfo.getRevision()%>
-@@ -249,7 +266,7 @@
+@@ -249,7 +253,7 @@
  
  <h3>Local logs</h3>
  <a href="/logs/">Log</a> directory
