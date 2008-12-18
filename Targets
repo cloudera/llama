@@ -65,7 +65,7 @@ supportedHadoopPackage = HadoopPackageTarget(
   patchVersion  = "CH-0.1.0",
   patchPlan     = [
       "projects/HadoopDist/scribe-log4j/scribe_hadoop_trunk_v3.patch",
-      "projects/HadoopDist/nn+jt_jsp/nn+jt_cloudera_0.18.2.patch",
+      "projects/HadoopDist/nn+jt_jsp/nn+jt_cloudera_0.18.2_noheader.patch",
                   ],
   components    = [ libfb303Component,
                     libthriftComponent,
