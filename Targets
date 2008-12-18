@@ -94,6 +94,12 @@ installerComponent = PackageComponent(
   includeZip = False, # we need this unpackacked
   destDir    = "bin")
 
+# the log mover system
+logMoverComponent = PackageComponent(
+  targetName = "projects/HadoopDist/log_mover:release",
+  includeZip = False, # we need this unpackacked
+  destDir    = "bin")
+
 # take the pig tgz package we assembled in thirdparty/pig/ and include that
 # in our distribution package.
 pigPackageComponent = PackageComponent(
@@ -118,6 +124,7 @@ supportedDistro = PackageTarget(
   components  = [
     hadoopComponent,
     installerComponent,
+    logMoverComponent,
     pigPackageComponent,
     hivePackageComponent
   ])

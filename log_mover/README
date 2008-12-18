@@ -1,0 +1,25 @@
+This project is meant to move logs from a single place, for example a Scribe
+central server or a directory that contains RSYNCed files, temporarily in to
+MySQL for reporting purposes.  This project is also capable of pruning the
+MySQL tables to ensure that they don't get too large.  Lastly, this project
+is capable of persisting old log files to HDFS.
+
+This project is also very pluggable.  As it stands now, it only deals
+with vmstat logs that are collected by Scribe.  This is a silly use
+case, because vmstat provides statistics that monitoring software
+such as Hyperic or Nagios could provide.  However, it provides a good
+example for using this framework for other log collection.
+
+Usage:
+Database initializers:
+db_user_and_db.sql - creates a user and database
+db_init.sql        - creates tables
+Usage:
+1) log_to_db.py    - parses logs and puts them in MySQL
+2) prune.py        - prune the MySQL tables
+3) persist.py      - persist old logs to HDFS
+
+Each of these scripts should be attached to a cron job.  It is recommended
+that log_to_db.py is run every minute, prune.py is run as often as you would
+like things pruned (this is also defined as a constant in each pruner), and
+persist.py is run every few hours or so.   

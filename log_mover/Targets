@@ -1,0 +1,28 @@
+#!/usr/bin/python
+#
+# (c) Copyright 2008 Cloudera, Inc.
+#
+# Installation system for Cloudera Hadoop
+#
+
+logMover = PythonTarget(
+  sources=[ "src/common.py",
+            "src/db",
+            "src/log_to_db.py",
+            "src/log_to_dbs",
+            "src/persist.py",
+            "src/persisters",
+            "src/prune.py",
+            "src/pruners",
+            "src/settings.py"])
+
+logMoverTest = PythonTestTarget(
+  sources = ["src/tests"],
+  mainModule = "src/run_tests.py",
+  requiredTargets = [":logMover"])
+
+# packaging the log mover up for use in the tarball
+release = PythonRedistTarget(
+  distribName     = "log_mover",
+  requiredTargets = [ ":logMover" ])
+
