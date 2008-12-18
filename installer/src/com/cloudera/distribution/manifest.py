@@ -10,6 +10,8 @@ from   com.cloudera.distribution.packages.hadoopinstall import HadoopInstall
 from   com.cloudera.distribution.packages.hiveinstall import HiveInstall
 from   com.cloudera.distribution.packages.piginstall import PigInstall
 from   com.cloudera.distribution.packages.scribeinstall import ScribeInstall
+from   com.cloudera.distribution.packages.logmoverinstall import LogMoverInstall
+from   com.cloudera.distribution.packages.portalinstall import PortalInstall
 from   com.cloudera.distribution.packages.globalprereq \
     import GlobalPrereqInstall
 
@@ -38,6 +40,12 @@ def createInstallPlan(properties):
   if properties.getBoolean(INSTALL_SCRIBE_KEY, INSTALL_SCRIBE_DEFAULT):
     output.printlnVerbose("Selecting package Scribe")
     plan.addTool(ScribeInstall(properties))
+  if properties.getBoolean(INSTALL_LOGMOVER_KEY, INSTALL_LOGMOVER_DEFAULT):
+    output.printlnVerbose("Selecting package LogMover")
+    plan.addTool(LogMoverInstall(properties))
+  if properties.getBoolean(INSTALL_PORTAL_KEY, INSTALL_PORTAL_DEFAULT):
+    output.printlnVerbose("Selecting package Portal")
+    plan.addTool(PortalInstall(properties))
 
   return plan
 
@@ -66,6 +74,16 @@ def getInstallFlags(properties):
     flags.append("--install-scribe")
   else:
     flags.append("--without-scribe")
+
+  if properties.getBoolean(INSTALL_LOGMOVER_KEY, INSTALL_LOGMOVER_DEFAULT):
+    flags.append("--install-logmover")
+  else:
+    flags.append("--without-logmover")
+
+  if properties.getBoolean(INSTALL_PORTAL_KEY, INSTALL_PORTAL_DEFAULT):
+    flags.append("--install-portal")
+  else:
+    flags.append("--without-portal")
 
   return flags
 
