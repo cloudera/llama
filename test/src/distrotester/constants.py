@@ -120,8 +120,18 @@ DFS_NAME_DIR = "/mnt/tmp/name"
 CHECKPOINT_DIR = "/mnt/tmp/secondary"
 HADOOP_TMP_DIR = "/mnt/tmp/hadoop"
 
+# Whom do we run hadoop daemons as?
+HADOOP_USER_KEY = "hadoop.user"
 HADOOP_USER = "hadoop"
 
+# Whom do we access hadoop as?
+CLIENT_USER_KEY = "client.user"
+CLIENT_USER = "client"
+
+# Whom we install as. Sometimes, also, access or host daemons.
+ROOT_USER = "root"
+
+# Where is java stored on this machine?
 JAVA_HOME_KEY = "java.home"
 
 

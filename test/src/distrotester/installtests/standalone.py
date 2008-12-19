@@ -21,9 +21,18 @@ class StandaloneTest(TestCaseWithAsserts):
 
   def __init__(self, methodName='runTest'):
     TestCaseWithAsserts.__init__(self, methodName)
-    self.hostname = None
     self.curHadoopSite = None
     self.curSlavesFile = None
+
+    # Get our hostname and memoize it
+    self.hostname = None
+    hostLines = shell.shLines("hostname")
+    if len(hostLines) > 0:
+      self.hostname = hostLines[0].strip()
+
+    if self.hostname == None:
+      self.hostname = "localhost"
+
 
   def getHadoopDir(self):
     return os.path.join(INSTALL_PREFIX, "hadoop")
@@ -52,12 +61,6 @@ class StandaloneTest(TestCaseWithAsserts):
         hostname.
     """
 
-    # Get our hostname and memoize it if need be.
-    if self.hostname == None:
-      hostLines = shell.shLines("hostname")
-      if len(hostLines) > 0:
-        self.hostname = hostLines[0].strip()
-
     # Get a temporary filename to use as the hadoop-site.xml file.
     (oshandle, tmpFilename) = tempfile.mkstemp()
     self.curHadoopSite = tmpFilename
@@ -78,22 +81,20 @@ class StandaloneTest(TestCaseWithAsserts):
 
     return self.curHadoopSite
 
-  def stopHadoop(self):
-    try:
-      # stop any hadoop run as ourselves.
-      hadoopDir = self.getHadoopDir()
-      stopCmd = os.path.join(hadoopDir, "bin/stop-all.sh")
-      shell.sh(stopCmd)
-    except shell.CommandError, ce:
-      pass # nothing to shut down? ok
-
+  def stopHadoopForUser(self, user):
+    """ Stop the hadoop daemons run by a given hadoop username """
     try:
       # stop any hadoop run as hadoop user.
       hadoopDir = self.getHadoopDir()
       stopCmd = os.path.join(hadoopDir, "bin/stop-all.sh")
-      shell.sh("sudo -H -u " + HADOOP_USER + " " + stopCmd)
+      shell.sh("sudo -H -u " + user + " " + stopCmd)
     except shell.CommandError, ce:
       pass # nothing to shut down? ok
+
+  def stopHadoop(self):
+    self.stopHadoopForUser(ROOT_USER)
+    self.stopHadoopForUser(HADOOP_USER)
+
 
 
   def tearDown(self):
@@ -108,6 +109,9 @@ class StandaloneTest(TestCaseWithAsserts):
     # self.stopHadoop()
 
 
+  # TODO: Turn this into a regular setUp() after you get all
+  # the individual cases working. This blows away the log dir
+  # too
   def prepare(self):
     """ shutdown and remove existing hadoop distribution. """
 
@@ -133,6 +137,7 @@ class StandaloneTest(TestCaseWithAsserts):
 
     cmd = INSTALLER_COMMAND + " --unattend --prefix " + INSTALL_PREFIX \
         + " --without-scribe --without-pig --without-hive" \
+        + " --without-logmover --without-portal" \
         + " --config-prefix " + CONFIG_PREFIX \
         + " --log-filename " + INSTALLER_LOG_FILE \
         + " --format-hdfs --hadoop-user root " \
@@ -143,6 +148,9 @@ class StandaloneTest(TestCaseWithAsserts):
         + self.prepHadoopSite("hadoop-configs/basic-config.xml") \
         + " --debug"
     shell.sh(cmd)
+
+    self.getProperties().setProperty(HADOOP_USER_KEY, ROOT_USER)
+    self.getProperties().setProperty(CLIENT_USER_KEY, ROOT_USER)
 
     hadoopSuite = unittest.makeSuite(HadoopTest, 'test')
     functionalityTests = unittest.TestSuite([
@@ -159,20 +167,89 @@ class StandaloneTest(TestCaseWithAsserts):
     """ Install all components.
         Use a separate hadoop user account and a separate client account. """
 
-    # TODO: Create accounts
     # TODO (aaron): enable scribe when it's ready.
-    pass
+    self.prepare()
+    javaHome = self.getProperties().getProperty(JAVA_HOME_KEY)
+
+    cmd = INSTALLER_COMMAND + " --unattend --prefix " + INSTALL_PREFIX \
+        + " --without-scribe " \
+        + " --config-prefix " + CONFIG_PREFIX \
+        + " --log-filename " + INSTALLER_LOG_FILE \
+        + " --format-hdfs --hadoop-user " + HADOOP_USER \
+        + " --java-home " + javaHome \
+        + " --hadoop-slaves " + self.getSlavesFile() \
+        + " --identity /root/.ssh/id_rsa" \
+        + " --hadoop-site " \
+        + self.prepHadoopSite("hadoop-configs/basic-config.xml") \
+        + ' --namenode "hdfs://' + self.hostname + ':9000/" ' \
+        + ' --jobtracker "' + self.hostname + ':9001"' \
+        + " --debug"
+
+    shell.sh(cmd)
+
+    self.getProperties().setProperty(HADOOP_USER_KEY, HADOOP_USER)
+    self.getProperties().setProperty(CLIENT_USER_KEY, CLIENT_USER)
+
+    hadoopSuite = unittest.makeSuite(HadoopTest, 'test')
+    functionalityTests = unittest.TestSuite([
+        hadoopSuite
+        ])
+
+    print "Running Hadoop functionality tests"
+    runner = unittest.TextTestRunner()
+    if not runner.run(functionalityTests).wasSuccessful():
+      self.fail()
 
   def testWithHostsFiles(self):
     """ All apps, separate accounts, with dfs.hosts and dfs.hosts.exclude
         files set in place.
     """
-    # TODO this
+
+    # TODO: Enable this when we get testAllApps() working smoothly
+    return
+    # TODO: Enable scribe when it's ready.
+    self.prepare()
+    javaHome = self.getProperties().getProperty(JAVA_HOME_KEY)
+
+    cmd = INSTALLER_COMMAND + " --unattend --prefix " + INSTALL_PREFIX \
+        + " --without-scribe " \
+        + " --config-prefix " + CONFIG_PREFIX \
+        + " --log-filename " + INSTALLER_LOG_FILE \
+        + " --format-hdfs --hadoop-user " + HADOOP_USER \
+        + " --java-home " + javaHome \
+        + " --hadoop-slaves " + self.getSlavesFile() \
+        + " --identity /root/.ssh/id_rsa" \
+        + " --hadoop-site " \
+        + self.prepHadoopSite("hadoop-configs/hosts-config.xml") \
+        + ' --namenode "hdfs://' + self.hostname + ':9000/" ' \
+        + ' --jobtracker "' + self.hostname + ':9001"' \
+        + " --debug"
+
+    shell.sh(cmd)
+
+    self.getProperties().setProperty(HADOOP_USER_KEY, HADOOP_USER)
+    self.getProperties().setProperty(CLIENT_USER_KEY, CLIENT_USER)
+
+    hadoopSuite = unittest.makeSuite(HadoopTest, 'test')
+    functionalityTests = unittest.TestSuite([
+        hadoopSuite
+        ])
+
+    print "Running Hadoop functionality tests"
+    runner = unittest.TextTestRunner()
+    if not runner.run(functionalityTests).wasSuccessful():
+      self.fail()
     pass
 
   def testGuidedInstall(self):
     """ Use stdin to handle guided installation. """
     # TODO: This
     # TODO: set the editor to /bin/true, provide a slaves file.
+    pass
+
+  def testWithoutLzo(self):
+    """ Remove the LZO libs, use a non-lzo configuration """
+    # TODO: This
+    # TODO: Make sure you put the lzo libs back when you're done!
     pass
 

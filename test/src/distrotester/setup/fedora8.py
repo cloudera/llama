@@ -46,6 +46,52 @@ class Fedora8Setup(PlatformSetup):
     elif self.arch == "i386":
       self.properties.setProperty(JAVA_HOME_KEY, "/usr/java/jdk1.6.0_10")
 
+  def writeSshConfig(self, handle):
+    """ write an ssh config file for unattended use to the
+        open file handle """
+
+    handle.write("""
+Host *
+  StrictHostKeyChecking no
+  PasswordAuthentication no
+  GSSAPIAuthentication no
+  NoHostAuthenticationForLocalhost yes
+  ServerAliveInterval 60
+  ServerAliveCountMax 60
+""")
+
+
+
+  def makeUser(self, username, rootSshKeys=True):
+    """ Make a user account on the machine. if rootSshKeys is true,
+        copy the authorized_keys and id_rsa files from /root/.ssh/ """
+
+    try:
+      # if we can get the user's passwd entry, we don't need to make it
+      shell.sh("getent passwd " + username)
+    except shell.CommandError, ce:
+      # we do.
+      shell.sh("useradd --create-home " + username)
+
+    shell.sh("mkdir -p /home/" + username + "/.ssh")
+    shell.sh("chmod 0755 /home/" + username)
+    shell.sh("chmod 0750 /home/" + username + "/.ssh")
+
+    if rootSshKeys:
+      shell.sh("cp /root/.ssh/authorized_keys /home/" + username + "/.ssh")
+      shell.sh("cp /root/.ssh/id_rsa /home/" + username + "/.ssh")
+      shell.sh("chmod 0600 /home/" + username + "/.ssh/authorized_keys")
+      shell.sh("chmod 0600 /home/" + username + "/.ssh/id_rsa")
+
+    shell.sh("chown " + username + ":" + username \
+        +" /home/" + username)
+
+    handle = open("/home/" + username + "/.ssh/config", "w")
+    self.writeSshConfig(handle)
+    handle.close()
+
+    shell.sh("chown " + username + ":" + username \
+        +" -R /home/" + username + "/.ssh")
 
 
   def setup(self):
@@ -98,16 +144,10 @@ class Fedora8Setup(PlatformSetup):
 
     # configure ssh so that it doesn't raise a fuss about unknwon hosts
     handle = open("/root/.ssh/config", "w")
-    handle.write("""
-Host *
-  StrictHostKeyChecking no
-  PasswordAuthentication no
-  GSSAPIAuthentication no
-  NoHostAuthenticationForLocalhost yes
-  ServerAliveInterval 60
-  ServerAliveCountMax 60
-""")
-
+    self.writeSshConfig(handle)
     handle.close()
+
+    self.makeUser(HADOOP_USER)
+    self.makeUser(CLIENT_USER)
 
 
