@@ -41,7 +41,7 @@ INSTALL_HIVE_KEY   = "hive.install"
 INSTALL_PIG_KEY    = "pig.install"
 INSTALL_SCRIBE_KEY = "scribe.install"
 INSTALL_LOGMOVER_KEY = "logmover.install"
-INSTALL_PORTAL_KEY   = "portal.install"
+INSTALL_PORTAL_KEY = "portal.install"
 
 # by default, we install all packages. Doing this just for good practice
 # in case we include some "optional" packages later.
