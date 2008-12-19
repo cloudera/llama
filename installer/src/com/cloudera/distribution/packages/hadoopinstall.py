@@ -435,7 +435,10 @@ via the command-line tools.)""")
 The Hadoop tmp directory (which will be created on each node) determines
 where temporary outputs of Hadoop processes are stored. This can live in
 /tmp, or some place where you have more control over where files are written.
-Make sure there is plenty of space available here.""")
+Make sure there is plenty of space available here. If this install is to used
+in a multi-user setting, it is recommended that each user have his own
+temporary directory; this can be achieved by including the string '${user.name}'
+in the temp dir name (e.g., /tmp/hadoop-${user.name}).""")
       self.hadoopSiteDict[HADOOP_TMP_DIR] = \
           prompt.getString("Enter the Hadoop temp dir", HADOOP_TMP_DEFAULT, \
           True)
@@ -863,6 +866,15 @@ to do, just accept the default values.""")
 
     def makeSinglePath(path):
       path = path.strip()
+
+      try:
+        # check first: if this contains another hadoop variable, don't
+        # create it now.
+        path.index("${")
+        return # skip since it contains a variable.
+      except ValueError:
+        pass # couldn't find the substring - good.
+
       try:
         output.printlnDebug("Creating path: " + path)
         dirutils.mkdirRecursive(path)

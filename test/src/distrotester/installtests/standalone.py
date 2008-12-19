@@ -117,13 +117,16 @@ class StandaloneTest(TestCaseWithAsserts):
 
     try:
       self.stopHadoop()
-
-      # Delete everything associated with Hadoop.
-      shell.sh("rm -rf /mnt/tmp")
-      shell.sh("rm -rf " + INSTALL_PREFIX)
-      shell.sh("rm -rf " + CONFIG_PREFIX)
     except:
       pass
+
+    # Delete everything associated with Hadoop.
+    shell.sh("rm -rf /mnt/tmp")
+    shell.sh("rm -rf " + INSTALL_PREFIX)
+    shell.sh("rm -rf " + CONFIG_PREFIX)
+    shell.sh("mkdir -p /mnt/tmp")
+    shell.sh("chmod a+w /mnt/tmp")
+    shell.sh("chmod o+t /mnt/tmp")
 
 
 
@@ -147,6 +150,7 @@ class StandaloneTest(TestCaseWithAsserts):
         + " --hadoop-site " \
         + self.prepHadoopSite("hadoop-configs/basic-config.xml") \
         + " --debug"
+    logging.debug("Installing with command: " + cmd)
     shell.sh(cmd)
 
     self.getProperties().setProperty(HADOOP_USER_KEY, ROOT_USER)
@@ -185,6 +189,7 @@ class StandaloneTest(TestCaseWithAsserts):
         + ' --jobtracker "' + self.hostname + ':9001"' \
         + " --debug"
 
+    logging.debug("Installing with command: " + cmd)
     shell.sh(cmd)
 
     self.getProperties().setProperty(HADOOP_USER_KEY, HADOOP_USER)

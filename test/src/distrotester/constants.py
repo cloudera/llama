@@ -107,12 +107,18 @@ REMOTE_SETUP_COMMAND = "python /mnt/distrotest/remotetest " + SETUP_ARG
 # What command do we use to launch the test batteries on the remote hosts?
 REMOTE_TEST_COMMAND = "python /mnt/distrotest/remotetest " + RUN_TESTS_ARG
 
+#  the remote program will record its output to this log file remotely
+# (in addition to printing to its stdout for inclusion in our own log)
+REMOTE_LOG_FILENAME = "/mnt/cloudera-tester.log"
+
 # How do we invoke the distribution installer
 # TODO (aaron): This should be parameterizable by version number
 INSTALLER_COMMAND = "/mnt/cloudera-hadoop-0.1.0/bin/install"
 
 INSTALL_PREFIX = "/mnt/installed-distro"
 CONFIG_PREFIX = "/mnt/etc/cloudera"
+
+# where should the installer output its logs to
 INSTALLER_LOG_FILE = "/mnt/cloudera-installer.log"
 
 DFS_DATA_DIR = "/mnt/tmp/data"

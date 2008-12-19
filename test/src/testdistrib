@@ -201,15 +201,14 @@ try:
   else:
     logging.info("Skipping CHD tarball upload at user request")
 
-  # Upload the id_rsa file we're using and chmod it correctly on the master
-  logging.info("Uploading ssh key")
-  shell.ssh("root", masterHost, "mkdir -p /root/.ssh", properties)
-  shell.ssh("root", masterHost, "chmod 0750 /root/.ssh", properties)
-  idRsaFile = properties.getProperty("ssh.identity")
-  shell.scp(idRsaFile, "root", masterHost, "/root/.ssh/id_rsa", properties)
-  shell.ssh("root", masterHost, "chmod 0600 /root/.ssh/id_rsa", properties)
-
-
+  if not properties.getBoolean(BYPASS_SETUP_KEY):
+    # Upload the id_rsa file we're using and chmod it correctly on the master
+    logging.info("Uploading ssh key")
+    shell.ssh("root", masterHost, "mkdir -p /root/.ssh", properties)
+    shell.ssh("root", masterHost, "chmod 0750 /root/.ssh", properties)
+    idRsaFile = properties.getProperty("ssh.identity")
+    shell.scp(idRsaFile, "root", masterHost, "/root/.ssh/id_rsa", properties)
+    shell.ssh("root", masterHost, "chmod 0600 /root/.ssh/id_rsa", properties)
 
 
   # Run platform-specific bootstrap commands. Append the unzip commands here
@@ -218,10 +217,10 @@ try:
   platformSetup.initProperties()
   if not properties.getProperty(BYPASS_SETUP_KEY):
     bootstrapCmds = platformSetup.remoteBootstrap()
+    bootstrapCmds.append("tar -zxf \"" + remoteDistribTarball + "\" -C /mnt")
   else:
     bootstrapCmds = []
   bootstrapCmds.append("tar -zxf \"" + remoteHarnessTarFile + "\" -C /mnt")
-  bootstrapCmds.append("tar -zxf \"" + remoteDistribTarball + "\" -C /mnt")
 
   logging.info("Executing system bootstrap commands on all nodes")
   for cmd in bootstrapCmds:
@@ -288,6 +287,7 @@ try:
       + " " + PACKAGE_BUCKET_ARG + " " + packageBucket \
       + " " + SLAVES_FILE_ARG + " " + remoteSlavesName \
       + " " + DISTRIB_TARBALL_ARG + " " + remoteDistribTarball \
+      + " --log-filename " + REMOTE_LOG_FILENAME + " --log-level DEBUG" \
       + " --debug"
   shell.ssh("root", masterHost, cmd, properties)
 

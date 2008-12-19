@@ -2,6 +2,7 @@
 #
 # Functionality unit test cases for Hadoop
 
+import logging
 import os
 
 from   com.cloudera.testutil.asserts import TestCaseWithAsserts
@@ -46,8 +47,14 @@ class HadoopTest(TestCaseWithAsserts):
     clientUser = self.getProperties().getProperty(CLIENT_USER_KEY)
     cmd = self.getDaemonSudo() + self.getHadoopCmd() + " fs -mkdir /user/" \
         + clientUser
+    try:
+      shell.sh(cmd)
+    except shell.CommandError, ce:
+      pass # ok for this to cause error (if dir already exists)
+
     cmd = self.getDaemonSudo() + self.getHadoopCmd() + " fs -chown " \
         + clientUser + " /user/" + clientUser
+    shell.sh(cmd)
 
 
   def testCreateFile(self):
@@ -64,6 +71,7 @@ class HadoopTest(TestCaseWithAsserts):
     for line in lines:
       try:
         line.index("SomeFileName")
+        logging.debug("Found touchz-created file")
         found = True
       except ValueError:
         pass
@@ -84,6 +92,7 @@ class HadoopTest(TestCaseWithAsserts):
     if numLines > 0:
       for line in lines:
         if line.startswith("Estimated value of PI is"):
+          logging.debug("PI calculator seems to have exited successfully.")
           found = True
     if not found:
       self.fail("Could not run pi example to completion")
