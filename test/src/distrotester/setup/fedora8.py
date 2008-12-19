@@ -94,6 +94,12 @@ Host *
         +" -R /home/" + username + "/.ssh")
 
 
+  def removePackage(self, package):
+    shell.sh("yum -y remove " + package)
+
+  def installPackage(self, package):
+    shell.sh("yum -y install " + package)
+
   def setup(self):
     """ Install on Fedora 8. """
 

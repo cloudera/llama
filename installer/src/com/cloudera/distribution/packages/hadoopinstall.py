@@ -259,6 +259,8 @@ or specify your own username with --hadoop-user""")
 
   def canUseBzip(self):
     """ Return True if precheckBzipLibs detected the correct bzip libraries """
+    # TODO(aaron): Watch HADOOP-4918; it seems as though bzip2 does not
+    # work with sequence files. Think hard before we use this.
     return self.libBzipFound
 
 
@@ -364,6 +366,24 @@ or specify your own username with --hadoop-user""")
     elif userHadoopSiteFile != None and not os.path.exists(userHadoopSiteFile):
       raise InstallError("Could not find hadoop site file: " \
           + userHadoopSiteFile)
+
+    # autoconfigure locations of dfs.hosts and dfs.hosts.exclude files if
+    # the user has passed these in as command-line arguments.
+    cmdlineDfsHosts = self.properties.getProperty(MAKE_DFS_HOSTS_KEY)
+    if cmdlineDfsHosts != None:
+      # This will be relative to the hadoop config path, if it's not an
+      # absolute path on its own.
+      cmdlineDfsHosts = os.path.join(self.getConfDir(), cmdlineDfsHosts)
+      self.hadoopSiteDict[DFS_HOSTS_FILE] = cmdlineDfsHosts
+
+    cmdlineDfsExcludes = self.properties.getProperty(MAKE_DFS_EXCLUDES_KEY)
+    if cmdlineDfsExcludes != None:
+      # This will be relative to the hadoop config path, if it's not an
+      # absolute path on its own.
+      cmdlineDfsExcludes = os.path.join(self.getConfDir(), cmdlineDfsExcludes)
+      self.hadoopSiteDict[DFS_EXCLUDE_FILE] = cmdlineDfsExcludes
+
+
 
     if not self.isUnattended() and userHadoopSiteFile == None:
       # time to actually query the user about these things.
@@ -667,10 +687,8 @@ to do, just accept the default values.""")
       raise InstallError("Could not write DFS hosts file: " + dfsHostsFileName \
           + " (" + str(ioe) + ")")
     except KeyError:
-      # we didn't do this part of the configuration in-tool.
-      # If the user specified their own dfs.hosts file, install that.
-      # TODO (aaron): 0.2 - Future versions should allow --dfs-hosts
-      # So just let this slide for now.
+      # we didn't do this part of the configuration in-tool, or the
+      # user didn't provide a filename on the command line to use.
       pass
 
 
@@ -685,10 +703,8 @@ to do, just accept the default values.""")
       raise InstallError("Could not create DFS exclude file: " \
           + excludeFileName + " (" + str(ioe) + ")")
     except KeyError:
-      # we didn't do this part of the configuration in-tool.
-      # If the user specified their own dfs.hosts.exclude file, install that.
-      # TODO (aaron): 0.2 - Future versions of this tool --dfs-exclude
-      # So just let this slide for now.
+      # we didn't do this part of the configuration in-tool, or the
+      # user didn't provide a filename on the command line to use.
       pass
 
   def writeHadoopSiteEpilogue(self, handle):

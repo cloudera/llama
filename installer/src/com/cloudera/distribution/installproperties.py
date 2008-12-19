@@ -68,6 +68,9 @@ class InstallProperties(Properties):
 
     # the following settings apply to master only
 
+    "--make-dfs-hosts"    : MAKE_DFS_HOSTS_KEY,
+    "--make-dfs-excludes" : MAKE_DFS_EXCLUDES_KEY,
+
     "--format-hdfs"    : FORMAT_DFS_KEY,
     "--no-format-hdfs" : FORMAT_DFS_KEY,
 

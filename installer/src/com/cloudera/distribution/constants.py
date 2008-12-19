@@ -43,6 +43,9 @@ INSTALL_SCRIBE_KEY = "scribe.install"
 INSTALL_LOGMOVER_KEY = "logmover.install"
 INSTALL_PORTAL_KEY = "portal.install"
 
+MAKE_DFS_HOSTS_KEY = "dfs.hosts.create"
+MAKE_DFS_EXCLUDES_KEY = "dfs.excludes.create"
+
 # by default, we install all packages. Doing this just for good practice
 # in case we include some "optional" packages later.
 INSTALL_HADOOP_DEFAULT = True

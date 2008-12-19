@@ -26,12 +26,24 @@ class StandaloneTest(TestCaseWithAsserts):
 
     # Get our hostname and memoize it
     self.hostname = None
-    hostLines = shell.shLines("hostname")
+    hostLines = shell.shLines("hostname --fqdn")
     if len(hostLines) > 0:
       self.hostname = hostLines[0].strip()
 
     if self.hostname == None:
       self.hostname = "localhost"
+
+
+  def getPlatformSetup(self):
+    """ Get the PlatformSetup object used to initialize the node """
+
+    # delaying this import til this thunk is used to avoid
+    # circular dependency
+    import distrotester.platforms as platforms
+
+    properties = self.getProperties()
+    platformName = properties.getProperty(TEST_PLATFORM_KEY)
+    return platforms.setupForPlatform(platformName, properties)
 
 
   def getHadoopDir(self):
@@ -47,7 +59,7 @@ class StandaloneTest(TestCaseWithAsserts):
     self.curSlavesFile = tmpFilename
 
     handle = os.fdopen(oshandle, "w")
-    handle.write("localhost\n")
+    handle.write(self.hostname + "\n")
     handle.close()
 
     return tmpFilename
@@ -210,8 +222,6 @@ class StandaloneTest(TestCaseWithAsserts):
         files set in place.
     """
 
-    # TODO: Enable this when we get testAllApps() working smoothly
-    return
     # TODO: Enable scribe when it's ready.
     self.prepare()
     javaHome = self.getProperties().getProperty(JAVA_HOME_KEY)
@@ -224,6 +234,8 @@ class StandaloneTest(TestCaseWithAsserts):
         + " --java-home " + javaHome \
         + " --hadoop-slaves " + self.getSlavesFile() \
         + " --identity /root/.ssh/id_rsa" \
+        + " --make-dfs-hosts dfs.hosts" \
+        + " --make-dfs-excludes dfs.hosts.exclude" \
         + " --hadoop-site " \
         + self.prepHadoopSite("hadoop-configs/hosts-config.xml") \
         + ' --namenode "hdfs://' + self.hostname + ':9000/" ' \
@@ -254,7 +266,45 @@ class StandaloneTest(TestCaseWithAsserts):
 
   def testWithoutLzo(self):
     """ Remove the LZO libs, use a non-lzo configuration """
-    # TODO: This
-    # TODO: Make sure you put the lzo libs back when you're done!
-    pass
+
+    # TODO (aaron): enable scribe when it's ready.
+    self.prepare()
+    javaHome = self.getProperties().getProperty(JAVA_HOME_KEY)
+
+    # remove the lzo package; use a finally block to ensure we always
+    # restore it after this test runs.
+    platformSetup = self.getPlatformSetup()
+    platformSetup.removePackage("lzo")
+    try:
+      cmd = INSTALLER_COMMAND + " --unattend --prefix " + INSTALL_PREFIX \
+          + " --without-scribe " \
+          + " --config-prefix " + CONFIG_PREFIX \
+          + " --log-filename " + INSTALLER_LOG_FILE \
+          + " --format-hdfs --hadoop-user " + HADOOP_USER \
+          + " --java-home " + javaHome \
+          + " --hadoop-slaves " + self.getSlavesFile() \
+          + " --identity /root/.ssh/id_rsa" \
+          + " --hadoop-site " \
+          + self.prepHadoopSite("hadoop-configs/no-compress-config.xml") \
+          + ' --namenode "hdfs://' + self.hostname + ':9000/" ' \
+          + ' --jobtracker "' + self.hostname + ':9001"' \
+          + " --debug"
+
+      logging.debug("Installing with command: " + cmd)
+      shell.sh(cmd)
+
+      self.getProperties().setProperty(HADOOP_USER_KEY, HADOOP_USER)
+      self.getProperties().setProperty(CLIENT_USER_KEY, CLIENT_USER)
+
+      hadoopSuite = unittest.makeSuite(HadoopTest, 'test')
+      functionalityTests = unittest.TestSuite([
+          hadoopSuite
+          ])
+
+      print "Running Hadoop functionality tests"
+      runner = unittest.TextTestRunner()
+      if not runner.run(functionalityTests).wasSuccessful():
+        self.fail()
+    finally:
+      platformSetup.installPackage("lzo")
 

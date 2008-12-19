@@ -38,6 +38,14 @@ class PlatformSetup(object):
     # Default: do nothing.
     pass
 
+  def removePackage(self, package):
+    """ Uninstall a single package using the platform's package mgmt tool """
+    pass # Default - do nothing.
+
+  def installPackage(self, package):
+    """ Install a single package using the platform's package mgmt tool """
+    pass # Default - do nothing.
+
   def setup(self):
     """ Perform platform-specific setup actions; executed on the remote
         instance after the distrotester has been uploaded and unzipped
