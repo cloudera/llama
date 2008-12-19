@@ -18,11 +18,6 @@ logMover = PythonTarget(
             "src/db_init.sql",
             "src/db_user_and_db.sql"])
 
-logMoverTest = PythonTestTarget(
-  sources = ["src/tests"],
-  mainModule = "src/run_tests.py",
-  requiredTargets = [":logMover"])
-
 # packaging the log mover up for use in the tarball
 release = PythonRedistTarget(
   distribName     = "log_mover",
