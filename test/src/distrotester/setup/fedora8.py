@@ -156,4 +156,15 @@ Host *
     self.makeUser(HADOOP_USER)
     self.makeUser(CLIENT_USER)
 
+    # Change the sudoers file to preserve environment variables we
+    # care a lot about.
+    # TODO(aaron): If you add an environment variable to the install plan,
+    # you have to add it here. This is unfortunate; we shouldn't need to
+    # list all this twice.
+    handle = open("/etc/sudoers", "a")
+    handle.write("""
+Defaults  env_keep += "JAVA_HOME HADOOPDIR HADOOP_HOME PIGDIR PIG_CLASSPATH"
+""")
+    handle.close()
+
 

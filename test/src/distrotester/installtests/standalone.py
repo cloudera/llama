@@ -16,6 +16,7 @@ import com.cloudera.tools.shell as shell
 from   distrotester.constants import *
 import distrotester.testproperties as testproperties
 from   distrotester.functiontests.hadooptests import HadoopTest
+from   distrotester.functiontests.pigtests import PigTest
 
 class StandaloneTest(TestCaseWithAsserts):
 
@@ -208,8 +209,10 @@ class StandaloneTest(TestCaseWithAsserts):
     self.getProperties().setProperty(CLIENT_USER_KEY, CLIENT_USER)
 
     hadoopSuite = unittest.makeSuite(HadoopTest, 'test')
+    pigSuite    = unittest.makeSuite(PigTest, 'test')
     functionalityTests = unittest.TestSuite([
-        hadoopSuite
+        hadoopSuite,
+        pigSuite
         ])
 
     print "Running Hadoop functionality tests"
@@ -248,8 +251,10 @@ class StandaloneTest(TestCaseWithAsserts):
     self.getProperties().setProperty(CLIENT_USER_KEY, CLIENT_USER)
 
     hadoopSuite = unittest.makeSuite(HadoopTest, 'test')
+    pigSuite    = unittest.makeSuite(PigTest, 'test')
     functionalityTests = unittest.TestSuite([
-        hadoopSuite
+        hadoopSuite,
+        pigSuite
         ])
 
     print "Running Hadoop functionality tests"
@@ -297,8 +302,10 @@ class StandaloneTest(TestCaseWithAsserts):
       self.getProperties().setProperty(CLIENT_USER_KEY, CLIENT_USER)
 
       hadoopSuite = unittest.makeSuite(HadoopTest, 'test')
+      pigSuite    = unittest.makeSuite(PigTest, 'test')
       functionalityTests = unittest.TestSuite([
-          hadoopSuite
+          hadoopSuite,
+          pigSuite
           ])
 
       print "Running Hadoop functionality tests"

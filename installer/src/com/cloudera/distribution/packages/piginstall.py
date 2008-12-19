@@ -76,6 +76,9 @@ class PigInstall(toolinstall.ToolInstall):
       raise InstallError("JobTracker address " + self.jobTrackerAddr \
           + " must be of the form dnsname:port")
 
+    output.printlnVerbose("Pig got jobtracker address: "+ self.jobTrackerAddr)
+
+
   def getFinalInstallPath(self):
     return os.path.join(self.getInstallBasePath(), PIG_INSTALL_SUBDIR)
 
@@ -123,6 +126,9 @@ class PigInstall(toolinstall.ToolInstall):
     if not os.path.exists(hadoopJarName):
       raise InstallError("Cannot find Hadoop jar: " + hadoopJarName)
 
+    if os.path.exists(hadoopLinkName):
+      os.remove(hadoopLinkName)
+
     cmd = "ln -s \"" + hadoopJarName + "\" \"" + hadoopLinkName + "\""
     try:
       shell.sh(cmd)
@@ -143,6 +149,7 @@ class PigInstall(toolinstall.ToolInstall):
       if None == hadoopInstaller:
         raise InstallError("Pig cannot be installed without Hadoop")
 
+      output.printlnVerbose("Writing pig properties file: " + confFilename)
       try:
         handle = open(confFilename, "a")
         handle.write("\n")
@@ -152,6 +159,8 @@ class PigInstall(toolinstall.ToolInstall):
       except IOError, ioe:
         raise InstallError("""Could not write to conf/pig.properties file.
 Reason: %(ioe)s""" % { "ioe" : str(ioe) })
+    else:
+      output.printlnInfo("Warning: not writing pig.properties.")
 
 
   def postInstall(self):
@@ -183,6 +192,53 @@ Reason: %(ioe)s""" % { "ioe" : str(ioe) })
     env.addToEnvironment("PIG_CLASSPATH", \
         os.path.join(pigDir, "pig-" + PIG_VERSION + "-core.jar") + ":" \
         + hadoopDir)
+
+    # must create pig tmp directory  in HDFS
+    output.printlnInfo("Creating in-HDFS directories for Pig...")
+    hadoopInstaller = toolinstall.getToolByName("Hadoop")
+    if hadoopInstaller == None:
+      raise InstallError("Pig depends on Hadoop")
+
+    # This is (basically) a code clone from hiveinstaller.py.
+    # TODO(aaron): refactor into hadoopinstaller.py (0.2)
+    tmpPath = "/tmp"
+    if hadoopInstaller.isMaster():
+      safemodeOff = False
+      try:
+        output.printlnVerbose("Starting HDFS...")
+        hadoopInstaller.ensureHdfsStarted()
+
+        output.printlnVerbose("Waiting for HDFS Safemode exit...")
+        hadoopInstaller.waitForSafemode()
+        safemodeOff = True
+
+        output.printlnVerbose("Creating directories...")
+        try:
+          hadoopInstaller.hadoopCmd("fs -mkdir " + tmpPath)
+        except InstallError:
+          pass # this dir may already exist; will detect real error @ chmod
+
+        output.printlnVerbose("Setting permissions...")
+        hadoopInstaller.hadoopCmd("fs -chmod a+w " + tmpPath)
+      except InstallError, ie:
+        output.printlnError("""
+Configuration of Pig requires starting Hadoop HDFS and creating the following
+directories:
+  %(tmppath)s
+
+This installer was unable to successfully start HDFS and create these paths.
+Reason: %(err)s
+
+Installation will continue, but you must perform these steps manually before
+using Pig.""" % \
+            { "tmppath"       : tmpPath,
+              "err"           : str(ie) })
+        if not safemodeOff and self.properties.getBoolean(FORMAT_DFS_KEY, \
+            FORMAT_DFS_DEFAULT):
+          output.printlnError("""
+(This may be because you did not format HDFS on installation. You can specify
+--format-hdfs to allow this to occur automatically.)""")
+
 
 
   def verify(self):
