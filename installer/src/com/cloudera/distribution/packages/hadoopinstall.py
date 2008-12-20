@@ -8,6 +8,7 @@ import math
 import os
 import re
 import shutil
+import socket
 import sys
 import time
 
@@ -234,7 +235,10 @@ or specify your own username with --hadoop-user""")
     nativeAllowed = self.properties.getBoolean(ALLOW_NATIVE_COMPRESSION_KEY, \
         ALLOW_NATIVE_COMPRESSION_DEFAULT)
 
-    return self.libLzoFound  and nativeAllowed
+    # return self.libLzoFound  and nativeAllowed
+    # TODO (aaron): Due to GPL licensing issues, LZO compression is currently
+    # disabled until an alternate library provider can be found.
+    return False
 
 
   def precheckBzipLibs(self):
@@ -455,7 +459,7 @@ via the command-line tools.)""")
 The Hadoop tmp directory (which will be created on each node) determines
 where temporary outputs of Hadoop processes are stored. This can live in
 /tmp, or some place where you have more control over where files are written.
-Make sure there is plenty of space available here. If this install is to used
+Make sure there is plenty of space available here. If this install is to be used
 in a multi-user setting, it is recommended that each user have his own
 temporary directory; this can be achieved by including the string '${user.name}'
 in the temp dir name (e.g., /tmp/hadoop-${user.name}).""")
@@ -493,7 +497,9 @@ You must choose one or more paths on each of the slave nodes where
 job-specific data will be written during MapReduce job execution. Adding
 multiple paths on separate physical devices will improve performance. (These
 directories will be created if they do not exist.) Enter one or more
-directories separated by commas.""")
+directories separated by commas. If creating multiple local directories
+on separate drives, subpaths should include ${user.name} to allow
+per-user local directories.""")
       mapredLocalDefault = os.path.join(self.hadoopSiteDict[HADOOP_TMP_DIR], \
           "mapred/local")
 
@@ -748,7 +754,7 @@ to do, just accept the default values.""")
   <description>If the map outputs are compressed, how should they be
                compressed? Cloudera Hadoop has detected native LZO compression
                libraries on your system and has selected these for better
-               perofrmance.
+               performance.
   </description>
 </property>
 <property>

@@ -348,4 +348,6 @@ PIG_VERSION = "0.1.1"
 PIG_INSTALL_SUBDIR = "pig-" + PIG_VERSION
 PIG_PACKAGE = "pig-" + PIG_VERSION + ".tar.gz"
 
+# TODO(aaron): 0.2 Need 'svnstring' or something of the like to handle this.
+DISTRIB_VERSION = "0.1.0"
 

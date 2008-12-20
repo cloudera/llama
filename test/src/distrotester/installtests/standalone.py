@@ -7,6 +7,7 @@
 
 import logging
 import os
+import socket
 import tempfile
 import unittest
 
@@ -26,13 +27,7 @@ class StandaloneTest(TestCaseWithAsserts):
     self.curSlavesFile = None
 
     # Get our hostname and memoize it
-    self.hostname = None
-    hostLines = shell.shLines("hostname --fqdn")
-    if len(hostLines) > 0:
-      self.hostname = hostLines[0].strip()
-
-    if self.hostname == None:
-      self.hostname = "localhost"
+    self.hostname = socket.getfqdn()
 
 
   def getPlatformSetup(self):
