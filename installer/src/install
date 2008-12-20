@@ -41,6 +41,7 @@ setLogName = properties.getProperty(output.LOG_FILENAME_PROP)
 if setLogName == None:
   properties.setProperty(output.LOG_FILENAME_PROP, DEFAULT_LOG_FILENAME)
 
+# TODO(aaron): BLOCKER - This does not actually set it to Verbose by default?!
 setLogVerbosity = properties.getProperty(output.LOG_VERBOSITY_PROP)
 if setLogVerbosity == None:
   properties.setProperty(output.LOG_VERBOSITY_PROP, DEFAULT_LOG_VERBOSITY)

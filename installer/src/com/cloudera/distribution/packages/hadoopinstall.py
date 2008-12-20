@@ -74,7 +74,7 @@ class HadoopInstall(toolinstall.ToolInstall):
     hadoopUser = self.getHadoopUsername()
     curUser = self.curUsername
 
-    if self.isRoot() or (not self.isUnattended() and curUSer != hadoopUser):
+    if self.isRoot() or (not self.isUnattended() and curUser != hadoopUser):
       return "sudo -H -u " + hadoopUser + " "
     else:
       return ""
