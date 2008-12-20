@@ -6,6 +6,7 @@
 
 from   com.cloudera.distribution.installerror import InstallError
 from   com.cloudera.distribution.toolinstall import ToolInstall
+
 import com.cloudera.util.output as output
 
 
@@ -13,21 +14,30 @@ class PortalInstall(ToolInstall):
   def __init__(self, properties):
     ToolInstall.__init__(self, "Portal", properties)
 
+    # need LogMover because we need MySQL
+    self.addDependency("LogMover")
+
 
   def precheck(self):
     """ If anything must be verified before we even get going, check those
         constraints in this method """
-    # TODO precheck Portal
     pass
 
   def install(self):
     """ Run the installation itself. """
-    pass
+
+    # the portal is only installed on the NN
+    if self.isMaster():
+      self.install_httpd()
+
     # TODO:
-    # - install Portal only on NN
     # - update hadoop-site-location with the right location of hadoop-site.xml
-    # - install Lighttpd with PHP5 and MySQL support on NN
     # - put the portal code in default htdocs for Lighttpd
+
+  def install_httpd(self):
+    """Installs Lighttpd with PHP5.  Assumes MySQL is already installed"""
+    pass
+    
 
   def configure(self):
     """ Run the configuration stage. This is responsible for

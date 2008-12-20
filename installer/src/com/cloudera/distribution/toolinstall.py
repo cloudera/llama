@@ -10,7 +10,10 @@ import os
 
 from   com.cloudera.distribution.constants import *
 from   com.cloudera.distribution.installerror import InstallError
+
+import com.cloudera.distribution.arch as arch
 import com.cloudera.util.output as output
+import com.cloudera.tools.shell as shell
 
 # map from name (string) -> ToolInstall
 toolMap = {}
@@ -125,6 +128,50 @@ class ToolInstall(object):
       raise InstallError("Cannot create link " + linkDest + " (" + str(ose) \
          + ")")
 
+
+  def isMaster(self):
+    """ Return true if we are installing on a master server, as opposed to
+        a slave server."""
+    # For the time being, the 'hadoop profile' is a bool true/false for
+    # isMaster
+    return self.properties.getBoolean(HADOOP_PROFILE_KEY) == PROFILE_MASTER_VAL
+
+  def getCurrUser(self):
+    """Returns the user running this installer"""
+    cmd = "whoami"
+    try:
+      whoamiLines = shell.shLines("whoami")
+    except shell.CommandError:
+      raise InstallError("Could not determine username with 'whoami'")
+
+    if len(whoamiLines) == 0:
+      raise InstallError("'whoami' returned no result.")
+    return whoamiLines[0].strip()
+
+  def installPackage(self, package_map):
+    """
+    Installs a package using the package
+    manager.  package_map is a dictionary
+    that maps the package manager (a
+    constant defined in this file) with
+    the name of the package (a string)
+    """
+    if self.getCurrUser() != "root":
+      raise InstallError("This script requires root to install packages")    
+
+    arch_inst = arch.getArchDetector()
+
+    pckg_mgr = arch_inst.getPackageMgrBin()
+    pckg =  package_map[arch_inst.getPackageMgr()]
+
+    if pckg_mgr == None:
+      raise InstallError("Could not determine your package manager")
+
+    command = pckg_mgr + " -y install " + pckg
+
+    installLines = shell.shLines(command)
+
+    output.printlnInfo("Installed " + pckg)
 
   def createEtcSymlink(self, appName, confDir):
     """ Create a symlink from /etc/cloudera/$appName to $confDir """

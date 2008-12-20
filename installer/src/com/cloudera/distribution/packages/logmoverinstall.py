@@ -6,8 +6,9 @@
 
 from   com.cloudera.distribution.installerror import InstallError
 from   com.cloudera.distribution.toolinstall import ToolInstall
-import com.cloudera.util.output as output
 
+import com.cloudera.util.output as output
+import com.cloudera.distribution.arch as arch
 
 class LogMoverInstall(ToolInstall):
   def __init__(self, properties):
@@ -22,7 +23,10 @@ class LogMoverInstall(ToolInstall):
 
   def install(self):
     """ Run the installation itself. """
-    pass
+
+    # the log mover is only installed on the NN
+    if self.isMaster():
+      self.install_mysql()
     # TODO:
     # - install LogMover
     # - alter settings.py to use the proper Scribe log
@@ -35,6 +39,14 @@ class LogMoverInstall(ToolInstall):
     # - Create the log directory specified in settings.py
     #   the logging module will break the script if the
     #   directory it is trying to log to doesn't exist
+
+  def install_mysql(self):
+    """Installs MySQL"""
+
+    pckg = {arch.PACKAGE_MGR_DEBIAN: "mysql-server",
+            arch.PACKAGE_MGR_RPM: "mysql-server",
+            }
+    self.installPackage(pckg)
 
   def configure(self):
     """ Run the configuration stage. This is responsible for

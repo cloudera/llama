@@ -62,6 +62,20 @@ class ArchDetector(object):
   def getPackageMgr(self):
     return self.packageMgr
 
+  def getPackageMgrBin(self):
+    """
+    Get the package manager binary
+    Returns None if the package
+    manager is unknown
+    """
+    pckg_mgr = self.getPackageMgr()
+    if pckg_mgr == PACKAGE_MGR_DEBIAN:
+      return "apt-get"
+    elif pckg_mgr == PACKAGE_MGR_RPM:
+      return "yum"
+    else:
+      return None
+
   def scan(self):
     """ scans for platform and architecture """
 

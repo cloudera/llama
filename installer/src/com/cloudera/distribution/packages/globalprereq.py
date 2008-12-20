@@ -31,14 +31,6 @@ class GlobalPrereqInstall(ToolInstall):
     self.configDir = None
     self.javaHome = None
 
-  def isMaster(self):
-    """ Return true if we are installing on a master server, as opposed to
-        a slave server."""
-    # For the time being, the 'hadoop profile' is a bool true/false for
-    # isMaster
-    return self.properties.getBoolean(HADOOP_PROFILE_KEY) == PROFILE_MASTER_VAL
-
-
   def precheckJava(self):
     """ Check that Java 1.6 is installed """
     # We have to check for Sun Java 1.6

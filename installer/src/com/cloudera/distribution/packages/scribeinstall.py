@@ -31,6 +31,12 @@ class ScribeInstall(ToolInstall):
     # - install configuration files
     # - start scribed
 
+    # dependencies:
+    #  -python
+    #  -python-dev
+    #  -ruby
+    #  -libevent-dev
+
   def configure(self):
     """ Run the configuration stage. This is responsible for
         setting up the config files and asking any questions
