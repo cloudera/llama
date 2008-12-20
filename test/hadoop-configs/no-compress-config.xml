@@ -94,7 +94,7 @@
 </property>
 <property>
   <name>mapred.local.dir</name>
-  <value>/mnt/tmp/hadoop/mapred/local</value>
+  <value>/mnt/tmp/hadoop/mapred/local-${user.name}/</value>
   <final>true</final>
 </property>
 <property>
