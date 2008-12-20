@@ -61,7 +61,7 @@ hadoopNativeLibs = DirComponent(
 # include the portal source code
 portalComponent = DirComponent(
   srcDir  = "portal/src",
-  destDir = "portal")
+  destDir = "src/webapps/portal")
 
 supportedHadoopPackage = HadoopPackageTarget(
   packageName   = "distrib-hadoop",

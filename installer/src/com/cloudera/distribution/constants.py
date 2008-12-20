@@ -320,6 +320,9 @@ DISTRIB_BASE_PATH = ".."
 # holds all the packages?
 PACKAGE_PATH = os.path.join(DISTRIB_BASE_PATH, "packages/")
 
+# The path to installer dependencies such as starter configuration files, etc
+DEPS_PATH = os.path.join(DISTRIB_BASE_PATH, "deps/")
+
 # relative to the distribution base path, where is the installer program?
 INSTALLER_SUBDIR = "bin"
 
@@ -345,4 +348,9 @@ PIG_VERSION = "0.1.1"
 PIG_INSTALL_SUBDIR = "pig-" + PIG_VERSION
 PIG_PACKAGE = "pig-" + PIG_VERSION + ".tar.gz"
 
+LIGHTTPD_UBUNTU_HTDOCS = "/var/www"
+LIGHTTPD_FC_HTDOCS = "/srv/www/lighttpd"
+
+# this exists within HADOOP_INSTALL_SUBDIR
+PORTAL_SRC_LOCATION = "webapps/portal"
 

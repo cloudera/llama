@@ -11,6 +11,10 @@ import os
 from   com.cloudera.distribution.constants import *
 from   com.cloudera.distribution.installerror import InstallError
 
+# the full path isn't used here, because Python
+# didn't like it for some reason
+import env
+
 import com.cloudera.distribution.arch as arch
 import com.cloudera.util.output as output
 import com.cloudera.tools.shell as shell
@@ -161,6 +165,13 @@ class ToolInstall(object):
 
     arch_inst = arch.getArchDetector()
 
+    # if this is Debian, then set the DEBIAN_FRONTEND
+    # env variable so we don't get tailwhip, or the
+    # blue screen that doesn't allow for an unattended
+    # installation
+    if arch_inst.getPackageMgr() == arch.PACKAGE_MGR_DEBIAN:
+      env.addToEnvironment("DEBIAN_FRONTEND", "noninteractive")
+
     pckg_mgr = arch_inst.getPackageMgrBin()
     pckg =  package_map[arch_inst.getPackageMgr()]
 
@@ -171,7 +182,18 @@ class ToolInstall(object):
 
     installLines = shell.shLines(command)
 
+    exists_msg = ""
+    if pckg_mgr == arch.PACKAGE_MGR_DEBIAN:
+      exists_msg = "0 upgraded, 0 newly installed"
+    elif pckg_mgr == arch.PACKAGE_MGR_RPM:
+      exists_msg = "Nothing to do"
+    # else case already handled above
+
+    installed = installLines[-1].find(exists_msg) != -1
+
     output.printlnInfo("Installed " + pckg)
+
+    return installed
 
   def createEtcSymlink(self, appName, confDir):
     """ Create a symlink from /etc/cloudera/$appName to $confDir """
