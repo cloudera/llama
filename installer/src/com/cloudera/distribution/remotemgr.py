@@ -5,6 +5,7 @@
 # Manages deployment to remote instances
 
 import os
+import socket
 import sys
 import tempfile
 
@@ -29,7 +30,9 @@ def isLocalHost(hostname):
   """ return true if the hostname represents localhost """
   return hostname == "127.0.0.1" \
       or hostname == "localhost" \
-      or hostname == "localhost.localdomain"
+      or hostname == "localhost.localdomain" \
+      or hostname == socket.gethostname() \
+      or hostname == socket.getfqdn()
 
 
 def allowLocalhost(properties):

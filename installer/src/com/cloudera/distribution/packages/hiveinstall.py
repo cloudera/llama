@@ -4,6 +4,7 @@
 #
 # Defines the ToolInstall instance that installs Hive
 
+import logging
 import os
 import re
 import sys
@@ -27,6 +28,7 @@ class HiveInstall(toolinstall.ToolInstall):
 
     self.hiveParams = {}
     self.hdfsServer = None # "hdfs://servername:port/"
+    self.hdfsErrMessage = None
 
 
   def precheck(self):
@@ -210,8 +212,7 @@ class HiveInstall(toolinstall.ToolInstall):
     if hadoopInstaller == None:
       raise InstallError("Hive depends on Hadoop")
 
-    tmpPath = "/tmp"
-    if hadoopInstaller.isMaster():
+    if hadoopInstaller.isMaster() and self.mayStartDaemons():
       safemodeOff = False
       try:
         output.printlnVerbose("Starting HDFS...")
@@ -227,33 +228,26 @@ class HiveInstall(toolinstall.ToolInstall):
         except InstallError:
           pass # this dir may already exist; will detect real error @ chmod
         try:
-          hadoopInstaller.hadoopCmd("fs -mkdir " + tmpPath)
+          hadoopInstaller.hadoopCmd("fs -mkdir " + HIVE_TEMP_DIR)
         except InstallError:
           pass # this dir may already exist; will detect real error @ chmod
 
         output.printlnVerbose("Setting permissions...")
         hadoopInstaller.hadoopCmd("fs -chmod a+w " + HIVE_WAREHOUSE_DIR)
-        hadoopInstaller.hadoopCmd("fs -chmod a+w " + tmpPath)
+        hadoopInstaller.hadoopCmd("fs -chmod a+w " + HIVE_TEMP_DIR)
       except InstallError, ie:
-        output.printlnError("""
-Configuration of Hive requires starting Hadoop HDFS and creating the following
-directories:
-  %(warehousepath)s
-  %(tmppath)s
-
-This installer was unable to successfully start HDFS and create these paths.
+        # format an error message telling the user what went wrong
+        # to print during postinstall instructions.
+        self.hdfsErrMessage = """
+(This installer was unable to successfully start HDFS and create these paths.)
 Reason: %(err)s
-
-Installation will continue, but you must perform these steps manually before
-using Hive.""" % \
-            { "warehousepath" : HIVE_WAREHOUSE_DIR,
-              "tmppath"       : tmpPath,
-              "err"           : str(ie) })
+""" % \
+            { "err"           : str(ie) }
         if not safemodeOff and self.properties.getBoolean(FORMAT_DFS_KEY, \
             FORMAT_DFS_DEFAULT):
-          output.printlnError("""
+          self.hdfsErrMessage = self.hdfsErrMessage + """
 (This may be because you did not format HDFS on installation. You can specify
---format-hdfs to allow this to occur automatically.)""")
+--format-hdfs to allow this to occur automatically.)"""
 
 
   def verify(self):
@@ -271,4 +265,23 @@ using Hive.""" % \
       argList.append(hiveNameNode)
 
     return argList
+
+  def printFinalInstructions(self):
+    if (self.isMaster() and not self.mayStartDaemons()) \
+        or self.hdfsErrMessage != None:
+      # Definitely print this out regardless of whether there was a particular
+      # error that prevented it from happening, or because the user has
+      # disabled daemon starts.
+      logging.info("""
+Before you can use Hive, you must start Hadoop HDFS and create the following
+directories and set them world-readable/writable:
+  %(warehousepath)s
+  %(tmppath)s
+""" % \
+          { "warehousepath" : HIVE_WAREHOUSE_DIR,
+            "tmppath"       : HIVE_TEMP_DIR }
+      if self.hdfsErrMessage != None:
+        # Then print the error reason, if any
+        logging.info(self.hdfsErrMessage)
+
 

@@ -85,8 +85,8 @@ class HadoopInstall(toolinstall.ToolInstall):
         (starting it if necessary). This must be run in postinstall or
         later. """
 
-    if self.startedHdfs:
-      # already running.
+    if self.startedHdfs or not self.mayStartDaemons():
+      # already running, or not allowed to run this.
       return
 
     output.printlnVerbose("Starting HDFS")
@@ -107,7 +107,8 @@ class HadoopInstall(toolinstall.ToolInstall):
         necessary. Also starts HDFS at this time if need be. This must be
         run in postinstall or later. """
 
-    if self.startedMapRed:
+    if self.startedMapRed or not self.mayStartDaemons():
+      # already running, or not allowed to run this.
       return
 
     self.ensureHdfsStarted()
@@ -1062,7 +1063,7 @@ HDFS before using Hadoop, by running the command:
     """ Run post-installation verification tests, if configured """
     # TODO(aaron): Verify hadoop
 
-    if self.isMaster():
+    if self.isMaster() and self.mayStartDaemons():
       try:
         self.ensureHdfsStarted()
         self.ensureMapRedStarted()

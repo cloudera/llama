@@ -90,6 +90,15 @@ class ToolInstall(object):
     """ return true if this must be an unattended installation """
     return self.properties.getProperty(UNATTEND_INSTALL_KEY, UNATTEND_DEFAULT)
 
+
+  def mayStartDaemons(self):
+    """ If true, then daemons may be started. otherwise, we are forbidden
+        from doing so during installation. This may be because we are creating
+        an AMI, have no slave nodes, etc.
+    """
+    return not self.getProperties().getBoolean(NO_DAEMONS_KEY)
+
+
   #### public interface that is part of the base ToolInstall ####
 
   def getName(self):
@@ -204,7 +213,8 @@ class ToolInstall(object):
   def getRedeployArgs(self):
     """ When this installer is invoking itself on another machine, what
         arguments should we pass to the installer for this package?
-        Returns a list of strings """
+        Returns a list of strings that should be added to argv when running
+        the installer on a remote host """
     return []
 
   def precheck(self):
@@ -232,4 +242,10 @@ class ToolInstall(object):
     output.printlnVerbose("No verification tests for " + self.getName() \
       + "; (ok)")
 
+  def printFinalInstructions(self):
+    """ If there are any final instructions to the user after installation
+        is over, you should print them out in this method. """
+
+    # default: no instructions:
+    pass
 

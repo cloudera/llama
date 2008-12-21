@@ -46,6 +46,10 @@ INSTALL_PORTAL_KEY = "portal.install"
 MAKE_DFS_HOSTS_KEY = "dfs.hosts.create"
 MAKE_DFS_EXCLUDES_KEY = "dfs.excludes.create"
 
+# If this is enabled, then skip any use of HDFS in the installer.
+# don't start any daemons.
+NO_DAEMONS_KEY = "no.daemons"
+
 # by default, we install all packages. Doing this just for good practice
 # in case we include some "optional" packages later.
 INSTALL_HADOOP_DEFAULT = True
@@ -302,6 +306,10 @@ MAX_SUBMIT_REPLICATION = DFS_MAX_REP
 
 DEFAULT_MAPRED_SYS_DIR = "/hadoop/system/mapred"
 
+
+# Create these in-HDFS paths as part of post-install process.
+HIVE_TEMP_DIR = "/tmp"
+PIG_TEMP_DIR = "/tmp"
 
 #######################################################################
 # Hive configuration

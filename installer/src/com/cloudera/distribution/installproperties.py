@@ -54,6 +54,9 @@ class InstallProperties(Properties):
     "--prefix"         : INSTALL_PREFIX_KEY,
     "--config-prefix"  : CONFIG_DIR_KEY,
 
+    # If true, refuses to start Hadoop, HDFS, etc.
+    "--no-start-daemons" : NO_DAEMONS_KEY,
+
     # options used only for debugging
     "--test-mode"      : TEST_MODE_KEY,
     "--remote-prefix"  : REMOTE_PREFIX_KEY,

@@ -25,6 +25,7 @@ class PigInstall(toolinstall.ToolInstall):
     self.addDependency("GlobalPrereq")
 
     self.jobTrackerAddr = None
+    self.hdfsErrMessage = None
 
 
   def precheck(self):
@@ -201,8 +202,7 @@ Reason: %(ioe)s""" % { "ioe" : str(ioe) })
 
     # This is (basically) a code clone from hiveinstaller.py.
     # TODO(aaron): refactor into hadoopinstaller.py (0.2)
-    tmpPath = "/tmp"
-    if hadoopInstaller.isMaster():
+    if hadoopInstaller.isMaster() and self.mayStartDaemons():
       safemodeOff = False
       try:
         output.printlnVerbose("Starting HDFS...")
@@ -214,28 +214,22 @@ Reason: %(ioe)s""" % { "ioe" : str(ioe) })
 
         output.printlnVerbose("Creating directories...")
         try:
-          hadoopInstaller.hadoopCmd("fs -mkdir " + tmpPath)
+          hadoopInstaller.hadoopCmd("fs -mkdir " + PIG_TEMP_DIR)
         except InstallError:
           pass # this dir may already exist; will detect real error @ chmod
 
         output.printlnVerbose("Setting permissions...")
-        hadoopInstaller.hadoopCmd("fs -chmod a+w " + tmpPath)
+        hadoopInstaller.hadoopCmd("fs -chmod a+w " + PIG_TEMP_DIR)
       except InstallError, ie:
-        output.printlnError("""
-Configuration of Pig requires starting Hadoop HDFS and creating the following
-directories:
-  %(tmppath)s
-
-This installer was unable to successfully start HDFS and create these paths.
+        # Log a message to print to the user at the end of installation.
+        self.hdfsErrMessage = """
+(This installer was unable to successfully start HDFS and create these paths.)
 Reason: %(err)s
-
-Installation will continue, but you must perform these steps manually before
-using Pig.""" % \
-            { "tmppath"       : tmpPath,
-              "err"           : str(ie) })
+""" % \
+            {              "err"           : str(ie) })
         if not safemodeOff and self.properties.getBoolean(FORMAT_DFS_KEY, \
             FORMAT_DFS_DEFAULT):
-          output.printlnError("""
+          self.hdfsErrMessage = self.hdfsErrMessage + """
 (This may be because you did not format HDFS on installation. You can specify
 --format-hdfs to allow this to occur automatically.)""")
 
@@ -256,3 +250,24 @@ using Pig.""" % \
       argList.append(jobTrackerAddr)
 
     return argList
+
+
+  def printFinalInstructions(self):
+    if (self.isMaster() and not self.mayStartDaemons()) \
+        or self.hdfsErrMessage != None:
+      # Definitely print this out regardless of whether there was a particular
+      # error that prevented it from happening, or because the user has
+      # disabled daemon starts.
+      logging.info("""
+Before using Pig, you must start Hadoop HDFS and create the following
+directories, and set them world-readable/writable:
+  %(tmppath)s
+"""% \
+          { "tmppath"       : PIG_TEMP_DIR }
+      if self.hdfsErrMessage != None:
+        # Then print the error reason, if any
+        logging.info(self.hdfsErrMessage)
+
+
+
+

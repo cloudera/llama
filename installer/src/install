@@ -161,7 +161,10 @@ if hadoopInstaller != None:
       { "hadoopStop" : hadoopStopCmd })
 
 
-# TODO: If there were warnings, list the follow-up actions that must be taken.
+# If there were warnings or more user-run steps, list the follow-up
+# actions that must be taken.
+for tool in installPlan.getInstallItems():
+  tool.printFinalInstructions()
 
 # print out any environment variables that individual users must set
 env.printEnvironment()

@@ -145,7 +145,7 @@ class ArchDetector(object):
       self.platform = PLATFORM_UNKNOWN
       self.packageMgr = PACKAGE_MGR_UNKNOWN
 
-    # TODO: What are the signatures for RHEL, CentOS from this?
+    # TODO(aaron): 0.2 What are the signatures for RHEL, CentOS from this?
     # need to test py 3.1, py 2.5, lsb_release on those platforms.
 
 
