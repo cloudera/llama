@@ -24,7 +24,7 @@ class HiveTest(TestCaseWithAsserts):
     return os.path.join(INSTALL_PREFIX, "hive")
 
   def getHiveCmd(self):
-    return os.path.join(self.getPigDir(), "bin/hive")
+    return os.path.join(self.getHiveDir(), "bin/hive")
 
   # TODO(aaron): Refactor getHadoopDir, Cmd, get*Sudo into common abstract base
   def getHadoopDir(self):
@@ -77,10 +77,12 @@ class HiveTest(TestCaseWithAsserts):
         http://wiki.apache.org/hadoop/Hive/GettingStarted
     """
 
+    logging.info("Testing Hive Invites query...")
     envScript = os.path.join(self.getInstallRoot(), "user_env")
 
     # Remove existing table if any.
     try:
+      logging.debug("Removing existing invites table (if any)")
       cmd = "source " + envScript + " && cd hive-tests && " \
           + self.getClientSudo() + self.getHiveCmd() + " -f drop-invites.q"
       shell.sh(cmd)
@@ -88,9 +90,11 @@ class HiveTest(TestCaseWithAsserts):
       pass # table might not exist, so ignore the error
 
     # run the main test script.
+    logging.debug("Running Hive query...")
     cmd = "source " + envScript + " && cd hive-tests && " \
         + self.getClientSudo() + self.getHiveCmd() + " -f invites.q"
     shell.sh(cmd)
+    logging.debug("The Hive query appears to have succeeded!")
 
 
 if __name__ == '__main__':
