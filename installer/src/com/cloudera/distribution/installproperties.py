@@ -56,6 +56,7 @@ class InstallProperties(Properties):
 
     # If true, refuses to start Hadoop, HDFS, etc.
     "--no-start-daemons" : NO_DAEMONS_KEY,
+    "--start-daemons"    : NO_DAEMONS_KEY,
 
     # options used only for debugging
     "--test-mode"      : TEST_MODE_KEY,
@@ -100,7 +101,8 @@ class InstallProperties(Properties):
     "--install-portal",
     "--format-hdfs",
     "--unattend",
-    "--test-mode"
+    "--test-mode",
+    "--no-start-daemons"
   ]
 
   # these disable boolean flags
@@ -113,7 +115,8 @@ class InstallProperties(Properties):
     "--without-logmover",
     "--without-portal",
     "--no-format-hdfs",
-    "--interactive"
+    "--interactive",
+    "--start-daemons"
   ]
 
   # what environment variables map to which properties?
