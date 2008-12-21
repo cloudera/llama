@@ -65,6 +65,9 @@ class HiveInstall(toolinstall.ToolInstall):
   def configureHdfsServer(self):
     """ Figure out where the HDFS namenode is """
 
+    # TODO(aaron) 0.2 - This whole hdfs server may not be needed here
+    # after all. Evaluate whether we can pull this out.
+
     self.hdfsServer = self.properties.getProperty(HIVE_NAMENODE_KEY)
 
     hadoopInstall = self.getHadoopInstaller()
@@ -111,24 +114,24 @@ class HiveInstall(toolinstall.ToolInstall):
         of the user. The software is not installed yet """
 
     self.configureHdfsServer()
-    hdfsServer = self.getHdfsServer()
 
     # Set up the hive-default.xml parameters We need to write out this
     # entire file, but most of these aren't worth changing. We just put
     # the entire list in here, configure what we want to, and write it
     # out during the install process
+
     self.hiveParams = {}
     self.hiveParams["hive.exec.scratchdir"] = "/tmp/hive-${user.name}"
-    # CH change; usual is true, but we want to start them in distributed mode
-    self.hiveParams["hive.metastore.local"] = "false"
+    # TODO(aaron): 0.2 - set this to false and configure remote derby
+    self.hiveParams["hive.metastore.local"] = "true"
     self.hiveParams["javax.jdo.option.ConnectionURL"] = \
         "jdbc:derby:;databaseName=metastore_db;create=true"
     self.hiveParams["javax.jdo.option.ConnectionDriverName"] = \
         "org.apache.derby.jdbc.EmbeddedDriver"
+    # TODO(aaron): 0.2 - make this location configurable
     self.hiveParams["hive.metastore.metadb.dir"] = \
-        "file:///var/metastore/metadb/"
-    self.hiveParams["hive.metastore.uris"] = hdfsServer \
-        + "/user/hive/warehouse"
+        "file://" + HIVE_METADB_DIR
+    self.hiveParams["hive.metastore.uris"] = "file://" + HIVE_METADB_DIR
     self.hiveParams["hive.metastore.warehouse.dir"] = HIVE_WAREHOUSE_DIR
     self.hiveParams["hive.metastore.connect.retries"] = "5"
     self.hiveParams["hive.metastore.rawstore.impl"] = \

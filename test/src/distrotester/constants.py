@@ -141,6 +141,9 @@ ROOT_USER = "root"
 JAVA_HOME_KEY = "java.home"
 
 
+# Where are the hive test files, relative to where the test harness runs?
+HIVE_TEST_DIR = "hive-tests"
+
 ############################################################
 # constants pertaining to making bootstrap installations
 ############################################################

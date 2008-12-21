@@ -307,6 +307,8 @@ DEFAULT_MAPRED_SYS_DIR = "/hadoop/system/mapred"
 # Hive configuration
 
 HIVE_WAREHOUSE_DIR = "/user/hive/warehouse"
+HIVE_METADB_DIR = "/var/metastore/metadb/"
+
 
 
 #######################################################################
