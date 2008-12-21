@@ -40,8 +40,7 @@ INSTALL_HADOOP_KEY = "hadoop.install"
 INSTALL_HIVE_KEY   = "hive.install"
 INSTALL_PIG_KEY    = "pig.install"
 INSTALL_SCRIBE_KEY = "scribe.install"
-INSTALL_LOGMOVER_KEY = "logmover.install"
-INSTALL_PORTAL_KEY = "portal.install"
+OVERWRITE_HTDOCS_KEY = "ovewrite.htdocs"
 
 # by default, we install all packages. Doing this just for good practice
 # in case we include some "optional" packages later.
@@ -49,8 +48,7 @@ INSTALL_HADOOP_DEFAULT = True
 INSTALL_HIVE_DEFAULT   = True
 INSTALL_PIG_DEFAULT    = True
 INSTALL_SCRIBE_DEFAULT = True
-INSTALL_LOGMOVER_DEFAULT = True
-INSTALL_PORTAL_DEFAULT = True
+OVERWRITE_HTDOCS_DEFAULT = False
 
 # arguments controlling hadoop-specific installation
 HADOOP_MASTER_ADDR_KEY = "hadoop.master.addr"
@@ -353,4 +351,3 @@ LIGHTTPD_FC_HTDOCS = "/srv/www/lighttpd"
 
 # this exists within HADOOP_INSTALL_SUBDIR
 PORTAL_SRC_LOCATION = "webapps/portal"
-

@@ -43,8 +43,8 @@ class LogMoverInstall(ToolInstall):
   def install_mysql(self):
     """Installs MySQL"""
 
-    pckg = {arch.PACKAGE_MGR_DEBIAN: "mysql-server",
-            arch.PACKAGE_MGR_RPM: "mysql-server",
+    pckg = {arch.PACKAGE_MGR_DEBIAN: ["mysql-server"],
+            arch.PACKAGE_MGR_RPM: ["mysql-server"],
             }
     self.installPackage(pckg)
 

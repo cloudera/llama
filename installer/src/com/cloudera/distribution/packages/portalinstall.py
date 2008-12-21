@@ -17,9 +17,6 @@ class PortalInstall(ToolInstall):
   def __init__(self, properties):
     ToolInstall.__init__(self, "Portal", properties)
 
-    # need LogMover because we need MySQL
-    self.addDependency("LogMover")
-
     # need Hadoop because the portal source code
     # is part of the Hadoop package
     self.addDependency("Hadoop")
@@ -28,19 +25,48 @@ class PortalInstall(ToolInstall):
     """ If anything must be verified before we even get going, check those
         constraints in this method """
 
+    # check to see if htdocs exist
     htdocs = self.getPortalDest()
     files = os.listdir(htdocs)
     if len(files) != 0:
-      output.printlnInfo("""
+      overwrite_flag = self.getProperty(OVERWRITE_HTDOCS_KEY, \
+                                        OVERWRITE_HTDOCS_DEFAULT)
+
+      # if they do exist and we're in unattended mode, break with errors
+      if self.isUnattended() and not overwrite_flag:
+        output.printlnVerbose("Failing because htdocs will not be overwritten")
+        output.printlnInfo("""
 Your htdocs (%(htdocs)s) folder has files in it.  This installer will add
 files to this directory and possibly overwrite data without backup.  Please
 either move your files elsewhere or erase them completely if they are
-the default set of documents for Apache, Lighttpd, etc.
+the default set of documents for Apache, Lighttpd, etc.  You can also
+run this script with the --overwrite-htdocs option.
 """ % {'htdocs': htdocs,
        })
-
-
-      raise InstallError(htdocs + " has files; please move or erase them")
+        raise InstallError(htdocs + " has files; please move or erase them")
+      # otherwise, ask the user what to do
+      elif not overwrite_flag:
+        output.printlnVerbose("Asking the user if we should overwrite htdocs")
+        output.printlnInfo("""
+You already have an htdocs folder, and there are files and directories in this
+folder.  The htdocs folder is:
+    %(htdocs)s
+This script will potentially overwrite these files.  Should the tool
+proceed and potentially ovewrite these files?  If you specify "no," then you
+will have to move these htdocs elsewhere.
+""" % {'htdocs': htdocs,
+       })
+        overwrite = False
+        while True:
+          answer = prompt.getString("(y or n):")
+          if answer.lower().startswith('y'):
+            overwrite = True
+            break
+          elif answer.lower().startswith('n'):
+            overwrite = False
+            break
+        if not overwrite:
+          raise InstallError(htdocs + " has files; please move or erase them")
 
   def install(self):
     """ Run the installation itself. """
@@ -61,42 +87,33 @@ the default set of documents for Apache, Lighttpd, etc.
     #  Ubuntu: http://www.ubuntugeek.com/lighttpd-webserver-setup
     #                -with-php5-and-mysql-support.html
 
-    # install lighttpd
-    pckg = {arch.PACKAGE_MGR_DEBIAN: "lighttpd",
-            arch.PACKAGE_MGR_RPM: "lighttpd",
+    output.printlnVerbose("Installing lighttpd-related packages")
+
+    # install lighttpd and other required modules
+    pckg = {arch.PACKAGE_MGR_DEBIAN: [
+                                      "lighttpd",
+                                      "php5-cgi",
+                                      "php5-mysql",
+                                      ],
+            arch.PACKAGE_MGR_RPM: [
+                                   "lighttpd",
+                                   "lighttpd-fastcgi",
+                                   "php-cli",
+                                   "php-mysql",
+                                  ],
             }
     self.installPackage(pckg)
 
-    # install necessary PHP and MySQL modules
     arch_inst = arch.getArchDetector()
-    if arch_inst.getPackageMgr() == arch.PACKAGE_MGR_DEBIAN:
-      pckg = {arch.PACKAGE_MGR_DEBIAN: "php5-cgi",
-              }
-      self.installPackage(pckg)
-
-      pckg = {arch.PACKAGE_MGR_DEBIAN: "php5-mysql",
-              }
-      self.installPackage(pckg)
-    elif arch_inst.getPackageMgr() == arch.PACKAGE_MGR_RPM:
-      pckg = {arch.PACKAGE_MGR_RPM: "lighttpd-fastcgi",
-              }
-      self.installPackage(pckg)
-
-      pckg = {arch.PACKAGE_MGR_RPM: "php-cli",
-              }
-      self.installPackage(pckg)
-
-      pckg = {arch.PACKAGE_MGR_RPM: "php-mysql",
-              }
-      self.installPackage(pckg)
-    else:
-      raise InstallError("Could not determine your package manager")
 
     # update php and lighttpd config files
     good_http_conf = ""
     good_php_ini = ""
     php_ini_dest = ""
     platform = arch_inst.getPlatform()
+
+    output.printlnVerbose("Installing php.ini and lighttpd.conf")
+
     if platform == arch.PLATFORM_UBUNTU:
       good_http_conf = os.path.join(DEPS_PATH,
                                     "ubuntu-8.04-i386_lighttpd.conf")
@@ -110,8 +127,13 @@ the default set of documents for Apache, Lighttpd, etc.
                                   "fedora8-i386_php.ini")
       php_ini_dest = "/etc/php.ini"
 
+    lighttpd_conf = "/etc/lighttpd/lighttpd.conf"
+
+    ToolInstall.backupFile(php_ini_dest)
+    ToolInstall.backupFile(lighttpd_conf)
+
     try:
-      shell.shLines("cp " + good_http_conf + " /etc/lighttpd/lighttpd.conf")
+      shell.shLines("cp " + good_http_conf + " " + lighttpd_conf)
     except shell.CommandError:
       raise InstallError("Could not copy a custom lighttpd configuration")
 
@@ -142,6 +164,8 @@ the default set of documents for Apache, Lighttpd, etc.
     src_folder = os.path.join(src_folder,
                               "*")
 
+    output.printlnVerbose("Copying portal files to htdocs")
+
     dest_folder = self.getPortalDest()
     try:
       cpLines = shell.shLines("cp -R " + src_folder + " " + dest_folder)
@@ -150,10 +174,38 @@ the default set of documents for Apache, Lighttpd, etc.
 
     output.printlnInfo("Successfully installed the portal")
 
-    # sed -i -e 's/localhost/new.domain/' index.html
-    # TODO
+    jobtracker = self.properties.getProperty(JOB_TRACKER_KEY)
+    namenode = self.properties.getProperty(NAMENODE_KEY)
+
+    # just strip the port off the jobtracker
+    jobtracker = self.getHost(jobtracker)
+
+    # remove the protocol (hdfs://) along with the port
+    namenode = namenode[7:]
+    namenode = self.getHost(namenode)
+
+    try:
+      jt_cmd = "sed -i -e 's/jobtracker.domain/" + jobtracker + "/' " + \
+                                        os.path.join(dest_folder, "index.html")
+
+      nn_cmd = "sed -i -e 's/namenode.domain/" + namenode + "/' " + \
+                                        os.path.join(dest_folder, "index.html")
+
+      output.printlnVerbose("seding the HTDOCS/index.html file")
+      lines = shell.shLines(jt_cmd)
+      output.printlnVerbose(lines)
+      lines = shell.shLines(nn_cmd)
+      output.printlnVerbose(lines)
+    except shell.CommandError:
+      raise InstallError("Could not sed the portal's index.html file")
 
     self.updatePortalConf()
+
+  @staticmethod
+  def getHost(host_and_port):
+    """Gets the host from a string host:port"""
+    parts = host_and_port.split(":")
+    return parts[0]
 
   def getHadoopLocation(self):
     """Gets the location where Hadoop is installed"""
@@ -190,8 +242,12 @@ the default set of documents for Apache, Lighttpd, etc.
     portal_dest = self.getPortalDest()
     portal_conf = os.path.join(portal_dest, "hadoop-site-location")
 
+    output.printlnVerbose("Writing location of hadoop-site.xml to portal config")
+
     try:
-      echoLines = shell.shLines("echo '" + hadoop_site + "' > " + portal_conf)
+      f = open(portal_conf, 'w')
+      f.write(hadoop_site)
+      f.close()
     except:
       raise InstallError("Portal web app could not be configured")
 

@@ -132,6 +132,40 @@ class ToolInstall(object):
       raise InstallError("Cannot create link " + linkDest + " (" + str(ose) \
          + ")")
 
+  @staticmethod
+  def backupFile(path):
+    """
+    Given a file path, backup the file by
+    first trying to create path.bak.  If that
+    exists, then create path.bak.2, then
+    path.bak.3, etc.
+    """
+    extension = ".bak"
+
+    attempt = path + extension
+    while os.path.exists(attempt):
+      # if this is the first attempt,
+      # then just add .1
+      if attempt.endswith(extension):
+        attempt += ".1"
+      # otherwise, break up the list by dots (.),
+      # increment the last element, and finally
+      # recreate the string
+      else:
+        parts = attempt.split(".")
+        parts[-1] = str(int(parts[-1]) + 1)
+        attempt = '.'.join(parts)
+
+    output.printlnInfo("Backing up " + path + " to " + attempt)
+
+    # actually do the copy
+    try:
+      output.printlnVerbose("Attempting to backup " + path)
+      cmd = "cp " + path + " " + attempt
+      cpLines = shell.shLines(cmd)
+      output.printlnVerbose(cpLines)
+    except shell.CommandError:
+      raise InstallError("Could not backup " + path)
 
   def isMaster(self):
     """ Return true if we are installing on a master server, as opposed to
@@ -154,11 +188,14 @@ class ToolInstall(object):
 
   def installPackage(self, package_map):
     """
-    Installs a package using the package
+    Installs a list of packages using the package
     manager.  package_map is a dictionary
     that maps the package manager (a
     constant defined in this file) with
-    the name of the package (a string)
+    a list of packages (strings)
+    This dict doesn't need a package list for
+    each package manager.  It will not
+    fail if not all packages are defined
     """
     if self.getCurrUser() != "root":
       raise InstallError("This script requires root to install packages")    
@@ -170,30 +207,46 @@ class ToolInstall(object):
     # blue screen that doesn't allow for an unattended
     # installation
     if arch_inst.getPackageMgr() == arch.PACKAGE_MGR_DEBIAN:
-      env.addToEnvironment("DEBIAN_FRONTEND", "noninteractive")
+      os.environ["DEBIAN_FRONTEND"] = "noninteractive"
 
     pckg_mgr = arch_inst.getPackageMgrBin()
-    pckg =  package_map[arch_inst.getPackageMgr()]
 
     if pckg_mgr == None:
       raise InstallError("Could not determine your package manager")
 
-    command = pckg_mgr + " -y install " + pckg
+    # get the package, but don't break if the user didn't specify
+    # a package to include
+    pckg_list = []
+    try:
+      pckg_list =  package_map[arch_inst.getPackageMgr()]
+    except:
+      return False
 
-    installLines = shell.shLines(command)
+    all_installed = True
+    for pckg in pckg_list:
+      # at the time this was written, we were just considering
+      # yum and apt-get.  If you consider something else, make sure
+      # it can handle the -y flag
+      command = pckg_mgr + " -y install " + pckg
 
-    exists_msg = ""
-    if pckg_mgr == arch.PACKAGE_MGR_DEBIAN:
-      exists_msg = "0 upgraded, 0 newly installed"
-    elif pckg_mgr == arch.PACKAGE_MGR_RPM:
-      exists_msg = "Nothing to do"
-    # else case already handled above
+      installLines = shell.shLines(command)
 
-    installed = installLines[-1].find(exists_msg) != -1
+      output.printlnVerbose(installLines)
 
-    output.printlnInfo("Installed " + pckg)
+      exists_msg = ""
+      if pckg_mgr == arch.PACKAGE_MGR_DEBIAN:
+        exists_msg = "0 upgraded, 0 newly installed"
+      elif pckg_mgr == arch.PACKAGE_MGR_RPM:
+        exists_msg = "Nothing to do"
+      # else case already handled above
 
-    return installed
+      installed = installLines[-1].find(exists_msg) != -1
+
+      output.printlnInfo("Installed " + pckg)
+
+      all_installed = all_installed and installed
+
+    return all_installed
 
   def createEtcSymlink(self, appName, confDir):
     """ Create a symlink from /etc/cloudera/$appName to $confDir """

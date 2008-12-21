@@ -26,7 +26,7 @@ class InstallPlan(object):
         pos = self.sortedItems.index(toolinstall.getToolByName(dep))
       except ValueError:
         raise InstallError( \
-"""Dependency %(dep) required for component %(src)s is not included
+"""Dependency %(dep)s required for component %(src)s is not included
 in the installation plan.""" %
             { "dep" : str(dep),
               "src" : tool.getName() })

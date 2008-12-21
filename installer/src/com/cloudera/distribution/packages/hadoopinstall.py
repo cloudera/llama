@@ -181,7 +181,7 @@ class HadoopInstall(toolinstall.ToolInstall):
         # non-root install: run hadoop as yourself.
         self.hadoopUser = self.curUsername
     elif self.curUsername != "root" and self.hadoopUser != self.curUsername \
-        and self.isUnattended():
+        and self.isUnattexnded():
       raise InstallError( \
 """In unattended mode, you cannot specify another username to run hadoop
 if you are not installing as root. Please re-run the installer as root,
