@@ -39,13 +39,9 @@ def createInstallPlan(properties):
     plan.addTool(PigInstall(properties))
   if properties.getBoolean(INSTALL_SCRIBE_KEY, INSTALL_SCRIBE_DEFAULT):
     output.printlnVerbose("Selecting package Scribe")
-    plan.addTool(ScribeInstall(properties))
-  if properties.getBoolean(INSTALL_LOGMOVER_KEY, INSTALL_LOGMOVER_DEFAULT):
-    output.printlnVerbose("Selecting package LogMover")
     plan.addTool(LogMoverInstall(properties))
-  if properties.getBoolean(INSTALL_PORTAL_KEY, INSTALL_PORTAL_DEFAULT):
-    output.printlnVerbose("Selecting package Portal")
     plan.addTool(PortalInstall(properties))
+    plan.addTool(ScribeInstall(properties))
 
   return plan
 
@@ -74,16 +70,6 @@ def getInstallFlags(properties):
     flags.append("--install-scribe")
   else:
     flags.append("--without-scribe")
-
-  if properties.getBoolean(INSTALL_LOGMOVER_KEY, INSTALL_LOGMOVER_DEFAULT):
-    flags.append("--install-logmover")
-  else:
-    flags.append("--without-logmover")
-
-  if properties.getBoolean(INSTALL_PORTAL_KEY, INSTALL_PORTAL_DEFAULT):
-    flags.append("--install-portal")
-  else:
-    flags.append("--without-portal")
 
   return flags
 

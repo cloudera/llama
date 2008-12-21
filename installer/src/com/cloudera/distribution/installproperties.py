@@ -43,11 +43,7 @@ class InstallProperties(Properties):
     "--install-scribe" : INSTALL_SCRIBE_KEY,
     "--without-scribe" : INSTALL_SCRIBE_KEY,
 
-    "--install-logmover" : INSTALL_LOGMOVER_KEY,
-    "--without-logmover" : INSTALL_LOGMOVER_KEY,
-
-    "--install-portal" : INSTALL_PORTAL_KEY,
-    "--without-portal" : INSTALL_PORTAL_KEY,
+    "--overwrite-htdocs": OVERWRITE_HTDOCS_KEY,
 
     "--java-home"      : JAVA_HOME_KEY,
 
@@ -97,8 +93,7 @@ class InstallProperties(Properties):
     "--install-hive",
     "--install-pig",
     "--install-scribe",
-    "--install-logmover",
-    "--install-portal",
+    "--overwrite-htdocs",
     "--format-hdfs",
     "--unattend",
     "--test-mode",
@@ -112,8 +107,6 @@ class InstallProperties(Properties):
     "--without-hive",
     "--without-pig",
     "--without-scribe",
-    "--without-logmover",
-    "--without-portal",
     "--no-format-hdfs",
     "--interactive",
     "--start-daemons"

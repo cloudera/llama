@@ -27,13 +27,13 @@ class LogMoverInstall(ToolInstall):
     # the log mover is only installed on the NN
     if self.isMaster():
       self.install_mysql()
+
     # TODO:
     # - install LogMover
     # - alter settings.py to use the proper Scribe log
     #   directories and to also have the correct
     #   GIT_ROOT.  settings.py must also have the
     #   correct HADOOP_HOME so it can speak with HDFS
-    # - install MySQL
     # - bootstrap MySQL with .sql files
     # - Setup cron jobs on NN only to run log movers
     # - Create the log directory specified in settings.py
@@ -43,8 +43,8 @@ class LogMoverInstall(ToolInstall):
   def install_mysql(self):
     """Installs MySQL"""
 
-    pckg = {arch.PACKAGE_MGR_DEBIAN: "mysql-server",
-            arch.PACKAGE_MGR_RPM: "mysql-server",
+    pckg = {arch.PACKAGE_MGR_DEBIAN: ["mysql-server"],
+            arch.PACKAGE_MGR_RPM: ["mysql-server"],
             }
     self.installPackage(pckg)
 

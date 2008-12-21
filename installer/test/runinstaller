@@ -45,7 +45,7 @@ sed -i -e "s/MASTER_HOST/$thishost/g" /tmp/install-hadoop-site.xml
 
 # and launch the program
 "$installerPrgm" --unattend --test-mode --prefix /mnt/tmp/master \
-  --remote-prefix /mnt/tmp/slave --without-scribe \
+  --remote-prefix /mnt/tmp/slave \
   --hadoop-site /tmp/install-hadoop-site.xml \
   --hadoop-slaves ${bin}/../testdata/localhost-slaves \
   --config-prefix /mnt/tmp/etc/cloudera \

@@ -13,6 +13,8 @@ class ScribeInstall(ToolInstall):
   def __init__(self, properties):
     ToolInstall.__init__(self, "Scribe", properties)
 
+    self.addDependency("LogMover")
+    self.addDependency("Portal")
 
   def precheck(self):
     """ If anything must be verified before we even get going, check those
@@ -30,6 +32,9 @@ class ScribeInstall(ToolInstall):
     # - add Scribe appender and libraries to HADOOP_CLASSPATH
     # - install configuration files
     # - start scribed
+
+    # TODO: tell the user how to start Scribe
+    # TODO: tell the user to add LD_LIBRARY_PATH to their env
 
     # dependencies:
     #  -python

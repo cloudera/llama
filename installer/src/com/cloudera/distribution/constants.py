@@ -40,8 +40,7 @@ INSTALL_HADOOP_KEY = "hadoop.install"
 INSTALL_HIVE_KEY   = "hive.install"
 INSTALL_PIG_KEY    = "pig.install"
 INSTALL_SCRIBE_KEY = "scribe.install"
-INSTALL_LOGMOVER_KEY = "logmover.install"
-INSTALL_PORTAL_KEY = "portal.install"
+OVERWRITE_HTDOCS_KEY = "ovewrite.htdocs"
 
 MAKE_DFS_HOSTS_KEY = "dfs.hosts.create"
 MAKE_DFS_EXCLUDES_KEY = "dfs.excludes.create"
@@ -56,8 +55,7 @@ INSTALL_HADOOP_DEFAULT = True
 INSTALL_HIVE_DEFAULT   = True
 INSTALL_PIG_DEFAULT    = True
 INSTALL_SCRIBE_DEFAULT = True
-INSTALL_LOGMOVER_DEFAULT = True
-INSTALL_PORTAL_DEFAULT = True
+OVERWRITE_HTDOCS_DEFAULT = False
 
 # arguments controlling hadoop-specific installation
 HADOOP_MASTER_ADDR_KEY = "hadoop.master.addr"
@@ -333,6 +331,9 @@ DISTRIB_BASE_PATH = ".."
 # holds all the packages?
 PACKAGE_PATH = os.path.join(DISTRIB_BASE_PATH, "packages/")
 
+# The path to installer dependencies such as starter configuration files, etc
+DEPS_PATH = os.path.join(DISTRIB_BASE_PATH, "deps/")
+
 # relative to the distribution base path, where is the installer program?
 INSTALLER_SUBDIR = "bin"
 
@@ -358,6 +359,11 @@ PIG_VERSION = "0.1.1"
 PIG_INSTALL_SUBDIR = "pig-" + PIG_VERSION
 PIG_PACKAGE = "pig-" + PIG_VERSION + ".tar.gz"
 
+LIGHTTPD_UBUNTU_HTDOCS = "/var/www"
+LIGHTTPD_FC_HTDOCS = "/srv/www/lighttpd"
+
 # TODO(aaron): 0.2 Need 'svnstring' or something of the like to handle this.
 DISTRIB_VERSION = "0.1.0"
 
+# this exists within HADOOP_INSTALL_SUBDIR
+PORTAL_SRC_LOCATION = "webapps/portal"
