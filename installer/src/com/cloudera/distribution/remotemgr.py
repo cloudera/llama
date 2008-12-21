@@ -140,10 +140,10 @@ def zipInstallerDistribution():
     handle = os.fdopen(oshandle, "w")
     handle.close()
   except OSError:
-    # irrelevant
+    # irrelevant because we just want the filename
     pass
   except IOError:
-    # irrelevant
+    # irrelevant because we just want the filename
     pass
 
   # what is the dir we should zip up? calculate that based on the current
@@ -161,7 +161,7 @@ def zipInstallerDistribution():
     try:
       os.remove(tmpFilename)
     except OSError:
-      pass # irrelevant
+      pass # irrelevant; ok to leave trash behind if it can't be removed.
 
     raise InstallError("""Could not compress distribution for deployment.
 command: %(cmd)s

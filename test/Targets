@@ -1,0 +1,23 @@
+#!/usr/bin/python
+#
+# (c) Copyright 2008 Cloudera, Inc.
+#
+# Test tool for Cloudera Hadoop Distribution
+#
+
+tester = PythonTarget(
+  sources=[ "src/distrotester",
+            "src/remotetest",
+            "src/testdistrib"],
+  requiredTargets=[ "python/Common",
+                    "projects/HadoopDist/installer" ],
+  dataPaths = [ "profiles",
+                "hadoop-configs",
+                "pig-tests" ])
+
+release = PythonRedistTarget(
+  distribName     = "distrotest",
+  requiredTargets = [ ":tester" ])
+
+defaultTarget(release)
+

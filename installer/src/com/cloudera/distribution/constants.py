@@ -42,6 +42,9 @@ INSTALL_PIG_KEY    = "pig.install"
 INSTALL_SCRIBE_KEY = "scribe.install"
 OVERWRITE_HTDOCS_KEY = "ovewrite.htdocs"
 
+MAKE_DFS_HOSTS_KEY = "dfs.hosts.create"
+MAKE_DFS_EXCLUDES_KEY = "dfs.excludes.create"
+
 # by default, we install all packages. Doing this just for good practice
 # in case we include some "optional" packages later.
 INSTALL_HADOOP_DEFAULT = True
@@ -244,7 +247,7 @@ ONE_DAY_IN_MINUTES = 24 * 60
 
 DEFAULT_TRASH_INTERVAL = ONE_DAY_IN_MINUTES
 
-HADOOP_TMP_DEFAULT = "/tmp/hadoop"
+HADOOP_TMP_DEFAULT = "/tmp/hadoop-${user.name}"
 
 DEFAULT_RAM_GUESS = 2048
 DEFAULT_CORES_GUESS = 2
@@ -331,7 +334,7 @@ APP_SUBDIR = "apps"
 # Underneath of $prefix/apps/, where do all the individual programs go?
 # TODO (aaron): 0.2 Need some way of embedding this in the build process
 # so that we don't have to manually change this every time.
-HADOOP_VERSION = "0.18.2"
+HADOOP_VERSION = "0.18.2-patched"
 HADOOP_INSTALL_SUBDIR = "hadoop-" + HADOOP_VERSION
 HADOOP_PACKAGE = "hadoop-" + HADOOP_VERSION + ".tar.gz"
 
@@ -348,6 +351,9 @@ PIG_PACKAGE = "pig-" + PIG_VERSION + ".tar.gz"
 
 LIGHTTPD_UBUNTU_HTDOCS = "/var/www"
 LIGHTTPD_FC_HTDOCS = "/srv/www/lighttpd"
+
+# TODO(aaron): 0.2 Need 'svnstring' or something of the like to handle this.
+DISTRIB_VERSION = "0.1.0"
 
 # this exists within HADOOP_INSTALL_SUBDIR
 PORTAL_SRC_LOCATION = "webapps/portal"

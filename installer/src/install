@@ -109,7 +109,7 @@ can select by pressing [enter].
 
   # If we're the master, perform automated deployment to additional machines
   if globalPrereqInstaller.isMaster():
-    # TODO: Unattended installation should only do this if DEPLOY_SLAVES_KEY
+    # TODO(aaron): Unattended install  should only do this if DEPLOY_SLAVES_KEY
     # is true; interactive installation should prompt for whether/not to do this
     output.printlnInfo("Deploying distribution to remote hosts.")
     output.printlnInfo("(This may take a few minutes)")

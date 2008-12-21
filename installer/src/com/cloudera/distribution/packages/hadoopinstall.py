@@ -8,6 +8,7 @@ import math
 import os
 import re
 import shutil
+import socket
 import sys
 import time
 
@@ -74,7 +75,7 @@ class HadoopInstall(toolinstall.ToolInstall):
     hadoopUser = self.getHadoopUsername()
     curUser = self.curUsername
 
-    if self.isRoot() or (not self.isUnattended() and curUSer != hadoopUser):
+    if self.isRoot() or (not self.isUnattended() and curUser != hadoopUser):
       return "sudo -H -u " + hadoopUser + " "
     else:
       return ""
@@ -226,7 +227,10 @@ or specify your own username with --hadoop-user""")
     nativeAllowed = self.properties.getBoolean(ALLOW_NATIVE_COMPRESSION_KEY, \
         ALLOW_NATIVE_COMPRESSION_DEFAULT)
 
-    return self.libLzoFound  and nativeAllowed
+    # return self.libLzoFound  and nativeAllowed
+    # TODO (aaron): Due to GPL licensing issues, LZO compression is currently
+    # disabled until an alternate library provider can be found.
+    return False
 
 
   def precheckBzipLibs(self):
@@ -251,6 +255,8 @@ or specify your own username with --hadoop-user""")
 
   def canUseBzip(self):
     """ Return True if precheckBzipLibs detected the correct bzip libraries """
+    # TODO(aaron): Watch HADOOP-4918; it seems as though bzip2 does not
+    # work with sequence files. Think hard before we use this.
     return self.libBzipFound
 
 
@@ -357,6 +363,24 @@ or specify your own username with --hadoop-user""")
       raise InstallError("Could not find hadoop site file: " \
           + userHadoopSiteFile)
 
+    # autoconfigure locations of dfs.hosts and dfs.hosts.exclude files if
+    # the user has passed these in as command-line arguments.
+    cmdlineDfsHosts = self.properties.getProperty(MAKE_DFS_HOSTS_KEY)
+    if cmdlineDfsHosts != None:
+      # This will be relative to the hadoop config path, if it's not an
+      # absolute path on its own.
+      cmdlineDfsHosts = os.path.join(self.getConfDir(), cmdlineDfsHosts)
+      self.hadoopSiteDict[DFS_HOSTS_FILE] = cmdlineDfsHosts
+
+    cmdlineDfsExcludes = self.properties.getProperty(MAKE_DFS_EXCLUDES_KEY)
+    if cmdlineDfsExcludes != None:
+      # This will be relative to the hadoop config path, if it's not an
+      # absolute path on its own.
+      cmdlineDfsExcludes = os.path.join(self.getConfDir(), cmdlineDfsExcludes)
+      self.hadoopSiteDict[DFS_EXCLUDE_FILE] = cmdlineDfsExcludes
+
+
+
     if not self.isUnattended() and userHadoopSiteFile == None:
       # time to actually query the user about these things.
       self.configuredHadoopSiteOnline = True
@@ -427,7 +451,10 @@ via the command-line tools.)""")
 The Hadoop tmp directory (which will be created on each node) determines
 where temporary outputs of Hadoop processes are stored. This can live in
 /tmp, or some place where you have more control over where files are written.
-Make sure there is plenty of space available here.""")
+Make sure there is plenty of space available here. If this install is to be used
+in a multi-user setting, it is recommended that each user have his own
+temporary directory; this can be achieved by including the string '${user.name}'
+in the temp dir name (e.g., /tmp/hadoop-${user.name}).""")
       self.hadoopSiteDict[HADOOP_TMP_DIR] = \
           prompt.getString("Enter the Hadoop temp dir", HADOOP_TMP_DEFAULT, \
           True)
@@ -462,7 +489,9 @@ You must choose one or more paths on each of the slave nodes where
 job-specific data will be written during MapReduce job execution. Adding
 multiple paths on separate physical devices will improve performance. (These
 directories will be created if they do not exist.) Enter one or more
-directories separated by commas.""")
+directories separated by commas. If creating multiple local directories
+on separate drives, subpaths should include ${user.name} to allow
+per-user local directories.""")
       mapredLocalDefault = os.path.join(self.hadoopSiteDict[HADOOP_TMP_DIR], \
           "mapred/local")
 
@@ -656,10 +685,8 @@ to do, just accept the default values.""")
       raise InstallError("Could not write DFS hosts file: " + dfsHostsFileName \
           + " (" + str(ioe) + ")")
     except KeyError:
-      # we didn't do this part of the configuration in-tool.
-      # If the user specified their own dfs.hosts file, install that.
-      # TODO (aaron): 0.2 - Future versions should allow --dfs-hosts
-      # So just let this slide for now.
+      # we didn't do this part of the configuration in-tool, or the
+      # user didn't provide a filename on the command line to use.
       pass
 
 
@@ -674,10 +701,8 @@ to do, just accept the default values.""")
       raise InstallError("Could not create DFS exclude file: " \
           + excludeFileName + " (" + str(ioe) + ")")
     except KeyError:
-      # we didn't do this part of the configuration in-tool.
-      # If the user specified their own dfs.hosts.exclude file, install that.
-      # TODO (aaron): 0.2 - Future versions of this tool --dfs-exclude
-      # So just let this slide for now.
+      # we didn't do this part of the configuration in-tool, or the
+      # user didn't provide a filename on the command line to use.
       pass
 
   def writeHadoopSiteEpilogue(self, handle):
@@ -721,7 +746,7 @@ to do, just accept the default values.""")
   <description>If the map outputs are compressed, how should they be
                compressed? Cloudera Hadoop has detected native LZO compression
                libraries on your system and has selected these for better
-               perofrmance.
+               performance.
   </description>
 </property>
 <property>
@@ -855,6 +880,15 @@ to do, just accept the default values.""")
 
     def makeSinglePath(path):
       path = path.strip()
+
+      try:
+        # check first: if this contains another hadoop variable, don't
+        # create it now.
+        path.index("${")
+        return # skip since it contains a variable.
+      except ValueError:
+        pass # couldn't find the substring - good.
+
       try:
         output.printlnDebug("Creating path: " + path)
         dirutils.mkdirRecursive(path)

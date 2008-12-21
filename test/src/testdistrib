@@ -1,0 +1,304 @@
+#!/usr/bin/env python
+#
+# (c) Copyright 2008 Cloudera, Inc
+# testdistrib  -- runs test processes across the Cloudera Hadoop Distribution
+
+import logging
+import os
+import sys
+import tempfile
+
+import com.cloudera.tools.ec2 as ec2
+import com.cloudera.tools.shell as shell
+import com.cloudera.util.output as output
+
+import com.cloudera.distribution.sshall as sshall
+import com.cloudera.distribution.scpall as scpall
+
+from   distrotester.constants import *
+import distrotester.platforms as platforms
+from   distrotester.testerror import TestError
+import distrotester.testproperties as testproperties
+
+# do this first
+output.initLogging()
+
+# use all args except program name
+argv = sys.argv[1:]
+
+properties = testproperties.TestProperties()
+output.attachOutputArgParser(properties)
+
+testproperties.loadAllProperties(properties, argv)
+testproperties.setProperties(properties)
+
+
+# if the user has not selected a log file name and a log level,
+# force a log file here. Also set the default log level to verbose.
+setLogName = properties.getProperty(output.LOG_FILENAME_PROP)
+if setLogName == None:
+  properties.setProperty(output.LOG_FILENAME_PROP, DEFAULT_LOG_FILENAME)
+
+setLogVerbosity = properties.getProperty(output.LOG_VERBOSITY_PROP)
+if setLogVerbosity == None:
+  properties.setProperty(output.LOG_VERBOSITY_PROP, DEFAULT_LOG_VERBOSITY)
+
+# set up the console. Also starts logging to the specified file
+output.setupConsole(properties)
+
+# if we are here, then properties and argv parsing succeeded
+
+localDistribTarball = properties.getProperty(DISTRIB_TARBALL_KEY)
+if localDistribTarball != None:
+  localDistribTarball = os.path.abspath(localDistribTarball)
+
+
+# Where are we? Switch into test program's base dir
+binName = sys.argv[0]
+binDir = properties.getProperty(TEST_BINDIR_KEY, os.path.dirname(binName))
+os.chdir(binDir)
+
+# Did the user ask for --list-platforms? If so, list 'em and exit.
+if properties.getBoolean(LIST_PLATFORMS_KEY):
+  platforms.listPlatforms()
+  sys.exit(1)
+
+# Make sure we have AWS credentials; we'll need these after we make an instance
+awsSecretKey = properties.getProperty(AWS_SECRET_ACCESS_KEY)
+awsAccessKey = properties.getProperty(AWS_ACCESS_KEY_ID)
+awsAccountId = properties.getProperty(AWS_ACCOUNT_ID_KEY)
+packageBucket = properties.getProperty(PACKAGE_BUCKET_KEY, \
+    PACKAGE_BUCKET_DEFAULT)
+
+if awsSecretKey == None:
+  logging.error("Error: " + AWS_SECRET_KEY_ENV + " is not set")
+  sys.exit(1)
+if awsAccessKey == None:
+  logging.error("Error: " + AWS_ACCESS_KEY_ENV + " is not set")
+  sys.exit(1)
+if awsAccountId == None:
+  logging.error("Error: " + AWS_ACCOUNT_ID_ENV + " is not set")
+  sys.exit(1)
+
+if localDistribTarball == None:
+  logging.error("Error: distribution location was not set with " \
+      + DISTRIB_TARBALL_ARG)
+  sys.exit(1)
+
+# ok, time to actually make the work.
+
+# Make a tarball of the test harness.
+(oshandle, tarballFilename) = tempfile.mkstemp(".tar.gz", "harness-")
+try:
+  handle = os.fdopen(oshandle, "w")
+  handle.close()
+except OSError:
+  # irrelevant
+  pass
+except IOError:
+  # irrelevant
+  pass
+
+harnessBaseDir = os.path.abspath(os.path.join(os.getcwd(), HARNESS_BASE_DIR))
+harnessParentDir = os.path.abspath(os.path.join(harnessBaseDir, ".."))
+baseName = os.path.basename(harnessBaseDir)
+
+# Actually tar it up.
+cmd = "tar czf \"" + tarballFilename + "\" -C \"" + harnessParentDir + "\""\
+    + " \"" + baseName + "\""
+shell.sh(cmd)
+
+# start an EC2 instance for this process.
+platformName = properties.getProperty(TEST_PLATFORM_KEY)
+if platformName == None:
+  logging.error("Error: No platform specified with " + TEST_PLATFORM_ARG)
+  sys.exit(1)
+
+logging.info("Launching tests on platform: " + platformName)
+
+existingInstanceNames = properties.getProperty(EXISTING_INSTANCES_KEY)
+userSuppliedInstances = False
+if existingInstanceNames != None:
+  instances = existingInstanceNames.split(",")
+  userSuppliedInstances = True
+  logging.info("Using instances:")
+
+# call this method regardless of whether it actually does the launch;
+# at minimum it sets up properties in our global configuation
+newInstances = platforms.launchInstances(platformName, properties, \
+    userSuppliedInstances)
+if existingInstanceNames == None:
+  instances = newInstances
+  logging.info("Started instances:")
+
+# TODO: Documentation: We need to set EC2_HOME, EC2_PRIVATE_KEY, EC2_CERT
+# for any user who will be running this tool (Including autotest users)
+for instance in instances:
+  logging.info("  " + instance)
+instanceLines = ec2.listInstances(None, properties)
+
+dnsMap = ec2.getInstanceDnsNames(instanceLines, instances)
+
+# We have a map from instanceId -> (internal dns, external dns)
+# Condense this into a list we can use.
+# Determine whether we should use EC2 internal dns names or external names
+# based on whether we're inside EC2 or not. (which we simply check for a
+# 10.x.y.z address for. TODO (aaron): This is not a foolproof method)
+useInternal = False
+try:
+  myHostNameLines = shell.shLines("hostname -i")
+  if len(myHostNameLines) > 0:
+    hostLine = myHostNameLines[0].strip()
+  if hostLine.startswith("10."):
+    useInternal = True
+except shell.CommandError:
+  pass
+
+hostList = []
+for (internal, external) in dnsMap.values():
+  if useInternal:
+    hostList.append(internal)
+  else:
+    hostList.append(external)
+if len(hostList) == 0:
+  logging.error("Empty host list? Don't know how to continue!")
+  sys.exit(1)
+
+# Everything from here out must be guarded to terminate the nodes
+# if the user didn't create them.
+try:
+
+  # Upload test harness tarball.
+  logging.info("Uploading test harness tarball")
+  remoteHarnessTarFile = os.path.join("/mnt/", \
+      os.path.basename(tarballFilename))
+  try:
+    try:
+      scpall.scpMultiHosts(tarballFilename, "root", hostList, \
+        remoteHarnessTarFile, properties, SCP_RETRIES, SCP_PARALLEL)
+    except scpall.MultiScpError, mse:
+      failedHosts = mse.getFailedHostList()
+      logging.error("Could not upload test harness to the following hosts:")
+      for host in failedHosts:
+        logging.error("  " + host)
+      raise
+  finally:
+    os.remove(tarballFilename)
+
+  # Pick one node to the "master" node.
+  masterHost = hostList[0]
+  numHosts = len(hostList)
+  slaveAddrs = hostList[1:numHosts]
+  logging.info("Master host is: " + masterHost)
+
+  # Upload distro tarball to master host.
+  remoteDistribTarball = os.path.join("/mnt/", \
+      os.path.basename(localDistribTarball))
+  if not properties.getBoolean(BYPASS_UPLOAD_KEY):
+    logging.info("Uploading CHD tarball...")
+    shell.scp(localDistribTarball, "root", masterHost, remoteDistribTarball, \
+        properties)
+  else:
+    logging.info("Skipping CHD tarball upload at user request")
+
+  if not properties.getBoolean(BYPASS_SETUP_KEY):
+    # Upload the id_rsa file we're using and chmod it correctly on the master
+    logging.info("Uploading ssh key")
+    shell.ssh("root", masterHost, "mkdir -p /root/.ssh", properties)
+    shell.ssh("root", masterHost, "chmod 0750 /root/.ssh", properties)
+    idRsaFile = properties.getProperty("ssh.identity")
+    shell.scp(idRsaFile, "root", masterHost, "/root/.ssh/id_rsa", properties)
+    shell.ssh("root", masterHost, "chmod 0600 /root/.ssh/id_rsa", properties)
+
+
+  # Run platform-specific bootstrap commands. Append the unzip commands here
+  # so that at the end of this, we know that we're ready to go on all nodes.
+  platformSetup = platforms.setupForPlatform(platformName, properties)
+  platformSetup.initProperties()
+  if not properties.getProperty(BYPASS_SETUP_KEY):
+    bootstrapCmds = platformSetup.remoteBootstrap()
+    bootstrapCmds.append("tar -zxf \"" + remoteDistribTarball + "\" -C /mnt")
+  else:
+    bootstrapCmds = []
+  bootstrapCmds.append("tar -zxf \"" + remoteHarnessTarFile + "\" -C /mnt")
+
+  logging.info("Executing system bootstrap commands on all nodes")
+  for cmd in bootstrapCmds:
+    results = sshall.sshMultiHosts("root", hostList, cmd, properties, \
+        SSH_RETRIES, SSH_PARALLEL)
+    for result in results:
+      # each result is an sshall.SshResult object
+      if result.getStatus() != 0:
+        logging.error("Got error result executing bootstrap cmd on: " \
+            + result.getHost())
+        logging.error("Command was: " + result.getCommand())
+        logging.error("Output:")
+        for line in result.getOutput():
+          logging.error("  " + line.rstrip())
+        raise TestError("Error running command.")
+
+  if not properties.getProperty(BYPASS_SETUP_KEY):
+    # Run platform-specific installation functions on all nodes.
+    cmd = REMOTE_SETUP_COMMAND + " " + TEST_PLATFORM_ARG + " " + platformName \
+        + " " + AWS_SECRET_KEY_ARG + " '" + awsSecretKey + "'" \
+        + " " + AWS_ACCESS_KEY_ARG + " '" + awsAccessKey + "'" \
+        + " " + AWS_ACCOUNT_ID_ARG + " '" + awsAccountId + "'" \
+        + " " + PACKAGE_BUCKET_ARG + " " + packageBucket \
+        + " --debug"
+
+    logging.info("Executing platform installation commands on all nodes")
+    results = sshall.sshMultiHosts("root", hostList, cmd, properties, \
+        SSH_RETRIES, SSH_PARALLEL)
+    for result in results:
+      # each result is an sshall.SshResult object
+      if result.getStatus() != 0:
+        logging.error("Got error result running platform install on: " \
+            + result.getHost())
+        logging.error("Command was: " + result.getCommand())
+        logging.error("Output:")
+        for line in result.getOutput():
+          logging.error("  " + line.rstrip())
+        raise TestError("Error running command.")
+
+  # write slaves list to a file and upload to the master node
+  (oshandle, tmpFilename) = tempfile.mkstemp("", "slaves-")
+  handle = os.fdopen(oshandle, "w")
+  for addr in slaveAddrs:
+    handle.write(addr + "\n")
+  handle.close()
+  remoteSlavesName = os.path.join("/mnt/", os.path.basename(tmpFilename))
+
+  logging.info("Uploading slaves file to master")
+  shell.scp(tmpFilename, "root", masterHost, remoteSlavesName, properties)
+
+  # we no longer need the list of slave addrs locally.
+  os.remove(tmpFilename)
+
+  # Run the global test battery loop on the master node
+  logging.info("Running remote test battery...")
+  # enforce a tty for this ssh command.
+  sshOpts = properties.getProperty("ssh.options", "")
+  sshOpts = sshOpts + " -t"
+  properties.setProperty("ssh.options", sshOpts)
+  cmd = REMOTE_TEST_COMMAND + " " + TEST_PLATFORM_ARG + " " + platformName \
+      + " " + AWS_SECRET_KEY_ARG + " '" + awsSecretKey + "'" \
+      + " " + AWS_ACCESS_KEY_ARG + " '" + awsAccessKey + "'" \
+      + " " + AWS_ACCOUNT_ID_ARG + " '" + awsAccountId + "'" \
+      + " " + PACKAGE_BUCKET_ARG + " " + packageBucket \
+      + " " + SLAVES_FILE_ARG + " " + remoteSlavesName \
+      + " " + DISTRIB_TARBALL_ARG + " " + remoteDistribTarball \
+      + " --log-filename " + REMOTE_LOG_FILENAME + " --log-level DEBUG" \
+      + " --debug"
+  shell.ssh("root", masterHost, cmd, properties)
+
+finally:
+  # shut down any instances we started. We're responsible for them.
+  # TODO: If this was run by a user, only shut down on success.
+  # If this is run in unattended mode, always shut down.
+  if not userSuppliedInstances:
+    logging.info("Shutting down instances...")
+    ec2.terminateInstances(instances, properties)
+
+
+sys.exit(0)
+

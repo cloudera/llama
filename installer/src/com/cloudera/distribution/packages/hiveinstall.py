@@ -219,8 +219,14 @@ class HiveInstall(toolinstall.ToolInstall):
         safemodeOff = True
 
         output.printlnVerbose("Creating directories...")
-        hadoopInstaller.hadoopCmd("fs -mkdir " + HIVE_WAREHOUSE_DIR)
-        hadoopInstaller.hadoopCmd("fs -mkdir " + tmpPath)
+        try:
+          hadoopInstaller.hadoopCmd("fs -mkdir " + HIVE_WAREHOUSE_DIR)
+        except InstallError:
+          pass # this dir may already exist; will detect real error @ chmod
+        try:
+          hadoopInstaller.hadoopCmd("fs -mkdir " + tmpPath)
+        except InstallError:
+          pass # this dir may already exist; will detect real error @ chmod
 
         output.printlnVerbose("Setting permissions...")
         hadoopInstaller.hadoopCmd("fs -chmod a+w " + HIVE_WAREHOUSE_DIR)
