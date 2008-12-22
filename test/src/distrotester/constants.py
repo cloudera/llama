@@ -4,6 +4,8 @@
 # Constants used by the distribution testing tool
 #
 
+import os
+
 import com.cloudera.util.output as output
 
 
@@ -72,6 +74,11 @@ SETUP_KEY = "remote.setup"
 RUN_TESTS_ARG = "--test"
 RUN_TESTS_KEY = "remote.runtests"
 
+# If this is true, then we were run by autotest or something like it.
+# Make sure we fully clean up our mess.
+UNATTENDED_ARG = "--unattend"
+UNATTENDED_KEY = "unattended.test"
+
 
 # If we know that the distribution has already been uploaded, don't
 # need to wait for it to happen a second time.
@@ -121,10 +128,12 @@ CONFIG_PREFIX = "/mnt/etc/cloudera"
 # where should the installer output its logs to
 INSTALLER_LOG_FILE = "/mnt/cloudera-installer.log"
 
-DFS_DATA_DIR = "/mnt/tmp/data"
-DFS_NAME_DIR = "/mnt/tmp/name"
-CHECKPOINT_DIR = "/mnt/tmp/secondary"
-HADOOP_TMP_DIR = "/mnt/tmp/hadoop"
+BASE_TMP_DIR = "/mnt/tmp"
+
+DFS_DATA_DIR = os.path.join(BASE_TMP_DIR, "data")
+DFS_NAME_DIR = os.path.join(BASE_TMP_DIR, "name")
+CHECKPOINT_DIR = os.path.join(BASE_TMP_DIR, "secondary")
+HADOOP_TMP_DIR = os.path.join(BASE_TMP_DIR, "hadoop")
 
 # Whom do we run hadoop daemons as?
 HADOOP_USER_KEY = "hadoop.user"
@@ -140,6 +149,9 @@ ROOT_USER = "root"
 # Where is java stored on this machine?
 JAVA_HOME_KEY = "java.home"
 
+
+# Where are the hive test files, relative to where the test harness runs?
+HIVE_TEST_DIR = "hive-tests"
 
 ############################################################
 # constants pertaining to making bootstrap installations

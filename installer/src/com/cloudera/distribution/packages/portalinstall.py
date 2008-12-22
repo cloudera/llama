@@ -33,7 +33,7 @@ class PortalInstall(ToolInstall):
     files = os.listdir(htdocs)
     if len(files) != 0:
       overwrite_flag = self.properties.getProperty(OVERWRITE_HTDOCS_KEY, \
-                                                    OVERWRITE_HTDOCS_DEFAULT)
+                                        OVERWRITE_HTDOCS_DEFAULT)
 
       # if they do exist and we're in unattended mode, break with errors
       if self.isUnattended() and not overwrite_flag:
@@ -79,7 +79,7 @@ will have to move these htdocs elsewhere.
 
   def install_httpd(self):
     """
-    Installs Lighttpd with PHP5 and MySQL support. 
+    Installs Lighttpd with PHP5 and MySQL support.
     Assumes MySQL is already installed
     """
 

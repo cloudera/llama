@@ -63,13 +63,21 @@ portalComponent = DirComponent(
   srcDir  = "portal/src",
   destDir = "src/webapps/portal")
 
+# Enable inclusion of scribe-log4j contrib jar that we build.
+scribeLog4JComponent = HadoopContribComponent(
+  name = "scribe-log4j")
+
+# Include Matei's fairshare scheduler contrib jar
+fairshareComponent = HadoopContribComponent(
+  name = "fairscheduler")
+
 supportedHadoopPackage = HadoopPackageTarget(
   packageName   = "distrib-hadoop",
   baseHadoopDir = "thirdparty/hadoop-0.18.2",
   baseVersion   = "0.18.2",
   patchVersion  = "CH-0.1.0",
   patchPlan     = [
-      "projects/HadoopDist/scribe-log4j/scribe_hadoop_trunk_v3.patch",
+      "projects/HadoopDist/scribe-log4j/scribe_hadoop_trunk_v4.patch",
       "projects/HadoopDist/nn+jt_jsp/nn+jt_cloudera_0.18.2_noheader.patch",
       "thirdparty/fairshare/fairscheduler-0.18.1.patch",
                   ],
@@ -84,7 +92,9 @@ supportedHadoopPackage = HadoopPackageTarget(
                     log4jpropComponent,
                     log4jpropComponent2,
                     hadoopNativeLibs,
-                    portalComponent
+                    portalComponent,
+                    scribeLog4JComponent,
+                    fairshareComponent
                    ])
 
 # components for packaging
@@ -121,12 +131,14 @@ hivePackageComponent = PackageComponent(
   includeZip = True,
   destDir    = "packages")
 
+docsComponent = DirComponent(
+  srcDir  = "doc",
+  destDir = "doc")
+
 # dependencies such as scribe libraries, configuration files, etc
 depsComponent = DirComponent(
   srcDir  = "deps",
   destDir = "deps")
-
-# TODO: documentation component, any other scripts, etc
 
 # There may be several versions of how we package the distribution.
 # supportedDistro is the one released to support clients
@@ -140,12 +152,13 @@ supportedDistro = PackageTarget(
     pigPackageComponent,
     hivePackageComponent,
     depsComponent,
+    docsComponent
   ])
 
 
 # subdirectory targets:
 #   installer -- guided and noattend python installation system
-#   test      -- Cluster Test tool
+#   test      -- Cluster Test tool (not included in distro itself)
 ProjectList(requiredTargets=[
   "projects/HadoopDist/installer",
   "projects/HadoopDist/test"

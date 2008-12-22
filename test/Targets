@@ -13,7 +13,8 @@ tester = PythonTarget(
                     "projects/HadoopDist/installer" ],
   dataPaths = [ "profiles",
                 "hadoop-configs",
-                "pig-tests" ])
+                "pig-tests",
+                "hive-tests" ])
 
 release = PythonRedistTarget(
   distribName     = "distrotest",

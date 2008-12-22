@@ -19,6 +19,7 @@ from   distrotester.setup.fedora8 import Fedora8Setup
 from   distrotester.constants import *
 from   distrotester.testerror import TestError
 from   distrotester.installtests.standalone import StandaloneTest
+from   distrotester.installtests.multihost import MultiHostTest
 
 
 def listPlatforms():
@@ -49,10 +50,14 @@ def setupForPlatform(platformName, properties):
   """ Return a PlatformSetup object specific to the intended platform.
       This is a factory method from string -> PlatformSetup """
 
-  # TODO (aaron): New platform? Add it to this list.
+  # TODO(aaron): New platform? Add it to this list.
   if platformName == "fc8.i386":
     return Fedora8Setup("i386", properties)
   elif platformName == "fc8.x86_64":
+    return Fedora8Setup("x86_64", properties)
+  elif platformName == "fc8.multi.i386":
+    return Fedora8Setup("i386", properties)
+  elif platformName == "fc8.multi.x86_64":
     return Fedora8Setup("x86_64", properties)
   else:
     raise TestError("No Setup object available for platform: " + platformName)
@@ -61,11 +66,15 @@ def setupForPlatform(platformName, properties):
 def testSuiteForPlatform(platformName, properties):
   """ return a pyunit TestSuite for execution on the remote platform """
 
-  # TODO (aaron): New platform? Add it to this list.
+  # TODO(aaron): New platform? Add it to this list.
   if platformName == "fc8.i386":
     return unittest.makeSuite(StandaloneTest, 'test')
   elif platformName == "fc8.x86_64":
     return unittest.makeSuite(StandaloneTest, 'test')
+  elif platformName == "fc8.multi.i386":
+    return unittest.makeSuite(MultiHostTest, 'test')
+  elif platformName == "fc8.multi.x86_64":
+    return unittest.makeSuite(MultiHostTest, 'test')
   else:
     raise TestError("No test suite available for platform: " + platformName)
 
@@ -82,6 +91,10 @@ def launchInstances(platformName, properties, configOnly=False):
       but doesn't actually launch the instances. Just set up params as if
       we did.
   """
+
+  # This method both sets the config properties, and then
+  # also creates the instances (if configOnly is False).
+  # TODO(aaron): Refactor into two different methods.
 
   profileFilename = profileForPlatform(platformName)
   profileProps = Properties()

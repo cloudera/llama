@@ -79,9 +79,10 @@ Host *
 
     if rootSshKeys:
       shell.sh("cp /root/.ssh/authorized_keys /home/" + username + "/.ssh")
-      shell.sh("cp /root/.ssh/id_rsa /home/" + username + "/.ssh")
       shell.sh("chmod 0600 /home/" + username + "/.ssh/authorized_keys")
-      shell.sh("chmod 0600 /home/" + username + "/.ssh/id_rsa")
+      if os.path.exists("/root/.ssh/id_rsa"):
+        shell.sh("cp /root/.ssh/id_rsa /home/" + username + "/.ssh")
+        shell.sh("chmod 0600 /home/" + username + "/.ssh/id_rsa")
 
     shell.sh("chown " + username + ":" + username \
         +" /home/" + username)

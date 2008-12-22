@@ -50,6 +50,10 @@ class InstallProperties(Properties):
     "--prefix"         : INSTALL_PREFIX_KEY,
     "--config-prefix"  : CONFIG_DIR_KEY,
 
+    # If true, refuses to start Hadoop, HDFS, etc.
+    "--no-start-daemons" : NO_DAEMONS_KEY,
+    "--start-daemons"    : NO_DAEMONS_KEY,
+
     # options used only for debugging
     "--test-mode"      : TEST_MODE_KEY,
     "--remote-prefix"  : REMOTE_PREFIX_KEY,
@@ -61,6 +65,9 @@ class InstallProperties(Properties):
     # when we can't poll the user for these values directly.
     "--jobtracker"     : JOB_TRACKER_KEY,
     "--namenode"       : NAMENODE_KEY,
+    "--scribe-master"  : SCRIBE_MASTER_ADDR_KEY,
+
+    "--scribe-log-dir" : SCRIBE_LOG_DIR_KEY,
 
     # the following settings apply to master only
 
@@ -92,7 +99,8 @@ class InstallProperties(Properties):
     "--overwrite-htdocs",
     "--format-hdfs",
     "--unattend",
-    "--test-mode"
+    "--test-mode",
+    "--no-start-daemons"
   ]
 
   # these disable boolean flags
@@ -103,7 +111,8 @@ class InstallProperties(Properties):
     "--without-pig",
     "--without-scribe",
     "--no-format-hdfs",
-    "--interactive"
+    "--interactive",
+    "--start-daemons"
   ]
 
   # what environment variables map to which properties?

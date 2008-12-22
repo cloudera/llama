@@ -4,6 +4,7 @@
 #
 # Defines the ToolInstall instance that installs Hadoop
 
+import logging
 import math
 import os
 import re
@@ -37,6 +38,7 @@ class HadoopInstall(toolinstall.ToolInstall):
     self.hadoopUser = None  # who should we run hadoop as?
     self.curUsername = None # who are we running as? (`whoami`)
     self.verified = False
+    self.hdfsFormatMsg = None
 
   def isHadoopVerified(self):
     """ return True if verification tests passed."""
@@ -85,8 +87,8 @@ class HadoopInstall(toolinstall.ToolInstall):
         (starting it if necessary). This must be run in postinstall or
         later. """
 
-    if self.startedHdfs:
-      # already running.
+    if self.startedHdfs or not self.mayStartDaemons():
+      # already running, or not allowed to run this.
       return
 
     output.printlnVerbose("Starting HDFS")
@@ -107,7 +109,8 @@ class HadoopInstall(toolinstall.ToolInstall):
         necessary. Also starts HDFS at this time if need be. This must be
         run in postinstall or later. """
 
-    if self.startedMapRed:
+    if self.startedMapRed or not self.mayStartDaemons():
+      # already running, or not allowed to run this.
       return
 
     self.ensureHdfsStarted()
@@ -228,8 +231,8 @@ or specify your own username with --hadoop-user""")
         ALLOW_NATIVE_COMPRESSION_DEFAULT)
 
     # return self.libLzoFound  and nativeAllowed
-    # TODO (aaron): Due to GPL licensing issues, LZO compression is currently
-    # disabled until an alternate library provider can be found.
+    # TODO(aaron): Due to GPL licensing issues, LZO compression is disabled
+    # until an alternate library provider can be found.
     return False
 
 
@@ -282,7 +285,7 @@ or specify your own username with --hadoop-user""")
     """ Sets the masterHost property of this object to point to the
         master server address for Hadoop, querying the user if necessary """
 
-    # TODO (aaron): 0.2 - We currently conflate the master address here with
+    # TODO(aaron): 0.2 - We currently conflate the master address here with
     # the address used for the secondary namenode. we should have a better
     # system which actually differentiates between the two, and puts scribe,
     # and the 2NN on a separate machine. This is an 0.2+ feature.
@@ -459,7 +462,7 @@ in the temp dir name (e.g., /tmp/hadoop-${user.name}).""")
           prompt.getString("Enter the Hadoop temp dir", HADOOP_TMP_DEFAULT, \
           True)
 
-      # TODO (aaron): 0.2 - future versions should scan for devices on the
+      # TODO(aaron): 0.2 - future versions should scan for devices on the
       # name node  and auto-recommend a comma-separated list
       output.printlnInfo("""
 You must choose one or more paths on the master node where the HDFS
@@ -582,7 +585,7 @@ to do, just accept the default values.""")
       self.hadoopSiteDict[JOBTRACKER_THREADS] = prompt.getInteger( \
           JOBTRACKER_THREADS, 1, None, defaultMasterThreads, True)
 
-      # TODO (aaron): 0.2 - Handle IO_SORT_FACTOR, IO_SORT_MB and
+      # TODO(aaron): 0.2 - Handle IO_SORT_FACTOR, IO_SORT_MB and
       # and fs.inmemory.size.mb; recommend something for these as well?
 
       self.hadoopSiteDict[IO_FILEBUF_SIZE] = prompt.getInteger( \
@@ -764,7 +767,7 @@ to do, just accept the default values.""")
         + "org.apache.hadoop.io.compress.GzipCodec"
     if self.canUseLzo():
       codecList = codecList + ",org.apache.hadoop.io.compress.LzoCodec"
-    # TODO (aaron): 0.2 - include bzip2 in official codec list after Hadoop .19
+    # TODO(aaron): 0.2 - include bzip2 in official codec list after Hadoop .19
     handle.write("""
 <property>
   <name>io.compression.codecs</name>
@@ -817,8 +820,8 @@ to do, just accept the default values.""")
 
     # We need to open the file for append and, at minimum,  add JAVA_HOME
     # Also enable JMX on all the daemons.
-    # TODO (aaron): Also allow overriding of the logging stuff?
-    # TODO (aaron): 0.2 -Eventually we'll want to overwrite the whole thing.
+    # TODO(aaron): Also allow overriding of the logging stuff?
+    # TODO(aaron): 0.2 -Eventually we'll want to overwrite the whole thing.
 
     destFileName = os.path.join(self.getConfDir(), "hadoop-env.sh")
     try:
@@ -1039,10 +1042,10 @@ this process.""")
         output.printlnError("Could not format HDFS; Hadoop returned error")
         raise InstallError("Error formatting HDFS")
     else:
-      output.printlnInfo( \
-"""Skipping HDFS format. If you have not done this before, you must format
+      self.hdfsFormatMsg = \
+"""HDFS was not formatted. If you have not done this before, you must format
 HDFS before using Hadoop, by running the command:
-%(cmd)s""" % { "cmd" : formatCmd })
+%(cmd)s""" % { "cmd" : formatCmd }
 
 
   def postInstall(self):
@@ -1060,9 +1063,9 @@ HDFS before using Hadoop, by running the command:
 
   def verify(self):
     """ Run post-installation verification tests, if configured """
-    # TODO: Verify hadoop
+    # TODO(aaron): Verify hadoop
 
-    if self.isMaster():
+    if self.isMaster() and self.mayStartDaemons():
       try:
         self.ensureHdfsStarted()
         self.ensureMapRedStarted()
@@ -1072,7 +1075,7 @@ HDFS before using Hadoop, by running the command:
         output.printlnError("Error starting Hadoop services: " + str(ie))
         output.printlnError("Cannot verify correct Hadoop installation")
 
-      # TODO: Run a sample 'pi' job. Also, do a touchz, ls, rm
+      # TODO(aaron): Run a sample 'pi' job. Also, do a touchz, ls, rm
 
 
   def getRedeployArgs(self):
@@ -1085,4 +1088,10 @@ HDFS before using Hadoop, by running the command:
     argList.append(self.getHadoopUsername())
 
     return argList
+
+  def printFinalInstructions(self):
+    if self.hdfsFormatMsg != None:
+      logging.info(self.hdfsFormatMsg)
+
+
 

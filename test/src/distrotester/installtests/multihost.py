@@ -1,9 +1,9 @@
 # (c) Copyright 2008 Cloudera, Inc.
 #
-# module: distrotester.installtests.standalone
+# module: distrotester.installtests.multihost
 #
-# Functionality unit tests for launching the installer on a single-node
-# (standalone) "cluster"
+# Functionality unit tests for launching the installer on a 2-node
+# cluster (one master node and one slave node)
 
 import logging
 import os
@@ -20,7 +20,7 @@ from   distrotester.functiontests.hadooptests import HadoopTest
 from   distrotester.functiontests.hivetests import HiveTest
 from   distrotester.functiontests.pigtests import PigTest
 
-class StandaloneTest(TestCaseWithAsserts):
+class MultiHostTest(TestCaseWithAsserts):
 
   def __init__(self, methodName='runTest'):
     TestCaseWithAsserts.__init__(self, methodName)
@@ -33,6 +33,8 @@ class StandaloneTest(TestCaseWithAsserts):
 
   def getPlatformSetup(self):
     """ Get the PlatformSetup object used to initialize the node """
+    # TODO(aaron): Refactor this out into common base class for
+    # multihost and standalone
 
     # delaying this import til this thunk is used to avoid
     # circular dependency
@@ -47,21 +49,18 @@ class StandaloneTest(TestCaseWithAsserts):
     return os.path.join(INSTALL_PREFIX, "hadoop")
 
   def getHadoopCmd(self):
+    # TODO(aaron): Refactor this out into common base class for
+    # multihost and standalone
     return os.path.join(self.getHadoopDir(), "bin/hadoop")
 
   def getSlavesFile(self):
-    """ Write out a slaves file containing only 'localhost' """
+    """ Return the slaves file provided by the remote test manager """
+    return self.getProperties().getProperty(SLAVES_FILE_KEY)
 
-    (oshandle, tmpFilename) = tempfile.mkstemp("", "slaves-")
-    self.curSlavesFile = tmpFilename
-
-    handle = os.fdopen(oshandle, "w")
-    handle.write(self.hostname + "\n")
-    handle.close()
-
-    return tmpFilename
 
   def getProperties(self):
+    # TODO(aaron): Refactor this out into common base class for
+    # multihost and standalone
     return testproperties.getProperties()
 
   def prepHadoopSite(self, inputHadoopSite):
@@ -69,6 +68,9 @@ class StandaloneTest(TestCaseWithAsserts):
         first replace the 'MASTER_HOST' string with the current
         hostname.
     """
+
+    # TODO(aaron): Refactor this out into common base class for
+    # multihost and standalone
 
     # Get a temporary filename to use as the hadoop-site.xml file.
     (oshandle, tmpFilename) = tempfile.mkstemp()
@@ -92,6 +94,8 @@ class StandaloneTest(TestCaseWithAsserts):
 
   def stopHadoopForUser(self, user):
     """ Stop the hadoop daemons run by a given hadoop username """
+    # TODO(aaron): Refactor this out into common base class for
+    # multihost and standalone
     try:
       # stop any hadoop run as hadoop user.
       hadoopDir = self.getHadoopDir()
@@ -101,12 +105,16 @@ class StandaloneTest(TestCaseWithAsserts):
       pass # nothing to shut down? ok
 
   def stopHadoop(self):
+    # TODO(aaron): Refactor this out into common base class for
+    # multihost and standalone
     self.stopHadoopForUser(ROOT_USER)
     self.stopHadoopForUser(HADOOP_USER)
 
 
 
   def tearDown(self):
+    # TODO(aaron): Refactor this out into common base class for
+    # multihost and standalone
     if self.curHadoopSite != None:
       # remove this temp file we created
       os.remove(self.curHadoopSite)
@@ -120,6 +128,8 @@ class StandaloneTest(TestCaseWithAsserts):
 
   def setUp(self):
     """ shutdown and remove existing hadoop distribution. """
+    # TODO(aaron): Refactor this out into common base class for
+    # multihost and standalone
 
     try:
       self.stopHadoop()
@@ -262,50 +272,4 @@ class StandaloneTest(TestCaseWithAsserts):
     # TODO: set the editor to /bin/true, provide a slaves file.
     pass
 
-  def testWithoutLzo(self):
-    """ Remove the LZO libs, use a non-lzo configuration """
-
-    # TODO (aaron): enable scribe when it's ready.
-    javaHome = self.getProperties().getProperty(JAVA_HOME_KEY)
-
-    # remove the lzo package; use a finally block to ensure we always
-    # restore it after this test runs.
-    platformSetup = self.getPlatformSetup()
-    platformSetup.removePackage("lzo")
-    try:
-      cmd = INSTALLER_COMMAND + " --unattend --prefix " + INSTALL_PREFIX \
-          + " --without-scribe " \
-          + " --config-prefix " + CONFIG_PREFIX \
-          + " --log-filename " + INSTALLER_LOG_FILE \
-          + " --format-hdfs --hadoop-user " + HADOOP_USER \
-          + " --java-home " + javaHome \
-          + " --hadoop-slaves " + self.getSlavesFile() \
-          + " --identity /root/.ssh/id_rsa" \
-          + " --hadoop-site " \
-          + self.prepHadoopSite("hadoop-configs/no-compress-config.xml") \
-          + ' --namenode "hdfs://' + self.hostname + ':9000/" ' \
-          + ' --jobtracker "' + self.hostname + ':9001"' \
-          + " --debug"
-
-      logging.debug("Installing with command: " + cmd)
-      shell.sh(cmd)
-
-      self.getProperties().setProperty(HADOOP_USER_KEY, HADOOP_USER)
-      self.getProperties().setProperty(CLIENT_USER_KEY, CLIENT_USER)
-
-      hadoopSuite = unittest.makeSuite(HadoopTest, 'test')
-      hiveSuite   = unittest.makeSuite(HiveTest, 'test')
-      pigSuite    = unittest.makeSuite(PigTest, 'test')
-      functionalityTests = unittest.TestSuite([
-          hadoopSuite,
-          hiveSuite,
-          pigSuite
-          ])
-
-      print "Running Hadoop functionality tests"
-      runner = unittest.TextTestRunner()
-      if not runner.run(functionalityTests).wasSuccessful():
-        self.fail()
-    finally:
-      platformSetup.installPackage("lzo")
 

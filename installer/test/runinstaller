@@ -24,12 +24,14 @@ fi
 
 # stop hadoop if it was already running.
 $sudoPrefix /tmp/master/hadoop/bin/stop-all.sh
+$sudoPrefix killall scribed
 
 # remove all the directories that this will create
 rm -rf /mnt/tmp/name
 rm -rf /mnt/tmp/data
 rm -rf /mnt/tmp/master
 rm -rf /mnt/tmp/slave
+rm -rf /mnt/tmp/hadoop*
 rm -rf /mnt/tmp/etc/cloudera
 rm -rf /tmp/cloudera
 rm -rf /tmp/cloudera-installer.log
@@ -38,7 +40,7 @@ rm -rf /tmp/cloudera-installer.log
 rm -f /tmp/slaves-*
 rm -f /tmp/distro-*.tar.gz
 
-thishost=`hostname`
+thishost=`hostname --fqdn`
 cp ../testdata/hadoop-site.xml /tmp/install-hadoop-site.xml
 sed -i -e "s/MASTER_HOST/$thishost/g" /tmp/install-hadoop-site.xml
 
@@ -50,10 +52,11 @@ sed -i -e "s/MASTER_HOST/$thishost/g" /tmp/install-hadoop-site.xml
   --config-prefix /mnt/tmp/etc/cloudera \
   --java-home /usr/java/jdk1.6.0_10 \
   --log-filename /tmp/cloudera-installer.log \
+  --log-level DEBUG \
   --format-hdfs \
   --install-bindir \
   ../../../../bin/redist/projects/HadoopDist_supportedDistro/cloudera-hadoop-0.1.0/bin\
-  --namenode "hdfs://localhost:9000/" --jobtracker "localhost:9001" \
+  --namenode "hdfs://$thishost:9000/" --jobtracker "$thishost:9001" \
   --debug \
   "$@"
 

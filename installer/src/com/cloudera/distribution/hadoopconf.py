@@ -25,6 +25,14 @@ def writePropertiesBody(handle, dict, finalKeys):
       finalStr = "\n  <final>true</final>"
     except ValueError:
       # not a final value, just a default.
+      outVal = dict[key]
+      if outVal == True:
+        outVal = "true"
+      elif outVal == False:
+        outVal = "false"
+      else:
+        outVal = str(outVal)
+
       finalStr = ""
 
     handle.write("""<property>
@@ -32,7 +40,7 @@ def writePropertiesBody(handle, dict, finalKeys):
   <value>%(val)s</value>%(final)s
 </property>
 """ % {   "name"  : key,
-          "val"   : dict[key],
+          "val"   : outVal,
           "final" : finalStr })
 
 

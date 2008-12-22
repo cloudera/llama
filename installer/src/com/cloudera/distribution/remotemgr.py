@@ -5,6 +5,7 @@
 # Manages deployment to remote instances
 
 import os
+import socket
 import sys
 import tempfile
 
@@ -29,7 +30,9 @@ def isLocalHost(hostname):
   """ return true if the hostname represents localhost """
   return hostname == "127.0.0.1" \
       or hostname == "localhost" \
-      or hostname == "localhost.localdomain"
+      or hostname == "localhost.localdomain" \
+      or hostname == socket.gethostname() \
+      or hostname == socket.getfqdn()
 
 
 def allowLocalhost(properties):
@@ -188,6 +191,9 @@ def getRemoteDeployArgs(hadoopSiteFilename, slavesFilename, properties):
 
   argList.append("--unattend")
   argList.append("--as-slave")
+
+  if properties.getBoolean(NO_DAEMONS_KEY):
+    argList.append("--no-start-daemons")
 
   # determine --install / --without for each tool
   toolFlags = manifest.getInstallFlags(properties)

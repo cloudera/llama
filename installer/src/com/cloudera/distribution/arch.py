@@ -76,6 +76,31 @@ class ArchDetector(object):
     else:
       return None
 
+  def getArchString(self):
+    """ Return the architecture name string used to identify
+        which arch-specific versions of libs, packages, etc,
+        we should install. """
+
+    if self.platform == PLATFORM_UNKNOWN:
+      archStr = "unknown"
+    elif self.platform == PLATFORM_UBUNTU:
+      archStr = "ubuntu-8.04"
+    elif self.platform == PLATFORM_FEDORA:
+      archStr = "fc8"
+    elif self.platform == PLATFORM_RHEL:
+      archStr = "rhel"
+    elif self.platform == PLATFORM_CENTOS:
+      archStr = "centos5"
+
+    if self.arch == ARCH_UNKNOWN:
+      archStr = archStr + "-unknown"
+    elif self.arch == ARCH_I386:
+      archStr = archStr + "-i386"
+    elif self.arch == ARCH_X86_64:
+      archStr = archStr + "-x86_64"
+
+    return archStr
+
   def scan(self):
     """ scans for platform and architecture """
 
@@ -145,7 +170,7 @@ class ArchDetector(object):
       self.platform = PLATFORM_UNKNOWN
       self.packageMgr = PACKAGE_MGR_UNKNOWN
 
-    # TODO: What are the signatures for RHEL, CentOS from this?
+    # TODO(aaron): 0.2 What are the signatures for RHEL, CentOS from this?
     # need to test py 3.1, py 2.5, lsb_release on those platforms.
 
 

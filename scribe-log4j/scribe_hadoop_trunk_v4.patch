@@ -729,7 +729,7 @@ Index: src/contrib/scribe-log4j/src/java/com/cloudera/scribe_log4j/ScribeAppende
 ===================================================================
 --- src/contrib/scribe-log4j/src/java/com/cloudera/scribe_log4j/ScribeAppender.java	(revision 0)
 +++ src/contrib/scribe-log4j/src/java/com/cloudera/scribe_log4j/ScribeAppender.java	(revision 0)
-@@ -0,0 +1,110 @@
+@@ -0,0 +1,108 @@
 +package com.cloudera.scribe_log4j;
 +
 +import org.apache.log4j.AppenderSkeleton;
@@ -795,11 +795,9 @@ Index: src/contrib/scribe-log4j/src/java/com/cloudera/scribe_log4j/ScribeAppende
 +        client = new Client(protocol, protocol);
 +        transport.open();
 +      }
-+    } catch (UnknownHostException uhe) {
++    } catch (Exception e) {
 +      // Do nothing, because loss of log data shouldn't
 +      // break Hadoop
-+    } catch (TTransportException tte) {
-+    } catch (IOException ioe) {
 +    }
 +  }
 +
@@ -823,7 +821,7 @@ Index: src/contrib/scribe-log4j/src/java/com/cloudera/scribe_log4j/ScribeAppende
 +
 +      try {
 +        client.Log(list);
-+      } catch (TException te) {
++      } catch (Exception e) {
 +        // Do nothing, because loss of log data shouldn't
 +        // break Hadoop
 +      }

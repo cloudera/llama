@@ -11,9 +11,10 @@ import os
 from   com.cloudera.distribution.constants import *
 from   com.cloudera.distribution.installerror import InstallError
 
-# the full path isn't used here, because Python
+# alex - the full path isn't used here, because Python
 # didn't like it for some reason
 import env
+# (aaron - This should be com.cloudera.distribution.env)
 
 import com.cloudera.distribution.arch as arch
 import com.cloudera.util.output as output
@@ -93,6 +94,15 @@ class ToolInstall(object):
   def isUnattended(self):
     """ return true if this must be an unattended installation """
     return self.properties.getProperty(UNATTEND_INSTALL_KEY, UNATTEND_DEFAULT)
+
+
+  def mayStartDaemons(self):
+    """ If true, then daemons may be started. otherwise, we are forbidden
+        from doing so during installation. This may be because we are creating
+        an AMI, have no slave nodes, etc.
+    """
+    return not self.getProperties().getBoolean(NO_DAEMONS_KEY)
+
 
   #### public interface that is part of the base ToolInstall ####
 
@@ -198,7 +208,7 @@ class ToolInstall(object):
     fail if not all packages are defined
     """
     if self.getCurrUser() != "root":
-      raise InstallError("This script requires root to install packages")    
+      raise InstallError("This script requires root to install packages")
 
     arch_inst = arch.getArchDetector()
 
@@ -279,7 +289,8 @@ class ToolInstall(object):
   def getRedeployArgs(self):
     """ When this installer is invoking itself on another machine, what
         arguments should we pass to the installer for this package?
-        Returns a list of strings """
+        Returns a list of strings that should be added to argv when running
+        the installer on a remote host """
     return []
 
   def precheck(self):
@@ -307,4 +318,10 @@ class ToolInstall(object):
     output.printlnVerbose("No verification tests for " + self.getName() \
       + "; (ok)")
 
+  def printFinalInstructions(self):
+    """ If there are any final instructions to the user after installation
+        is over, you should print them out in this method. """
+
+    # default: no instructions:
+    pass
 
