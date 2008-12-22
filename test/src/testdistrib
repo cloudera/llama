@@ -211,6 +211,10 @@ try:
     shell.scp(idRsaFile, "root", masterHost, "/root/.ssh/id_rsa", properties)
     shell.ssh("root", masterHost, "chmod 0600 /root/.ssh/id_rsa", properties)
 
+    # untar the distribution on the master node
+    shell.ssh("root", masterHost, "tar -zxf \"" + remoteDistribTarball \
+        + "\" -C /mnt", properties)
+
 
   # Run platform-specific bootstrap commands. Append the unzip commands here
   # so that at the end of this, we know that we're ready to go on all nodes.
@@ -218,7 +222,6 @@ try:
   platformSetup.initProperties()
   if not properties.getProperty(BYPASS_SETUP_KEY):
     bootstrapCmds = platformSetup.remoteBootstrap()
-    bootstrapCmds.append("tar -zxf \"" + remoteDistribTarball + "\" -C /mnt")
   else:
     bootstrapCmds = []
   bootstrapCmds.append("tar -zxf \"" + remoteHarnessTarFile + "\" -C /mnt")
@@ -300,7 +303,7 @@ finally:
   # if we commissioned instances ourselves, shut them down only on a successful
   # test; otherwise leave them here for the user to inspect, reuse, etc.
   if properties.getBoolean(UNATTENDED_KEY) \
-      or (not userSuppliedInstances and not successfulTest):
+      or (not userSuppliedInstances and successfulTest):
     logging.info("Shutting down instances...")
     ec2.terminateInstances(instances, properties)
 
