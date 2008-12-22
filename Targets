@@ -121,8 +121,13 @@ hivePackageComponent = PackageComponent(
   destDir    = "packages")
 
 docsComponent = DirComponent(
-  srcDir = "doc",
+  srcDir  = "doc",
   destDir = "doc")
+
+# dependencies such as scribe libraries, configuration files, etc
+depsComponent = DirComponent(
+  srcDir  = "deps",
+  destDir = "deps")
 
 # There may be several versions of how we package the distribution.
 # supportedDistro is the one released to support clients
@@ -135,6 +140,7 @@ supportedDistro = PackageTarget(
     logMoverComponent,
     pigPackageComponent,
     hivePackageComponent,
+    depsComponent,
     docsComponent
   ])
 

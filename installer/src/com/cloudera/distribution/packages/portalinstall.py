@@ -107,25 +107,25 @@ will have to move these htdocs elsewhere.
     arch_inst = arch.getArchDetector()
 
     # update php and lighttpd config files
-    good_http_conf = ""
-    good_php_ini = ""
+    deps_arch_dir = ""
     php_ini_dest = ""
     platform = arch_inst.getPlatform()
 
     output.printlnVerbose("Installing php.ini and lighttpd.conf")
 
     if platform == arch.PLATFORM_UBUNTU:
-      good_http_conf = os.path.join(DEPS_PATH,
-                                    "ubuntu-8.04-i386_lighttpd.conf")
-      good_php_ini = os.path.join(DEPS_PATH,
-                                  "ubuntu-8.04-i386_php.ini")
+      deps_arch_dir = os.path.join(DEPS_PATH,
+                                   "ubuntu-8.04-i386")
       php_ini_dest = "/etc/php5/cgi/php.ini"
     elif platform == arch.PLATFORM_FEDORA:
-      good_http_conf = os.path.join(DEPS_PATH,
-                                    "fedora8-i386_lighttpd.conf")
-      good_php_ini = os.path.join(DEPS_PATH,
-                                  "fedora8-i386_php.ini")
+      deps_arch_dir = os.path.join(DEPS_PATH,
+                                   "fedora8-i386")
       php_ini_dest = "/etc/php.ini"
+
+    good_php_ini = os.path.abspath(
+                        os.path.join(deps_arch_dir, "php.ini"))
+    good_http_conf = os.path.abspath(
+                        os.path.join(deps_arch_dir, "lighttpd.conf"))
 
     lighttpd_conf = "/etc/lighttpd/lighttpd.conf"
 
