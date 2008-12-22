@@ -231,8 +231,8 @@ or specify your own username with --hadoop-user""")
         ALLOW_NATIVE_COMPRESSION_DEFAULT)
 
     # return self.libLzoFound  and nativeAllowed
-    # TODO(aaron): Due to GPL licensing issues, LZO compression is currently
-    # disabled until an alternate library provider can be found.
+    # TODO(aaron): Due to GPL licensing issues, LZO compression is disabled
+    # until an alternate library provider can be found.
     return False
 
 

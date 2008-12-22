@@ -6,6 +6,7 @@
 
 import os
 import socket
+import time
 
 import com.cloudera.distribution.arch as arch
 from   com.cloudera.distribution.constants import *
@@ -15,6 +16,7 @@ import com.cloudera.distribution.toolinstall as toolinstall
 import com.cloudera.util.output as output
 import com.cloudera.util.prompt as prompt
 import com.cloudera.tools.dirutils as dirutils
+import com.cloudera.tools.shell as shell
 
 
 class ScribeInstall(toolinstall.ToolInstall):
@@ -55,7 +57,7 @@ class ScribeInstall(toolinstall.ToolInstall):
     maybeLogHome = self.properties.getProperty(SCRIBE_LOG_DIR_KEY, \
         SCRIBE_LOG_DIR_DEFAULT)
 
-    if self.isUnattended():
+    if not self.isUnattended():
       self.scribeLogHome = prompt.getString( \
           "Where should Scribe store log files?", maybeLogHome, True)
     else:
@@ -73,7 +75,7 @@ class ScribeInstall(toolinstall.ToolInstall):
       self.masterHost = self.hostname
     else:
       self.masterHost = self.properties.getProperty(SCRIBE_MASTER_ADDR_KEY)
-      if self.isUnattended():
+      if not self.isUnattended():
         self.masterHost = prompt.getString( \
             "What is the hostname for the Scribe master server?",
             self.masterHost, True)
@@ -108,7 +110,7 @@ class ScribeInstall(toolinstall.ToolInstall):
 
   def getFinalInstallPath(self):
     """ Return the dirname where scribe is installed to. """
-    return os.path.join(self.getInstallBasePath, SCRIBE_INSTALL_SUBDIR)
+    return os.path.join(self.getInstallBasePath(), SCRIBE_INSTALL_SUBDIR)
 
   def installScribe(self):
     """ Unpack architecture-specific build of scribe. """
@@ -116,27 +118,58 @@ class ScribeInstall(toolinstall.ToolInstall):
     # Figure out which input file we want
     archDetector = arch.getArchDetector()
     archStr = archDetector.getArchString()
-    tarballFile = os.path.join(DEPS_PATH, archStr, SCRIBE_PACKAGE_NAME)
+    tarballFile = os.path.join(DEPS_PATH, archStr, SCRIBE_PACKAGE)
 
     # make the output directory
     installPath = self.getFinalInstallPath()
     dirutils.mkdirRecursive(installPath)
 
     # actually unzip it.
-    cmd = "tar -zxf \"" + tarballFile + "\"" + " -C \"" + installPath + "\""
+    cmd = "tar -zxf \"" + tarballFile + "\" -C \"" + installPath + "\""
     try:
       shell.sh(cmd)
     except shell.CommandError, ce:
       raise InstallError("Error unpacking Scribe (tar returned error)")
 
+    # This contains a sub-tarball full of libraries. Unzip this.
+    libTarball = os.path.join(installPath, "scribe_libs.tar.gz")
+    libPath = os.path.join(installPath, "lib")
+    try:
+      dirutils.mkdirRecursive(libPath)
+    except OSError, ose:
+      raise InstallError("Could not create scribe lib dir.\nReason: %(ose)s" \
+          % { "ose" : str(ose) })
+      
+    cmd = "tar -zxf \"" + libTarball + "\" -C \"" + libPath + "\""
+    try:
+      shell.sh(cmd)
+    except shell.CommandError, ce:
+      raise InstallError("Error unpacking Scribe libs (tar returned error)")
+
+    # and now delete the tarball; no longer useful.
+    try:
+      os.remove(libTarball)
+    except OSError:
+      raise InstallError("Error removing Scribe library tarball")
+
 
   def writeLibWrapper(self):
     """ Set LD_LIBRARY_PATH in a bash script that then runs scribed """
-    # TODO: Do the correct LD_LIB thing
-    # TODO: Repackage tarball files into something sane.
+
+    installPath = os.path.abspath(os.path.join(self.getFinalInstallPath(), 
+        "lib"))
+
+    fbLibPath = os.path.join(installPath, "fb303")
+    boostLibPath = os.path.join(installPath, "boost")
+    thriftLibPath = os.path.join(installPath, "thrift")
+
+    ldLibraryPath = fbLibPath + ":" + boostLibPath + ":" + thriftLibPath \
+        + ":$LD_LIBRARY_PATH"
 
     wrapperFileName = os.path.join(self.getFinalInstallPath(), \
         SCRIBE_WRAPPER_NAME)
+    output.printlnVerbose("Writing scribe wrapper script to " + wrapperFileName)
+    dateStr = time.asctime()
     try:
       handle = open(wrapperFileName, "w")
       handle.write("""#!/bin/bash
@@ -151,12 +184,13 @@ class ScribeInstall(toolinstall.ToolInstall):
 
 bindir=`dirname $0`
 bindir=`cd $bindir && pwd`
-export LD_LIBRARY_PATH=all/sorts/of/shit
+export LD_LIBRARY_PATH=%(ldLibPath)s
 ${bindir}/scribed
 
-""" % {  "ver"      : DISTRIB_VERSION,
-         "thedate"  : dateStr,
-         "selfname" : SCRIBE_WRAPPER_NAME
+""" % {  "ver"       : DISTRIB_VERSION,
+         "thedate"   : dateStr,
+         "selfname"  : SCRIBE_WRAPPER_NAME,
+         "ldLibPath" : ldLibraryPath
       })
       handle.close()
     except IOError, ioe:
@@ -202,10 +236,10 @@ Reason: %(ioe)s
       raise InstallError("Error copying config file for scribe")
 
     try:
-      cmd = 'sed -i -e "s/SCRIBE_LOG_HOME/' + self.scribeLogHome + '/" ' \
+      cmd = 'sed -i -e "s|SCRIBE_LOG_HOME|' + self.scribeLogHome + '|" ' \
           + localConfDest
       shell.sh(cmd)
-      cmd = 'sed -i -e "s/SCRIBE_MASTER_HOST/' + self.masterHost + '/" ' \
+      cmd = 'sed -i -e "s|SCRIBE_MASTER_HOST|' + self.masterHost + '|" ' \
           + localConfDest
       shell.sh(cmd)
     except shell.CommandError, ce:
@@ -216,13 +250,13 @@ Reason: %(ioe)s
       masterConfSrc = os.path.join(configSource, "scribe_central.conf")
       masterConfDest = os.path.join(configDest, "scribe_central.conf")
       try:
-        cmd = "cp \"" + centralConfSrc + "\" \"" + configDest + "\""
+        cmd = "cp \"" + masterConfSrc + "\" \"" + configDest + "\""
         shell.sh(cmd)
       except shell.CommandError, ce:
         raise InstallError("Error copying config file for scribe")
 
       try:
-        cmd = 'sed -i -e "s/SCRIBE_LOG_HOME/' + self.scribeLogHome + '/" ' \
+        cmd = 'sed -i -e "s|SCRIBE_LOG_HOME|' + self.scribeLogHome + '|" ' \
             + masterConfDest
         shell.sh(cmd)
       except shell.CommandError, ce:
@@ -238,7 +272,7 @@ Reason: %(ioe)s
       # Really shouldn't get here.
       raise InstallError("Error: Scribe installation depends on Hadoop")
 
-    log4JConfFile = os.path.join(hadoopInstaller.getConfDir(), "log4j.conf")
+    log4jConfFile = os.path.join(hadoopInstaller.getConfDir(), "log4j.xml")
     try:
       cmd = 'sed -i -e "s/hostname.domain/' + self.hostname + '/" ' \
           + log4jConfFile

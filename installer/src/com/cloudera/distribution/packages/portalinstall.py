@@ -25,6 +25,9 @@ class PortalInstall(ToolInstall):
     """ If anything must be verified before we even get going, check those
         constraints in this method """
 
+    # AARON REMOVE THIS -- TODO --
+    if not self.isMaster():   
+      return    
     # check to see if htdocs exist
     htdocs = self.getPortalDest()
     files = os.listdir(htdocs)
