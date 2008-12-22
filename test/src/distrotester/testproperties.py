@@ -58,6 +58,8 @@ class TestProperties(Properties):
     SLAVES_FILE_ARG     : SLAVES_FILE_KEY,
     DISTRIB_TARBALL_ARG : DISTRIB_TARBALL_KEY,
 
+    UNATTENDED_ARG      : UNATTENDED_KEY,
+
     # Options related to restarting the test harness and debugging
     EXISTING_INSTANCES_ARG : EXISTING_INSTANCES_KEY,
     BYPASS_UPLOAD_ARG      : BYPASS_UPLOAD_KEY,
@@ -76,7 +78,8 @@ class TestProperties(Properties):
     RUN_TESTS_ARG,
     SETUP_ARG,
     BYPASS_UPLOAD_ARG,
-    BYPASS_SETUP_ARG
+    BYPASS_SETUP_ARG,
+    UNATTENDED_ARG
   ]
 
   # these disable boolean flags

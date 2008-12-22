@@ -74,6 +74,11 @@ SETUP_KEY = "remote.setup"
 RUN_TESTS_ARG = "--test"
 RUN_TESTS_KEY = "remote.runtests"
 
+# If this is true, then we were run by autotest or something like it.
+# Make sure we fully clean up our mess.
+UNATTENDED_ARG = "--unattend"
+UNATTENDED_KEY = "unattended.test"
+
 
 # If we know that the distribution has already been uploaded, don't
 # need to wait for it to happen a second time.

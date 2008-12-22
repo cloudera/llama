@@ -131,7 +131,7 @@ if existingInstanceNames == None:
   instances = newInstances
   logging.info("Started instances:")
 
-# TODO: Documentation: We need to set EC2_HOME, EC2_PRIVATE_KEY, EC2_CERT
+# TODO(aaron): Documentation: We need to set EC2_HOME, EC2_PRIVATE_KEY, EC2_CERT
 # for any user who will be running this tool (Including autotest users)
 for instance in instances:
   logging.info("  " + instance)
@@ -164,10 +164,11 @@ if len(hostList) == 0:
   logging.error("Empty host list? Don't know how to continue!")
   sys.exit(1)
 
+
 # Everything from here out must be guarded to terminate the nodes
 # if the user didn't create them.
+successfulTest = False
 try:
-
   # Upload test harness tarball.
   logging.info("Uploading test harness tarball")
   remoteHarnessTarFile = os.path.join("/mnt/", \
@@ -291,14 +292,17 @@ try:
       + " --debug"
   shell.ssh("root", masterHost, cmd, properties)
 
+  # ssh will throw CommandError if there was a problem; getting here means
+  # victory.
+  successfulTest = True
 finally:
-  # shut down any instances we started. We're responsible for them.
-  # TODO: If this was run by a user, only shut down on success.
-  # If this is run in unattended mode, always shut down.
-  if not userSuppliedInstances:
+  # If we are running in unattended mode, always shutdown instances.
+  # if we commissioned instances ourselves, shut them down only on a successful
+  # test; otherwise leave them here for the user to inspect, reuse, etc.
+  if properties.getBoolean(UNATTENDED_KEY) \
+      or (not userSuppliedInstances and not successfulTest):
     logging.info("Shutting down instances...")
     ec2.terminateInstances(instances, properties)
-
 
 sys.exit(0)
 
