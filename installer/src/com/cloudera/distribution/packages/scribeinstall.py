@@ -139,7 +139,7 @@ class ScribeInstall(toolinstall.ToolInstall):
     except OSError, ose:
       raise InstallError("Could not create scribe lib dir.\nReason: %(ose)s" \
           % { "ose" : str(ose) })
-      
+
     cmd = "tar -zxf \"" + libTarball + "\" -C \"" + libPath + "\""
     try:
       shell.sh(cmd)
@@ -156,7 +156,7 @@ class ScribeInstall(toolinstall.ToolInstall):
   def writeLibWrapper(self):
     """ Set LD_LIBRARY_PATH in a bash script that then runs scribed """
 
-    installPath = os.path.abspath(os.path.join(self.getFinalInstallPath(), 
+    installPath = os.path.abspath(os.path.join(self.getFinalInstallPath(),
         "lib"))
 
     fbLibPath = os.path.join(installPath, "fb303")
@@ -170,6 +170,12 @@ class ScribeInstall(toolinstall.ToolInstall):
         SCRIBE_WRAPPER_NAME)
     output.printlnVerbose("Writing scribe wrapper script to " + wrapperFileName)
     dateStr = time.asctime()
+
+    localConfFile = os.path.join(self.getFinalInstallPath(), \
+        "scribe_local.conf")
+    masterConfFile = os.path.join(self.getFinalInstallPath(), \
+        "scribe_central.conf")
+
     try:
       handle = open(wrapperFileName, "w")
       handle.write("""#!/bin/bash
@@ -185,19 +191,33 @@ class ScribeInstall(toolinstall.ToolInstall):
 bindir=`dirname $0`
 bindir=`cd $bindir && pwd`
 export LD_LIBRARY_PATH=%(ldLibPath)s
-${bindir}/scribed
 
-""" % {  "ver"       : DISTRIB_VERSION,
-         "thedate"   : dateStr,
-         "selfname"  : SCRIBE_WRAPPER_NAME,
-         "ldLibPath" : ldLibraryPath
+nohup ${bindir}/scribed %(localConfFile)s 2</dev/null </dev/null >/dev/null &
+""" % {  "ver"           : DISTRIB_VERSION,
+         "thedate"       : dateStr,
+         "selfname"      : SCRIBE_WRAPPER_NAME,
+         "ldLibPath"     : ldLibraryPath,
+         "localConfFile" : localConfFile
       })
+
+      if self.isMaster():
+        # Also start the master scribe daemon
+        handle.write("""
+nohup ${bindir}/scribed %(masterConfFile)s 2</dev/null </dev/null >/dev/null &
+""" % { "masterConfFile" : masterConfFile })
+
       handle.close()
     except IOError, ioe:
       raise InstallError("""
 Could not write wrapper script for scribe launcher.
 Reason: %(ioe)s
 """ %  { "ioe" : str(ioe) })
+
+    cmd = "chmod a+x \"" + wrapperFileName + "\""
+    try:
+      shell.sh(cmd)
+    except shell.CommandError:
+      raise InstallError("Could not make scribe launcher executable")
 
 
   def createPaths(self):
@@ -306,6 +326,15 @@ Reason: %(ioe)s
     self.installConfigFiles()
 
 
+  def getScribeUserSudo(self):
+    """ Return the sudo cmd prefix to launch scribed as the scribe user """
+
+    if self.scribeUser != "root":
+      return "sudo -u " + self.scribeUser + " "
+    else:
+      return ""
+
+
   def postInstall(self):
     """ Run any post-installation activities. This occurs after
         all ToolInstall objects have run their install() operations. """
@@ -315,12 +344,10 @@ Reason: %(ioe)s
 
     if self.mayStartDaemons():
       # Start scribed.
-      # TODO(aaron): Verify that this actually hups itself to the background;
-      # otherwise we'll have to do a nohup launch.
       output.printlnInfo("Starting local scribe server")
       cmd = os.path.join(self.getFinalInstallPath(), SCRIBE_WRAPPER_NAME)
       try:
-        shell.sh(cmd)
+        shell.sh(self.getScribeUserSudo() + cmd)
         self.isScribeStarted = True
       except shell.CommandError:
         output.printlnError("Error: Could not start scribed.")
