@@ -321,8 +321,9 @@ DISTRIB_BASE_PATH = ".."
 # holds all the packages?
 PACKAGE_PATH = os.path.join(DISTRIB_BASE_PATH, "packages/")
 
-# The path to installer dependencies such as starter configuration files, etc
-DEPS_PATH = os.path.join(DISTRIB_BASE_PATH, "deps/")
+# Refer to DISTRIB_BASE_PATH to understand how the DEPS_PATH
+# variable is determined
+DEPS_PATH = os.path.join(DISTRIB_BASE_PATH, "deps")
 
 # relative to the distribution base path, where is the installer program?
 INSTALLER_SUBDIR = "bin"

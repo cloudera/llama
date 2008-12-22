@@ -120,6 +120,11 @@ hivePackageComponent = PackageComponent(
   includeZip = True,
   destDir    = "packages")
 
+# dependencies such as scribe libraries, configuration files, etc
+depsComponent = DirComponent(
+  srcDir  = "deps",
+  destDir = "deps")
+
 # TODO: documentation component, any other scripts, etc
 
 # There may be several versions of how we package the distribution.
@@ -132,7 +137,8 @@ supportedDistro = PackageTarget(
     installerComponent,
     logMoverComponent,
     pigPackageComponent,
-    hivePackageComponent
+    hivePackageComponent,
+    depsComponent,
   ])
 
 
