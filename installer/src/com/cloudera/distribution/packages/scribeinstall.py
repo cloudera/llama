@@ -26,12 +26,12 @@ class ScribeInstall(ToolInstall):
     """ Run the installation itself. """
     pass
     # TODO:
-    # - install Scribe and dependencies
+    # - install Scribe and dependencies (specified below)
     # - modify log4j.xml as to allow for the Scribe appender and also
     #   to have the node's hostname added
     # - add Scribe appender and libraries to HADOOP_CLASSPATH
+    #    -- do this by just appending hadop-site.env
     # - install configuration files
-    # - start scribed
 
     # TODO: tell the user how to start Scribe
     # TODO: tell the user to add LD_LIBRARY_PATH to their env

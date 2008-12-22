@@ -25,6 +25,9 @@ class PortalInstall(ToolInstall):
     """ If anything must be verified before we even get going, check those
         constraints in this method """
 
+    if not self.isMaster():
+      return
+
     # check to see if htdocs exist
     htdocs = self.getPortalDest()
     files = os.listdir(htdocs)
@@ -58,13 +61,11 @@ will have to move these htdocs elsewhere.
        })
         overwrite = False
         while True:
-          answer = prompt.getString("(y or n):")
-          if answer.lower().startswith('y'):
-            overwrite = True
+          answer = prompt.getBoolean("(y or n):", None)
+          if answer != None:
+            overwrite = answer
             break
-          elif answer.lower().startswith('n'):
-            overwrite = False
-            break
+
         if not overwrite:
           raise InstallError(htdocs + " has files; please move or erase them")
 
@@ -256,15 +257,24 @@ will have to move these htdocs elsewhere.
   def postInstall(self):
     """ Run any post-installation activities. This occurs after
         all ToolInstall objects have run their install() operations. """
-    # TODO postinstall Portal
-    pass
+
+    # if we don't want to start any daemon processes, kill lighttpd
+    if not self.mayStartDaemons():
+      output.printlnVerbose("Attempting to stop lighttpd")
+      try:
+        cmd = "/etc/init.d/lighttpd stop"
+        lines = shell.shLines(cmd)
+        output.printlnVerbose(lines)
+      except shell.CommandError:
+        output.printlnInfo("Could not stop lighttpd")
+
+      output.printlnInfo("Stopping lighttpd")
 
   def verify(self):
     """ Run post-installation verification tests, if configured """
-    # TODO: Verify Portal
+    pass
 
   def getRedeployArgs(self):
     """ Provide any command-line arguments to the installer on the slaves """
-    # TODO: Return anything necessary.
     return []
 
