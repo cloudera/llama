@@ -149,7 +149,6 @@ class StandaloneTest(TestCaseWithAsserts):
 
     cmd = INSTALLER_COMMAND + " --unattend --prefix " + INSTALL_PREFIX \
         + " --without-scribe --without-pig --without-hive" \
-        + " --without-logmover --without-portal" \
         + " --config-prefix " + CONFIG_PREFIX \
         + " --log-filename " + INSTALLER_LOG_FILE \
         + " --format-hdfs --hadoop-user root " \
