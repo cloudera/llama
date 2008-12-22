@@ -11,9 +11,10 @@ import os
 from   com.cloudera.distribution.constants import *
 from   com.cloudera.distribution.installerror import InstallError
 
-# the full path isn't used here, because Python
+# alex - the full path isn't used here, because Python
 # didn't like it for some reason
 import env
+# (aaron - This should be com.cloudera.distribution.env)
 
 import com.cloudera.distribution.arch as arch
 import com.cloudera.util.output as output

@@ -130,12 +130,12 @@ class StandaloneTest(TestCaseWithAsserts):
       pass
 
     # Delete everything associated with Hadoop.
-    shell.sh("rm -rf /mnt/tmp")
+    shell.sh("rm -rf " + BASE_TMP_DIR)
     shell.sh("rm -rf " + INSTALL_PREFIX)
     shell.sh("rm -rf " + CONFIG_PREFIX)
-    shell.sh("mkdir -p /mnt/tmp")
-    shell.sh("chmod a+w /mnt/tmp")
-    shell.sh("chmod o+t /mnt/tmp")
+    shell.sh("mkdir -p " + BASE_TMP_DIR)
+    shell.sh("chmod a+w " + BASE_TMP_DIR)
+    shell.sh("chmod o+t " + BASE_TMP_DIR)
 
 
 

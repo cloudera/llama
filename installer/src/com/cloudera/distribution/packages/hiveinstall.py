@@ -242,7 +242,7 @@ class HiveInstall(toolinstall.ToolInstall):
 (This installer was unable to successfully start HDFS and create these paths.)
 Reason: %(err)s
 """ % \
-            { "err"           : str(ie) }
+            { "err" : str(ie) }
         if not safemodeOff and self.properties.getBoolean(FORMAT_DFS_KEY, \
             FORMAT_DFS_DEFAULT):
           self.hdfsErrMessage = self.hdfsErrMessage + """
@@ -279,7 +279,7 @@ directories and set them world-readable/writable:
   %(tmppath)s
 """ % \
           { "warehousepath" : HIVE_WAREHOUSE_DIR,
-            "tmppath"       : HIVE_TEMP_DIR }
+            "tmppath"       : HIVE_TEMP_DIR })
       if self.hdfsErrMessage != None:
         # Then print the error reason, if any
         logging.info(self.hdfsErrMessage)

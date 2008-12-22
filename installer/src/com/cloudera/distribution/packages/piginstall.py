@@ -4,6 +4,7 @@
 #
 # Defines the ToolInstall instance that installs Pig
 
+import logging
 import os
 import sys
 
@@ -226,12 +227,12 @@ Reason: %(ioe)s""" % { "ioe" : str(ioe) })
 (This installer was unable to successfully start HDFS and create these paths.)
 Reason: %(err)s
 """ % \
-            {              "err"           : str(ie) })
+            { "err" : str(ie) }
         if not safemodeOff and self.properties.getBoolean(FORMAT_DFS_KEY, \
             FORMAT_DFS_DEFAULT):
           self.hdfsErrMessage = self.hdfsErrMessage + """
 (This may be because you did not format HDFS on installation. You can specify
---format-hdfs to allow this to occur automatically.)""")
+--format-hdfs to allow this to occur automatically.)"""
 
 
 
@@ -263,7 +264,7 @@ Before using Pig, you must start Hadoop HDFS and create the following
 directories, and set them world-readable/writable:
   %(tmppath)s
 """% \
-          { "tmppath"       : PIG_TEMP_DIR }
+          { "tmppath" : PIG_TEMP_DIR })
       if self.hdfsErrMessage != None:
         # Then print the error reason, if any
         logging.info(self.hdfsErrMessage)

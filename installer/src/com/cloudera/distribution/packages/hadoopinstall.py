@@ -4,6 +4,7 @@
 #
 # Defines the ToolInstall instance that installs Hadoop
 
+import logging
 import math
 import os
 import re
@@ -37,6 +38,7 @@ class HadoopInstall(toolinstall.ToolInstall):
     self.hadoopUser = None  # who should we run hadoop as?
     self.curUsername = None # who are we running as? (`whoami`)
     self.verified = False
+    self.hdfsFormatMsg = None
 
   def isHadoopVerified(self):
     """ return True if verification tests passed."""
@@ -1040,10 +1042,10 @@ this process.""")
         output.printlnError("Could not format HDFS; Hadoop returned error")
         raise InstallError("Error formatting HDFS")
     else:
-      output.printlnInfo( \
-"""Skipping HDFS format. If you have not done this before, you must format
+      self.hdfsFormatMsg = \
+"""HDFS was not formatted. If you have not done this before, you must format
 HDFS before using Hadoop, by running the command:
-%(cmd)s""" % { "cmd" : formatCmd })
+%(cmd)s""" % { "cmd" : formatCmd }
 
 
   def postInstall(self):
@@ -1086,4 +1088,10 @@ HDFS before using Hadoop, by running the command:
     argList.append(self.getHadoopUsername())
 
     return argList
+
+  def printFinalInstructions(self):
+    if self.hdfsFormatMsg != None:
+      logging.info(self.hdfsFormatMsg)
+
+
 

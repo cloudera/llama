@@ -4,6 +4,8 @@
 # Constants used by the distribution testing tool
 #
 
+import os
+
 import com.cloudera.util.output as output
 
 
@@ -121,10 +123,12 @@ CONFIG_PREFIX = "/mnt/etc/cloudera"
 # where should the installer output its logs to
 INSTALLER_LOG_FILE = "/mnt/cloudera-installer.log"
 
-DFS_DATA_DIR = "/mnt/tmp/data"
-DFS_NAME_DIR = "/mnt/tmp/name"
-CHECKPOINT_DIR = "/mnt/tmp/secondary"
-HADOOP_TMP_DIR = "/mnt/tmp/hadoop"
+BASE_TMP_DIR = "/mnt/tmp"
+
+DFS_DATA_DIR = os.path.join(BASE_TMP_DIR, "data")
+DFS_NAME_DIR = os.path.join(BASE_TMP_DIR, "name")
+CHECKPOINT_DIR = os.path.join(BASE_TMP_DIR, "secondary")
+HADOOP_TMP_DIR = os.path.join(BASE_TMP_DIR, "hadoop")
 
 # Whom do we run hadoop daemons as?
 HADOOP_USER_KEY = "hadoop.user"

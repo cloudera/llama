@@ -29,7 +29,7 @@ class PortalInstall(ToolInstall):
     htdocs = self.getPortalDest()
     files = os.listdir(htdocs)
     if len(files) != 0:
-      overwrite_flag = self.getProperty(OVERWRITE_HTDOCS_KEY, \
+      overwrite_flag = self.properties.getProperty(OVERWRITE_HTDOCS_KEY, \
                                         OVERWRITE_HTDOCS_DEFAULT)
 
       # if they do exist and we're in unattended mode, break with errors
