@@ -78,7 +78,7 @@ will have to move these htdocs elsewhere.
 
   def install_httpd(self):
     """
-    Installs Lighttpd with PHP5 and MySQL support. 
+    Installs Lighttpd with PHP5 and MySQL support.
     Assumes MySQL is already installed
     """
 

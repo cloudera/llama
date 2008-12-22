@@ -63,6 +63,10 @@ portalComponent = DirComponent(
   srcDir  = "portal/src",
   destDir = "src/webapps/portal")
 
+# Enable inclusion of scribe-log4j contrib jar that we build.
+scribeLog4JComponent = HadoopContribComponent(
+  name = "scribe-log4j")
+
 supportedHadoopPackage = HadoopPackageTarget(
   packageName   = "distrib-hadoop",
   baseHadoopDir = "thirdparty/hadoop-0.18.2",
@@ -83,7 +87,8 @@ supportedHadoopPackage = HadoopPackageTarget(
                     log4jpropComponent,
                     log4jpropComponent2,
                     hadoopNativeLibs,
-                    portalComponent
+                    portalComponent,
+                    scribeLog4JComponent
                    ])
 
 # components for packaging

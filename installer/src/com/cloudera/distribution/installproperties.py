@@ -65,6 +65,9 @@ class InstallProperties(Properties):
     # when we can't poll the user for these values directly.
     "--jobtracker"     : JOB_TRACKER_KEY,
     "--namenode"       : NAMENODE_KEY,
+    "--scribe-master"  : SCRIBE_MASTER_ADDR_KEY,
+
+    "--scribe-log-dir" : SCRIBE_LOG_DIR_KEY,
 
     # the following settings apply to master only
 

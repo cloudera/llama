@@ -208,7 +208,7 @@ class ToolInstall(object):
     fail if not all packages are defined
     """
     if self.getCurrUser() != "root":
-      raise InstallError("This script requires root to install packages")    
+      raise InstallError("This script requires root to install packages")
 
     arch_inst = arch.getArchDetector()
 

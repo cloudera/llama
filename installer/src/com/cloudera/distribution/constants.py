@@ -63,6 +63,9 @@ HADOOP_SLAVES_FILE_KEY = "hadoop.slaves.file"
 HADOOP_SITE_FILE_KEY   = "hadoop.site.file"
 HADOOP_USER_NAME_KEY   = "hadoop.user.name"
 
+SCRIBE_MASTER_ADDR_KEY = "scribe.master.addr"
+SCRIBE_LOG_DIR_KEY     = "scribe.log.dir"
+
 # what username do we run hadoop as if we are running this as root?
 # (We run as the current user if non-root)
 HADOOP_USER_NAME_DEFAULT = "hadoop"
@@ -316,6 +319,24 @@ HIVE_WAREHOUSE_DIR = "/user/hive/warehouse"
 HIVE_METADB_DIR = "/var/metastore/metadb/"
 
 
+#######################################################################
+# Scribe configuration
+
+# this exists within HADOOP_INSTALL_SUBDIR
+PORTAL_SRC_LOCATION = "webapps/portal"
+
+SCRIBE_LOG_DIR_DEFAULT = "/var/log/scribe"
+
+LIGHTTPD_UBUNTU_HTDOCS = "/var/www"
+LIGHTTPD_FC_HTDOCS = "/srv/www/lighttpd"
+
+# Scribe service user account
+# TODO(aaron) 0.2 - make this configurable
+SCRIBE_USER = "scribe"
+
+# The name of the script we generate to run scribed.
+SCRIBE_WRAPPER_NAME = "scribed-run"
+
 
 #######################################################################
 # The following section deals with paths associated with the layout of
@@ -331,8 +352,7 @@ DISTRIB_BASE_PATH = ".."
 # holds all the packages?
 PACKAGE_PATH = os.path.join(DISTRIB_BASE_PATH, "packages/")
 
-# Refer to DISTRIB_BASE_PATH to understand how the DEPS_PATH
-# variable is determined
+# OS-specific library dependencies
 DEPS_PATH = os.path.join(DISTRIB_BASE_PATH, "deps")
 
 # relative to the distribution base path, where is the installer program?
@@ -341,6 +361,9 @@ INSTALLER_SUBDIR = "bin"
 # underneath of $prefix, where do the actual installs of different
 # programs get put?
 APP_SUBDIR = "apps"
+
+# Where are the sample scribe config files to change
+SCRIBE_CONF_INPUTS_PATH = os.path.join(DEPS_PATH, "scribe-conf")
 
 # Underneath of $prefix/apps/, where do all the individual programs go?
 # TODO (aaron): 0.2 Need some way of embedding this in the build process
@@ -360,11 +383,9 @@ PIG_VERSION = "0.1.1"
 PIG_INSTALL_SUBDIR = "pig-" + PIG_VERSION
 PIG_PACKAGE = "pig-" + PIG_VERSION + ".tar.gz"
 
-LIGHTTPD_UBUNTU_HTDOCS = "/var/www"
-LIGHTTPD_FC_HTDOCS = "/srv/www/lighttpd"
+SCRIBE_INSTALL_SUBDIR = "scribe"
+SCRIBE_PACKAGE = "scribe.tar.gz"
 
 # TODO(aaron): 0.2 Need 'svnstring' or something of the like to handle this.
 DISTRIB_VERSION = "0.1.0"
 
-# this exists within HADOOP_INSTALL_SUBDIR
-PORTAL_SRC_LOCATION = "webapps/portal"

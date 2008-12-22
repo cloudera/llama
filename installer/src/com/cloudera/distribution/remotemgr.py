@@ -192,6 +192,9 @@ def getRemoteDeployArgs(hadoopSiteFilename, slavesFilename, properties):
   argList.append("--unattend")
   argList.append("--as-slave")
 
+  if properties.getBoolean(NO_DAEMONS_KEY):
+    argList.append("--no-start-daemons")
+
   # determine --install / --without for each tool
   toolFlags = manifest.getInstallFlags(properties)
   argList.extend(toolFlags)
