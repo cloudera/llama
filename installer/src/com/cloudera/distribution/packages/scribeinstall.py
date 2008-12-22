@@ -66,6 +66,7 @@ class ScribeInstall(toolinstall.ToolInstall):
     if self.scribeLogHome == None or len(self.scribeLogHome) == 0:
       raise InstallError("Invalid Scribe log dir; set with --scribe-log-dir")
 
+    # remove any trailing '/' characters.
     while self.scribeLogHome.endswith(os.sep):
       self.scribeLogHome = self.scribeLogHome[0:len(self.scribeLogHome)-1]
 

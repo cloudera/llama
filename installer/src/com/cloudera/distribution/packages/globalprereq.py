@@ -374,10 +374,11 @@ to add nodes to the slaves file after installation is complete.
     self.configInstallPrefix()
     self.configEtcDir()
     self.configSlavesFile()
-    if self.getNumSlaves() > 0:
+    if self.getNumSlaves() > 0 and self.isMaster():
       self.configInstallUser()
       self.configSshIdentityKey()
       self.configUploadPrefix()
+
 
   def install(self):
     """ Run the installation itself. """
