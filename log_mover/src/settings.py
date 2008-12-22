@@ -19,7 +19,7 @@ copy_command = "fs -copyFromLocal"
 git_root = "/home/alex/git"
 
 # log output dir
-log_out = os.path.join(git_root, "python/HadoopMonitoring/LogMover/src/logs")
+log_out = os.path.join(git_root, "projects/HadoopDist/log_mover/src/logs")
 
 # the different movers that exist
 movers = [#'vmstat',
