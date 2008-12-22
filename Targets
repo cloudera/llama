@@ -71,6 +71,7 @@ supportedHadoopPackage = HadoopPackageTarget(
   patchPlan     = [
       "projects/HadoopDist/scribe-log4j/scribe_hadoop_trunk_v3.patch",
       "projects/HadoopDist/nn+jt_jsp/nn+jt_cloudera_0.18.2_noheader.patch",
+      "thirdparty/fairshare/fairscheduler-0.18.1.patch",
                   ],
   components    = [ libfb303Component,
                     libthriftComponent,
@@ -104,7 +105,7 @@ installerComponent = PackageComponent(
 logMoverComponent = PackageComponent(
   targetName = "projects/HadoopDist/log_mover:release",
   includeZip = False, # we need this unpackacked
-  destDir    = "bin")
+  destDir    = "bin/logmover")
 
 # take the pig tgz package we assembled in thirdparty/pig/ and include that
 # in our distribution package.
