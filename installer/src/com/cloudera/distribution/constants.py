@@ -323,7 +323,15 @@ PACKAGE_PATH = os.path.join(DISTRIB_BASE_PATH, "packages/")
 
 # Refer to DISTRIB_BASE_PATH to understand how the DEPS_PATH
 # variable is determined
+#
+# The location of the distributed dependencies
 DEPS_PATH = os.path.join(DISTRIB_BASE_PATH, "deps")
+
+# Refer to DISTRIB_BASE_PATH to understand how the LOGMOVER_PATH
+# variable is determined
+#
+# The location of the distributed logmover
+LOGMOVER_PATH = os.path.join(DISTRIB_BASE_PATH, "bin/logmover")
 
 # relative to the distribution base path, where is the installer program?
 INSTALLER_SUBDIR = "bin"
