@@ -262,6 +262,46 @@ class ToolInstall(object):
 
     return all_installed
 
+  def modifyDaemon(self, init_map, state):
+    """
+    Modifies the state of a service.  init_map is a
+    map that maps architectures to init scripts.  These
+    scripts must have the full path, for example
+    "/etc/init.d/mysql".  State is the desired state
+    of the service, for example "start," "stop," etc
+
+    The init_map doesn't need to have every single
+    architecture either.  This function will not fail
+    if an init script is not included for a particular
+    architecture.
+    """
+    if self.getCurrUser() != "root":
+      raise InstallError("This script requires root to change init scripts")
+
+    arch_inst = arch.getArchDetector()
+
+    # get the init script, but don't break if the user didn't specify
+    # a script
+    init_script = ''
+    try:
+      init_script = init_map[arch_inst.getPlatform()]
+    except:
+      output.printlnVerbose("Skipping this service")
+      return
+
+    try:
+      output.printlnVerbose("Attempting to " + state + " " + init_script)
+
+      command = init_script + " " + state
+
+      lines = shell.shLines(command)
+
+      output.printlnVerbose(lines)
+
+      output.printlnInfo("Performed a " + state + " on " + init_script)
+    except shell.CommandError:
+      raise InstallError("Could not " + command + " " + init_script)
+
   def createEtcSymlink(self, appName, confDir):
     """ Create a symlink from /etc/cloudera/$appName to $confDir """
 

@@ -256,14 +256,13 @@ will have to move these htdocs elsewhere.
 
     # if we don't want to start any daemon processes, kill lighttpd
     if not self.mayStartDaemons():
-      output.printlnVerbose("Attempting to stop lighttpd")
-      try:
-        cmd = "/etc/init.d/lighttpd stop"
-        shell.sh(cmd)
-      except shell.CommandError:
-        output.printlnInfo("Could not stop lighttpd")
+      lighttpd_map = {arch.PLATFORM_UBUNTU: "/etc/init.d/lighttpd",
+                      arch.PLATFORM_FEDORA: "/etc/init.d/lighttpd"
+                       }
 
-      output.printlnInfo("Stopping lighttpd")
+      state = "stop"
+
+      self.modifyDaemon(lighttpd_map, state)
 
   def verify(self):
     """ Run post-installation verification tests, if configured """
