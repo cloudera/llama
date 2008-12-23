@@ -163,8 +163,19 @@ password is required for creating a MySQL user for the log mover.
     db_user_script = os.path.join(logmover_prefix, "db_user_and_db.sql")
     db_init_script = os.path.join(logmover_prefix, "db_init.sql")
 
+    output.printlnVerbose("Attempting to bootstrap MySQL for the log mover")
+
+    # make sure MySQL is running
+    mysql_map = {arch.PLATFORM_UBUNTU: "/etc/init.d/mysql",
+                 arch.PLATFORM_FEDORA: "/etc/init.d/mysqld"
+                 }
+    state = "start"
+
+    self.modifyDaemon(mysql_map, state)
+
     try:
-      output.printlnVerbose("Attempting to bootstrap MySQL for the log mover")
+
+      output.printlnVerbose("Making sure MySQL is already running")
 
       base_cmd = "mysql -u " + db_user + " "
 
@@ -264,23 +275,18 @@ schema creation
 
     # if we don't want to start any daemon processes, kill mysql
     if not self.mayStartDaemons():
-      output.printlnVerbose("Attempting to stop mysql")
-      arch_inst = arch.getArchDetector()
-      try:
-        # FC and Ubuntu have different init.d scripts
-        cmd = ''
-        if arch_inst.getPlatform() == arch.PLATFORM_UBUNTU:
-          cmd = "/etc/init.d/mysql stop"
-        elif arch_inst.getPlatform() == arch.PLATFORM_FEDORA:
-          cmd = "/etc/init.d/mysqld stop"
-        else:
-          raise InstallError("Your Linux distribution is not supported")
+      mysql_map = {arch.PLATFORM_UBUNTU: "/etc/init.d/mysql",
+                   arch.PLATFORM_FEDORA: "/etc/init.d/mysqld"
+                   }
 
-        shell.sh(cmd)
-      except shell.CommandError:
-        output.printlnInfo("Could not stop mysql")
+      lighttpd_map = {arch.PLATFORM_UBUNTU: "/etc/init.d/lighttpd",
+                      arch.PLATFORM_FEDORA: "/etc/init.d/lighttpd"
+                       }
 
-      output.printlnInfo("Stopping lighttpd")
+      state = "stop"
+
+      self.modifyDaemon(mysql_map, state)
+      self.modifyDaemon(lighttpd_map, state)
 
   def verify(self):
     """ Run post-installation verification tests, if configured """
