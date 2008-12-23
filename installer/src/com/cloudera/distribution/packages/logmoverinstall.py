@@ -171,12 +171,11 @@ password is required for creating a MySQL user for the log mover.
                  }
     state = "start"
 
+    output.printlnVerbose("Making sure MySQL is already running")
+
     self.modifyDaemon(mysql_map, state)
 
     try:
-
-      output.printlnVerbose("Making sure MySQL is already running")
-
       base_cmd = "mysql -u " + db_user + " "
 
       # pass the -p param if we are using a password
