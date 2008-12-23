@@ -30,7 +30,10 @@ class PortalInstall(ToolInstall):
 
     # check to see if htdocs exist
     htdocs = self.getPortalDest()
-    files = os.listdir(htdocs)
+    files = []
+    if os.path.exists(htdocs):
+      files = os.listdir(htdocs)
+
     if len(files) != 0:
       overwrite_flag = self.properties.getProperty(OVERWRITE_HTDOCS_KEY, \
                                         OVERWRITE_HTDOCS_DEFAULT)
