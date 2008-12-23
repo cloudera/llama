@@ -227,6 +227,7 @@ class MultiHostTest(TestCaseWithAsserts):
         + self.prepHadoopSite("hadoop-configs/basic-config.xml") \
         + ' --namenode "hdfs://' + self.hostname + ':9000/" ' \
         + ' --jobtracker "' + self.hostname + ':9001"' \
+        + " --overwrite-htdocs" \
         + " --debug"
 
     logging.debug("Installing with command: " + cmd)
@@ -271,6 +272,7 @@ class MultiHostTest(TestCaseWithAsserts):
         + self.prepHadoopSite("hadoop-configs/hosts-config.xml") \
         + ' --namenode "hdfs://' + self.hostname + ':9000/" ' \
         + ' --jobtracker "' + self.hostname + ':9001"' \
+        + " --overwrite-htdocs" \
         + " --debug"
 
     shell.sh(cmd)

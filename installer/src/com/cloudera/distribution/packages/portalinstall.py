@@ -112,13 +112,10 @@ will have to move these htdocs elsewhere.
 
     output.printlnVerbose("Installing php.ini and lighttpd.conf")
 
+    deps_arch_dir = os.path.join(DEPS_PATH, arch_inst.getArchString())
     if platform == arch.PLATFORM_UBUNTU:
-      deps_arch_dir = os.path.join(DEPS_PATH,
-                                   "ubuntu-8.04-i386")
       php_ini_dest = "/etc/php5/cgi/php.ini"
     elif platform == arch.PLATFORM_FEDORA:
-      deps_arch_dir = os.path.join(DEPS_PATH,
-                                   "fedora8-i386")
       php_ini_dest = "/etc/php.ini"
 
     good_php_ini = os.path.abspath(
