@@ -351,6 +351,16 @@ SCRIBE_WRAPPER_NAME = "scribed-run"
 
 
 #######################################################################
+# Logmover configuration
+
+# The database that the log mover uses
+# note that if this changes from "ana," a lot of code is going to have
+# to change, including the log mover itself
+LOGMOVER_DB_NAME = "ana"
+
+
+
+#######################################################################
 # The following section deals with paths associated with the layout of
 # the packages within the installer itself and their destinations relative
 # to the install prefix
@@ -363,6 +373,9 @@ DISTRIB_BASE_PATH = ".."
 # What subdir of the installation system (Relative to the 'install' program)
 # holds all the packages?
 PACKAGE_PATH = os.path.join(DISTRIB_BASE_PATH, "packages/")
+
+# What subdir of the installation system holds documentation?
+DOCS_INPUT_PATH = os.path.join(DISTRIB_BASE_PATH, "doc/")
 
 # OS-specific library dependencies
 DEPS_PATH = os.path.join(DISTRIB_BASE_PATH, "deps")
@@ -382,6 +395,9 @@ APP_SUBDIR = "apps"
 
 # Where are the sample scribe config files to change
 SCRIBE_CONF_INPUTS_PATH = os.path.join(DEPS_PATH, "scribe-conf")
+
+# Underneath of $prefix, where do docs get installed to?
+DOCS_SUBDIR = "doc"
 
 # Underneath of $prefix/apps/, where do all the individual programs go?
 # TODO (aaron): 0.2 Need some way of embedding this in the build process
@@ -408,7 +424,3 @@ SCRIBE_PACKAGE = "scribe.tar.gz"
 # (IS-65, CH-75)
 DISTRIB_VERSION = "0.1.0"
 
-# The database that the log mover uses
-# note that if this changes from "ana," a lot of code is going to have
-# to change, including the log mover itself
-LOGMOVER_DB_NAME = "ana"
