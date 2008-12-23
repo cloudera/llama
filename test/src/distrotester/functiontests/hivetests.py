@@ -27,6 +27,7 @@ class HiveTest(TestCaseWithAsserts):
     return os.path.join(self.getHiveDir(), "bin/hive")
 
   # TODO(aaron): Refactor getHadoopDir, Cmd, get*Sudo into common abstract base
+  # (CH-77)
   def getHadoopDir(self):
     return os.path.join(INSTALL_PREFIX, "hadoop")
 
@@ -66,7 +67,7 @@ class HiveTest(TestCaseWithAsserts):
     """ Perform setup tasks for tests """
 
     # TODO(aaron): user dir creation is in Pig and Hive (also Hadoop)Test?
-    # Refactor out.
+    # Refactor out. (CH-77)
 
     # Ensure that the user's home dir exists in HDFS
     clientUser = self.getProperties().getProperty(CLIENT_USER_KEY)

@@ -94,7 +94,7 @@ def launchInstances(platformName, properties, configOnly=False):
 
   # This method both sets the config properties, and then
   # also creates the instances (if configOnly is False).
-  # TODO(aaron): Refactor into two different methods.
+  # TODO(aaron): Refactor into two different methods. (CH-77)
 
   profileFilename = profileForPlatform(platformName)
   profileProps = Properties()

@@ -19,6 +19,7 @@ import distrotester.testproperties as testproperties
 from   distrotester.functiontests.hadooptests import HadoopTest
 from   distrotester.functiontests.hivetests import HiveTest
 from   distrotester.functiontests.pigtests import PigTest
+from   distrotester.functiontests.scribetests import ScribeTest
 
 class StandaloneTest(TestCaseWithAsserts):
 
@@ -201,10 +202,12 @@ class StandaloneTest(TestCaseWithAsserts):
     hadoopSuite = unittest.makeSuite(HadoopTest, 'test')
     hiveSuite   = unittest.makeSuite(HiveTest, 'test')
     pigSuite    = unittest.makeSuite(PigTest, 'test')
+    scribeSuite = unittest.makeSuite(ScribeTest, 'test')
     functionalityTests = unittest.TestSuite([
         hadoopSuite,
         hiveSuite,
-        pigSuite
+        pigSuite,
+        scribeSuite
         ])
 
     print "Running Hadoop functionality tests"
@@ -244,10 +247,12 @@ class StandaloneTest(TestCaseWithAsserts):
     hadoopSuite = unittest.makeSuite(HadoopTest, 'test')
     hiveSuite   = unittest.makeSuite(HiveTest, 'test')
     pigSuite    = unittest.makeSuite(PigTest, 'test')
+    scribeSuite = unittest.makeSuite(ScribeTest, 'test')
     functionalityTests = unittest.TestSuite([
         hadoopSuite,
         hiveSuite,
-        pigSuite
+        pigSuite,
+        scribeSuite
         ])
 
     print "Running Hadoop functionality tests"
@@ -296,10 +301,12 @@ class StandaloneTest(TestCaseWithAsserts):
       hadoopSuite = unittest.makeSuite(HadoopTest, 'test')
       hiveSuite   = unittest.makeSuite(HiveTest, 'test')
       pigSuite    = unittest.makeSuite(PigTest, 'test')
+      scribeSuite = unittest.makeSuite(ScribeTest, 'test')
       functionalityTests = unittest.TestSuite([
           hadoopSuite,
           hiveSuite,
-          pigSuite
+          pigSuite,
+          scribeSuite
           ])
 
       print "Running Hadoop functionality tests"

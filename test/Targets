@@ -5,6 +5,7 @@
 # Test tool for Cloudera Hadoop Distribution
 #
 
+# The python sources that make up the test framework
 tester = PythonTarget(
   sources=[ "src/distrotester",
             "src/remotetest",
@@ -16,9 +17,38 @@ tester = PythonTarget(
                 "pig-tests",
                 "hive-tests" ])
 
-release = PythonRedistTarget(
-  distribName     = "distrotest",
+
+# package containing all the above python sources
+pyRelease = PythonRedistTarget(
+  distribName     = "distroTestPython",
   requiredTargets = [ ":tester" ])
+
+# Jar containing Java code to run to test scribe
+scribeTestsJar = JarTarget(
+  jarName = "ScribeDistribTest.jar",
+  sources = [ "scribe-tests" ],
+  requiredTargets = [ "thirdparty/hadoop" ])
+
+
+# Now we bundle all of the above together
+
+pythonComponent = PackageComponent(
+  targetName = ":pyRelease",
+  includeZip = False) # copy files straight in
+
+scribeTestsComponent = OutputComponent(
+  targetName = ":scribeTestsJar",
+  destDir = "scribe-tests")
+
+removeInstallerComponent = ExcludeComponent(
+  name = "install")
+
+release = PackageTarget(
+  packageName = "distrotest",
+  components = [
+      pythonComponent,
+      scribeTestsComponent,
+      removeInstallerComponent ])
 
 defaultTarget(release)
 
