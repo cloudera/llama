@@ -144,6 +144,10 @@ dnsMap = ec2.getInstanceDnsNames(instanceLines, instances)
 # Determine whether we should use EC2 internal dns names or external names
 # based on whether we're inside EC2 or not. (which we simply check for a
 # 10.x.y.z address for. TODO (aaron): This is not a foolproof method)
+
+# The slaves file is always written with internal addresses, since that's how
+# the instances will interact with one another.
+
 useInternal = False
 try:
   myHostNameLines = shell.shLines("hostname -i")
@@ -154,12 +158,17 @@ try:
 except shell.CommandError:
   pass
 
+# This is the list of addresses we interact with
 hostList = []
+
+# this is the list of addresses the nodes themselves interact with
+internalList = []
 for (internal, external) in dnsMap.values():
   if useInternal:
     hostList.append(internal)
   else:
     hostList.append(external)
+  internalList.append(internal)
 if len(hostList) == 0:
   logging.error("Empty host list? Don't know how to continue!")
   sys.exit(1)
@@ -189,7 +198,7 @@ try:
   # Pick one node to the "master" node.
   masterHost = hostList[0]
   numHosts = len(hostList)
-  slaveAddrs = hostList[1:numHosts]
+  slaveAddrs = internalList[1:numHosts]
   logging.info("Master host is: " + masterHost)
 
   # Upload distro tarball to master host.

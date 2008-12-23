@@ -11,6 +11,7 @@ import socket
 import tempfile
 import unittest
 
+import com.cloudera.distribution.sshall as sshall
 from   com.cloudera.testutil.asserts import TestCaseWithAsserts
 import com.cloudera.tools.shell as shell
 
@@ -25,7 +26,6 @@ class MultiHostTest(TestCaseWithAsserts):
   def __init__(self, methodName='runTest'):
     TestCaseWithAsserts.__init__(self, methodName)
     self.curHadoopSite = None
-    self.curSlavesFile = None
 
     # Get our hostname and memoize it
     self.hostname = socket.getfqdn()
@@ -56,6 +56,21 @@ class MultiHostTest(TestCaseWithAsserts):
   def getSlavesFile(self):
     """ Return the slaves file provided by the remote test manager """
     return self.getProperties().getProperty(SLAVES_FILE_KEY)
+
+  def getSlavesList(self):
+    slavesFile = self.getSlavesFile()
+    try:
+      handle = open(slavesFile)
+      lines = handle.readlines()
+      slavesList = []
+      for line in lines:
+        slavesList.append(line.strip())
+      handle.close()
+      return slavesList
+    except IOError, ioe:
+      logging.error("Error opening slaves file: " + str(slavesFile))
+      logging.error(ioe)
+      return []
 
 
   def getProperties(self):
@@ -113,36 +128,48 @@ class MultiHostTest(TestCaseWithAsserts):
 
 
   def tearDown(self):
-    # TODO(aaron): Refactor this out into common base class for
-    # multihost and standalone
+    # TODO(aaron): This code block is common to MultiHost and Standalone
     if self.curHadoopSite != None:
       # remove this temp file we created
       os.remove(self.curHadoopSite)
-
-    if self.curSlavesFile != None:
-      # remove this temp file we created
-      os.remove(self.curSlavesFile)
 
     # self.stopHadoop()
 
 
   def setUp(self):
     """ shutdown and remove existing hadoop distribution. """
-    # TODO(aaron): Refactor this out into common base class for
-    # multihost and standalone
 
     try:
       self.stopHadoop()
     except:
       pass
 
+    logging.debug("Performing setup actions for next multihost test")
+
     # Delete everything associated with Hadoop.
-    shell.sh("rm -rf " + BASE_TMP_DIR)
-    shell.sh("rm -rf " + INSTALL_PREFIX)
-    shell.sh("rm -rf " + CONFIG_PREFIX)
-    shell.sh("mkdir -p " + BASE_TMP_DIR)
-    shell.sh("chmod a+w " + BASE_TMP_DIR)
-    shell.sh("chmod o+t " + BASE_TMP_DIR)
+    # Do this on all hosts.
+    allHosts = self.getSlavesList()
+    allHosts.append(self.hostname)
+
+    def doSshAll(cmd):
+      logging.debug("sshall command: " + cmd)
+      results = sshall.sshMultiHosts("root", allHosts, cmd, \
+          self.getProperties(), SSH_RETRIES, SSH_PARALLEL)
+      for result in results:
+        # each result is an sshall.SshResult obj
+        if result.getStatus() != 0:
+          logging.error("Got error status executing command on " \
+              + result.getHost())
+          logging.error("Output:")
+          for line in result.getOutput():
+            logging.error("  " + line.rstrip())
+
+    doSshAll("rm -rf " + BASE_TMP_DIR)
+    doSshAll("rm -rf " + INSTALL_PREFIX)
+    doSshAll("rm -rf " + CONFIG_PREFIX)
+    doSshAll("mkdir -p " + BASE_TMP_DIR)
+    doSshAll("chmod a+w " + BASE_TMP_DIR)
+    doSshAll("chmod o+t " + BASE_TMP_DIR)
 
 
 

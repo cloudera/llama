@@ -138,7 +138,16 @@ def launchInstances(platformName, properties, configOnly=False):
     raise TestError("No keypair set for " + platformName)
 
   if profileProps.getBoolean(ec2.EC2_CREATE_GROUP_PROP):
-    ec2.ensureGroup(group, profileProps)
+    createdGroup = ec2.ensureGroup(group, profileProps)
+    if createdGroup:
+      # Authorize Hadoop ports too
+      # aaron: I'm honestly not sure what ports Hadoop really needs here.
+      # It might actually be more than this. I gave up and authorized all
+      # traffic within the chdtest group manually; I don't know if this
+      # will recreate everything necessary.
+      ec2.authorizeGroup(group, 9000, TCP, profileProps)
+      ec2.authorizeGroup(group, 9001, TCP, profileProps)
+      ec2.authorizeGroup(group, 50010, TCP, profileProps)
 
   # The chdtest identity file may not be chmod'd to 0600 (git does not
   # track permissions except a+x/a-x). We need to do that here.
