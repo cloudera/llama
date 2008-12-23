@@ -35,7 +35,7 @@ class MultiHostTest(TestCaseWithAsserts):
   def getPlatformSetup(self):
     """ Get the PlatformSetup object used to initialize the node """
     # TODO(aaron): Refactor this out into common base class for
-    # multihost and standalone
+    # multihost and standalone (CH-77)
 
     # delaying this import til this thunk is used to avoid
     # circular dependency
@@ -51,7 +51,7 @@ class MultiHostTest(TestCaseWithAsserts):
 
   def getHadoopCmd(self):
     # TODO(aaron): Refactor this out into common base class for
-    # multihost and standalone
+    # multihost and standalone (CH-77)
     return os.path.join(self.getHadoopDir(), "bin/hadoop")
 
   def getSlavesFile(self):
@@ -76,7 +76,7 @@ class MultiHostTest(TestCaseWithAsserts):
 
   def getProperties(self):
     # TODO(aaron): Refactor this out into common base class for
-    # multihost and standalone
+    # multihost and standalone (CH-77)
     return testproperties.getProperties()
 
   def prepHadoopSite(self, inputHadoopSite):
@@ -86,7 +86,7 @@ class MultiHostTest(TestCaseWithAsserts):
     """
 
     # TODO(aaron): Refactor this out into common base class for
-    # multihost and standalone
+    # multihost and standalone (CH-77)
 
     # Get a temporary filename to use as the hadoop-site.xml file.
     (oshandle, tmpFilename) = tempfile.mkstemp()
@@ -111,7 +111,7 @@ class MultiHostTest(TestCaseWithAsserts):
   def stopHadoopForUser(self, user):
     """ Stop the hadoop daemons run by a given hadoop username """
     # TODO(aaron): Refactor this out into common base class for
-    # multihost and standalone
+    # multihost and standalone (CH-77)
     try:
       # stop any hadoop run as hadoop user.
       hadoopDir = self.getHadoopDir()
@@ -122,7 +122,7 @@ class MultiHostTest(TestCaseWithAsserts):
 
   def stopHadoop(self):
     # TODO(aaron): Refactor this out into common base class for
-    # multihost and standalone
+    # multihost and standalone (CH-77)
     self.stopHadoopForUser(ROOT_USER)
     self.stopHadoopForUser(HADOOP_USER)
 
@@ -130,6 +130,7 @@ class MultiHostTest(TestCaseWithAsserts):
 
   def tearDown(self):
     # TODO(aaron): This code block is common to MultiHost and Standalone
+    # (CH-77)
     if self.curHadoopSite != None:
       # remove this temp file we created
       os.remove(self.curHadoopSite)
@@ -213,11 +214,9 @@ class MultiHostTest(TestCaseWithAsserts):
     """ Install all components.
         Use a separate hadoop user account and a separate client account. """
 
-    # TODO (aaron): enable scribe when it's ready.
     javaHome = self.getProperties().getProperty(JAVA_HOME_KEY)
 
     cmd = INSTALLER_COMMAND + " --unattend --prefix " + INSTALL_PREFIX \
-        + " --without-scribe " \
         + " --config-prefix " + CONFIG_PREFIX \
         + " --log-filename " + INSTALLER_LOG_FILE \
         + " --format-hdfs --hadoop-user " + HADOOP_USER \
@@ -257,11 +256,9 @@ class MultiHostTest(TestCaseWithAsserts):
         files set in place.
     """
 
-    # TODO: Enable scribe when it's ready.
     javaHome = self.getProperties().getProperty(JAVA_HOME_KEY)
 
     cmd = INSTALLER_COMMAND + " --unattend --prefix " + INSTALL_PREFIX \
-        + " --without-scribe " \
         + " --config-prefix " + CONFIG_PREFIX \
         + " --log-filename " + INSTALLER_LOG_FILE \
         + " --format-hdfs --hadoop-user " + HADOOP_USER \
@@ -300,7 +297,7 @@ class MultiHostTest(TestCaseWithAsserts):
 
   def testGuidedInstall(self):
     """ Use stdin to handle guided installation. """
-    # TODO: This
+    # TODO: This (CH-79)
     # TODO: set the editor to /bin/true, provide a slaves file.
     pass
 

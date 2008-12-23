@@ -124,7 +124,7 @@ class HiveInstall(toolinstall.ToolInstall):
 
     self.hiveParams = {}
     self.hiveParams["hive.exec.scratchdir"] = "/tmp/hive-${user.name}"
-    # TODO(aaron): 0.2 - set this to false and configure remote derby
+    # TODO(aaron): 0.2 - set this to false and configure remote derby (CH-70)
     self.hiveParams["hive.metastore.local"] = "true"
     self.hiveParams["javax.jdo.option.ConnectionURL"] = \
         "jdbc:derby:;databaseName=metastore_db;create=true"

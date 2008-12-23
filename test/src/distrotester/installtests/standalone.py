@@ -176,11 +176,9 @@ class StandaloneTest(TestCaseWithAsserts):
     """ Install all components.
         Use a separate hadoop user account and a separate client account. """
 
-    # TODO (aaron): enable scribe when it's ready.
     javaHome = self.getProperties().getProperty(JAVA_HOME_KEY)
 
     cmd = INSTALLER_COMMAND + " --unattend --prefix " + INSTALL_PREFIX \
-        + " --without-scribe " \
         + " --config-prefix " + CONFIG_PREFIX \
         + " --log-filename " + INSTALLER_LOG_FILE \
         + " --format-hdfs --hadoop-user " + HADOOP_USER \
@@ -220,11 +218,9 @@ class StandaloneTest(TestCaseWithAsserts):
         files set in place.
     """
 
-    # TODO: Enable scribe when it's ready.
     javaHome = self.getProperties().getProperty(JAVA_HOME_KEY)
 
     cmd = INSTALLER_COMMAND + " --unattend --prefix " + INSTALL_PREFIX \
-        + " --without-scribe " \
         + " --config-prefix " + CONFIG_PREFIX \
         + " --log-filename " + INSTALLER_LOG_FILE \
         + " --format-hdfs --hadoop-user " + HADOOP_USER \
@@ -263,14 +259,13 @@ class StandaloneTest(TestCaseWithAsserts):
 
   def testGuidedInstall(self):
     """ Use stdin to handle guided installation. """
-    # TODO: This
+    # TODO: This (CH-79)
     # TODO: set the editor to /bin/true, provide a slaves file.
     pass
 
   def testWithoutLzo(self):
     """ Remove the LZO libs, use a non-lzo configuration """
 
-    # TODO (aaron): enable scribe when it's ready.
     javaHome = self.getProperties().getProperty(JAVA_HOME_KEY)
 
     # remove the lzo package; use a finally block to ensure we always
@@ -279,7 +274,6 @@ class StandaloneTest(TestCaseWithAsserts):
     platformSetup.removePackage("lzo")
     try:
       cmd = INSTALLER_COMMAND + " --unattend --prefix " + INSTALL_PREFIX \
-          + " --without-scribe " \
           + " --config-prefix " + CONFIG_PREFIX \
           + " --log-filename " + INSTALLER_LOG_FILE \
           + " --format-hdfs --hadoop-user " + HADOOP_USER \

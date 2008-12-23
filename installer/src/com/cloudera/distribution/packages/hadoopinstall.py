@@ -288,7 +288,7 @@ or specify your own username with --hadoop-user""")
     # TODO(aaron): 0.2 - We currently conflate the master address here with
     # the address used for the secondary namenode. we should have a better
     # system which actually differentiates between the two, and puts scribe,
-    # and the 2NN on a separate machine. This is an 0.2+ feature.
+    # and the 2NN on a separate machine. This is an 0.2+ feature. (CH-85)
 
     defHostName = self.properties.getProperty(HADOOP_MASTER_ADDR_KEY)
     if defHostName == None:
@@ -820,7 +820,7 @@ to do, just accept the default values.""")
 
     # We need to open the file for append and, at minimum,  add JAVA_HOME
     # Also enable JMX on all the daemons.
-    # TODO(aaron): Also allow overriding of the logging stuff?
+    # TODO(aaron): Also allow overriding of the logging stuff? (CH-76)
     # TODO(aaron): 0.2 -Eventually we'll want to overwrite the whole thing.
 
     destFileName = os.path.join(self.getConfDir(), "hadoop-env.sh")

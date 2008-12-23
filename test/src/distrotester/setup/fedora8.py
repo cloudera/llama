@@ -161,7 +161,7 @@ Host *
     # care a lot about.
     # TODO(aaron): If you add an environment variable to the install plan,
     # you have to add it here. This is unfortunate; we shouldn't need to
-    # list all this twice.
+    # list all this twice. (CH-80)
     handle = open("/etc/sudoers", "a")
     handle.write("""
 Defaults  env_keep += "JAVA_HOME HADOOPDIR HADOOP_HOME PIGDIR PIG_CLASSPATH"
