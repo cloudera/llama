@@ -24,7 +24,7 @@ fi
 
 # stop hadoop if it was already running.
 $sudoPrefix /tmp/master/hadoop/bin/stop-all.sh
-$sudoPrefix killall scribed
+killall scribed
 
 # remove all the directories that this will create
 rm -rf /mnt/tmp/name

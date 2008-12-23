@@ -158,7 +158,7 @@ DEFAULT_LOG_VERBOSITY = output.VERBOSE
 #######################################################################
 ### Some more constants affecting the installer system itself
 
-# TODO (aaron): 0.2 - Allow the user to change these settings
+# TODO (aaron): 0.2 - Allow the user to change these settings (CH-83)
 
 # how many tries do we make when uploading to any given host
 NUM_SCP_RETRIES = 3
@@ -343,11 +343,21 @@ LIGHTTPD_UBUNTU_HTDOCS = "/var/www"
 LIGHTTPD_FC_HTDOCS = "/srv/www/lighttpd"
 
 # Scribe service user account
-# TODO(aaron) 0.2 - make this configurable
+# TODO(aaron) 0.2 - make this configurable (CH-84)
 SCRIBE_USER = "scribe"
 
 # The name of the script we generate to run scribed.
 SCRIBE_WRAPPER_NAME = "scribed-run"
+
+
+#######################################################################
+# Logmover configuration
+
+# The database that the log mover uses
+# note that if this changes from "ana," a lot of code is going to have
+# to change, including the log mover itself
+LOGMOVER_DB_NAME = "ana"
+
 
 
 #######################################################################
@@ -363,6 +373,9 @@ DISTRIB_BASE_PATH = ".."
 # What subdir of the installation system (Relative to the 'install' program)
 # holds all the packages?
 PACKAGE_PATH = os.path.join(DISTRIB_BASE_PATH, "packages/")
+
+# What subdir of the installation system holds documentation?
+DOCS_INPUT_PATH = os.path.join(DISTRIB_BASE_PATH, "doc/")
 
 # OS-specific library dependencies
 DEPS_PATH = os.path.join(DISTRIB_BASE_PATH, "deps")
@@ -383,9 +396,12 @@ APP_SUBDIR = "apps"
 # Where are the sample scribe config files to change
 SCRIBE_CONF_INPUTS_PATH = os.path.join(DEPS_PATH, "scribe-conf")
 
+# Underneath of $prefix, where do docs get installed to?
+DOCS_SUBDIR = "doc"
+
 # Underneath of $prefix/apps/, where do all the individual programs go?
 # TODO (aaron): 0.2 Need some way of embedding this in the build process
-# so that we don't have to manually change this every time.
+# so that we don't have to manually change this every time. (IS-65)
 HADOOP_VERSION = "0.18.2-patched"
 HADOOP_INSTALL_SUBDIR = "hadoop-" + HADOOP_VERSION
 HADOOP_PACKAGE = "hadoop-" + HADOOP_VERSION + ".tar.gz"
@@ -405,9 +421,6 @@ SCRIBE_INSTALL_SUBDIR = "scribe"
 SCRIBE_PACKAGE = "scribe.tar.gz"
 
 # TODO(aaron): 0.2 Need 'svnstring' or something of the like to handle this.
+# (IS-65, CH-75)
 DISTRIB_VERSION = "0.1.0"
 
-# The database that the log mover uses
-# note that if this changes from "ana," a lot of code is going to have
-# to change, including the log mover itself
-LOGMOVER_DB_NAME = "ana"

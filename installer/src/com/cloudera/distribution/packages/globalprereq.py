@@ -14,6 +14,7 @@ from   com.cloudera.distribution.installerror import InstallError
 import com.cloudera.distribution.java as java
 from   com.cloudera.distribution.toolinstall import ToolInstall
 import com.cloudera.tools.dirutils as dirutils
+import com.cloudera.tools.shell as shell
 import com.cloudera.util.output as output
 import com.cloudera.util.prompt as prompt
 
@@ -383,12 +384,32 @@ to add nodes to the slaves file after installation is complete.
   def install(self):
     """ Run the installation itself. """
 
+    # Create the apps dir
     installDir = self.getAppsPrefix()
     try:
       dirutils.mkdirRecursive(installDir)
     except OSError, ose:
       raise InstallError("Error creating installation directory " \
           + installDir + " (" + str(ose) + ")")
+
+    # Create the docs dir and copy all the documentation there.
+    docsDest = os.path.join(self.getInstallPrefix(), DOCS_SUBDIR)
+    try:
+      dirutils.mkdirRecursive(docsDest)
+    except OSError, ose:
+      raise InstallError("Error creating docs directory " + docsDest \
+          + " (" + str(ose) + ")")
+
+    docsInputDir = DOCS_INPUT_PATH
+    if not docsInputDir.endswith(os.sep):
+      docsInputDir = docsInputDir + os.sep
+
+    cmd = "cp -R " + DOCS_INPUT_PATH + "* " + docsDest
+    try:
+      shell.sh(cmd)
+    except shell.CommandError:
+      raise InstallError("Error installing documentation")
+
 
   def postInstall(self):
     """ Run any post-installation activities. This occurs after

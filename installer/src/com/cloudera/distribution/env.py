@@ -11,6 +11,7 @@ import os
 
 from    com.cloudera.distribution.installerror import InstallError
 import  com.cloudera.distribution.toolinstall as toolinstall
+import  com.cloudera.tools.shell as shell
 import  com.cloudera.util.output as output
 
 envMap = {}
@@ -66,6 +67,7 @@ def writeEnvironmentScript():
 
   keys.sort()
   envFilename = os.path.join(globalPrereq.getInstallPrefix(), "user_env")
+  envFilename = os.path.abspath(envFilename)
   try:
     handle = open(envFilename, "w")
     handle.write("#!/bin/bash\n")
@@ -75,6 +77,16 @@ def writeEnvironmentScript():
   except IOError, ioe:
     raise InstallError("Could not write " + envFilename + "\nreason: " \
         + str(ioe))
+
+  # Now symlink this into the config dir
+  configDir = os.path.abspath(globalPrereq.getConfigDir())
+  configTarget = os.path.join(configDir, "user_env")
+  cmd = "ln -s \"" + envFilename + "\" \"" + configTarget + "\""
+  try:
+    shell.sh(cmd)
+  except shell.CommandError:
+    raise InstallError("Could not create symlink: " + configTarget)
+
 
   output.printlnInfo("""
 The required environment variable bindings have also been written to
