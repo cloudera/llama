@@ -86,14 +86,19 @@ class LogMoverInstall(toolinstall.ToolInstall):
     hadoop_home = self.properties.getProperty(INSTALL_PREFIX_KEY,
                                               INSTALL_PREFIX_DEFAULT)
     hadoop_home = os.path.join(hadoop_home, "hadoop")
-    log_out = os.path.join(logmover_prefix, "logs")
+    log_out_orig = os.path.join(logmover_prefix, "logs")
 
-    # TODO: ask aaron about this; I need to use his properties work
-    scribe_logs = "scribe.logs"
+    # get the location of the scribe logs
+    scribe_installer = toolinstall.getToolByName("Scribe")
+    scribe_logs = scribe_installer.getScribeLogDir()
+
+    # we want the log mover to look at central logs for hadoop
+    scribe_logs = os.path.join(scribe_logs, "central/hadoop")
 
     # escape the slashes in the path
     hadoop_home = hadoop_home.replace("/", "\\/")
-    log_out = log_out.replace("/", "\\/")
+    log_out = log_out_orig.replace("/", "\\/")
+    scribe_logs = scribe_logs.replace("/", "\\/")
 
     # set the $HADOOP_HOME var
     hadoop_cmd = "sed -i -e 's/path.to.hadoop.home/" + \
@@ -120,13 +125,26 @@ class LogMoverInstall(toolinstall.ToolInstall):
     except shell.CommandError:
       raise InstallError("Cannot configure the log mover settings file")
 
+    # lastly, make sure the log_out folder exists, so the log mover
+    # logging framework won't complain
+    try:
+      output.printlnVerbose("Attempting to create the log mover log dir")
+      os.mkdir(log_out_orig)
+      cmd = "chown hadoop -R " + log_out_orig
+      lines = shell.shLines(cmd)
+      output.printlnVerbose(lines)
+    except:
+      raise InstallError("Couldn't create log mover's log directory")
+
     output.printlnInfo("Done configuring log mover")
 
   def installMysql(self):
-    """Installs MySQL"""
+    """Installs MySQL and required modules"""
 
-    pckg = {arch.PACKAGE_MGR_DEBIAN: ["mysql-server"],
-            arch.PACKAGE_MGR_RPM: ["mysql-server"],
+    pckg = {arch.PACKAGE_MGR_DEBIAN: ["mysql-server",
+                                      "python-mysqldb"],
+            arch.PACKAGE_MGR_RPM: ["mysql-server",
+                                   "MySQL-python"],
             }
     self.installPackage(pckg)
 
@@ -183,8 +201,8 @@ schema creation
 
     try:
       output.printlnVerbose("Attempting to install log mover cron")
-      cmd =  "echo '* * * * * " + pruner + "\n"
-      cmd +=       "* * * * * " + log_to_db + "'"
+      cmd =  "echo '* * * * * python " + pruner + "\n"
+      cmd +=       "* * * * * python " + log_to_db + "'"
       cmd += " | sudo crontab -u " + hadoop_user + " -"
 
       lines = shell.shLines(cmd)
