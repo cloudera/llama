@@ -44,8 +44,11 @@ class ScribeInstall(toolinstall.ToolInstall):
       output.printlnVerbose("Found username: " + self.scribeUser)
     except shell.CommandError:
       raise InstallError( \
-          "You must create the 'scribe' username to install scribe")
+              "You must create the 'scribe' username to install scribe")
 
+  def getScribeLogDir(self):
+    """Gets the location where Scribe puts its logs"""
+    return self.scribeLogHome
 
   def configure(self):
     """ Run the configuration stage. This is responsible for
@@ -69,7 +72,6 @@ class ScribeInstall(toolinstall.ToolInstall):
     # remove any trailing '/' characters.
     while self.scribeLogHome.endswith(os.sep):
       self.scribeLogHome = self.scribeLogHome[0:len(self.scribeLogHome)-1]
-
 
     # Determine the hostname for the master scribe server
     if self.isMaster():
