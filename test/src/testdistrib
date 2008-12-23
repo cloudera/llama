@@ -208,8 +208,27 @@ try:
     logging.info("Uploading CHD tarball...")
     shell.scp(localDistribTarball, "root", masterHost, remoteDistribTarball, \
         properties)
+
+    # untar the distribution on the master node
+    shell.ssh("root", masterHost, "tar -zxf \"" + remoteDistribTarball \
+        + "\" -C /mnt", properties)
   else:
     logging.info("Skipping CHD tarball upload at user request")
+
+  installerTarball = properties.getProperty(INSTALLER_TARBALL_KEY)
+  if installerTarball != None:
+    # Upload only the installer and overlay it on top of the existing
+    # distribution.
+    logging.info("Uploading installer...")
+    remoteInstallerTarball = os.path.join("/mnt", \
+        os.path.basename(installerTarball))
+    shell.scp(installerTarball, "root", masterHost, remoteInstallerTarball, \
+        properties)
+
+    shell.ssh("root", masterHost, "tar -zxf \"" + remoteInstallerTarball \
+        + "\" -C /mnt", properties)
+    shell.ssh("root", masterHost, "mv /mnt/installer/* " + DISTRIB_DEST_DIR, \
+        properties)
 
   if not properties.getBoolean(BYPASS_SETUP_KEY):
     # Upload the id_rsa file we're using and chmod it correctly on the master
@@ -219,10 +238,6 @@ try:
     idRsaFile = properties.getProperty("ssh.identity")
     shell.scp(idRsaFile, "root", masterHost, "/root/.ssh/id_rsa", properties)
     shell.ssh("root", masterHost, "chmod 0600 /root/.ssh/id_rsa", properties)
-
-    # untar the distribution on the master node
-    shell.ssh("root", masterHost, "tar -zxf \"" + remoteDistribTarball \
-        + "\" -C /mnt", properties)
 
 
   # Run platform-specific bootstrap commands. Append the unzip commands here

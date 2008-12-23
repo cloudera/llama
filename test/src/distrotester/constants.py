@@ -33,6 +33,10 @@ DEFAULT_LOG_VERBOSITY = output.DEBUG
 DISTRIB_TARBALL_ARG = "--distribution"
 DISTRIB_TARBALL_KEY = "distribution.tar.file"
 
+# If we want to refresh only the installer, where is this tarball?
+INSTALLER_TARBALL_ARG = "--installer"
+INSTALLER_TARBALL_KEY = "installer.tar.file"
+
 # if we're in a multi-host situation, where did the test controller put the
 # slaves file?
 SLAVES_FILE_ARG = "--slaves-file"
@@ -120,7 +124,8 @@ REMOTE_LOG_FILENAME = "/mnt/cloudera-tester.log"
 
 # How do we invoke the distribution installer
 # TODO (aaron): This should be parameterizable by version number
-INSTALLER_COMMAND = "/mnt/cloudera-hadoop-0.1.0/bin/install"
+DISTRIB_DEST_DIR = "/mnt/cloudera-hadoop-0.1.0/"
+INSTALLER_COMMAND = os.path.join(DISTRIB_DEST_DIR, "bin/install")
 
 INSTALL_PREFIX = "/mnt/installed-distro"
 CONFIG_PREFIX = "/mnt/etc/cloudera"
