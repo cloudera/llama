@@ -38,6 +38,14 @@ class ScribeInstall(toolinstall.ToolInstall):
     """ If anything must be verified before we even get going, check those
         constraints in this method """
 
+    # Check that the scribe user account exists
+    try:
+      shell.shLines("getent passwd \"" + self.scribeUser + "\"")
+      output.printlnVerbose("Found username: " + self.scribeUser)
+    except shell.CommandError:
+      raise InstallError( \
+              "You must create the 'scribe' username to install scribe")
+
   def getScribeLogDir(self):
     """Gets the location where Scribe puts its logs"""
     return self.scribeLogHome

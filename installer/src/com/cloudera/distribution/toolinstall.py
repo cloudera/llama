@@ -149,6 +149,8 @@ class ToolInstall(object):
     first trying to create path.bak.  If that
     exists, then create path.bak.2, then
     path.bak.3, etc.
+
+    Return the file that was created
     """
     extension = ".bak"
 
@@ -176,6 +178,8 @@ class ToolInstall(object):
       output.printlnVerbose(cpLines)
     except shell.CommandError:
       raise InstallError("Could not backup " + path)
+
+    return attempt
 
   def isMaster(self):
     """ Return true if we are installing on a master server, as opposed to

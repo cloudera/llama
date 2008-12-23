@@ -4,9 +4,9 @@
 #
 # Defines the ToolInstall instance that installs the web portal
 
-from com.cloudera.distribution.installerror import InstallError
-from com.cloudera.distribution.toolinstall import ToolInstall
-from com.cloudera.distribution.constants import *
+from   com.cloudera.distribution.installerror import InstallError
+from   com.cloudera.distribution.toolinstall import ToolInstall
+from   com.cloudera.distribution.constants import *
 
 import com.cloudera.distribution.arch as arch
 import com.cloudera.util.output as output
@@ -59,12 +59,7 @@ proceed and potentially ovewrite these files?  If you specify "no," then you
 will have to move these htdocs elsewhere.
 """ % {'htdocs': htdocs,
        })
-        overwrite = False
-        while True:
-          answer = prompt.getBoolean("(y or n):", None)
-          if answer != None:
-            overwrite = answer
-            break
+        overwrite = prompt.getBoolean("(y or n):", False)
 
         if not overwrite:
           raise InstallError(htdocs + " has files; please move or erase them")
@@ -134,17 +129,17 @@ will have to move these htdocs elsewhere.
     ToolInstall.backupFile(lighttpd_conf)
 
     try:
-      shell.shLines("cp " + good_http_conf + " " + lighttpd_conf)
+      shell.sh("cp " + good_http_conf + " " + lighttpd_conf)
     except shell.CommandError:
       raise InstallError("Could not copy a custom lighttpd configuration")
 
     try:
-      shell.shLines("cp " + good_php_ini + " " + php_ini_dest)
+      shell.sh("cp " + good_php_ini + " " + php_ini_dest)
     except shell.CommandError:
       raise InstallError("Could not copy a custom php.ini")
 
     try:
-      shell.shLines("/etc/init.d/lighttpd restart")
+      shell.sh("/etc/init.d/lighttpd restart")
     except shell.CommandError:
       raise InstallError("Could not restart lighttpd using /etc/init.d/lighttpd")
 
@@ -169,7 +164,7 @@ will have to move these htdocs elsewhere.
 
     dest_folder = self.getPortalDest()
     try:
-      cpLines = shell.shLines("cp -R " + src_folder + " " + dest_folder)
+      shell.sh("cp -R " + src_folder + " " + dest_folder)
     except shell.CommandError:
       raise InstallError("Portal web app could not be copied to " + dest_folder)
 
@@ -193,10 +188,8 @@ will have to move these htdocs elsewhere.
                                         os.path.join(dest_folder, "index.html")
 
       output.printlnVerbose("seding the HTDOCS/index.html file")
-      lines = shell.shLines(jt_cmd)
-      output.printlnVerbose(lines)
-      lines = shell.shLines(nn_cmd)
-      output.printlnVerbose(lines)
+      shell.sh(jt_cmd)
+      shell.sh(nn_cmd)
     except shell.CommandError:
       raise InstallError("Could not sed the portal's index.html file")
 
@@ -263,8 +256,7 @@ will have to move these htdocs elsewhere.
       output.printlnVerbose("Attempting to stop lighttpd")
       try:
         cmd = "/etc/init.d/lighttpd stop"
-        lines = shell.shLines(cmd)
-        output.printlnVerbose(lines)
+        shell.sh(cmd)
       except shell.CommandError:
         output.printlnInfo("Could not stop lighttpd")
 
