@@ -28,11 +28,13 @@ class LogMoverInstall(toolinstall.ToolInstall):
 
   def getLogMoverPrefix(self):
     """Gets the log mover install location"""
-    install_prefix = self.properties.getProperty(INSTALL_PREFIX_KEY,
-                                                 INSTALL_PREFIX_DEFAULT)
+    install_prefix = self.getInstallBasePath()
 
     # figure out where the log mover should be installed
     return os.path.join(install_prefix, "logmover")
+
+  def getFinalInstallPath(self):
+    return self.getLogMoverPrefix()
 
   def getSuperUserPasswd(self):
     return self.properties.getProperty(DB_SUPERUSER_PASSWD_KEY,
@@ -60,13 +62,15 @@ class LogMoverInstall(toolinstall.ToolInstall):
       output.printlnInfo("Installing logmover to " + logmover_prefix)
 
       # create the install dir for the log mover
-      os.mkdir(logmover_prefix)
+      dirutils.mkdirRecursive(logmover_prefix)
 
       # copy the log mover over
       cmd = "cp -R " + logmover_src + " " + logmover_prefix
       shell.sh(cmd)
-    except shell.commandError:
+    except shell.CommandError:
       raise InstallError("Could not copy logmover files")
+    except OSError, ose:
+      raise InstallError("Could not copy logmover files: " + str(ose))
 
   def installConfigs(self):
     """Install configuration files"""
@@ -271,6 +275,9 @@ schema creation
   def postInstall(self):
     """ Run any post-installation activities. This occurs after
         all ToolInstall objects have run their install() operations. """
+
+    self.createInstallSymlink("logmover")
+    self.createEtcSymlink("logmover", self.getFinalInstallPath())
 
     # if we don't want to start any daemon processes, kill mysql
     if not self.mayStartDaemons():
