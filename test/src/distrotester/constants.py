@@ -143,6 +143,9 @@ HADOOP_USER = "hadoop"
 CLIENT_USER_KEY = "client.user"
 CLIENT_USER = "client"
 
+# What username does Scribe run as?
+SCRIBE_USER = "scribe"
+
 # Whom we install as. Sometimes, also, access or host daemons.
 ROOT_USER = "root"
 

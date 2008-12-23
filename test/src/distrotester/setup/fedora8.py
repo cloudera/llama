@@ -84,7 +84,7 @@ Host *
         shell.sh("cp /root/.ssh/id_rsa /home/" + username + "/.ssh")
         shell.sh("chmod 0600 /home/" + username + "/.ssh/id_rsa")
 
-    shell.sh("chown " + username + ":" + username \
+    shell.sh("chown -R " + username + ":" + username \
         +" /home/" + username)
 
     handle = open("/home/" + username + "/.ssh/config", "w")
@@ -156,6 +156,7 @@ Host *
 
     self.makeUser(HADOOP_USER)
     self.makeUser(CLIENT_USER)
+    self.makeUser(SCRIBE_USER)
 
     # Change the sudoers file to preserve environment variables we
     # care a lot about.
