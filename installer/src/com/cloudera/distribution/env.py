@@ -81,11 +81,11 @@ def writeEnvironmentScript():
   # Now symlink this into the config dir
   configDir = os.path.abspath(globalPrereq.getConfigDir())
   configTarget = os.path.join(configDir, "user_env")
-  cmd = "ln -s \"" + envFilename + "\" \"" + configTarget + "\""
   try:
-    shell.sh(cmd)
-  except shell.CommandError:
-    raise InstallError("Could not create symlink: " + configTarget)
+    os.symlink(envFilename, configTarget)
+  except OSError, ose:
+    raise InstallError("Could not create symlink: " + configTarget \
+        + " (" + str(ose) + ")")
 
 
   output.printlnInfo("""

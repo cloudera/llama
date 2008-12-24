@@ -25,15 +25,15 @@ def writePropertiesBody(handle, dict, finalKeys):
       finalStr = "\n  <final>true</final>"
     except ValueError:
       # not a final value, just a default.
-      outVal = dict[key]
-      if outVal == True:
-        outVal = "true"
-      elif outVal == False:
-        outVal = "false"
-      else:
-        outVal = str(outVal)
-
       finalStr = ""
+
+    outVal = dict[key]
+    if outVal == True:
+      outVal = "true"
+    elif outVal == False:
+      outVal = "false"
+    else:
+      outVal = str(outVal)
 
     handle.write("""<property>
   <name>%(name)s</name>

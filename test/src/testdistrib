@@ -227,8 +227,8 @@ try:
 
     shell.ssh("root", masterHost, "tar -zxf \"" + remoteInstallerTarball \
         + "\" -C /mnt", properties)
-    shell.ssh("root", masterHost, "mv /mnt/installer/* " + DISTRIB_DEST_DIR, \
-        properties)
+    shell.ssh("root", masterHost, "rsync -r /mnt/installer/* " \
+        + os.path.join(DISTRIB_DEST_DIR, "bin"), properties)
 
   if not properties.getBoolean(BYPASS_SETUP_KEY):
     # Upload the id_rsa file we're using and chmod it correctly on the master
