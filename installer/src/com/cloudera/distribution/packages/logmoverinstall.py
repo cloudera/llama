@@ -154,13 +154,6 @@ class LogMoverInstall(toolinstall.ToolInstall):
     use_passwd = not self.isUnattended() or \
                  (self.isUnattended() and self.getSuperUserPasswd() != "")
 
-    if not self.isUnattended():
-      output.printlnInfo("""
-Please provide your MySQL root password.  If you are unsure what your
-root password is, then try not supplying a password.  Your MySQL root
-password is required for creating a MySQL user for the log mover.
-""")
-
     if self.isUnattended() and self.getSuperUserPasswd() != "":
       self.createMyCnf()
 
@@ -178,6 +171,13 @@ password is required for creating a MySQL user for the log mover.
     output.printlnVerbose("Making sure MySQL is already running")
 
     self.modifyDaemon(mysql_map, state)
+
+    if not self.isUnattended():
+      output.printlnInfo("""
+Please provide your MySQL root password.  If you are unsure what your
+root password is, then try not supplying a password.  Your MySQL root
+password is required for creating a MySQL user for the log mover.
+""")
 
     try:
       base_cmd = "mysql -u " + db_user + " "
