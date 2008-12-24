@@ -251,7 +251,7 @@ schema creation
     hadoop_tool = toolinstall.getToolByName("Hadoop")
     hadoop_user = hadoop_tool.getHadoopUsername()
 
-    pruner = os.path.join(self.getLogMoverPrefix(), "pruner.py")
+    pruner = os.path.join(self.getLogMoverPrefix(), "prune.py")
     log_to_db = os.path.join(self.getLogMoverPrefix(), "log_to_db.py")
 
     try:
