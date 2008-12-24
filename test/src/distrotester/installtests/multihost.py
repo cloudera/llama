@@ -127,7 +127,6 @@ class MultiHostTest(TestCaseWithAsserts):
     self.stopHadoopForUser(HADOOP_USER)
 
 
-
   def tearDown(self):
     # TODO(aaron): This code block is common to MultiHost and Standalone
     # (CH-77)
@@ -166,6 +165,7 @@ class MultiHostTest(TestCaseWithAsserts):
           for line in result.getOutput():
             logging.error("  " + line.rstrip())
 
+    doSshAll("killall scribed")
     doSshAll("rm -rf " + BASE_TMP_DIR)
     doSshAll("rm -rf " + INSTALL_PREFIX)
     doSshAll("rm -rf " + CONFIG_PREFIX)

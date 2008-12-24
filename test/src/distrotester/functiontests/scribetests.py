@@ -44,6 +44,10 @@ class ScribeTest(TestCaseWithAsserts):
     else:
       return ""
 
+  def getTestJar(self):
+    """ Return the filename of the jar containing the Java code to run """
+    return SCRIBE_TEST_JAR
+
 
   def setUp(self):
     """ Perform setup tasks for tests """
@@ -66,13 +70,16 @@ class ScribeTest(TestCaseWithAsserts):
     """ Run a MapReduce job that produces a log entry in scribe. We then
         check the logs on the master server to make sure it appears. """
 
+    logging.info("Testing scribe...")
+
     nonce = "nonce-" + str(time.time())
-    cmd = self.getClientSudo() + self.getHadoopCmd() + "jar " \
+    cmd = self.getClientSudo() + self.getHadoopCmd() + " jar " \
         + self.getTestJar() + " com.cloudera.scribetest.ScribeDriver " \
         + nonce
 
     logging.info("Running MapReduce log job with nonce: " + nonce)
     shell.sh(cmd)
+    logging.info("MapReduce job finished. Waiting for log results...")
 
     # now check our log file for this nonce.
     startTime = time.time()

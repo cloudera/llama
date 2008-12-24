@@ -106,6 +106,12 @@ class StandaloneTest(TestCaseWithAsserts):
     self.stopHadoopForUser(HADOOP_USER)
 
 
+  def stopScribe(self):
+    try:
+      shell.sh("killall scribed")
+    except shell.CommandError, ce:
+      pass # nothing to shut down? ok.
+
 
   def tearDown(self):
     if self.curHadoopSite != None:
@@ -124,6 +130,7 @@ class StandaloneTest(TestCaseWithAsserts):
 
     try:
       self.stopHadoop()
+      self.stopScribe()
     except:
       pass
 

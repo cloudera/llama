@@ -329,9 +329,16 @@ def deployRemotes(properties):
   cmd = "\"" + prgm + "\" " + installerArgs
   output.printlnDebug("Remote execution command: " + cmd)
 
+
+  # Enforce the use of tty's so we can sudo
+  origSshOpts = properties.getProperty("ssh.options", "")
+  sshOpts = origSshOpts + " -t"
+  properties.setProperty("ssh.options", sshOpts)
+
   # ... here we go - execute that on all nodes
   output.printlnDebug("Executing remote installation program")
   doSshAll(user, slaveList, cmd, properties)
+  properties.setProperty("ssh.options", origSshOpts)
 
   # report status back to the user at the end of this
   if isRemoteDeployError():

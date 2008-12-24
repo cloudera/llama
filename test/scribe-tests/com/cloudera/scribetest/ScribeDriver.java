@@ -87,7 +87,11 @@ public final class ScribeDriver {
         }
       }
 
-      ostream.close();
+      try {
+        ostream.close();
+      } catch (IOException ioe) {
+        // ignored; we're closing.
+      }
     }
   }
 

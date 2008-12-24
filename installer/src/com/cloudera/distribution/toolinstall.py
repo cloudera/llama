@@ -294,13 +294,14 @@ class ToolInstall(object):
 
       command = init_script + " " + state
 
-      lines = shell.shLines(command)
+      lines = shell.shLines(command, False)
 
       output.printlnVerbose(lines)
 
       output.printlnInfo("Performed a " + state + " on " + init_script)
     except shell.CommandError:
       raise InstallError("Could not " + command + " " + init_script)
+
 
   def createEtcSymlink(self, appName, confDir):
     """ Create a symlink from /etc/cloudera/$appName to $confDir """

@@ -102,7 +102,7 @@ class ScribeInstall(toolinstall.ToolInstall):
   def installRuby(self):
     """ Install ruby interpreter """
     rubyPkg = { arch.PACKAGE_MGR_DEBIAN: ["ruby1.8", "ruby1.8-dev"],
-                arch.PACKAGE_MGR_RPM: ["ruby", "ruby-devel"] }
+                arch.PACKAGE_MGR_RPM: ["ruby", "ruby-libs"] }
     self.installPackage(rubyPkg)
 
   def installLibEvent(self):
@@ -380,12 +380,13 @@ Reason: %(ioe)s
     cmd = os.path.join(self.getFinalInstallPath(), SCRIBE_WRAPPER_NAME)
     output.printlnInfo("""
 To aggregate logs from all hosts, scribed must be started on each machine.
-scribed can be started by running the command:
+scribed can be started by running the following command as user %(scribe)s:
 %(cmd)s
 
 You may wish to put this command in your rc.local file to start scribe on
 boot.
-""" % { "cmd" : cmd })
+""" % { "scribe" : self.scribeUser,
+        "cmd"    : cmd })
 
     if self.isScribeStarted:
       output.printlnInfo("Note: scribed has already been started.")

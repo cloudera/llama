@@ -131,8 +131,13 @@ except InstallError, ie:
   output.printlnError("Installation has been aborted")
   sys.exit(1)
 
-output.printlnInfo( \
-    "The Cloudera Hadoop Distribution installation process is complete!")
+output.printlnInfo("""
+
+***********************************************************************
+The Cloudera Hadoop Distribution installation process is complete!
+***********************************************************************
+
+""")
 
 globalPrereqName = None
 if globalPrereqInstaller != None:
@@ -141,6 +146,8 @@ if globalPrereqInstaller != None:
   output.printlnInfo("Distribution config files are in %(confdir)s." % \
       { "confdir" : globalPrereqInstaller.getConfigDir() } )
   globalPrereqName = globalPrereqInstaller.getName()
+
+output.printlnInfo("")
 
 output.printlnVerbose("Installed components:")
 for tool in installPlan.getInstallItems():
@@ -159,6 +166,7 @@ if hadoopInstaller != None:
     output.printlnInfo("(Note: Hadoop has already been started for you.)")
   output.printlnInfo("You can stop Hadoop by running:\n$ %(hadoopStop)s" % \
       { "hadoopStop" : hadoopStopCmd })
+  output.printlnInfo("")
 
 
 # If there were warnings or more user-run steps, list the follow-up
@@ -166,8 +174,7 @@ if hadoopInstaller != None:
 for tool in installPlan.getInstallItems():
   tool.printFinalInstructions()
 
-# print out any environment variables that individual users must set
-env.printEnvironment()
+# echo out information about the user's environment.
 env.writeEnvironmentScript()
 
 sys.exit(0)

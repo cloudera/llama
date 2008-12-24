@@ -71,6 +71,8 @@ class PigTest(TestCaseWithAsserts):
     """ Run the passwd id example from http://wiki.apache.org/pig/RunPig """
     # This runs on the Hadoop cluster, not in local mode.
 
+    logging.info("Resetting pig HDFS state")
+
     # Remove existing in-HDFS files related to this test.
     try:
       cmd = self.getClientSudo() + self.getHadoopCmd() + " fs -rm passwd-data"
@@ -89,12 +91,16 @@ class PigTest(TestCaseWithAsserts):
         + "pig-tests/passwd-data passwd-data"
     shell.sh(cmd)
 
+    logging.info("Running pig script...")
+
     # run the id.pig script
     envScript = os.path.join(self.getInstallRoot(), "user_env")
     runPig = self.getPigCmd()
     cmd = "source " + envScript + " && cd pig-tests && " \
         + self.getClientSudo() + runPig + " id.pig"
     shell.sh(cmd)
+
+    logging.info("pig test appears to work!")
 
 
 if __name__ == '__main__':

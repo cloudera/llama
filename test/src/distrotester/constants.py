@@ -161,6 +161,10 @@ JAVA_HOME_KEY = "java.home"
 # Where are the hive test files, relative to where the test harness runs?
 HIVE_TEST_DIR = "hive-tests"
 
+# Where are the scribe test files
+SCRIBE_TEST_DIR = "scribe-tests"
+SCRIBE_TEST_JAR = os.path.join(SCRIBE_TEST_DIR, "ScribeDistribTest.jar")
+
 ############################################################
 # constants pertaining to making bootstrap installations
 ############################################################

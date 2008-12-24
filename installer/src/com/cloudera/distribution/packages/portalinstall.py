@@ -4,12 +4,16 @@
 #
 # Defines the ToolInstall instance that installs the web portal
 
+import os
+import logging
+
 from   com.cloudera.distribution.installerror import InstallError
 from   com.cloudera.distribution.toolinstall import ToolInstall
 from   com.cloudera.distribution.constants import *
 
 import com.cloudera.distribution.arch as arch
 import com.cloudera.util.output as output
+import com.cloudera.util.prompt as prompt
 import com.cloudera.tools.shell as shell
 
 class PortalInstall(ToolInstall):
@@ -139,7 +143,7 @@ will have to move these htdocs elsewhere.
       raise InstallError("Could not copy a custom php.ini")
 
     try:
-      shell.sh("/etc/init.d/lighttpd restart")
+      shell.sh("/etc/init.d/lighttpd restart", logging.INFO, False)
     except shell.CommandError:
       raise InstallError("Could not restart lighttpd using /etc/init.d/lighttpd")
 

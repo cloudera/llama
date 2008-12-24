@@ -400,12 +400,16 @@ or specify your own username with --hadoop-user""")
             prompt.getString("Enter the hostname:port for the JobTracker", \
             defaultJobTracker, True)
         self.hadoopSiteDict[MAPRED_JOB_TRACKER] = jobTrackerName
+        self.properties.setProperty(JOB_TRACKER_KEY, jobTrackerName)
 
         defaultNameNode = self.getMasterHost() + ":" + str(DEFAULT_NN_PORT)
         nameNodeName = \
             prompt.getString("Enter the hostname:port for the HDFS NameNode", \
             defaultNameNode, True)
-        self.hadoopSiteDict[FS_DEFAULT_NAME] = "hdfs://" + nameNodeName + "/"
+
+        nameNodeUri = "hdfs://" + nameNodeName + "/"
+        self.hadoopSiteDict[FS_DEFAULT_NAME] = nameNodeUri
+        self.properties.setProperty(NAMENODE_KEY, nameNodeUri)
 
         # check to make sure they didn't put 'localhost' in either of these
         # and that they're legal host:port pairs
@@ -438,6 +442,7 @@ Please enter a valid address for both the JobTracker and the NameNode.
         else:
           # looks good; proceed.
           daemonAddrsOk = True
+
 
       output.printlnInfo("""
 When HDFS files are deleted using the command-line tools, they are moved

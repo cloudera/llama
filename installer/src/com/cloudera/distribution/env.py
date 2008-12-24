@@ -82,6 +82,8 @@ def writeEnvironmentScript():
   configDir = os.path.abspath(globalPrereq.getConfigDir())
   configTarget = os.path.join(configDir, "user_env")
   try:
+    if os.path.exists(configTarget):
+      os.remove(configTarget)
     os.symlink(envFilename, configTarget)
   except OSError, ose:
     raise InstallError("Could not create symlink: " + configTarget \
@@ -89,7 +91,8 @@ def writeEnvironmentScript():
 
 
   output.printlnInfo("""
-The required environment variable bindings have also been written to
+Using the tools in this distribution requires that a few environment variables
+are set. The required environment variable bindings have been written to
 %(filename)s
 You may source this directly into your shell, or any other config scripts.""" \
       % { "filename" : envFilename })
