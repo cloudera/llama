@@ -96,6 +96,7 @@ class ScribeTest(TestCaseWithAsserts):
       line = handle.readline()
       if len(line) == 0:
         # We overran the end of the file; wait for scribe to give us more data
+        logging.info("Waiting for more data...")
         time.sleep(1)
       else:
         try:
