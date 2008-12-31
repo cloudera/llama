@@ -288,23 +288,25 @@ schema creation
     """ Run any post-installation activities. This occurs after
         all ToolInstall objects have run their install() operations. """
 
-    self.createInstallSymlink("logmover")
-    self.createEtcSymlink("logmover", self.getFinalInstallPath())
+    if self.isMaster():
+      # We only installed this on the head node; only start this on the same
+      self.createInstallSymlink("logmover")
+      self.createEtcSymlink("logmover", self.getFinalInstallPath())
 
-    # if we don't want to start any daemon processes, kill mysql
-    if not self.mayStartDaemons():
-      mysql_map = {arch.PLATFORM_UBUNTU: "/etc/init.d/mysql",
-                   arch.PLATFORM_FEDORA: "/etc/init.d/mysqld"
-                   }
+      # if we don't want to start any daemon processes, kill mysql
+      if not self.mayStartDaemons():
+        mysql_map = {arch.PLATFORM_UBUNTU: "/etc/init.d/mysql",
+                     arch.PLATFORM_FEDORA: "/etc/init.d/mysqld"
+                     }
 
-      lighttpd_map = {arch.PLATFORM_UBUNTU: "/etc/init.d/lighttpd",
-                      arch.PLATFORM_FEDORA: "/etc/init.d/lighttpd"
-                       }
+        lighttpd_map = {arch.PLATFORM_UBUNTU: "/etc/init.d/lighttpd",
+                        arch.PLATFORM_FEDORA: "/etc/init.d/lighttpd"
+                         }
 
-      state = "stop"
+        state = "stop"
 
-      self.modifyDaemon(mysql_map, state)
-      self.modifyDaemon(lighttpd_map, state)
+        self.modifyDaemon(mysql_map, state)
+        self.modifyDaemon(lighttpd_map, state)
 
   def verify(self):
     """ Run post-installation verification tests, if configured """
