@@ -22,6 +22,7 @@ import os
 import tempfile
 
 from   com.cloudera.distribution.constants import *
+from   com.cloudera.distribution.dnsregex import *
 from   com.cloudera.distribution.installerror import InstallError
 import com.cloudera.distribution.java as java
 from   com.cloudera.distribution.toolinstall import ToolInstall
@@ -105,6 +106,95 @@ class GlobalPrereqInstall(ToolInstall):
   def getConfigDir(self):
     return self.configDir
 
+  def editSlavesFile(self, filename):
+    """ Launches the editor for the slaves file in interactive mode.
+        Called by configSlavesFile"""
+
+    # Run whatever editor the user specified with $EDITOR or --editor
+    editorPrgm = self.properties.getProperty(EDITOR_KEY, EDITOR_DEFAULT)
+    editorString = editorPrgm + " \"" + filename + "\""
+    ret = os.system(editorString)
+    if ret > 0:
+      output.printlnError("Encountered error return value from editor")
+      raise InstallError("Editor returned " + str(ret))
+
+
+  def validateSlavesFile(self, filename):
+    """ Reads the slaves file after it has been edited (or reads the one
+        supplied on the command line), determines if it is valid or not.
+        In interactive mode, allows the user to go back and edit the file
+        if errors were detected.
+    """
+
+    # validation: the file shouldn't be empty. It certainly *can*, but
+    # that's a very boring Hadoop cluster. We should print a warning msg
+    # but continue running.
+
+    # when we're parsing this file, also cache the number of lines
+    # in the file
+
+    slaveLines = []
+    try:
+      handle = open(filename)
+      slaveLines = handle.readlines()
+      handle.close()
+    except IOError, ioe:
+      output.printlnError("Cannot read installer copy of slaves file: " \
+          + filename)
+      output.printlnError(str(ioe))
+      raise InstallError(ioe)
+
+    # parse the slave lines we just read. Also, rewrite this file,
+    # removing any empty lines or lines starting with '#'
+    foundIpAddr = False
+    foundBogusAddr = False
+
+    try:
+      handle = open(filename, "w")
+      numSlaves = 0
+      for slaveLine in slaveLines:
+        slaveLine = slaveLine.strip()
+        if len(slaveLine) == 0 or slaveLine[0] == "#":
+          continue
+        else:
+          if isIpAddress(slaveLine):
+            foundIpAddr = True
+          elif not isDnsName(slaveLine):
+            foundBogusAddr = True
+          handle.write(slaveLine + "\n")
+          numSlaves = numSlaves + 1
+      handle.close()
+    except IOError, ioe:
+      raise InstallError("Error: Couldn't rewrite slaves file. Reason: " \
+          + str(ioe))
+
+    self.numSlaves = numSlaves
+    allow_reedit = False
+    if self.numSlaves == 0:
+      output.printlnInfo( \
+"""Warning: Your slaves file appears to be empty. Installation will continue
+locally, but your cluster won't be able to do much like this :) You will need
+to add nodes to the slaves file after installation is complete.
+""")
+      allow_reedit = True
+    elif foundBogusAddr:
+      output.printlnInfo( \
+"""Warning: Your slaves file appears to contain lines which are not valid DNS
+addresses.""")
+      allow_reedit = True
+    elif foundIpAddr:
+      output.printlnInfo( \
+"""Warning: Your slaves file appears to contain IP addresses. If you enable
+a DFS hosts file, this may prevent slave nodes from participating in your
+cluster.""")
+      allow_reedit = True
+
+    if allow_reedit and not self.isUnattended():
+      do_reedit = prompt.getBoolean( \
+          "Do you want to edit the slaves file to correct this?", True, True)
+      if do_reedit:
+        self.editSlavesFile(filename)
+
 
   def configSlavesFile(self):
     """ Configure the slaves file. This involves calling up an editor
@@ -134,7 +224,12 @@ class GlobalPrereqInstall(ToolInstall):
       # now write ours out
       try:
         for line in userSlaveLines:
-          handle.write(line)
+          line = line.strip()
+          if len(line) == 0 or line[0] == "#":
+            # ignore empty lines or comments.
+            continue
+          else:
+            handle.write(line + "\n")
         handle.close()
         userSlavesSuccess = True
       except IOError, ioe:
@@ -144,9 +239,24 @@ class GlobalPrereqInstall(ToolInstall):
       # don't need the open file handle associated with this file
       # (we'll need to reopen it after the user edits it)
       try:
+        # Write a message to the user in the file explaining what to do
+        handle.write( \
+"""# Fill this file with the addresses of the slave nodes you want to install
+# on. These must be the fully-qualified DNS addresses of the machines.
+# good: slave0.foocorp.com
+# bad: slave0
+# bad: 10.4.100.1
+#
+# Put one address on each line of this file.
+# Lines beginning with '#' are ignored, as are empty lines.
+""")
         handle.close()
-      except IOError:
-        pass # irrelevant.
+      except IOError, ioe:
+        # We couldn't write our message into the file for some reason. This
+        # isn't a big problem; we'll just write a msg for the log file and
+        # keep going.
+        output.printlnVerbose("Error writing intro msg into slaves file: " \
+            + str(ioe))
 
     if self.isUnattended():
       # if we don't have a user slaves file, bail.
@@ -164,10 +274,15 @@ class GlobalPrereqInstall(ToolInstall):
       output.printlnInfo("""
 You must now provide the addresses of all slaves which are part of this
 cluster. This installer will install the Cloudera Hadoop distribution to all
-of these machines. This file should contain one address per line, with no
-extra whitespace, blank lines, comments or punctuation. The master
-server's address should not be in this file. This will also be used as
-the basis for Hadoop's "slaves" file.
+of these machines. This file should contain one address per line. You may
+use blank lines; lines beginning with '#' will be ignored.
+
+All addresses must be fully-qualified DNS addresses. e.g., slave1.foocorp.com
+Do not use IP addresses (e.g., "10.1.100.1") or hostnames (e.g., "slave1").
+
+The master server's address should not be in this file. This will also be
+used as the basis for Hadoop's "slaves" file, and (if configured) the DFS hosts
+file.
 
 If you do not want to install Cloudera Hadoop on some slaves, then omit these
 machine addresses for now. You can add these nodes to Hadoop's slaves file
@@ -175,51 +290,16 @@ after installation is complete.
 
 Press [enter] to continue.""")
 
-      # Just wait for the user to hit enter.
+      # Just wait for the user to hit enter, then launch the editor.
       raw_input()
+      self.editSlavesFile(tmpFilename)
 
-      # Run whatever editor the user specified with $EDITOR or --editor
-      editorPrgm = self.properties.getProperty(EDITOR_KEY, EDITOR_DEFAULT)
-      editorString = editorPrgm + " \"" + tmpFilename + "\""
-      ret = os.system(editorString)
-      if ret > 0:
-        output.printlnError("Encountered error return value from editor")
-        raise InstallError("Editor returned " + str(ret))
+    self.validateSlavesFile()
 
-    # validation: the file shouldn't be empty. It certainly *can*, but
-    # that's a very boring Hadoop cluster. We should print a warning msg
-    # but continue running.
-
-    # when we're parsing this file, also cache the number of lines
-    # in the file
-
-    slaveLines = []
-    try:
-      handle = open(tmpFilename)
-      slaveLines = handle.readlines()
-      handle.close()
-    except IOError, ioe:
-      output.printlnError("Cannot read installer copy of slaves file " \
-          + tmpFilename)
-      output.printlnError(str(ioe))
-      raise InstallError(ioe)
-
-    numSlaves = 0
-    for slaveLine in slaveLines:
-      if len(slaveLine.strip()) > 0:
-        numSlaves = numSlaves + 1
-    self.numSlaves = numSlaves
-    if self.numSlaves == 0:
-      output.printlnInfo( \
-"""Warning: Your slaves file appears to be empty. Installation will continue
-locally, but your cluster won't be able to do much like this :) You will need
-to add nodes to the slaves file after installation is complete.
-""")
-
-    # in any case, we've successfully acquired a slaves file. memorize
-    # its name.
+    # we've successfully acquired a slaves file. memorize its name.
     self.slavesFileName = tmpFilename
     output.printlnDebug("Slaves input file: " + self.slavesFileName)
+
 
   def getNumSlaves(self):
     return self.numSlaves

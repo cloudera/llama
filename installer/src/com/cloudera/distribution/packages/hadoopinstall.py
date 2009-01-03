@@ -519,6 +519,17 @@ per-user local directories.""")
           prompt.getString("Enter the local job data dir(s)", \
           mapredLocalDefault, True)
 
+      output.printlnInfo("""
+You must choose one or more paths on the master node used by the HDFS
+secondary namenode for metadata compaction. Performance will be improved if
+these are on separate physical devices. Enter one or more directories
+separated by commas.""")
+      secondaryNamenodeDirDefault = "/home/" + self.getHadoopUsername() \
+          + "/hdfs/secondary"
+      self.hadoopSiteDict[NN2_CHECKPOINT_DIR] = prompt.getString( \
+          "Enter the secondary NameNode's storage path(s)", \
+          secondaryNamenodeDirDefault, True)
+
       # Grab some basic info about the slave machine setup. Between these
       # parameters and the number of slave nodes, we can infer reasonable
       # values for everything else in the system.
@@ -633,12 +644,6 @@ to do, just accept the default values.""")
       self.hadoopSiteDict[MAPRED_SUBMIT_REPLICATION] = prompt.getInteger( \
           MAPRED_SUBMIT_REPLICATION, 1, DFS_MAX_REP, \
           defaultSubmitReplication, True)
-
-      secondaryNamenodeDirDefault = "/home/" + self.getHadoopUsername() \
-          + "/hdfs/secondary"
-      self.hadoopSiteDict[NN2_CHECKPOINT_DIR] = prompt.getString( \
-          "Enter one or more comma-delimited directories for " \
-          + "the secondary NameNode's data", secondaryNamenodeDirDefault, True)
 
       self.hadoopSiteDict[MAPRED_SYSTEM_DIR] = prompt.getString( \
           MAPRED_SYSTEM_DIR, DEFAULT_MAPRED_SYS_DIR, True)

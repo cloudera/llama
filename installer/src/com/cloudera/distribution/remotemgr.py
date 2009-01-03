@@ -84,17 +84,25 @@ reason: %(ioe)s""" % \
   return slaves
 
 
-def removeHosts(hostList, failedHosts):
-  """ remove all elements of the failed host list from the hostList """
-  for failedHost in failedHosts:
+def removeHosts(goodHostList, already_failed, newlyFailedHosts):
+  """ remove all elements of the newly-failed host list from the good list,
+      and add it to the total failure list, already_failed. """
+
+  for failedHost in newlyFailedHosts:
     try:
-      hostList.remove(failedHost)
+      goodHostList.remove(failedHost)
     except ValueError:
       # failedHost wasn't in the hostList; ignore this.
       pass
 
+    try:
+      already_failed.index(failedHost)
+    except ValueError:
+      # we haven't seen this host fail yet. Add to the total fail list
+      already_failed.append(failedHost)
 
-def doSshAll(user, slaveList, cmd, properties):
+
+def doSshAll(user, slaveList, bad_hosts, cmd, properties):
   """ perform an sshall for the specified command, on the slaves. Output
       as "verbose" any text returned by the commands. Set the error flag
       if an error was encountered, and remove any failed hosts from the
@@ -125,9 +133,10 @@ hosts:""" % { "cmd" : cmd })
     for host in failedHosts:
       output.printlnError("  " + host)
     setRemoteDeployError()
-    removeHosts(slaveList, failedHosts)
+    removeHosts(slaveList, bad_hosts, failedHosts)
 
-def doScpAll(localFile, user, slaveList, remoteFile, fileDesc, properties):
+def doScpAll(localFile, user, slaveList, bad_hosts, remoteFile, fileDesc, \
+    properties):
   """ perform an scpall for the specified file, to the slaves. set the
       error flag if an error was encountered, and remove any failed hosts
       from the slave list. Print a message to the user if this happens """
@@ -142,7 +151,7 @@ def doScpAll(localFile, user, slaveList, remoteFile, fileDesc, properties):
     failedHosts = mse.getFailedHostList()
     for host in failedHosts:
       output.printlnError("  " + str(host))
-    removeHosts(slaveList, failedHosts)
+    removeHosts(slaveList, bad_hosts, failedHosts)
 
 
 def zipInstallerDistribution():
@@ -262,8 +271,12 @@ def deployRemotes(properties):
       and retries, but nothing too fancy. If any host fails at any stage
       of this process, subsequent stages are skipped on that host. At
       the end of this method, we tell the user where any failures occurred
-      so they can manually install on those hosts afterward. """
+      so they can manually install on those hosts afterward.
 
+      We also return this list of hosts back to our caller.
+  """
+
+  failed_hosts = []
   errorsPresent = False
 
   # figure out the global configuration settings that guide the
@@ -282,7 +295,7 @@ def deployRemotes(properties):
     # send data to. In addition, various variables we depend on will not
     # have been configured.
     output.printlnDebug("No remote slaves; exiting remote deployment")
-    return
+    return []
 
   # rezip our distribution up, and get the filename where we put it.
   output.printlnDebug("Compressing installer distribution")
@@ -300,12 +313,12 @@ def deployRemotes(properties):
   # mkdir -p the uploadPrefix on all the remote nodes
   output.printlnDebug("Creating remote upload prefix")
   cmd = "mkdir -p \"" + uploadPrefix + "\""
-  doSshAll(user, slaveList, cmd, properties)
+  doSshAll(user, slaveList, failed_hosts, cmd, properties)
 
   # scp the whole package to all the nodes
   output.printlnDebug("Uploading installation package")
-  doScpAll(localFile, user, slaveList, remoteFile, "installation packages", \
-      properties)
+  doScpAll(localFile, user, slaveList, failed_hosts, remoteFile, \
+      "installation packages", properties)
 
   # now that we're done using the local copy, remove the local tarball
   os.remove(localFile)
@@ -318,20 +331,20 @@ def deployRemotes(properties):
     output.printlnDebug("Uploading hadoop-site.xml")
     localHadoopSite = hadoopInstaller.getHadoopSiteFilename()
     remoteHadoopSite = os.path.join(uploadPrefix, "hadoop-site.xml")
-    doScpAll(localHadoopSite, user, slaveList, remoteHadoopSite, \
+    doScpAll(localHadoopSite, user, slaveList, failed_hosts, remoteHadoopSite, \
         "hadoop-site.xml", properties)
 
   # scp the slaves file around
   output.printlnDebug("Uploading common slaves list")
   remoteSlavesName = os.path.join(uploadPrefix, "slaves")
-  doScpAll(slavesFileName, user, slaveList, remoteSlavesName, "slaves", \
-      properties)
+  doScpAll(slavesFileName, user, slaveList, failed_hosts, remoteSlavesName, \
+      "slaves", properties)
 
 
   # Unzip the installation tarball.
   output.printlnDebug("Unzipping installation tarball on remotes")
   cmd = "tar -xzf \"" + remoteFile + "\" -C \"" + uploadPrefix + "\""
-  doSshAll(user, slaveList, cmd, properties)
+  doSshAll(user, slaveList, failed_hosts, cmd, properties)
 
   # come up with the remote install cmd line
   installerFilename = os.path.basename(sys.argv[0])
@@ -349,7 +362,7 @@ def deployRemotes(properties):
 
   # ... here we go - execute that on all nodes
   output.printlnDebug("Executing remote installation program")
-  doSshAll(user, slaveList, cmd, properties)
+  doSshAll(user, slaveList, failed_hosts, cmd, properties)
   properties.setProperty("ssh.options", origSshOpts)
 
   # report status back to the user at the end of this
@@ -362,5 +375,6 @@ is operational.""")
     output.printlnInfo("Successful deployment on %(n)i remote nodes" \
         % { "n" : len(slaveList) })
 
+  return failed_hosts
 
 

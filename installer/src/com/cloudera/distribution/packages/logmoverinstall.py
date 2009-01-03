@@ -186,9 +186,11 @@ class LogMoverInstall(toolinstall.ToolInstall):
 
     if not self.isUnattended():
       output.printlnInfo("""
-Please provide your MySQL root password.  If you are unsure what your
-root password is, then try not supplying a password.  Your MySQL root
-password is required for creating a MySQL user for the log mover.
+I am now going to create a MySQL user account for the log mover. If you have
+previously configured MySQL with a root password, please type it in below.
+If you have not configured a MySQL password, press [enter] to use a blank one.
+(If you aren't sure what this means, press [enter]. If that doesn't work, ask
+your sysadmin.)
 """)
 
     try:
@@ -204,9 +206,9 @@ password is required for creating a MySQL user for the log mover.
 
       if not self.isUnattended():
         output.printlnInfo("""
-Please provide your MySQL root password again.  This time for
-schema creation
-""")
+I need to run a second MySQL script. Please type your MySQL root password
+again. (Same as above.)
+"""
 
       cmd = base_cmd + LOGMOVER_DB_NAME + " < " + db_init_script
 

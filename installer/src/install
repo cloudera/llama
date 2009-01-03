@@ -125,7 +125,7 @@ can select by pressing [enter].
     # is true; interactive installation should prompt for whether/not to do this
     output.printlnInfo("Deploying distribution to remote hosts.")
     output.printlnInfo("(This may take a few minutes)")
-    remotemgr.deployRemotes(properties)
+    remote_failed_hosts = remotemgr.deployRemotes(properties)
 
   # any steps to be performed per-tool after the whole system is together
   for tool in installPlan.getInstallItems():
@@ -143,7 +143,18 @@ except InstallError, ie:
   output.printlnError("Installation has been aborted")
   sys.exit(1)
 
-output.printlnInfo("""
+if len(remote_failed_hosts) == 0:
+  output.printlnInfo("""
+
+***********************************************************************
+The Cloudera Hadoop Distribution installation process has completed
+locally. Errors were encountered when deploying to remote hosts.
+***********************************************************************
+
+""")
+else:
+  # all good
+  output.printlnInfo("""
 
 ***********************************************************************
 The Cloudera Hadoop Distribution installation process is complete!
@@ -183,6 +194,14 @@ if hadoopInstaller != None:
 
 # If there were warnings or more user-run steps, list the follow-up
 # actions that must be taken.
+
+if len(remote_failed_hosts) > 0:
+  output.printlnInfo("There were errors deploying the distribution to the
+following remote hosts:")
+  for host in remote_failed_hosts:
+    output.printlnInfo("  " + host)
+  output.printlnInfo("You may need to manually install on these hosts.")
+
 for tool in installPlan.getInstallItems():
   tool.printFinalInstructions()
 

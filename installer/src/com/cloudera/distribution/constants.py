@@ -434,5 +434,5 @@ SCRIBE_PACKAGE = "scribe.tar.gz"
 
 # TODO(aaron): 0.2 Need 'svnstring' or something of the like to handle this.
 # (IS-65, CH-75)
-DISTRIB_VERSION = "0.1.0"
+DISTRIB_VERSION = "0.1.1"
 
