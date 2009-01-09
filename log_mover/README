@@ -22,4 +22,4 @@ Usage:
 Each of these scripts should be attached to a cron job.  It is recommended
 that log_to_db.py is run every minute, prune.py is run as often as you would
 like things pruned (this is also defined as a constant in each pruner), and
-persist.py is run every few hours or so.   
+persist.py is run every few hours or so.

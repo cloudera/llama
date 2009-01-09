@@ -16,11 +16,11 @@ div#new_issue_form input.button {
   margin-left: 565px;
   width: 60px;
   border-color:#ccc #777 #999 #ddd;
-	border-width:1px;
-	padding:2px 8px;
-	font-size:12px;
-	border-style:solid;
-	background:#ddd;
+  border-width:1px;
+  padding:2px 8px;
+  font-size:12px;
+  border-style:solid;
+  background:#ddd;
 }
 
 ul.errorlist {

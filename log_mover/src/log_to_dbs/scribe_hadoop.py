@@ -45,7 +45,7 @@ class ScribeHadoopLogToDB(abstract_scribe.AbstractScribeLogToDB):
 
   # An example matching line:
   #  server10.cloudera.com org.apache.hadoop.mapred.Merger$MergeQueue
-  #  08/11/25 12:12:33 INFO mapred.Merger: Down to the last 
+  #  08/11/25 12:12:33 INFO mapred.Merger: Down to the last
   #  merge-pass, with 2 segments left of total size: 3141424 bytes
   LOG_MATCH = re.compile("^[a-zA-Z0-9.]+ [a-z-A-Z0-9.?$]+ [0-9]{2}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}")
 

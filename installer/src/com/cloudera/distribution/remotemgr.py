@@ -16,6 +16,7 @@
 #
 # Manages deployment to remote instances
 
+import logging
 import os
 import socket
 import sys
@@ -196,7 +197,8 @@ error: %(ret)s""" % {
   return tmpFilename
 
 
-def getRemoteDeployArgs(hadoopSiteFilename, slavesFilename, properties):
+def getRemoteDeployArgs(hadoopSiteFilename, slavesFilename, pub_key_filename, \
+    properties):
   """ return the string of arguments which should be passed to the installer
       when run on the remote deploying end.
 
@@ -205,6 +207,7 @@ def getRemoteDeployArgs(hadoopSiteFilename, slavesFilename, properties):
                              hadoop-site.xml has been uploaded
         slavesFilename     - the filename on the remote hosts where
                              the slaves list has been uploaded
+        pub_key_filename   - The public key id_rsa.pub file for the Hadoop user
         properties         - Properties object governing the installer
   """
 
@@ -243,6 +246,10 @@ def getRemoteDeployArgs(hadoopSiteFilename, slavesFilename, properties):
 
   argList.append("--hadoop-slaves")
   argList.append(slavesFilename)
+
+  if pub_key_filename != None:
+    argList.append("--hadoop-pubkey")
+    argList.append(pub_key_filename)
 
   # fold down the argument list into a string
   def concat(x, y):
@@ -340,6 +347,16 @@ def deployRemotes(properties):
   doScpAll(slavesFileName, user, slaveList, failed_hosts, remoteSlavesName, \
       "slaves", properties)
 
+  # if the hadoop user had an ssh key generated for him, then we send the
+  # public key to all the machines here
+  remote_pub_key = None
+  if hadopInstaller != None:
+    local_pub_key = hadoopInstaller.getPubKeyfile()
+    if local_pub_key != None:
+      logging.debug("Uploading hadoop public key")
+      remote_pub_key = os.path.join(uploadPrefix, "hadoop-pub-key")
+      doScpAll(local_pub_key, user, slaveList, failed_hosts, remote_pub_key, \
+          "hadoop public key", properties)
 
   # Unzip the installation tarball.
   output.printlnDebug("Unzipping installation tarball on remotes")
@@ -350,7 +367,7 @@ def deployRemotes(properties):
   installerFilename = os.path.basename(sys.argv[0])
   prgm = os.path.join(uploadPrefix, INSTALLER_SUBDIR, installerFilename)
   installerArgs = getRemoteDeployArgs(remoteHadoopSite, remoteSlavesName, \
-      properties)
+      remote_pub_key, properties)
   cmd = "\"" + prgm + "\" " + installerArgs
   output.printlnDebug("Remote execution command: " + cmd)
 

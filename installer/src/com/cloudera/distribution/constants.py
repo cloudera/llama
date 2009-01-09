@@ -116,6 +116,14 @@ HIVE_NAMENODE_KEY = NAMENODE_KEY
 # Java-specific options
 JAVA_HOME_KEY = "java.home"
 
+# Hadoop- and scribe-specific users may need ssh keys created for them
+# if the user account was just created for them.
+CREATE_SSHKEYS_KEY = "ssh.create.keys"
+CREATE_SSHKEYS_DEFAULT = False
+
+# when we upload the id_rsa.pub file to remote hosts, where did we put it
+HADOOP_PUBKEY_KEY = "hadoop.public.key"
+
 # where do we install the distribution to
 INSTALL_PREFIX_KEY = "install.prefix"
 INSTALL_PREFIX_DEFAULT = "/usr/share/cloudera"

@@ -208,7 +208,7 @@ your sysadmin.)
         output.printlnInfo("""
 I need to run a second MySQL script. Please type your MySQL root password
 again. (Same as above.)
-"""
+""")
 
       cmd = base_cmd + LOGMOVER_DB_NAME + " < " + db_init_script
 

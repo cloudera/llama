@@ -57,7 +57,7 @@
 </table>
 <!-- ==================== MODULE DESCRIPTION ==================== -->
 <h1 class="epydoc">Module persist</h1><p class="nomargin-top"><span class="codelink"><a href="persist-pysrc.html">source&nbsp;code</a></span></p>
-<p>This file invokes persisters that copy logs to HDFS and moves them 
+<p>This file invokes persisters that copy logs to HDFS and moves them
   locally to a TRASH folder</p>
   <p>This file is invoked by a cron job</p>
 
@@ -88,11 +88,11 @@
       Uses action_classes to create a list of files to be moved.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="persist-pysrc.html#persist">source&nbsp;code</a></span>
-            
+
           </td>
         </tr>
       </table>
-      
+
     </td>
   </tr>
 <tr>
@@ -103,15 +103,15 @@
         <tr>
           <td><span class="summary-sig"><a name="move_to_trash"></a><span class="summary-sig-name">move_to_trash</span>(<span class="summary-sig-arg">log_dir</span>,
         <span class="summary-sig-arg">file</span>)</span><br />
-      Given a log directory and a file, move that file to the trash, which 
+      Given a log directory and a file, move that file to the trash, which
       is in log_dir/TRASH</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="persist-pysrc.html#move_to_trash">source&nbsp;code</a></span>
-            
+
           </td>
         </tr>
       </table>
-      
+
     </td>
   </tr>
 <tr>
@@ -124,11 +124,11 @@
       Creates an HDFS directory if it doesn't already exist</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="persist-pysrc.html#create_dir_if_not_exists">source&nbsp;code</a></span>
-            
+
           </td>
         </tr>
       </table>
-      
+
     </td>
   </tr>
 <tr>
@@ -142,11 +142,11 @@
       each directory exists in HDFS</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="persist-pysrc.html#create_hdfs_path">source&nbsp;code</a></span>
-            
+
           </td>
         </tr>
       </table>
-      
+
     </td>
   </tr>
 </table>
@@ -238,8 +238,8 @@ r.ScribePersister(),}">{'vmstat': scribe_persister.ScribePersister()<code class=
     ><span class="codelink"><a href="persist-pysrc.html#persist">source&nbsp;code</a></span>&nbsp;
     </td>
   </tr></table>
-  
-  <p>Uses action_classes to create a list of files to be moved. Then moves 
+
+  <p>Uses action_classes to create a list of files to be moved. Then moves
   the files to HDFS, maintaining the exact directory structure.</p>
   <dl class="fields">
   </dl>
@@ -258,8 +258,8 @@ r.ScribePersister(),}">{'vmstat': scribe_persister.ScribePersister()<code class=
     ><span class="codelink"><a href="persist-pysrc.html#create_hdfs_path">source&nbsp;code</a></span>&nbsp;
     </td>
   </tr></table>
-  
-  <p>Given a log dir, recurses down the directory tree and makes sure that 
+
+  <p>Given a log dir, recurses down the directory tree and makes sure that
   each directory exists in HDFS</p>
   <p>This essentially mirrors the log directory path in HDFS</p>
   <dl class="fields">
@@ -291,7 +291,7 @@ r.ScribePersister(),}">{'vmstat': scribe_persister.ScribePersister()<code class=
        cellspacing="0" width="100%" bgcolor="white">
 <tr><td>
   <h3 class="epydoc">formatter</h3>
-  
+
   <dl class="fields">
   </dl>
   <dl class="fields">
@@ -309,7 +309,7 @@ logging.Formatter(&quot;%(asctime)s - %(levelname)s - %(message)s&quot;)
        cellspacing="0" width="100%" bgcolor="white">
 <tr><td>
   <h3 class="epydoc">file_handler</h3>
-  
+
   <dl class="fields">
   </dl>
   <dl class="fields">

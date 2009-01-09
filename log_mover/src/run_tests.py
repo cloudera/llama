@@ -55,7 +55,7 @@ def run_tests_in_suite(suite_name):
 def run_tests_in_suites(suite_names):
   # TODO: make sure the suite name is in the "suites" dictionary
   for suite_name in suite_names:
-    run_tests_in_suite(suite_name)  
+    run_tests_in_suite(suite_name)
 
 if __name__ == "__main__":
   (script_name, script_args) = sys.argv[0], sys.argv[1:]

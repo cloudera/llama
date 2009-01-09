@@ -62,6 +62,11 @@ class InstallProperties(Properties):
     "--prefix"         : INSTALL_PREFIX_KEY,
     "--config-prefix"  : CONFIG_DIR_KEY,
 
+    # if true, create missing ~hadoop/.ssh/id_rsa
+    "--create-keys"    : CREATE_SSHKEYS_KEY,
+    # filename of the remote public key file
+    "--hadoop-pubkey"  : HADOOP_PUBKEY_KEY,
+
     # If true, refuses to start Hadoop, HDFS, etc.
     "--no-start-daemons" : NO_DAEMONS_KEY,
     "--start-daemons"    : NO_DAEMONS_KEY,
@@ -115,7 +120,8 @@ class InstallProperties(Properties):
     "--format-hdfs",
     "--unattend",
     "--test-mode",
-    "--no-start-daemons"
+    "--no-start-daemons",
+    "--create-keys"
   ]
 
   # these disable boolean flags

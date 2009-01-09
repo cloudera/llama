@@ -83,15 +83,15 @@
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a href="common-module.html#get_key_cols" class="summary-sig-name">get_key_cols</a>(<span class="summary-sig-arg">dict</span>)</span><br />
-      takes a dict and returns a string to be added to an 
+      takes a dict and returns a string to be added to an
       &quot;insert&quot; statement, where each item is a key column name</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="common-pysrc.html#get_key_cols">source&nbsp;code</a></span>
-            
+
           </td>
         </tr>
       </table>
-      
+
     </td>
   </tr>
 <tr>
@@ -101,15 +101,15 @@
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td><span class="summary-sig"><a href="common-module.html#get_values" class="summary-sig-name">get_values</a>(<span class="summary-sig-arg">dict</span>)</span><br />
-      takes a dict and returns a string to be added to an 
+      takes a dict and returns a string to be added to an
       &quot;insert&quot; statement, where each item is an escaped value.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="common-pysrc.html#get_values">source&nbsp;code</a></span>
-            
+
           </td>
         </tr>
       </table>
-      
+
     </td>
   </tr>
 <tr>
@@ -122,11 +122,11 @@
       Given a number of seconds, returns a date that is today - seconds.</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="common-pysrc.html#get_threshold_date">source&nbsp;code</a></span>
-            
+
           </td>
         </tr>
       </table>
-      
+
     </td>
   </tr>
 <tr>
@@ -141,11 +141,11 @@
       Given statitistics, store them in to MySQL with an ORM mechanism</td>
           <td align="right" valign="top">
             <span class="codelink"><a href="common-pysrc.html#store_orm">source&nbsp;code</a></span>
-            
+
           </td>
         </tr>
       </table>
-      
+
     </td>
   </tr>
 </table>
@@ -180,7 +180,7 @@
     ><span class="codelink"><a href="common-pysrc.html#get_key_cols">source&nbsp;code</a></span>&nbsp;
     </td>
   </tr></table>
-  
+
   <p>takes a dict and returns a string to be added to an &quot;insert&quot;
   statement, where each item is a key column name</p>
   <p>Replaces:</p>
@@ -195,11 +195,11 @@
   <dl class="fields">
     <dt>Parameters:</dt>
     <dd><ul class="nomargin-top">
-        <li><strong class="pname"><code>dict</code></strong> (dictionary) - the dictionary whose keys will be returned in preparation for a 
+        <li><strong class="pname"><code>dict</code></strong> (dictionary) - the dictionary whose keys will be returned in preparation for a
           SQL INSERT statement</li>
     </ul></dd>
     <dt>Returns: string</dt>
-        <dd>a comma-delimited string, where each item is a SQL-compliant key 
+        <dd>a comma-delimited string, where each item is a SQL-compliant key
           name</dd>
   </dl>
 </td></tr></table>
@@ -217,9 +217,9 @@
     ><span class="codelink"><a href="common-pysrc.html#get_values">source&nbsp;code</a></span>&nbsp;
     </td>
   </tr></table>
-  
+
   <p>takes a dict and returns a string to be added to an &quot;insert&quot;
-  statement, where each item is an escaped value.  Values are enclosed by 
+  statement, where each item is an escaped value.  Values are enclosed by
   single quotes (')</p>
   <p>Replaces:</p>
   <ul>
@@ -234,7 +234,7 @@
           SQL INSERT statement</li>
     </ul></dd>
     <dt>Returns: string</dt>
-        <dd>a comma-delimited string, where each item is a SQL-compliant 
+        <dd>a comma-delimited string, where each item is a SQL-compliant
           value</dd>
   </dl>
 </td></tr></table>
@@ -252,8 +252,8 @@
     ><span class="codelink"><a href="common-pysrc.html#get_threshold_date">source&nbsp;code</a></span>&nbsp;
     </td>
   </tr></table>
-  
-  <p>Given a number of seconds, returns a date that is today - seconds.  
+
+  <p>Given a number of seconds, returns a date that is today - seconds.
   The date is in SQL format.</p>
   <dl class="fields">
     <dt>Parameters:</dt>
@@ -280,9 +280,9 @@
     ><span class="codelink"><a href="common-pysrc.html#store_orm">source&nbsp;code</a></span>&nbsp;
     </td>
   </tr></table>
-  
+
   <p>Given statitistics, store them in to MySQL with an ORM mechanism</p>
-  <p>Will convert keys to MySQL-compliant column names.  See 
+  <p>Will convert keys to MySQL-compliant column names.  See
   <i>get_key_cols(dict)</i></p>
   <dl class="fields">
     <dt>Parameters:</dt>

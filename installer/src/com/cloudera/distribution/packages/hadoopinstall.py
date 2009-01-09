@@ -52,19 +52,32 @@ class HadoopInstall(toolinstall.ToolInstall):
     self.verified = False
     self.hdfsFormatMsg = None
 
+    self.create_ssh_key = False
+    self.redist_pubkey_filename = None
+
+
+  def getPubKeyFile(self):
+    """ Return the name of the hadoop user's public key file to redistribute
+        during deployment, or None if there isn't any."""
+    return self.redist_pubkey_filename
+
+
   def isHadoopVerified(self):
     """ return True if verification tests passed."""
     return self.verified
+
 
   def isMaster(self):
     """ Return true if we are installing on a master server, as opposed to
         a slave server."""
     return toolinstall.getToolByName("GlobalPrereq").isMaster()
 
+
   def getHadoopSiteProperty(self, propName):
     """ If the user configured hadoop-site in this tool, extract
         a property from the map the user created """
     return self.hadoopSiteDict[propName]
+
 
   def getHadoopUsername(self):
     """ Return the username we should run hadoop as. This returns the value
@@ -962,19 +975,81 @@ to do, just accept the default values.""")
     makeSinglePath(logDir)
 
 
+  def precheckSshKeys(self):
+    """ If the Hadoop account's ssh doesn't exist and we're in unattended
+        mode, we should just fail immediately with a warning. This only
+        applies to the master, who can create/distribute these keys."""
+
+    if self.isMaster() and self.isUnattended() and not self.hasSshKey():
+      raise InstallError("""Error: No ssh key available for the Hadoop user.
+Hadoop services will not be able to start. To create keys, run this installer
+with --create-keys""")
+
+
   def precheck(self):
     """ If anything must be verified before we even get going, check those
         constraints in this method """
 
     self.precheckUsername()
+    self.precheckSshKeys()
     self.precheckLzoLibs()
     self.precheckBzipLibs()
+
+
+  def hasSshKey(self):
+    """ Return True if the Hadoop user account has an ssh key file present."""
+    # Search for .ssh/id_rsa, id_dsa in hadoop user's account.
+
+    hadoop_user = self.getHadoopUsername()
+    userDir = os.path.expanduser("~" + hadoop_user)
+    userSshDir = os.path.join(userDir, ".ssh")
+    rsaKey = os.path.join(userSshDir, "id_rsa")
+    dsaKey = os.path.join(userSshDir, "id_dsa")
+
+    if os.path.exists(rsaKey):
+      output.printlnVerbose("Found " + hadoop_user + " ssh key: " + rsaKey)
+      return True
+    elif os.path.exists(dsaKey):
+      output.printlnVerbose("Found " + hadoop_user + " ssh key: " + dsaKey)
+      return True
+    else:
+      output.printlnVerbose("Could not find ssh key for user " + hadoop_user)
+      return False
+
+
+  def configSshKeys(self):
+    """ Determine if the Hadoop account's ssh key exists. If not, offer to
+        create it if the user so desires. This method is only run in the
+        master installer. """
+
+    # If we're not root, we can only create keys for ourselves.
+    allow_ssh_keygen = self.isRoot() or cur_username == hadoop_username
+
+    # Initial value of this is set by user with --create-keys flag
+    self.create_ssh_key = self.properties.getBoolean(CREATE_SSHKEYS_KEY, \
+        CREATE_SSHKEYS_DEFAULT)
+
+    if not self.hasSshKey() and not self.isUnattended() and allow_ssh_keygen \
+        and not self.create_ssh_key:
+      # interactive - prompt the user to create keys or not (since the key
+      # is missing, and they didn't tell us on the command line to do this.
+      hadoop_user = self.getHadoopUsername()
+      output.printlnInfo( \
+"""I could not find an ssh key for the user '%(hadoopuser)s' selected to run
+the Hadoop daemons. This will cause problems starting Hadoop.""" % \
+    { "hadoopuser" : hadoop_user })
+
+      self.create_ssh_key = prompt.getBoolean( \
+          "Should I create and distribute ssh keys now?", self.create_ssh_key)
 
 
   def configure(self):
     """ Run the configuration stage. This is responsible for
         setting up the config files and asking any questions
         of the user. The software is not installed yet """
+
+    if self.isMaster():
+      self.configSshKeys()
 
     self.configMasterAddress()
     self.configHadoopSite()
@@ -984,10 +1059,155 @@ to do, just accept the default values.""")
     return os.path.join(self.getInstallBasePath(), HADOOP_INSTALL_SUBDIR)
 
 
-  def install(self):
-    """ Run the installation itself. """
+  def shouldCreateSshKey(self):
+    """ Return true if we should create missing ssh keys. This is based on the
+        property CREATE_SSHKEYS_KEY (from --create-keys) and any interactive
+        response. """
 
-    # Install the hadoop package itself
+    return self.create_ssh_key
+
+
+  def createSshKeys(self):
+    " Assumes its being run on the master; actually create ~hadoop/.ssh/id_rsa "
+
+    hadoop_user = self.getHadoopUsername()
+    output.printlnVerbose("Generating id_rsa file for " + hadoop_user)
+
+    # mkdir ~hadoop/.ssh and set it mode 0750
+    sshKeyDir = os.path.join(os.path.expanduser("~" + hadoop_user), ".ssh")
+    try:
+      if not os.path.exists(sshKeyDir):
+        dirutils.mkdirRecursive(sshKeyDir)
+        # permissions must be 0750 or more strict
+        shell.sh("chmod o-rwx \"" + sshKeyDir + "\"")
+        shell.sh("chmod g-w \"" + sshKeyDir + "\"")
+        shell.sh("chown " + hadoop_user + ":" + hadoop_user + " \"" \
+            + sshKeyDir + "\"")
+    except OSError, ose:
+      raise InstallError("Could not create " + sshKeyDir + ": " + str(ose))
+    except shell.CommandError:
+      raise InstallError("Could not set owner for " + sshKeyDir)
+
+    # create the key file id_rsa and id_rsa.pub
+    try:
+      rsaFilename = os.path.join(sshKeyDir, "id_rsa")
+      shell.sh("ssh-keygen -b 2048 -t rsa -f \"" + rsaFilename + "\" -N ''")
+    except shell.CommandError:
+      raise InstallError("Could not run ssh-keygen; cannot create ssh keys")
+
+    # copy id_rsa.pub into local authorized_keys file
+    try:
+      pubFilename = rsaFilename + ".pub"
+      pubKeyHandle = open(pubFilename, "r")
+      # This will give us a single \n-terminated line for this pub key.
+      pubKeyString = pubKeyHandle.read()
+      pubKeyHandle.close()
+    except IOError, ioe:
+      raise InstallError("Could not read public key: " + str(ioe))
+
+    try:
+      authKeysFilename = os.path.join(sshKeyDir, "authorized_keys")
+      authKeysHandle = open(authKeysFilename, "a")
+      authKeysHandle.write("\n")
+      authKeysHandle.write("# Cloudera Hadoop installer: added autogen key:\n")
+      authKeysHandle.write(pubKeyString)
+      authKeysHandle.close()
+    except IOError, ioe:
+      raise InstallError("Could not authorize public key: " + str(ioe))
+
+    # set the file permissions on the above files.
+    try:
+      shell.sh("chown " + hadoop_user + " \"" + rsaFilename + "\"")
+      shell.sh("chown " + hadoop_user + " \"" + pubFilename + "\"")
+      shell.sh("chown " + hadoop_user + " \"" + authKeysFilename + "\"")
+      shell.sh("chmod 0600 \"" + rsaFilename + "\"")
+    except shell.CommandError:
+      raise InstallError("Could not set ssh key file permissions.")
+
+    # set the name of the public key file to redistribute to slaves
+    self.redist_pubkey_filename = pubFilename
+
+
+  def installPublicKey(self):
+    """
+        This is running on a slave. The master may have uploaded an id_rsa.pub
+        file; we append this in ~hadoop/.ssh/authorized_keys, creating any
+        dirs/files as needed.
+    """
+
+    hadoop_user = self.getHadoopUsername()
+    pubkey_filename = self.properties.getProperty(HADOOP_PUBKEY_KEY)
+
+    if pubkey_filename == None:
+      return # Nothing to do here.
+
+    output.printlnVerbose("Writing public key into authorized_keys file")
+
+    try:
+      handle = open(pubkey_filename)
+      public_key = handle.read() # this is a single \n-terminated line
+      handle.close()
+    except IOError, ioe:
+      raise InstallError("Cannot read public key: " + str(ioe))
+
+    userSshDir = os.path.join(os.path.expanduser("~" + hadoop_user), ".ssh")
+    if not os.path.exists(userSshDir):
+      # Create ~hadoop/.ssh/
+      try:
+        dirutils.mkdirRecursive(userSshDir)
+      except OSError, ose:
+        raise InstallError("Cannot create ssh directory: " + str(ose))
+
+      try:
+        # make sure the user owns the dir, and it's 0750 or better
+        shell.sh("chown " + hadoop_user + " \"" + userSshDir + "\"")
+        shell.sh("chmod o-rwx \"" + userSshDir + "\"")
+        shell.sh("chmod g-w \"" + userSshDir + "\"")
+      except shell.CommandError:
+        raise InstallError("Could not set permissions for " + userSshDir)
+
+    # append this to the authorized_keys file.
+    authKeyFile = os.path.join(userSshDir, "authorized_keys")
+    setAuthKeysPerms = not os.path.exists(authKeyFile)
+    try:
+      handle = open(authKeyFile, "a")
+      handle.write("# Cloudera Hadoop installer added public key:\n")
+      handle.write(public_key)
+      handle.close()
+    except IOError, ioe:
+      raise InstallError("Could not write public key data: " + str(ioe))
+
+    if setAuthKeysPerms:
+      # We created the file. chmod and chown it.
+      try:
+        shell.sh("chown " + hadoop_user + " \"" + authKeyFile + "\"")
+        shell.sh("chmod 0600 \"" + authKeyFile + "\"")
+      except shell.CommandError:
+        raise InstallError("Error setting permissions on " + authKeyFile)
+
+
+  def installSshKeys(self):
+    """
+        If being run on the master, creates local ssh keys for the hadoop
+        user. After this is over the remote mgr module will scp the
+        id_rsa.pub file to all the slaves.
+
+        If being run on a slave, reads the id_rsa.pub file and inserts its
+        contents in the Hadoop user's authorized_keys file.
+    """
+
+    if self.isMaster():
+      if not self.hasSshKey() and self.shouldCreateSshKey():
+        # Actually create the key files.
+        self.createSshKeys()
+    else:
+      self.installPublicKey()
+
+
+
+  def installPackage(self):
+    """ Install the Hadoop tarball itself. """
+
     hadoopPackageName = os.path.abspath(os.path.join(PACKAGE_PATH, \
         HADOOP_PACKAGE))
     if not os.path.exists(hadoopPackageName):
@@ -1004,6 +1224,14 @@ to do, just accept the default values.""")
       shell.sh(cmd)
     except shell.CommandError, ce:
       raise InstallError("Error unpacking hadoop (tar returned error)")
+
+
+  def install(self):
+    """ Run the installation itself. """
+
+    self.installSshKeys()
+
+    self.installPackage()
 
     # write the config files out.
     if self.isMaster():
