@@ -4,6 +4,10 @@
 ./deps/fc8-i386/php.ini
 ./deps/fc8-i386/scribe.tar.gz
 ./deps/fc8-i386/lighttpd.conf
+./deps/fc8-x86_64
+./deps/fc8-x86_64/lighttpd.conf
+./deps/fc8-x86_64/php.ini
+./deps/fc8-x86_64/scribe.tar.gz
 ./deps/ubuntu-8.04-i386
 ./deps/ubuntu-8.04-i386/php.ini
 ./deps/ubuntu-8.04-i386/scribe.tar.gz
