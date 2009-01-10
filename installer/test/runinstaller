@@ -23,7 +23,7 @@ else
 fi
 
 # stop hadoop if it was already running.
-$sudoPrefix /tmp/master/hadoop/bin/stop-all.sh
+$sudoPrefix /mnt/tmp/master/apps/hadoop-0.18.2-patched/bin/stop-all.sh
 killall scribed
 
 # remove all the directories that this will create
@@ -55,7 +55,7 @@ sed -i -e "s/MASTER_HOST/$thishost/g" /tmp/install-hadoop-site.xml
   --log-level DEBUG \
   --format-hdfs \
   --install-bindir \
-  ../../../../bin/redist/projects/HadoopDist_supportedDistro/cloudera-hadoop-0.1.0/bin\
+  ../../../../bin/redist/projects/HadoopDist_supportedDistro/cloudera-hadoop-0.1.1/bin\
   --namenode "hdfs://$thishost:9000/" --jobtracker "$thishost:9001" \
   --debug \
   "$@"

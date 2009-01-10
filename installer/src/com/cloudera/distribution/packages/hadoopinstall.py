@@ -980,7 +980,13 @@ to do, just accept the default values.""")
         mode, we should just fail immediately with a warning. This only
         applies to the master, who can create/distribute these keys."""
 
-    if self.isMaster() and self.isUnattended() and not self.hasSshKey():
+    # Initial value of this is set by user with --create-keys flag;
+    # this default is assumed to be in place before calling configSshKeys()
+    self.create_ssh_key = self.properties.getBoolean(CREATE_SSHKEYS_KEY, \
+        CREATE_SSHKEYS_DEFAULT)
+
+    if self.isMaster() and self.isUnattended() and not self.hasSshKey() \
+        and not self.create_ssh_key:
       raise InstallError("""Error: No ssh key available for the Hadoop user.
 Hadoop services will not be able to start. To create keys, run this installer
 with --create-keys""")
@@ -1023,21 +1029,20 @@ with --create-keys""")
         master installer. """
 
     # If we're not root, we can only create keys for ourselves.
+    hadoop_username = self.getHadoopUsername()
+    cur_username = self.getCurrUser()
     allow_ssh_keygen = self.isRoot() or cur_username == hadoop_username
 
-    # Initial value of this is set by user with --create-keys flag
-    self.create_ssh_key = self.properties.getBoolean(CREATE_SSHKEYS_KEY, \
-        CREATE_SSHKEYS_DEFAULT)
+    # note: self.create_ssh_key was initialzied during precheck phase.
 
     if not self.hasSshKey() and not self.isUnattended() and allow_ssh_keygen \
         and not self.create_ssh_key:
       # interactive - prompt the user to create keys or not (since the key
       # is missing, and they didn't tell us on the command line to do this.
-      hadoop_user = self.getHadoopUsername()
       output.printlnInfo( \
 """I could not find an ssh key for the user '%(hadoopuser)s' selected to run
 the Hadoop daemons. This will cause problems starting Hadoop.""" % \
-    { "hadoopuser" : hadoop_user })
+    { "hadoopuser" : hadoop_username })
 
       self.create_ssh_key = prompt.getBoolean( \
           "Should I create and distribute ssh keys now?", self.create_ssh_key)

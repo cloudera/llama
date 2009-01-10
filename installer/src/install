@@ -22,6 +22,7 @@
 #
 #
 
+import logging
 import os
 import sys
 
@@ -97,6 +98,7 @@ try:
   # Detect any prereqs that we cannot install:
   output.printlnInfo("Checking prerequisites for installation...")
   for tool in installPlan.getInstallItems():
+    output.printlnVerbose("Running precheck for item: " + tool.getName())
     tool.precheck()
 
   output.printlnInfo("All necessary prerequisites were found.")
@@ -108,6 +110,7 @@ can select by pressing [enter].
 """)
 
   for tool in installPlan.getInstallItems():
+    output.printlnVerbose("Running configure for item: " + tool.getName())
     tool.configure()
 
   # Any user input should have occurred above this line. From this point
@@ -126,6 +129,8 @@ can select by pressing [enter].
     output.printlnInfo("Deploying distribution to remote hosts.")
     output.printlnInfo("(This may take a few minutes)")
     remote_failed_hosts = remotemgr.deployRemotes(properties)
+  else:
+    remote_failed_hosts = []
 
   # any steps to be performed per-tool after the whole system is together
   for tool in installPlan.getInstallItems():
@@ -144,20 +149,20 @@ except InstallError, ie:
   sys.exit(1)
 
 if len(remote_failed_hosts) == 0:
-  output.printlnInfo("""
-
-***********************************************************************
-The Cloudera Hadoop Distribution installation process has completed
-locally. Errors were encountered when deploying to remote hosts.
-***********************************************************************
-
-""")
-else:
   # all good
   output.printlnInfo("""
 
 ***********************************************************************
 The Cloudera Hadoop Distribution installation process is complete!
+***********************************************************************
+
+""")
+else:
+  output.printlnInfo("""
+
+***********************************************************************
+The Cloudera Hadoop Distribution installation process has completed
+locally. Errors were encountered when deploying to remote hosts.
 ***********************************************************************
 
 """)
@@ -196,8 +201,8 @@ if hadoopInstaller != None:
 # actions that must be taken.
 
 if len(remote_failed_hosts) > 0:
-  output.printlnInfo("There were errors deploying the distribution to the
-following remote hosts:")
+  output.printlnInfo("There were errors deploying the distribution to the " \
+    + "following remote hosts:")
   for host in remote_failed_hosts:
     output.printlnInfo("  " + host)
   output.printlnInfo("You may need to manually install on these hosts.")

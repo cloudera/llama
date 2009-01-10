@@ -74,8 +74,9 @@ You already have an htdocs folder, and there are files and directories in this
 folder.  The htdocs folder is:
     %(htdocs)s
 This script will potentially overwrite these files.  Should the tool
-proceed and potentially ovewrite these files?  If you specify "no," then you
-will have to move these htdocs elsewhere.
+proceed and potentially ovewrite these files?  If you specify "no," then the
+installer will exit. You must move these htdocs elsewhere before restarting
+the installer.
 """ % {'htdocs': htdocs,
        })
         overwrite = prompt.getBoolean("(y or n):", False)

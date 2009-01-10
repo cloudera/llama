@@ -18,6 +18,7 @@
 # prerequisite configuration
 #   e.g., get the user's ssh key file for slave machines, etc.
 
+import logging
 import os
 import tempfile
 
@@ -110,6 +111,8 @@ class GlobalPrereqInstall(ToolInstall):
     """ Launches the editor for the slaves file in interactive mode.
         Called by configSlavesFile"""
 
+    logging.debug("Editing slaves file: " + filename)
+
     # Run whatever editor the user specified with $EDITOR or --editor
     editorPrgm = self.properties.getProperty(EDITOR_KEY, EDITOR_DEFAULT)
     editorString = editorPrgm + " \"" + filename + "\""
@@ -125,6 +128,8 @@ class GlobalPrereqInstall(ToolInstall):
         In interactive mode, allows the user to go back and edit the file
         if errors were detected.
     """
+
+    logging.debug("Validating slaves file: " + filename)
 
     # validation: the file shouldn't be empty. It certainly *can*, but
     # that's a very boring Hadoop cluster. We should print a warning msg
@@ -186,7 +191,8 @@ addresses.""")
       output.printlnInfo( \
 """Warning: Your slaves file appears to contain IP addresses. If you enable
 a DFS hosts file, this may prevent slave nodes from participating in your
-cluster.""")
+cluster. To correct this problem, change the IP addresses in the list to the
+fully-qualified hostnames of the same machines.""")
       allow_reedit = True
 
     if allow_reedit and not self.isUnattended():
@@ -194,6 +200,7 @@ cluster.""")
           "Do you want to edit the slaves file to correct this?", True, True)
       if do_reedit:
         self.editSlavesFile(filename)
+        self.validateSlavesFile(filename) # tail recurse for this
 
 
   def configSlavesFile(self):
@@ -294,7 +301,11 @@ Press [enter] to continue.""")
       raw_input()
       self.editSlavesFile(tmpFilename)
 
-    self.validateSlavesFile()
+    # Validate the contents of the slaves file. If we're in interactive mode,
+    # give the user the chance to go back and edit the file until all errors
+    # are rectified. When this returns, we have addresses that either we are
+    # happy with, or the user has overriden the check.
+    self.validateSlavesFile(tmpFilename)
 
     # we've successfully acquired a slaves file. memorize its name.
     self.slavesFileName = tmpFilename

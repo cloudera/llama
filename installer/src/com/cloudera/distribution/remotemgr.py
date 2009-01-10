@@ -350,8 +350,8 @@ def deployRemotes(properties):
   # if the hadoop user had an ssh key generated for him, then we send the
   # public key to all the machines here
   remote_pub_key = None
-  if hadopInstaller != None:
-    local_pub_key = hadoopInstaller.getPubKeyfile()
+  if hadoopInstaller != None:
+    local_pub_key = hadoopInstaller.getPubKeyFile()
     if local_pub_key != None:
       logging.debug("Uploading hadoop public key")
       remote_pub_key = os.path.join(uploadPrefix, "hadoop-pub-key")
