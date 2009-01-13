@@ -105,6 +105,19 @@ the installer.
 
     output.printlnVerbose("Installing lighttpd-related packages")
 
+    arch_inst = arch.getArchDetector()
+
+    if arch_inst.getArch() == arch.ARCH_X86_64 \
+        and arch_inst.getPlatform() == arch.PLATFORM_FEDORA:
+      # FC8.x86_64 seems to install curl.i386 by default, which
+      # conflicts with curl.x86_64. We've told the user in the README
+      # to remove the i386 version first. (We can't remove it ourselves,
+      # because we don't want to remove any dependencies of the user's).
+      # So we'll see if this works here:
+      curl_pkgs = { arch.PACKAGE_MGR_DEBIAN: [],
+          arch.PACKAGE_MGR_RPM: [ "curl.x86_64" ] }
+      self.installPackage(curl_pkgs)
+
     # install lighttpd and other required modules
     pckg = {arch.PACKAGE_MGR_DEBIAN: [
                                       "lighttpd",
@@ -120,7 +133,6 @@ the installer.
             }
     self.installPackage(pckg)
 
-    arch_inst = arch.getArchDetector()
 
     # update php and lighttpd config files
     deps_arch_dir = ""

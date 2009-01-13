@@ -113,8 +113,15 @@ class ScribeInstall(toolinstall.ToolInstall):
 
   def installRuby(self):
     """ Install ruby interpreter """
-    rubyPkg = { arch.PACKAGE_MGR_DEBIAN: ["ruby1.8", "ruby1.8-dev"],
-                arch.PACKAGE_MGR_RPM: ["ruby", "ruby-libs"] }
+
+    archDetector = arch.getArchDetector()
+    if archDetector.getArch() == arch.ARCH_X86_64:
+      # Install x86_64-specific ruby libraries on fedora.
+      rubyPkg = { arch.PACKAGE_MGR_DEBIAN: ["ruby1.8", "ruby1.8-dev"],
+                  arch.PACKAGE_MGR_RPM: ["ruby", "ruby-libs.x86_64"] }
+    else:
+      rubyPkg = { arch.PACKAGE_MGR_DEBIAN: ["ruby1.8", "ruby1.8-dev"],
+                  arch.PACKAGE_MGR_RPM: ["ruby", "ruby-libs"] }
     self.installPackage(rubyPkg)
 
   def installLibEvent(self):

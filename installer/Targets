@@ -21,3 +21,4 @@ release = PythonRedistTarget(
   distribName     = "installer",
   requiredTargets = [ ":installer" ])
 
+defaultTarget(release)

@@ -33,6 +33,11 @@ DEFAULT_LOG_VERBOSITY = output.DEBUG
 DISTRIB_TARBALL_ARG = "--distribution"
 DISTRIB_TARBALL_KEY = "distribution.tar.file"
 
+# Alternate means of acquiring the distribution is to retrieve it from S3
+# What is the bucket:key for this?
+DISTRIB_S3_ARG = "--s3distribution"
+DISTRIB_S3_KEY = "distribution.s3.location"
+
 # If we want to refresh only the installer, where is this tarball?
 INSTALLER_TARBALL_ARG = "--installer"
 INSTALLER_TARBALL_KEY = "installer.tar.file"

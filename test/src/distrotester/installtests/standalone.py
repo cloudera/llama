@@ -11,7 +11,7 @@ import socket
 import tempfile
 import unittest
 
-from   com.cloudera.testutil.asserts import TestCaseWithAsserts
+from   com.cloudera.testutil.verbosetest import VerboseTestCase
 import com.cloudera.tools.shell as shell
 
 from   distrotester.constants import *
@@ -21,10 +21,10 @@ from   distrotester.functiontests.hivetests import HiveTest
 from   distrotester.functiontests.pigtests import PigTest
 from   distrotester.functiontests.scribetests import ScribeTest
 
-class StandaloneTest(TestCaseWithAsserts):
+class StandaloneTest(VerboseTestCase):
 
   def __init__(self, methodName='runTest'):
-    TestCaseWithAsserts.__init__(self, methodName)
+    VerboseTestCase.__init__(self, methodName)
     self.curHadoopSite = None
     self.curSlavesFile = None
 
@@ -124,9 +124,13 @@ class StandaloneTest(TestCaseWithAsserts):
 
     # self.stopHadoop()
 
+    VerboseTestCase.tearDown(self)
+
 
   def setUp(self):
     """ shutdown and remove existing hadoop distribution. """
+
+    VerboseTestCase.setUp(self)
 
     try:
       self.stopHadoop()

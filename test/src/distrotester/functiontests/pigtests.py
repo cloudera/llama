@@ -5,14 +5,14 @@
 import logging
 import os
 
-from   com.cloudera.testutil.asserts import TestCaseWithAsserts
+from   com.cloudera.testutil.verbosetest import VerboseTestCase
 import com.cloudera.tools.shell as shell
 
 from   distrotester.constants import *
 import distrotester.testproperties as testproperties
 
 
-class PigTest(TestCaseWithAsserts):
+class PigTest(VerboseTestCase):
 
   def getInstallRoot(self):
     return INSTALL_PREFIX
@@ -52,6 +52,8 @@ class PigTest(TestCaseWithAsserts):
 
   def setUp(self):
     """ Perform setup tasks for tests """
+
+    VerboseTestCase.setUp(self)
 
     # Ensure that the user's home dir exists in HDFS
     clientUser = self.getProperties().getProperty(CLIENT_USER_KEY)

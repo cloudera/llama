@@ -113,6 +113,20 @@ Host *
     s3destDir = os.path.join(PACKAGE_TARGET, "s3sync/*.rb")
     shell.sh("cp " + s3destDir + " /usr/bin")
 
+    # write out the s3 environment
+    access_key_id = self.properties.getProperty(AWS_ACCESS_KEY_ID)
+    secret_access_key = self.properties.getProperty(AWS_SECRET_ACCESS_KEY)
+
+    shell.sh("mkdir -p /etc/s3conf")
+
+    handle = open("/etc/s3conf/s3config.yml", "w")
+    handle.write("""
+aws_access_key_id: %(access)s
+aws_secret_access_key: %(secret)s
+""" % { "access" : access_key_id,
+        "secret" : secret_access_key })
+    handle.close()
+
     # now install Java.
     if self.arch == "x86_64":
       jdkPackage = "jdk-6u7-linux-" + self.arch + "-rpm.bin"
@@ -148,6 +162,12 @@ Host *
     shell.sh("yum -y install screen lzo")
     shell.sh("yum -y install xeyes xauth")
     shell.sh("yum -y install xml-commons-apis")
+
+    # if this is x86_64, then we need to install the correct version
+    # of curl for compatibility with php (used by the support portal)
+    if self.arch == "x86_64":
+      shell.sh("yum -y remove curl.i386")
+      shell.sh("yum -y install curl.x86_64")
 
     # configure ssh so that it doesn't raise a fuss about unknwon hosts
     handle = open("/root/.ssh/config", "w")

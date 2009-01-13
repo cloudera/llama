@@ -80,9 +80,27 @@ if awsAccountId == None:
   logging.error("Error: " + AWS_ACCOUNT_ID_ENV + " is not set")
   sys.exit(1)
 
-if localDistribTarball == None:
+
+# one of the following three flags must be set; they are obeyed in this
+# priority order:
+#
+# --bypass-upload     Disables distribution upload (b/c it's already there)
+# --distribution      Local path to a tarball to upload
+# --s3distribution    bucket:key which contains the distribution in S3.
+#
+# make sure that one of these is set.
+
+bypass_distro_upload = properties.getBoolean(BYPASS_UPLOAD_KEY)
+
+distro_s3_location = properties.getProperty(DISTRIB_S3_KEY)
+# if we're using the s3 version because no local version provided, disable
+# local upload.
+bypass_distro_upload = bypass_distro_upload or \
+    (distro_s3_location != None and localDistribTarball == None)
+
+if localDistribTarball == None and not bypass_distro_upload:
   logging.error("Error: distribution location was not set with " \
-      + DISTRIB_TARBALL_ARG)
+      + DISTRIB_TARBALL_ARG + " or " + DISTRIB_S3_ARG)
   sys.exit(1)
 
 # ok, time to actually make the work.
@@ -178,7 +196,8 @@ if len(hostList) == 0:
 # if the user didn't create them.
 successfulTest = False
 try:
-  # Upload test harness tarball.
+  # Upload test harness tarball to all nodes (the test harness is only run in test
+  # mode on one host, but everyone needs it for setup purposes)
   logging.info("Uploading test harness tarball")
   remoteHarnessTarFile = os.path.join("/mnt/", \
       os.path.basename(tarballFilename))
@@ -202,9 +221,9 @@ try:
   logging.info("Master host is: " + masterHost)
 
   # Upload distro tarball to master host.
-  remoteDistribTarball = os.path.join("/mnt/", \
-      os.path.basename(localDistribTarball))
-  if not properties.getBoolean(BYPASS_UPLOAD_KEY):
+  if not bypass_distro_upload:
+    remoteDistribTarball = os.path.join("/mnt/", \
+        os.path.basename(localDistribTarball))
     logging.info("Uploading CHD tarball...")
     shell.scp(localDistribTarball, "root", masterHost, remoteDistribTarball, \
         properties)
@@ -214,21 +233,6 @@ try:
         + "\" -C /mnt", properties)
   else:
     logging.info("Skipping CHD tarball upload at user request")
-
-  installerTarball = properties.getProperty(INSTALLER_TARBALL_KEY)
-  if installerTarball != None:
-    # Upload only the installer and overlay it on top of the existing
-    # distribution.
-    logging.info("Uploading installer...")
-    remoteInstallerTarball = os.path.join("/mnt", \
-        os.path.basename(installerTarball))
-    shell.scp(installerTarball, "root", masterHost, remoteInstallerTarball, \
-        properties)
-
-    shell.ssh("root", masterHost, "tar -zxf \"" + remoteInstallerTarball \
-        + "\" -C /mnt", properties)
-    shell.ssh("root", masterHost, "rsync -r /mnt/installer/* " \
-        + os.path.join(DISTRIB_DEST_DIR, "bin"), properties)
 
   if not properties.getBoolean(BYPASS_SETUP_KEY):
     # Upload the id_rsa file we're using and chmod it correctly on the master
@@ -287,6 +291,35 @@ try:
         for line in result.getOutput():
           logging.error("  " + line.rstrip())
         raise TestError("Error running command.")
+
+  # Now that setup has been performed, s3cmd is available on remote machines.
+  # If the user is providing the distribution from S3, have them fetch it
+  # here.
+  if distro_s3_location != None:
+    logging.info("Retrieving distribution from S3 at " + distro_s3_location)
+    remoteDistribTarball = "/mnt/distro.tar.gz"
+    cmd = "s3cmd.rb get \"" + distro_s3_location + "\" " + remoteDistribTarball
+    shell.ssh("root", masterHost, cmd, properties)
+    shell.ssh("root", masterHost, "tar -xzf " + remoteDistribTarball + " -C /mnt", properties)
+  elif bypass_distro_upload:
+    # If we didn't set the distribution location before, we'll need a dummy
+    # below, so just make one up.
+    remoteDistribTarball = "/mnt/distro.tar.gz"
+
+  installerTarball = properties.getProperty(INSTALLER_TARBALL_KEY)
+  if installerTarball != None:
+    # Upload only the installer and overlay it on top of the existing
+    # distribution.
+    logging.info("Uploading installer...")
+    remoteInstallerTarball = os.path.join("/mnt", \
+        os.path.basename(installerTarball))
+    shell.scp(installerTarball, "root", masterHost, remoteInstallerTarball, \
+        properties)
+
+    shell.ssh("root", masterHost, "tar -zxf \"" + remoteInstallerTarball \
+        + "\" -C /mnt", properties)
+    shell.ssh("root", masterHost, "rsync -r /mnt/installer/* " \
+        + os.path.join(DISTRIB_DEST_DIR, "bin"), properties)
 
   # write slaves list to a file and upload to the master node
   (oshandle, tmpFilename) = tempfile.mkstemp("", "slaves-")

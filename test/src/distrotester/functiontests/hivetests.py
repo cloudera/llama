@@ -5,14 +5,14 @@
 import logging
 import os
 
-from   com.cloudera.testutil.asserts import TestCaseWithAsserts
+from   com.cloudera.testutil.verbosetest import VerboseTestCase
 import com.cloudera.tools.shell as shell
 
 from   distrotester.constants import *
 import distrotester.testproperties as testproperties
 
 
-class HiveTest(TestCaseWithAsserts):
+class HiveTest(VerboseTestCase):
 
   def getInstallRoot(self):
     return INSTALL_PREFIX
@@ -65,6 +65,8 @@ class HiveTest(TestCaseWithAsserts):
 
   def setUp(self):
     """ Perform setup tasks for tests """
+
+    VerboseTestCase.setUp(self)
 
     # TODO(aaron): user dir creation is in Pig and Hive (also Hadoop)Test?
     # Refactor out. (CH-77)
