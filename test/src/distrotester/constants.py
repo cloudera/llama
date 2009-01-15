@@ -1,4 +1,4 @@
-# (c) Copyright 2008 Cloudera, Inc.
+# (c) Copyright 2009 Cloudera, Inc.
 #
 # module: distrotester.constants
 # Constants used by the distribution testing tool
