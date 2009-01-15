@@ -139,7 +139,7 @@ class ToolInstall(object):
 
     # create soft links to installed application; remove the
     # existing install symlink if there is one
-    linkDest = os.path.join(self.getInstallPrefix(), appName)
+    linkDest = self.getInstallSymlinkPath(appName)
     if os.path.exists(linkDest):
       try:
         os.unlink(linkDest)
@@ -153,6 +153,10 @@ class ToolInstall(object):
     except OSError, ose:
       raise InstallError("Cannot create link " + linkDest + " (" + str(ose) \
          + ")")
+
+  def getInstallSymlinkPath(self, appName):
+    " Return the target name creaetd by the symlink to the app install path "
+    return os.path.join(self.getInstallPrefix(), appName)
 
   @staticmethod
   def backupFile(path):

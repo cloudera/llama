@@ -16,6 +16,9 @@
 #
 # Defines the ToolInstall instance that installs LogMover
 
+import logging
+import tempfile
+
 from   com.cloudera.distribution.installerror import InstallError
 from   com.cloudera.distribution.constants import *
 
@@ -265,18 +268,63 @@ again. (Same as above.)
     hadoop_tool = toolinstall.getToolByName("Hadoop")
     hadoop_user = hadoop_tool.getHadoopUsername()
 
-    pruner = os.path.join(self.getLogMoverPrefix(), "prune.py")
-    log_to_db = os.path.join(self.getLogMoverPrefix(), "log_to_db.py")
+    pruner = os.path.join(self.getInstallSymlinkPath("logmover"), "prune.py")
+    log_to_db = os.path.join(self.getInstallSymlinkPath("logmover"), "log_to_db.py")
 
+    # Get their existing crontab and concatenate our new commands
+    # on the end, don't just replace whatever they already have, completely.
     try:
-      output.printlnVerbose("Attempting to install log mover cron")
-      cmd =  "echo '* * * * * python " + pruner + "\n"
-      cmd +=       "* * * * * python " + log_to_db + "'"
-      cmd += " | sudo crontab -u " + hadoop_user + " -"
-
-      shell.sh(cmd)
+      logging.debug("Retrieving existing crontab for " + hadoop_user)
+      existing_cron = shell.shLines("crontab -l -u " + hadoop_user, False)
     except shell.CommandError:
-      raise InstallError("Unable to install the log mover cron job")
+      # somehow this failed? oh well, maybe it's just because there
+      # was no such crontab. fail only on the case below where we
+      # actually try to install a new crontab.
+      logging.debug("Warning: could not read existing crontab")
+      existing_cron = []
+
+    # CH-125: check to make sure pruner and log_to_db aren't already there.
+    need_prune = True
+    need_log_to_db = True
+    for existing_line in existing_cron:
+      if existing_line.find("prune.py") >= 0:
+        logging.debug("Found existing cron job for prune.py")
+        need_prune = False
+      elif existing_line.find("log_to_db.py") >= 0:
+        logging.debug("Found existing cron job for log_to_db.py")
+        need_log_to_db = False
+
+    if need_prune:
+      existing_cron.append("* * * * * python " + pruner + "\n")
+    if need_log_to_db:
+      existing_cron.append("* * * * * python " + log_to_db + "\n")
+
+    if need_prune or need_log_to_db:
+      # we changed something, so reinstall the cron.
+      # put the new cron in a file to install
+      try:
+        (oshandle, tmpFilename) = tempfile.mkstemp("", "crontab-")
+        handle = os.fdopen(oshandle, "w")
+        for line in existing_cron:
+          handle.write(line)
+        handle.close()
+      except OSError, ose:
+        logging.error("Could not manipulate temporary file: " + str(ose))
+      except IOError, ioe:
+        logging.error("Could not write to temporary file: " + str(ioe))
+
+      try:
+        output.printlnVerbose("Attempting to install log mover cron")
+        cmd = "crontab -u " + hadoop_user + " \"" + tmpFilename + "\""
+        shell.sh(cmd)
+      except shell.CommandError:
+          raise InstallError("Unable to install the log mover cron job")
+
+      # no longer need that temp file.
+      try:
+        os.remove(tmpFilename)
+      except OSError, ose:
+        logging.error("Warning: could not remove temporary file " + tmpFilename + ": " + str(ose))
 
     output.printlnInfo("Installed log mover cron job")
 
