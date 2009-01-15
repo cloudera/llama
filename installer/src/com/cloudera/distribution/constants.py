@@ -173,7 +173,7 @@ defaultPropertyFileName = "install.properties"
 DEFAULT_LOG_FILENAME = "cloudera-installer.log"
 
 # this should hold more information than is printed to the screen by default.
-DEFAULT_LOG_VERBOSITY = output.VERBOSE
+DEFAULT_LOG_VERBOSITY = output.DEBUG
 
 # Before we start Hadoop services, we need to kill any existing hadoop
 # instances. The pidfiles go in the directory identified by the following

@@ -1265,14 +1265,14 @@ the Hadoop daemons. This will cause problems starting Hadoop.""" % \
     # set the file permissions on the above files.
     try:
       shell.sh("chown " + hadoop_user + " \"" + rsaFilename + "\"")
-      shell.sh("chown " + hadoop_user + " \"" + pubFilename + "\"")
+      shell.sh("chown " + hadoop_user + " \"" + finalPubFilename + "\"")
       shell.sh("chown " + hadoop_user + " \"" + authKeysFilename + "\"")
       shell.sh("chmod 0600 \"" + rsaFilename + "\"")
     except shell.CommandError:
       raise InstallError("Could not set ssh key file permissions.")
 
     # set the name of the public key file to redistribute to slaves
-    self.redist_pubkey_filename = pubFilename
+    self.redist_pubkey_filename = finalPubFilename
 
 
   def installPublicKey(self):

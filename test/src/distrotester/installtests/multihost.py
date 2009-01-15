@@ -138,6 +138,25 @@ class MultiHostTest(VerboseTestCase):
     VerboseTestCase.tearDown(self)
 
 
+  def doSshAll(self, cmd):
+    " Execute a command on all hosts. "
+
+    logging.debug("sshall command: " + cmd)
+
+    allHosts = self.getSlavesList()
+    allHosts.append(self.hostname)
+
+    results = sshall.sshMultiHosts("root", allHosts, cmd, \
+        self.getProperties(), SSH_RETRIES, SSH_PARALLEL)
+    for result in results:
+      # each result is an sshall.SshResult obj
+      if result.getStatus() != 0:
+        logging.error("Got error status executing command on " \
+            + result.getHost())
+        logging.error("Output:")
+        for line in result.getOutput():
+          logging.error("  " + line.rstrip())
+
   def setUp(self):
     """ shutdown and remove existing hadoop distribution. """
 
@@ -152,30 +171,14 @@ class MultiHostTest(VerboseTestCase):
 
     # Delete everything associated with Hadoop.
     # Do this on all hosts.
-    allHosts = self.getSlavesList()
-    allHosts.append(self.hostname)
 
-    def doSshAll(cmd):
-      logging.debug("sshall command: " + cmd)
-      results = sshall.sshMultiHosts("root", allHosts, cmd, \
-          self.getProperties(), SSH_RETRIES, SSH_PARALLEL)
-      for result in results:
-        # each result is an sshall.SshResult obj
-        if result.getStatus() != 0:
-          logging.error("Got error status executing command on " \
-              + result.getHost())
-          logging.error("Output:")
-          for line in result.getOutput():
-            logging.error("  " + line.rstrip())
-
-    doSshAll("killall scribed")
-    doSshAll("rm -rf " + BASE_TMP_DIR)
-    doSshAll("rm -rf " + INSTALL_PREFIX)
-    doSshAll("rm -rf " + CONFIG_PREFIX)
-    doSshAll("mkdir -p " + BASE_TMP_DIR)
-    doSshAll("chmod a+w " + BASE_TMP_DIR)
-    doSshAll("chmod o+t " + BASE_TMP_DIR)
-
+    self.doSshAll("killall scribed")
+    self.doSshAll("rm -rf " + BASE_TMP_DIR)
+    self.doSshAll("rm -rf " + INSTALL_PREFIX)
+    self.doSshAll("rm -rf " + CONFIG_PREFIX)
+    self.doSshAll("mkdir -p " + BASE_TMP_DIR)
+    self.doSshAll("chmod a+w " + BASE_TMP_DIR)
+    self.doSshAll("chmod o+t " + BASE_TMP_DIR)
 
 
   def testHadoopOnly(self):
@@ -369,7 +372,7 @@ class MultiHostTest(VerboseTestCase):
     # the second installation will reformat the hdfs instance, but
     # we need to manually destroy the hdfs data dir first or else
     # it will fail to boot (bad namespace).
-    shell.sh("rm -rf /mnt/tmp/data")
+    self.doSshAll("rm -rf /mnt/tmp/data")
     logging.info("Performing second install/test in repeated batch.")
     self.testAllApps()
 
