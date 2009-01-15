@@ -257,9 +257,9 @@ class MultiHostTest(VerboseTestCase):
         self.fail()
     finally:
       # Restore the original id_rsa file on our way out.
-      # Also, delete the id_rsa.pub file that we leave behind.
+      # Also, delete the id_rsa.pub.cloudera file that we leave behind.
       os.rename("/home/hadoop/.ssh/id_rsa_backup", "/home/hadoop/.ssh/id_rsa")
-      os.remove("/home/hadoop/.ssh/id_rsa.pub")
+      os.remove("/home/hadoop/.ssh/id_rsa.pub.cloudera")
       logging.debug("Final ssh key md5:")
       id_rsa_md5 = shell.shLines("md5sum /home/hadoop/.ssh/id_rsa")
       logging.debug(id_rsa_md5)
@@ -362,8 +362,14 @@ class MultiHostTest(VerboseTestCase):
   def testDoubleInstall(self):
     """ Run the installer 2x in a row then test """
 
+    # This tests CH-118 - "installer should stop scribe, hadoop daemons"
+
     logging.info("Performing first install/test in repeated batch.")
     self.testAllApps()
+    # the second installation will reformat the hdfs instance, but
+    # we need to manually destroy the hdfs data dir first or else
+    # it will fail to boot (bad namespace).
+    shell.sh("rm -rf /mnt/tmp/data")
     logging.info("Performing second install/test in repeated batch.")
     self.testAllApps()
 

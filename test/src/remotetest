@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# (c) Copyright 2008 Cloudera, Inc
+# (c) Copyright 2009 Cloudera, Inc
 # remotetest  -- runs test processes across the Cloudera Hadoop Distribution
 #                This is the program entry point used on the remote server
 

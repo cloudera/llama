@@ -32,6 +32,12 @@ import com.cloudera.tools.dirutils as dirutils
 import com.cloudera.tools.shell as shell
 
 
+# how much time do we wait after booting the scribe daemons before
+# we return from the startup method? If we go too early, then hadoop
+# may miss critical messages. This value is in seconds.
+SCRIBE_START_WAIT_TIME = 3
+
+
 class ScribeInstall(toolinstall.ToolInstall):
   def __init__(self, properties):
     toolinstall.ToolInstall.__init__(self, "Scribe", properties)
@@ -373,6 +379,36 @@ Reason: %(ioe)s
     else:
       return ""
 
+  def isDaemonRunning(self):
+    """ Returns True if we started scribed. """
+    return self.isScribeStarted
+
+
+  def ensureScribeStarted(self):
+    """ Start scribed if it hasn't already been started.
+        Refuses to start scribed if we're not allowed to start daemons.
+    """
+
+    global SCRIBE_START_WAIT_TIME
+
+    if not self.mayStartDaemons() or self.isDaemonRunning():
+      return # nothing to do
+
+    # Start scribed.
+    output.printlnInfo("Starting local scribe server")
+    cmd = os.path.join(self.getFinalInstallPath(), SCRIBE_WRAPPER_NAME)
+    try:
+      # run the daemons
+      shell.sh(self.getScribeUserSudo() + cmd)
+
+      # don't return immediately; give the daemons time to turn on
+      # so we don't miss statrup msgs if we start hadoop immediately
+      # afterward
+      time.sleep(SCRIBE_START_WAIT_TIME)
+      self.isScribeStarted = True
+    except shell.CommandError:
+      output.printlnError("Error: Could not start scribed.")
+
 
   def postInstall(self):
     """ Run any post-installation activities. This occurs after
@@ -380,16 +416,7 @@ Reason: %(ioe)s
 
     self.createInstallSymlink("scribe")
     self.createEtcSymlink("scribe", self.getFinalInstallPath())
-
-    if self.mayStartDaemons():
-      # Start scribed.
-      output.printlnInfo("Starting local scribe server")
-      cmd = os.path.join(self.getFinalInstallPath(), SCRIBE_WRAPPER_NAME)
-      try:
-        shell.sh(self.getScribeUserSudo() + cmd)
-        self.isScribeStarted = True
-      except shell.CommandError:
-        output.printlnError("Error: Could not start scribed.")
+    self.ensureScribeStarted()
 
 
   def verify(self):
@@ -424,6 +451,6 @@ boot.
 """ % { "scribe" : self.scribeUser,
         "cmd"    : cmd })
 
-    if self.isScribeStarted:
+    if self.isDaemonRunning():
       output.printlnInfo("Note: scribed has already been started.")
 

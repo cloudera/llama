@@ -62,6 +62,8 @@ class TestProperties(Properties):
 
     UNATTENDED_ARG      : UNATTENDED_KEY,
 
+    SINGLE_TEST_NAME_ARG : SINGLE_TEST_NAME_KEY,
+
     # Options related to restarting the test harness and debugging
     EXISTING_INSTANCES_ARG : EXISTING_INSTANCES_KEY,
     BYPASS_UPLOAD_ARG      : BYPASS_UPLOAD_KEY,

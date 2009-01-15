@@ -335,6 +335,12 @@ try:
   # we no longer need the list of slave addrs locally.
   os.remove(tmpFilename)
 
+  single_test_name = properties.getProperty(SINGLE_TEST_NAME_KEY)
+  if single_test_name != None:
+    test_name_arg = " " + SINGLE_TEST_NAME_ARG + " " + single_test_name
+  else:
+    test_name_arg = ""
+
   # Run the global test battery loop on the master node
   logging.info("Running remote test battery...")
   # enforce a tty for this ssh command.
@@ -349,7 +355,7 @@ try:
       + " " + SLAVES_FILE_ARG + " " + remoteSlavesName \
       + " " + DISTRIB_TARBALL_ARG + " " + remoteDistribTarball \
       + " --log-filename " + REMOTE_LOG_FILENAME + " --log-level DEBUG" \
-      + " --debug"
+      + " --debug" + test_name_arg
   shell.ssh("root", masterHost, cmd, properties)
 
   # ssh will throw CommandError if there was a problem; getting here means

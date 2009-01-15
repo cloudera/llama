@@ -329,6 +329,10 @@ class StandaloneTest(VerboseTestCase):
 
     logging.info("Performing first install/test in repeated batch.")
     self.testAllApps()
+    # the second installation will reformat the hdfs instance, but
+    # we need to manually destroy the hdfs data dir first or else
+    # it will fail to boot (bad namespace).
+    shell.sh("rm -rf /mnt/tmp/data")
     logging.info("Performing second install/test in repeated batch.")
     self.testAllApps()
 

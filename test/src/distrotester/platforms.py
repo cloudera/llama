@@ -66,15 +66,20 @@ def setupForPlatform(platformName, properties):
 def testSuiteForPlatform(platformName, properties):
   """ return a pyunit TestSuite for execution on the remote platform """
 
+  # If the user has specified a particular test name to run, then run only
+  # that one. Otherwise, make suites with "test" as the prefix, which selects
+  # all tests.
+  testNamePrefix = properties.getProperty(SINGLE_TEST_NAME_KEY, "test")
+
   # TODO(aaron): New platform? Add it to this list.
   if platformName == "fc8.i386":
-    return unittest.makeSuite(StandaloneTest, 'test')
+    return unittest.makeSuite(StandaloneTest, testNamePrefix)
   elif platformName == "fc8.x86_64":
-    return unittest.makeSuite(StandaloneTest, 'test')
+    return unittest.makeSuite(StandaloneTest, testNamePrefix)
   elif platformName == "fc8.multi.i386":
-    return unittest.makeSuite(MultiHostTest, 'test')
+    return unittest.makeSuite(MultiHostTest, testNamePrefix)
   elif platformName == "fc8.multi.x86_64":
-    return unittest.makeSuite(MultiHostTest, 'test')
+    return unittest.makeSuite(MultiHostTest, testNamePrefix)
   else:
     raise TestError("No test suite available for platform: " + platformName)
 

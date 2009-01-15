@@ -152,6 +152,9 @@ class HadoopInstall(toolinstall.ToolInstall):
         service = m.group(1)
         logging.debug("Found pidfile " + filename + " for service " + service)
 
+        # convert the filename to its full path so we can open it.
+        filename = os.path.join(pid_dir, filename)
+
         try:
           handle = open(filename)
           pid = int(handle.readline())
@@ -170,6 +173,8 @@ class HadoopInstall(toolinstall.ToolInstall):
         try:
           handle = open("/proc/" + str(pid) + "/cmdline")
           cmdline = handle.readline()
+          # the cmdline contains nul characters between tokens here
+          logging.debug("cmdline is : " + cmdline.replace(chr(0)," "))
           handle.close()
         except IOError, ioe:
           # This is a stale pidfile; the pid doesn't actually exist.
@@ -178,6 +183,7 @@ class HadoopInstall(toolinstall.ToolInstall):
         cmdline = cmdline.lower()
         if cmdline.find("java") >= 0 and cmdline.find(service) >= 0:
           # This is an actual Hadoop daemon for this service. Let's kill it.
+          logging.debug("Found hadoop daemon process")
           try:
             logging.debug("Testing pid " + str(pid) + " for killability")
             shell.sh("kill -0 " + str(pid))
@@ -192,8 +198,8 @@ class HadoopInstall(toolinstall.ToolInstall):
             logging.debug("Actually trying to kill pid")
             shell.sh("kill " + str(pid))
           except shell.CommandError:
+            logging.debug("Kill command exited with non-zero status.")
             error_pids.append(pid)
-
 
     some_error = False
 
@@ -236,6 +242,13 @@ these services and reinstalling this distribution.
     if self.startedHdfs or not self.mayStartDaemons():
       # already running, or not allowed to run this.
       return
+
+    # If we're installing scribe too, make sure that we start it first
+    # because we want to be able to capture the log output from Hadoop
+    # in the central scribe logs.
+    scribe_installer = toolinstall.getToolByName("scribe")
+    if scribe_installer != None:
+      scribe_installer.ensureScribeStarted()
 
     output.printlnVerbose("Starting HDFS")
     hadoopBinPath = os.path.join(self.getFinalInstallPath(), "bin")
@@ -1214,7 +1227,7 @@ the Hadoop daemons. This will cause problems starting Hadoop.""" % \
     except shell.CommandError:
       raise InstallError("Could not set owner for " + sshKeyDir)
 
-    # create the key file id_rsa and id_rsa.pub
+    # create the key file id_rsa and id_rsa.pub (we'll rename this below)
     try:
       rsaFilename = os.path.join(sshKeyDir, "id_rsa")
       shell.sh("ssh-keygen -b 2048 -t rsa -f \"" + rsaFilename + "\" -N ''")
@@ -1228,8 +1241,16 @@ the Hadoop daemons. This will cause problems starting Hadoop.""" % \
       # This will give us a single \n-terminated line for this pub key.
       pubKeyString = pubKeyHandle.read()
       pubKeyHandle.close()
+
+      # If there is an id_rsa.pub file present, then the authorized_keys
+      # file is silently ignored by sshd. So we should rename this file
+      # to something that doesn't interfere with other keys.
+      finalPubFilename = pubFilename + ".cloudera"
+      os.rename(pubFilename, finalPubFilename)
     except IOError, ioe:
       raise InstallError("Could not read public key: " + str(ioe))
+    except OSError, ose:
+      raise InstallError("Could not rename public key: "+ str(ose))
 
     try:
       authKeysFilename = os.path.join(sshKeyDir, "authorized_keys")
@@ -1400,7 +1421,7 @@ the Hadoop daemons. This will cause problems starting Hadoop.""" % \
 Before your Hadoop cluster is usable, the distributed filesystem must be
 formatted. If this is a new cluster, you should select "yes" to format HDFS
 and prepare the cluster for use. If you are installing this distribution on
-an existing Hadoop cluster, all existing HDFS data will be destroyed by
+an existing Hadoop cluster, all existing HDFS data will be invalidated by
 this process.""")
       formatHdfs = prompt.getBoolean("Format HDFS now?", maybeFormatHdfs, \
           False)
@@ -1422,6 +1443,8 @@ this process.""")
       except shell.CommandError, ce:
         output.printlnError("Could not format HDFS; Hadoop returned error")
         raise InstallError("Error formatting HDFS")
+      logging.info("""Formatted HDFS. If you had existing data in the HDFS data directories,
+you must clear and reinitialize those directories before using Hadoop.""")
     else:
       self.hdfsFormatMsg = \
 """HDFS was not formatted. If you have not done this before, you must format

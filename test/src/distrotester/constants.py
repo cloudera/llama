@@ -89,6 +89,11 @@ UNATTENDED_ARG = "--unattend"
 UNATTENDED_KEY = "unattended.test"
 
 
+# if the user only wants to run a single test in the battery,
+# allow them to specify the method name here.
+SINGLE_TEST_NAME_ARG = "--test-name"
+SINGLE_TEST_NAME_KEY = "test.name"
+
 # If we know that the distribution has already been uploaded, don't
 # need to wait for it to happen a second time.
 BYPASS_UPLOAD_ARG = "--bypass-upload"
