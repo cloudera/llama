@@ -91,7 +91,7 @@ class ScribeTest(VerboseTestCase):
     # directory. (CH-78)
 
     TARGET_LOG_FILE = "/var/log/scribe/central/hadoop/hadoop_current"
-    SCRIBE_TIMEOUT = 120 # give ourselves up to 2 minutes to find the nonce
+    SCRIBE_TIMEOUT = 30 # give ourselves up to 30 seconds to find the nonce
     found = False
     handle = open(TARGET_LOG_FILE)
     while time.time() - startTime < SCRIBE_TIMEOUT and not found:

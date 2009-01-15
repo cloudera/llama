@@ -92,6 +92,7 @@
 ./bin/com/cloudera/testutil
 ./bin/com/cloudera/testutil/__init__.py
 ./bin/com/cloudera/testutil/asserts.py
+./bin/com/cloudera/testutil/verbosetest.py
 ./bin/com/cloudera/common
 ./bin/com/cloudera/common/__init__.py
 ./bin/com/cloudera/tools

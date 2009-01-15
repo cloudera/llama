@@ -221,8 +221,11 @@ class MultiHostTest(VerboseTestCase):
 
     javaHome = self.getProperties().getProperty(JAVA_HOME_KEY)
 
+    logging.debug("Initial ssh key md5:")
+    id_rsa_md5 = shell.shLines("md5sum /home/hadoop/.ssh/id_rsa")
+    logging.debug(id_rsa_md5)
     logging.debug("Removing id_rsa file for hadoop user")
-    shell.sh("mv -f /home/hadoop/.ssh/id_rsa /home/hadoop/.ssh/id_rsa_backup")
+    os.rename("/home/hadoop/.ssh/id_rsa", "/home/hadoop/.ssh/id_rsa_backup")
 
     try:
       cmd = INSTALLER_COMMAND + " --unattend --prefix " + INSTALL_PREFIX \
@@ -254,7 +257,12 @@ class MultiHostTest(VerboseTestCase):
         self.fail()
     finally:
       # Restore the original id_rsa file on our way out.
-      shell.sh("mv -f /home/hadoop/.ssh/id_rsa_backup /home/hadoop/.ssh/id_rsa")
+      # Also, delete the id_rsa.pub file that we leave behind.
+      os.rename("/home/hadoop/.ssh/id_rsa_backup", "/home/hadoop/.ssh/id_rsa")
+      os.remove("/home/hadoop/.ssh/id_rsa.pub")
+      logging.debug("Final ssh key md5:")
+      id_rsa_md5 = shell.shLines("md5sum /home/hadoop/.ssh/id_rsa")
+      logging.debug(id_rsa_md5)
 
 
   def testAllApps(self):
@@ -350,4 +358,12 @@ class MultiHostTest(VerboseTestCase):
     # TODO: set the editor to /bin/true, provide a slaves file.
     pass
 
+
+  def testDoubleInstall(self):
+    """ Run the installer 2x in a row then test """
+
+    logging.info("Performing first install/test in repeated batch.")
+    self.testAllApps()
+    logging.info("Performing second install/test in repeated batch.")
+    self.testAllApps()
 

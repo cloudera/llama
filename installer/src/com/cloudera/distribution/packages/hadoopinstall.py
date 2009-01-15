@@ -107,6 +107,127 @@ class HadoopInstall(toolinstall.ToolInstall):
     else:
       return ""
 
+  def kill_all_hadoop_daemons(self):
+    """ Attempts to kill any/all Hadoop daemons it can find. If this is
+        running as root, will kill all of them; other users will only be
+        able to stop their own daemons.
+
+        Depends on $HADOOP_PID_DIR environment variable, per Hadoop's
+        bin/stop-*.sh scripts.
+    """
+
+    output.debug("Trying to stop all Hadoop services...")
+
+    # Look at all the files in the pid dir, look for those that match
+    # the regex "hadoop-(user name?)-command.pid"
+    # The user-name component may actually be an arbitrary user-controlled
+    # "ident string," so we're liberal about this.
+    # command is one of:
+    #   datanode
+    #   jobtracker
+    #   tasktracker
+    #   secondarynamenode
+    #   namenode
+
+    pid_dir = self.properties.getProperty(HADOOP_PID_DIR_KEY, \
+        HADOOP_PID_DIR_DEFAULT)
+
+    dir_contents = os.listdir(pid_dir)
+
+    pidfile_regex = re.compile("hadoop-.*-" \
+        + "((namenode)|(datanode)|(secondarynamenode)|(jobtracker)|(tasktracker)).pid")
+
+    # the list of pids that we couldn't kill and we think we should have.
+    error_pids = []
+
+    # the list of pids owned by other users (kill -0 returned error)
+    foreign_pids = []
+
+
+    for filename in dir_contents:
+      m = pidfile_regex.match(filename)
+      if m != None and m.start() == 0 and m.end() == len(filename):
+        # Found a filename that matches that expression; pull out the component
+        # name from the parentheses group.
+        service = m.group(1)
+        logging.debug("Found pidfile " + filename + " for service " + service)
+
+        try:
+          handle = open(filename)
+          pid = int(handle.readline())
+          handle.close()
+        except ValueError:
+          # line wasn't a number?
+          continue
+        except IOError, ioe:
+          # couldn't read this? just ignore...
+          output.error("Warning: could not read pidfile: " + filename)
+          output.error(str(ioe))
+          continue
+
+        # determine if this pid still exists and if it is for the same command
+        # that we think it is for.
+        try:
+          handle = open("/proc/" + str(pid) + "/cmdline")
+          cmdline = handle.readline()
+          handle.close()
+        except IOError, ioe:
+          # This is a stale pidfile; the pid doesn't actually exist.
+          continue
+
+        cmdline = cmdline.lower()
+        if cmdline.find("java") >= 0 and cmdline.find(service) >= 0:
+          # This is an actual Hadoop daemon for this service. Let's kill it.
+          try:
+            logging.debug("Testing pid " + str(pid) + " for killability")
+            shell.sh("kill -0 " + str(pid))
+            logging.debug("Seems like it should work.")
+          except shell.CommandError:
+            # kill -0 returned an exit status => we can't send it a signal.
+            logging.debug("Could not kill -0 " + str(pid))
+            foreign_pids.append(pid)
+            continue
+
+          try:
+            logging.debug("Actually trying to kill pid")
+            shell.sh("kill " + str(pid))
+          except shell.CommandError:
+            error_pids.append(pid)
+
+
+    some_error = False
+
+    if len(error_pids) > 0:
+      logging.error("Errors were encountered killing processes:")
+      for pid in error_pids:
+        logging.error("  " + str(pid))
+      some_error = True
+
+    if len(foreign_pids) > 0:
+      some_error = True
+      logging.error("The following running Hadoop processes are owned by other users:")
+      for pid in foreign_pids:
+        # Determine the user who owns this process
+        lines = shell.shLines("ps aux | grep \" " + str(pid) + " \"")
+        process_owner = "(unknown)"
+        for line in lines:
+          components = line.split()
+          try:
+            if int(components[1]) == pid:
+              process_owner = components[0]
+              break
+          except ValueError:
+            # couldn't convert components[1] to int? not a pid.
+            continue
+        logging.error("  " + str(pid) + " owned by " + process_owner)
+
+    if some_error:
+      logging.error("""
+Warning: All Hadoop processes could not be terminated. This may
+interfere with the installation process. If errors occur, try stopping
+these services and reinstalling this distribution.
+""")
+
   def ensureHdfsStarted(self):
     """ Ensures that the HDFS cluster that we just put together is started
         (starting it if necessary). This must be run in postinstall or
@@ -1233,6 +1354,11 @@ the Hadoop daemons. This will cause problems starting Hadoop.""" % \
 
   def install(self):
     """ Run the installation itself. """
+
+    if self.mayStartDaemons():
+      # kill any running daemons before we attempt to restart them
+      # or install over top of them.
+      self.kill_all_hadoop_daemons()
 
     self.installSshKeys()
 

@@ -16,6 +16,7 @@
 #
 # Defines the ToolInstall instance that installs Scribe
 
+import logging
 import os
 import socket
 import time
@@ -49,6 +50,14 @@ class ScribeInstall(toolinstall.ToolInstall):
   def precheck(self):
     """ If anything must be verified before we even get going, check those
         constraints in this method """
+
+    # installing scribe requires being root.
+    if self.getCurrUser() != "root":
+      raise InstallError("""Error: cannot install scribe without being root.
+To install this distribution with scribe, please re-run this installer as root.
+To install the distribution without scribe, re-run with the --without-scribe
+argument.
+""")
 
     # Check that the scribe user account exists
     try:
@@ -333,6 +342,14 @@ Reason: %(ioe)s
 
   def install(self):
     """ Run the installation itself. """
+
+    if self.mayStartDaemons():
+      logging.info("Stopping any running scribe daemons...")
+      try:
+        shell.sh("killall scribed")
+        logging.info("ok.")
+      except shell.CommandError, ce:
+        logging.info("No scribe daemons to stop (OK)")
 
     # install dependency packages:
     self.installPythonDev()

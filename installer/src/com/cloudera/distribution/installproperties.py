@@ -139,7 +139,9 @@ class InstallProperties(Properties):
   # what environment variables map to which properties?
   envVarMap = {
     "JAVA_HOME" : JAVA_HOME_KEY,
-    "EDITOR"    : EDITOR_KEY
+    "EDITOR"    : EDITOR_KEY,
+
+    HADOOP_PID_DIR_ENV : HADOOP_PID_DIR_KEY
   }
 
   # when we load the data from a file, which paths should be

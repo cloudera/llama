@@ -175,6 +175,13 @@ DEFAULT_LOG_FILENAME = "cloudera-installer.log"
 # this should hold more information than is printed to the screen by default.
 DEFAULT_LOG_VERBOSITY = output.VERBOSE
 
+# Before we start Hadoop services, we need to kill any existing hadoop
+# instances. The pidfiles go in the directory identified by the following
+# key.
+HADOOP_PID_DIR_KEY = "hadoop.pid.dir"
+HADOOP_PID_DIR_ENV = "HADOOP_PID_DIR"
+HADOOP_PID_DIR_DEFAULT = "/tmp" # this is hardcoded in Hadoop.
+
 #######################################################################
 ### Some more constants affecting the installer system itself
 

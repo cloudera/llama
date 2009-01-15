@@ -324,3 +324,11 @@ class StandaloneTest(VerboseTestCase):
     finally:
       platformSetup.installPackage("lzo")
 
+  def testDoubleInstall(self):
+    """ Run the installer 2x in a row then test """
+
+    logging.info("Performing first install/test in repeated batch.")
+    self.testAllApps()
+    logging.info("Performing second install/test in repeated batch.")
+    self.testAllApps()
+
