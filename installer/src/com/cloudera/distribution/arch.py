@@ -150,7 +150,7 @@ class ArchDetector(object):
         distributionLines = shell.shLines("lsb_release -d | awk '{ print $2 }'")
         if len(distributionLines) > 0:
           distributionName = distributionLines[0].strip()
-        output.printlnVerbose("Got distribution name: " + distributionName)
+          output.printlnVerbose("Got distribution name: " + distributionName)
       except shell.CommandError, ce:
         # couldn't run this command
         output.printlnDebug("Could not run lsb_release:" + str(ce))

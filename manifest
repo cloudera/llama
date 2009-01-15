@@ -18,7 +18,7 @@
 ./deps/log_mover
 ./deps/log_mover/settings.py
 ./doc
-./doc/README
+./README
 ./doc/LICENSE.txt
 ./bin
 ./bin/logmover
