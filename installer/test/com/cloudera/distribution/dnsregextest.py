@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# (c) Copyright 2008 Cloudera, Inc.
+# (c) Copyright 2009 Cloudera, Inc.
 #
 # Unit test cases for dns-matching regular expressions
 # used by HadoopInstaller to validate whether addresses are legal

@@ -1,4 +1,4 @@
-# (c) Copyright 2008 Cloudera, Inc.
+# (c) Copyright 2009 Cloudera, Inc.
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
