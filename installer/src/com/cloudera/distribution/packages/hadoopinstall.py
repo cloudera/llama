@@ -1095,14 +1095,17 @@ to do, just accept the default values.""")
 
     makePathForProperty(HADOOP_TMP_DIR)
 
-    # This assumes that master is not also a worker. This is ok though;
-    # Hadoop should really actually make the appropriate directories itself
-    # if necessary.
+    # namenode metadata path is only necessary on the master node.
     if self.isMaster():
       makePathsForProperty(DFS_NAME_DIR)
-    else:
-      makePathsForProperty(DFS_DATA_DIR)
-      makePathsForProperty(MAPRED_LOCAL_DIR)
+
+    # always create these paths on all machines in case the master
+    # is also employed as a datanode. Because the user may have told
+    # us to create the NN dir and not the DN dir, we create and chown
+    # it in advance to prevent errors later on. If unused, it'll just
+    # stay quietly empty.
+    makePathsForProperty(DFS_DATA_DIR)
+    makePathsForProperty(MAPRED_LOCAL_DIR)
 
     # Now make the log dir and chown it to the hadoop username.
     logDir = os.path.join(self.getFinalInstallPath(), "logs")
