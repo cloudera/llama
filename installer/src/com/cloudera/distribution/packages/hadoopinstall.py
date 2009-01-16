@@ -54,6 +54,7 @@ class HadoopInstall(toolinstall.ToolInstall):
 
     self.create_ssh_key = False
     self.redist_pubkey_filename = None
+    self.warn_need_ssh_keys = False
 
 
   def getPubKeyFile(self):
@@ -1111,11 +1112,23 @@ to do, just accept the default values.""")
     logDir = os.path.join(self.getFinalInstallPath(), "logs")
     makeSinglePath(logDir)
 
+  def get_ssh_warning(self):
+    " return a warning msg regarding the lack of ssh keys for the hadoop user "
+
+    hadoop_user = self.getHadoopUsername()
+
+    return """Warning: No ssh key is available for the Hadoop user, %(user)s.
+Before you start Hadoop services, you will need to create keys for this user
+using ssh-keygen.""" % { "user" : hadoop_user }
+
 
   def precheckSshKeys(self):
     """ If the Hadoop account's ssh doesn't exist and we're in unattended
         mode, we should just fail immediately with a warning. This only
         applies to the master, who can create/distribute these keys."""
+
+    # This method must be run after precheckUsername(), because it can call
+    # get_ssh_warning(), which requires that the hadoop username be set up.
 
     # Initial value of this is set by user with --create-keys flag;
     # this default is assumed to be in place before calling configSshKeys()
@@ -1124,9 +1137,15 @@ to do, just accept the default values.""")
 
     if self.isMaster() and self.isUnattended() and not self.hasSshKey() \
         and not self.create_ssh_key:
-      raise InstallError("""Error: No ssh key available for the Hadoop user.
+      if self.mayStartDaemons():
+        raise InstallError("""Error: No ssh key available for the Hadoop user.
 Hadoop services will not be able to start. To create keys, run this installer
-with --create-keys""")
+with --create-keys. Alternatively, disable daemon launch during the install
+process with --no-start-daemons.""")
+      else:
+        # ssh keys are missing, but we're not starting daemons. Just warn.
+        logging.error(self.get_ssh_warning())
+        self.warn_need_ssh_keys = True
 
 
   def precheck(self):
@@ -1499,6 +1518,8 @@ HDFS before using Hadoop, by running the command:
   def printFinalInstructions(self):
     if self.hdfsFormatMsg != None:
       logging.info(self.hdfsFormatMsg)
+    if self.warn_need_ssh_keys:
+      logging.info(self.get_ssh_warning())
 
 
 

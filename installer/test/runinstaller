@@ -44,13 +44,21 @@ thishost=`hostname --fqdn`
 cp ../testdata/hadoop-site.xml /tmp/install-hadoop-site.xml
 sed -i -e "s/MASTER_HOST/$thishost/g" /tmp/install-hadoop-site.xml
 
+if [ -z "$JAVA_HOME" ]; then
+  # do a dir listing of /usr/java and pick the first entry.
+  # this one-liner absolutizes the dirname.
+  CUR_JAVA=`perl -MCwd -e 'print Cwd::abs_path(shift), "\n"' /usr/java/* | head -n 1`
+else
+  CUR_JAVA="$JAVA_HOME"
+fi
+
 # and launch the program
 "$installerPrgm" --unattend --test-mode --prefix /mnt/tmp/master \
   --remote-prefix /mnt/tmp/slave \
   --hadoop-site /tmp/install-hadoop-site.xml \
   --hadoop-slaves ${bin}/../testdata/localhost-slaves \
   --config-prefix /mnt/tmp/etc/cloudera \
-  --java-home /usr/java/jdk1.6.0_10 \
+  --java-home $CUR_JAVA \
   --log-filename /tmp/cloudera-installer.log \
   --log-level DEBUG \
   --format-hdfs \
