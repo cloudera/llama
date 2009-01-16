@@ -1,4 +1,4 @@
-# (c) Copyright 2008 Cloudera, Inc.
+# (c) Copyright 2009 Cloudera, Inc.
 #
 # Functionality unit test cases for Pig
 
