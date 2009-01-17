@@ -113,6 +113,19 @@ class GlobalPrereqInstall(ToolInstall):
 
     logging.debug("Editing slaves file: " + filename)
 
+    # rewrite the file to contain the boilerplate text at the top
+    try:
+      handle = open(filename)
+      slave_lines = handle.read()
+      handle.close()
+      
+      handle = open(filename, "w")
+      handle.write(self.get_slaves_file_boilerplate())
+      handle.write(slave_lines)
+      handle.close()
+    except IOError, ioe:
+      raise InstallError("Could not open the slaves file " + filename + " for editing: " + str(ioe))
+
     # Run whatever editor the user specified with $EDITOR or --editor
     editorPrgm = self.properties.getProperty(EDITOR_KEY, EDITOR_DEFAULT)
     editorString = editorPrgm + " \"" + filename + "\""
@@ -202,6 +215,21 @@ fully-qualified hostnames of the same machines.""")
         self.editSlavesFile(filename)
         self.validateSlavesFile(filename) # tail recurse for this
 
+  def get_slaves_file_boilerplate(self):
+    """ return a string that should be put in an 'empty' slaves file to give instructions
+        to the user about what to do in this file.
+    """
+
+    return \
+"""# Fill this file with the addresses of the slave nodes you want to install
+# on. These must be the fully-qualified DNS addresses of the machines.
+# good: slave0.foocorp.com
+# bad: slave0
+# bad: 10.4.100.1
+#
+# Put one address on each line of this file.
+# Lines beginning with '#' are ignored, as are empty lines.
+"""
 
   def configSlavesFile(self):
     """ Configure the slaves file. This involves calling up an editor
@@ -219,6 +247,7 @@ fully-qualified hostnames of the same machines.""")
     if userSlavesFile != None:
       # we have a user's slaves file. Copy this into the temp file
       # read their data in first....
+      userSlavesFile = os.path.join(self.properties.getProperty(BASE_DIR_KEY), userSlavesFile)
       try:
         userFileHandle = open(userSlavesFile)
         userSlaveLines = userFileHandle.readlines()
@@ -246,24 +275,9 @@ fully-qualified hostnames of the same machines.""")
       # don't need the open file handle associated with this file
       # (we'll need to reopen it after the user edits it)
       try:
-        # Write a message to the user in the file explaining what to do
-        handle.write( \
-"""# Fill this file with the addresses of the slave nodes you want to install
-# on. These must be the fully-qualified DNS addresses of the machines.
-# good: slave0.foocorp.com
-# bad: slave0
-# bad: 10.4.100.1
-#
-# Put one address on each line of this file.
-# Lines beginning with '#' are ignored, as are empty lines.
-""")
         handle.close()
       except IOError, ioe:
-        # We couldn't write our message into the file for some reason. This
-        # isn't a big problem; we'll just write a msg for the log file and
-        # keep going.
-        output.printlnVerbose("Error writing intro msg into slaves file: " \
-            + str(ioe))
+        pass # no reason to worry here. we didn't actually do anything.
 
     if self.isUnattended():
       # if we don't have a user slaves file, bail.
@@ -490,6 +504,7 @@ Press [enter] to continue.""")
     # Create the apps dir
     installDir = self.getAppsPrefix()
     try:
+      logging.debug("Creating installation directory: " + installDir)
       dirutils.mkdirRecursive(installDir)
     except OSError, ose:
       raise InstallError("Error creating installation directory " \
@@ -497,7 +512,11 @@ Press [enter] to continue.""")
 
     # Create the docs dir and copy all the documentation there.
     docsDest = os.path.join(self.getInstallPrefix(), DOCS_SUBDIR)
+    if not docsDest.endswith(os.sep):
+      docsDest = docsDest + os.sep
+
     try:
+      logging.debug("Creating documentation directory: " + docsDest)
       dirutils.mkdirRecursive(docsDest)
     except OSError, ose:
       raise InstallError("Error creating docs directory " + docsDest \
@@ -507,7 +526,7 @@ Press [enter] to continue.""")
     if not docsInputDir.endswith(os.sep):
       docsInputDir = docsInputDir + os.sep
 
-    cmd = "cp -R " + DOCS_INPUT_PATH + "* " + docsDest
+    cmd = "cp -R \"" + DOCS_INPUT_PATH + "*\" \"" + docsDest + "\""
     try:
       shell.sh(cmd)
     except shell.CommandError:

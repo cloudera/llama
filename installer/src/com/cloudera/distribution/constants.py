@@ -96,6 +96,11 @@ HADOOP_USER_NAME_DEFAULT = "hadoop"
 
 HADOOP_PROFILE_KEY     = "hadoop.profile" # master or slave?
 
+# what is the dir where we started running the installer?
+# use this for relative path resolution, since we cd into the dir
+# where the installer executable is.
+BASE_DIR_KEY = "base.dir"
+
 # values for HADOOP_PROFILE_KEY
 PROFILE_MASTER_VAL = False
 PROFILE_SLAVE_VAL = True

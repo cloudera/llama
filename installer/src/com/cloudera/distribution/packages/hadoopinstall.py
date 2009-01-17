@@ -522,9 +522,12 @@ or specify your own username with --hadoop-user""")
           + "hadoop-site.xml file specification")
       output.printlnError("Please restart installation with --hadoop-site")
       raise InstallError("No hadoop site file specified")
-    elif userHadoopSiteFile != None and not os.path.exists(userHadoopSiteFile):
-      raise InstallError("Could not find hadoop site file: " \
-          + userHadoopSiteFile)
+    elif userHadoopSiteFile != None:
+      userHadoopSiteFile = os.path.join(self.properties.getProperty(BASE_DIR_KEY),
+          userHadoopSiteFile)
+      if not os.path.exists(userHadoopSiteFile):
+        raise InstallError("Could not find hadoop site file: " \
+            + userHadoopSiteFile)
 
     # autoconfigure locations of dfs.hosts and dfs.hosts.exclude files if
     # the user has passed these in as command-line arguments.
@@ -980,6 +983,11 @@ to do, just accept the default values.""")
     else:
       # The user provided us with a hadoop-site file. write that out.
       hadoopSiteFileName = self.properties.getProperty(HADOOP_SITE_FILE_KEY)
+      if hadoopSiteFileName == None:
+        # We shouldn't get here, but for paranoia's sake
+        raise InstallError("Unexpected error: no hadoop-site.xml provided?")
+      hadoopSiteFileName = os.path.join(self.properties.getProperty(BASE_DIR_KEY), \
+          hadoopSiteFileName)
       shutil.copyfile(hadoopSiteFileName, destFileName)
 
 

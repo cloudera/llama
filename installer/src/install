@@ -59,6 +59,11 @@ if setLogVerbosity == None:
   properties.setProperty(output.LOG_VERBOSITY_PROP, DEFAULT_LOG_VERBOSITY)
 
 
+# record the directory where the user started, for use with relative paths
+# to hadoop-site.xml, slaves, etc.
+basedir = os.path.abspath(os.getcwd())
+properties.setProperty(BASE_DIR_KEY, basedir)
+
 # set up the console. Also starts logging to the specified file
 output.setupConsole(properties)
 
