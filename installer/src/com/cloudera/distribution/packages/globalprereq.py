@@ -91,8 +91,13 @@ class GlobalPrereqInstall(ToolInstall):
   def configEtcDir(self):
     """ Determine the dir where we put the links to the config directories """
 
-    maybeConfigDir = self.properties.getProperty(CONFIG_DIR_KEY, \
-        CONFIG_DIR_DEFAULT)
+    if self.getCurrUser() == "root":
+      config_dir = CONFIG_DIR_DEFAULT
+    else:
+      config_dir = os.path.expanduser("~/etc")
+
+    maybeConfigDir = self.properties.getProperty(CONFIG_DIR_KEY, config_dir)
+    maybeConfigDir = os.path.abspath(os.path.expanduser(maybeConfigDir))
 
     if self.isUnattended():
       self.configDir = maybeConfigDir
@@ -336,8 +341,13 @@ Press [enter] to continue.""")
   def configInstallPrefix(self):
     """ Determine the root directory where we're going to install this. """
 
+    if self.getCurrUser() == "root":
+      install_default = INSTALL_PREFIX_DEFAULT
+    else:
+      install_default = os.path.expanduser("~/cloudera")
+
     maybeInstallPrefix = self.properties.getProperty(INSTALL_PREFIX_KEY, \
-        INSTALL_PREFIX_DEFAULT)
+        install_default)
 
     if self.isUnattended():
       self.installPrefix = maybeInstallPrefix
@@ -345,6 +355,7 @@ Press [enter] to continue.""")
       self.installPrefix = prompt.getString( \
           "What path should the distribution be installed to?", \
           maybeInstallPrefix, True)
+      self.installPrefix = os.path.abspath(os.path.expanduser(self.installPrefix))
 
     if self.properties.getBoolean(TEST_MODE_KEY, TEST_MODE_DEFAULT):
       # we allow installation to a separate prefix on remote hosts in testing
@@ -431,6 +442,7 @@ Press [enter] to continue.""")
 
     maybeUploadPrefix = self.properties.getProperty(UPLOAD_PREFIX_KEY, \
         UPLOAD_PREFIX_DEFAULT)
+    maybeUploadPrefix = os.path.abspath(os.path.expanduser(maybeUploadPrefix))
 
     if not self.isUnattended():
       maybeUploadPrefix = prompt.getString("When uploading installation " \
