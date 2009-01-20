@@ -19,6 +19,7 @@ import re
 
 import abstract_scribe
 import common
+import settings
 
 import db.connection
 
@@ -47,7 +48,7 @@ class ScribeHadoopLogToDB(abstract_scribe.AbstractScribeLogToDB):
   #  server10.cloudera.com org.apache.hadoop.mapred.Merger$MergeQueue
   #  08/11/25 12:12:33 INFO mapred.Merger: Down to the last
   #  merge-pass, with 2 segments left of total size: 3141424 bytes
-  LOG_MATCH = re.compile("^[a-zA-Z0-9.]+ [a-z-A-Z0-9.?$]+ [0-9]{2}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}")
+  LOG_MATCH = re.compile("^[a-zA-Z0-9.\-]+ [a-z-A-Z0-9.?$]+ [0-9]{2}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}")
 
   # no need for a custom constructor
 
@@ -105,22 +106,22 @@ class ScribeHadoopLogToDB(abstract_scribe.AbstractScribeLogToDB):
     """
 
     if line != '' and parsed['h_level'] == 'ERROR':
-      conn = db.connection.connect()
-      c = conn.cursor()
+      ScribeHadoopLogToDB._write_line_to_log(line)
 
-      line = line.replace("'", "\\'")
+  @staticmethod
+  def _write_line_to_log(line):
+    """
+    Appends settings.hadoop_error_log_dest
 
-      sql = "insert into hadoop_extras values \
-             (%(h_id)d, %(count)d, '%(line)s')" % \
-             {'h_id': parsed['h_id'],
-              'count': count,
-              'line': line,
-             }
+    @type  line: string
+    @param line: the line to write
+    """
+    # TODO(alex): don't open and close a file handler
+    #             on every function call
 
-      c.execute(sql)
-
-      conn.commit()
-      c.close()
+    f_h = open(settings.hadoop_error_log_dest, 'a')
+    f_h.write(line+"\n")
+    f_h.close()
 
   @staticmethod
   def _store_parsed(parsed):
@@ -135,33 +136,9 @@ class ScribeHadoopLogToDB(abstract_scribe.AbstractScribeLogToDB):
     @param parsed: the parsed log message
     """
     if parsed['h_level'] == 'ERROR':
-      conn = db.connection.connect()
-
-      c = conn.cursor()
-
-      cols = common.get_key_cols(parsed)
-      vals = common.get_values(parsed)
-
-      # special case the ID
-      cols = 'h_id,' + cols
-      vals = 'NULL,' + vals
-
-      # ORM it!
-      sql = "insert into hadoop (%(cols)s) values \
-                        (%(vals)s)" % \
-                        {'cols': cols,
-                         'vals': vals}
-
-      c.execute(sql)
-
-      # add the 'h_id' field so any trailing data
-      # can reference this hadoop log
-      c.execute('select last_insert_id()')
-      row = c.fetchone()
-      parsed['h_id'] = row[0]
-
-      conn.commit()
-      c.close()
+      line = "%(h_hostname)s %(h_class)s %(h_date)s %(h_level)s %(h_category)s: %(h_message)s" \
+               % parsed
+      ScribeHadoopLogToDB._write_line_to_log(line)
 
   @staticmethod
   def _process_std_line(line):
