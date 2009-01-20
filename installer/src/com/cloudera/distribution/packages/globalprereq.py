@@ -534,11 +534,11 @@ Press [enter] to continue.""")
       raise InstallError("Error creating docs directory " + docsDest \
           + " (" + str(ose) + ")")
 
-    docsInputDir = DOCS_INPUT_PATH
+    docsInputDir = os.path.abspath(DOCS_INPUT_PATH)
     if not docsInputDir.endswith(os.sep):
       docsInputDir = docsInputDir + os.sep
 
-    cmd = "cp -R \"" + DOCS_INPUT_PATH + "*\" \"" + docsDest + "\""
+    cmd = "cp -R " + docsInputDir + "* \"" + docsDest + "\""
     try:
       shell.sh(cmd)
     except shell.CommandError:
