@@ -59,6 +59,16 @@ log_prefixes = {'vmstat': 'vmstat_',
                 'mpstat': 'mpstat_',
                }
 
+# this is confusing.  This script was originally created to store everything
+# in MySQL, but in the context of CH, we don't need MySQL because we're just
+# storring ERROR logs.  In fact, MySQL has licensing issues and overcomplicates
+# the installer
+#
+# Anyway, the following configuration option specifies the file
+# where Hadoop ERROR logs are stored
+hadoop_error_log_dest = "/var/log/hadoop/errors"
+
+
 # the time in which logs should remain
 # in the db for each mover (in seconds)
 #
