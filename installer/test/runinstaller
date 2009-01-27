@@ -53,6 +53,7 @@ else
 fi
 
 # and launch the program
+echo "Running $installerPrgm"
 "$installerPrgm" --unattend --test-mode --prefix /mnt/tmp/master \
   --remote-prefix /mnt/tmp/slave \
   --hadoop-site /tmp/install-hadoop-site.xml \

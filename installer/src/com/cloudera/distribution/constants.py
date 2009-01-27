@@ -33,18 +33,6 @@ INSTALL_INTERACTIVE_VAL = False
 # tell us otherwise.
 UNATTEND_DEFAULT = False
 
-# the DB user who can create databases, users, etc
-DB_SUPERUSER = "root"
-
-# db super user password information, for installing
-# the log mover in unattended mode
-DB_SUPERUSER_PASSWD_KEY = "db.superuser.passwd"
-DB_SUPERUSER_PASSWD_DEFAULT = ""
-
-# the root .my.cnf file to store the password
-# in for unattended mode
-ROOT_MY_CNF_FILE = "/root/.my.cnf"
-
 # by default, if localhost is in the slaves file, the installer will
 # not deploy to this host. Hadoop's start/stop scripts also depend on
 # Hadoop being installed on the same path on all machines. But for
@@ -381,15 +369,13 @@ SCRIBE_USER = "scribe"
 # The name of the script we generate to run scribed.
 SCRIBE_WRAPPER_NAME = "scribed-run"
 
-
 #######################################################################
 # Logmover configuration
 
-# The database that the log mover uses
-# note that if this changes from "ana," a lot of code is going to have
-# to change, including the log mover itself
-LOGMOVER_DB_NAME = "ana"
-
+# The name of the file written to by the LogMover for ERROR entries.
+# Must be writable by whomever runs log_to_db.py, and readable by the
+# lighttpd user.
+LOG_MOVER_ERROR_FILE = "/var/log/hadoop/errors"
 
 
 #######################################################################
@@ -441,6 +427,7 @@ HADOOP_PACKAGE = "hadoop-" + HADOOP_VERSION + ".tar.gz"
 # Hive and Pig don't have formal releases; we track their svn repository
 # version numbers from when we froze their commits.
 
+# TODO: Move everything to newer Hive version.
 HIVE_VERSION = "r725920"
 HIVE_INSTALL_SUBDIR = "hive-" + HIVE_VERSION
 HIVE_PACKAGE = "hive-" + HIVE_VERSION + ".tar.gz"

@@ -94,8 +94,7 @@ the installer.
 
   def install_httpd(self):
     """
-    Installs Lighttpd with PHP5 and MySQL support.
-    Assumes MySQL is already installed
+    Installs Lighttpd with PHP5 support.
     """
 
     # instructions for this were taken from:
@@ -122,13 +121,11 @@ the installer.
     pckg = {arch.PACKAGE_MGR_DEBIAN: [
                                       "lighttpd",
                                       "php5-cgi",
-                                      "php5-mysql",
                                       ],
             arch.PACKAGE_MGR_RPM: [
                                    "lighttpd",
                                    "lighttpd-fastcgi",
                                    "php-cli",
-                                   "php-mysql",
                                   ],
             }
     self.installPackage(pckg)
@@ -172,13 +169,11 @@ the installer.
     except shell.CommandError:
       raise InstallError("Could not restart lighttpd using /etc/init.d/lighttpd")
 
-    output.printlnInfo("Installed lighttpd with PHP and MySQL support.")
+    output.printlnInfo("Installed lighttpd with PHP support.")
 
   def install_portal(self):
     """
     Install the portal by copying to lighttpd's docroot.
-    Because LogMover has already been run, the DB has
-    already been bootstrapped
     """
 
     # get the location of the hadoop distribution

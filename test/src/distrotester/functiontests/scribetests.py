@@ -69,12 +69,12 @@ class ScribeTest(VerboseTestCase):
 
 
   def testNoRedundantCronJobs(self):
-    " CH-125: scribe logmover should have exactly two entries in the crontab "
+    " CH-125: scribe logmover should have exactly one entry in the crontab "
 
     hadoop_user = self.getProperties().getProperty(HADOOP_USER_KEY)
     logging.info("Checking crontab size for hadoop user: " + hadoop_user)
     cron_lines = shell.shLines("crontab -u " + hadoop_user + " -l")
-    self.assertEqual(len(cron_lines), 2, "expected 2 crontab lines")
+    self.assertEqual(len(cron_lines), 1, "expected 1 crontab line")
     logging.info("crontab seems to be the correct size for hadoop user")
 
 

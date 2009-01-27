@@ -102,9 +102,6 @@ class InstallProperties(Properties):
     "-i"               : SSH_IDENTITY_KEY,
     "-u"               : SSH_USER_KEY,
     "--user"           : SSH_USER_KEY,
-
-    # db super user stuff
-    "--db-superuser"   : DB_SUPERUSER_PASSWD_KEY,
   }
 
   # list of boolean flags (a subset of the above map).

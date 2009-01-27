@@ -176,26 +176,8 @@
 </property>
 
 <property>
-  <name>mapred.map.output.compression.codec</name>
-  <value>org.apache.hadoop.io.compress.LzoCodec</value>
-  <description>If the map outputs are compressed, how should they be
-               compressed? Cloudera Hadoop has detected native LZO compression
-               libraries on your system and has selected these for better
-               perofrmance.
-  </description>
-</property>
-<property>
-  <name>mapred.compress.map.output</name>
-  <value>true</value>
-</property>
-<property>
-  <name>mapred.output.compression.codec</name>
-  <value>org.apache.hadoop.io.compress.LzoCodec</value>
-</property>
-
-<property>
   <name>io.compression.codecs</name>
-  <value>org.apache.hadoop.io.compress.DefaultCodec,org.apache.hadoop.io.compress.GzipCodec,org.apache.hadoop.io.compress.LzoCodec</value>
+  <value>org.apache.hadoop.io.compress.DefaultCodec,org.apache.hadoop.io.compress.GzipCodec</value>
   <description>A list of the compression codec classes that can be used
                for compression/decompression.</description>
 </property>
