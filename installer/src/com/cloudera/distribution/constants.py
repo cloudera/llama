@@ -224,6 +224,9 @@ DFS_DATA_DIR = "dfs.data.dir"
 DFS_NAME_DIR = "dfs.name.dir"
 MAPRED_LOCAL_DIR = "mapred.local.dir"
 
+HADOOP_LOG_DIR_KEY = "hadoop.log.dir"
+HADOOP_LOG_DIR_ARG = "--hadoop-log-dir"
+HADOOP_LOG_DIR_DEFAULT = "logs"
 
 # advanced config settings below here.
 

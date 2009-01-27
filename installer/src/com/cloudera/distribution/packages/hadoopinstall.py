@@ -51,6 +51,7 @@ class HadoopInstall(toolinstall.ToolInstall):
     self.curUsername = None # who are we running as? (`whoami`)
     self.verified = False
     self.hdfsFormatMsg = None
+    self.hadoop_log_dir = None
 
     self.create_ssh_key = False
     self.redist_pubkey_filename = None
@@ -499,11 +500,31 @@ or specify your own username with --hadoop-user""")
   def getMasterHost(self):
     return self.masterHost
 
+
   def getNumSlaves(self):
     return toolinstall.getToolByName("GlobalPrereq").getNumSlaves()
 
+
   def getTempSlavesFileName(self):
     return toolinstall.getToolByName("GlobalPrereq").getTempSlavesFileName()
+
+
+  def configHadoopLogDir(self):
+    """ Configure where Hadoop writes its log files """
+
+    # grab the path from --hadoop-log-dir, default is ${HADOOP_HOME}/logs
+    self.hadoop_log_dir = self.properties.getProperty(HADOOP_LOG_DIR_KEY, HADOOP_LOG_DIR_DEFAULT);
+    if not self.isUnattended():
+      logging.info("""
+Hadoop stores log files containing diagnostic information for troubleshooting.
+By default, these are stored in a subdirectory of the Hadoop installation. You
+can override this setting here. Any relative paths will be joined to the Hadoop
+install directory.
+""")
+      self.hadoop_log_dir = prompt.getString("Where should Hadoop log files be stored?", \
+          self.hadoop_log_dir, True)
+
+    logging.debug("Storing Hadoop logs in " + self.hadoop_log_dir)
 
 
   def configHadoopSite(self):
@@ -1024,7 +1045,6 @@ to do, just accept the default values.""")
 
     # We need to open the file for append and, at minimum,  add JAVA_HOME
     # Also enable JMX on all the daemons.
-    # TODO(aaron): Also allow overriding of the logging stuff? (CH-76)
     # TODO(aaron): 0.2 -Eventually we'll want to overwrite the whole thing.
 
     destFileName = os.path.join(self.getConfDir(), "hadoop-env.sh")
@@ -1070,6 +1090,9 @@ to do, just accept the default values.""")
           + "-Dcom.sun.management.jmxremote.authenticate=false "\
           + "-Dcom.sun.management.jmxremote.ssl=false " \
           + "$HADOOP_BALANCER_OPTS\"\n")
+
+      log_dir = os.path.join("${HADOOP_HOME}", self.hadoop_log_dir)
+      handle.write("export HADOOP_LOG_DIR=" + log_dir + "\n")
 
       handle.close()
     except IOError, ioe:
@@ -1143,7 +1166,8 @@ to do, just accept the default values.""")
     makePathsForProperty(MAPRED_LOCAL_DIR)
 
     # Now make the log dir and chown it to the hadoop username.
-    logDir = os.path.join(self.getFinalInstallPath(), "logs")
+    logDir = self.hadoop_log_dir
+    logDir = os.path.join(self.getFinalInstallPath(), self.hadoop_log_dir)
     makeSinglePath(logDir)
 
   def get_ssh_warning(self):
@@ -1247,6 +1271,7 @@ the Hadoop daemons. This will cause problems starting Hadoop.""" % \
       self.configSshKeys()
 
     self.configMasterAddress()
+    self.configHadoopLogDir()
     self.configHadoopSite()
 
 
@@ -1273,11 +1298,9 @@ the Hadoop daemons. This will cause problems starting Hadoop.""" % \
     try:
       if not os.path.exists(sshKeyDir):
         dirutils.mkdirRecursive(sshKeyDir)
-        # permissions must be 0750 or more strict
-        shell.sh("chmod o-rwx \"" + sshKeyDir + "\"")
-        shell.sh("chmod g-w \"" + sshKeyDir + "\"")
-        shell.sh("chown " + hadoop_user + ":" + hadoop_user + " \"" \
-            + sshKeyDir + "\"")
+        # permissions must be 0750 or more strict. Just set them to 0700.
+        shell.sh("chmod go-rwx \"" + sshKeyDir + "\"")
+        shell.sh("chown " + hadoop_user + " \"" + sshKeyDir + "\"")
     except OSError, ose:
       raise InstallError("Could not create " + sshKeyDir + ": " + str(ose))
     except shell.CommandError:
@@ -1362,10 +1385,9 @@ the Hadoop daemons. This will cause problems starting Hadoop.""" % \
         raise InstallError("Cannot create ssh directory: " + str(ose))
 
       try:
-        # make sure the user owns the dir, and it's 0750 or better
+        # make sure the user owns the dir, and it's 0750 or better; use 0700.
         shell.sh("chown " + hadoop_user + " \"" + userSshDir + "\"")
-        shell.sh("chmod o-rwx \"" + userSshDir + "\"")
-        shell.sh("chmod g-w \"" + userSshDir + "\"")
+        shell.sh("chmod go-rwx \"" + userSshDir + "\"")
       except shell.CommandError:
         raise InstallError("Could not set permissions for " + userSshDir)
 
@@ -1547,6 +1569,9 @@ HDFS before using Hadoop, by running the command:
 
     argList.append("--hadoop-user")
     argList.append(self.getHadoopUsername())
+
+    argList.append(HADOOP_LOG_DIR_ARG)
+    argList.append(self.hadoop_log_dir)
 
     return argList
 
