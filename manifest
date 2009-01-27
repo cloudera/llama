@@ -18,6 +18,7 @@
 ./deps/log_mover
 ./deps/log_mover/settings.py
 ./doc
+./doc/hadoop_patches.txt
 ./README
 ./doc/LICENSE.txt
 ./bin
