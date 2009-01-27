@@ -73,6 +73,11 @@ class GeneralPruner:
     # saved.  Returns the number of pruned items
     old_date = common.get_threshold_date(self.__log_lifetime)
 
+    # TODO(aaron): This no longer functions right. connect() returns None,
+    # which will promptly crash the conn.cursor() call. We no longer support
+    # mysql. Of course, prune.py is deprecated now, so this should not get
+    # called. This code should disappear or get refactored out.
+
     conn = db.connection.connect()
     c = conn.cursor()
 

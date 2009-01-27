@@ -1,8 +1,6 @@
 #!/usr/bin/python
 #
-# (c) Copyright 2008 Cloudera, Inc.
-#
-# Installation system for Cloudera Hadoop
+# (c) Copyright 2009 Cloudera, Inc.
 #
 
 logMover = PythonTarget(

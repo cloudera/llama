@@ -22,9 +22,6 @@ import os
 
 import settings
 
-# storage modules
-import db.connection
-
 # pruner imports
 import pruners.general as general
 

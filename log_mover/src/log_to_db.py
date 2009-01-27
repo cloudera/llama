@@ -24,9 +24,6 @@ import os
 
 import settings
 
-# storage modules
-import db.connection
-
 # log mover imports
 import log_to_dbs.scribe_unix_cmd as scribe_unix_cmd
 import log_to_dbs.scribe_hadoop as scribe_hadoop

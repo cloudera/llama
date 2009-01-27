@@ -36,6 +36,9 @@ rm -rf /mnt/tmp/etc/cloudera
 rm -rf /tmp/cloudera
 rm -rf /tmp/cloudera-installer.log
 
+rm -f /var/log/hadoop/errors
+rm -rf /var/log/scribe
+
 # remove extraneous trash slaves files.
 rm -f /tmp/slaves-*
 rm -f /tmp/distro-*.tar.gz

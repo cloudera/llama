@@ -96,12 +96,6 @@ log_prune_date_col = {'vmstat': 'v_date',
                       'mpstat': 'm_date',
                      }
 
-# DB connection information
-db_host = 'localhost'
-db_user = 'ana'
-db_password = 'ana'
-db_database = 'ana'
-
 # the size of the input buffer when
 # reading in a scribe log
 scribe_buffer_size = 1024
@@ -110,3 +104,10 @@ scribe_buffer_size = 1024
 # when looking at /proc/net/dev
 # output
 net_io_eth_card = "eth0"
+
+# DB connection information
+db_host = 'localhost'
+db_user = 'ana'
+db_password = 'ana'
+db_database = 'ana'
+
