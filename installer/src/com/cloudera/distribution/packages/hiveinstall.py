@@ -79,9 +79,6 @@ class HiveInstall(toolinstall.ToolInstall):
   def configureHdfsServer(self):
     """ Figure out where the HDFS namenode is """
 
-    # TODO(aaron) 0.2 - This whole hdfs server may not be needed here
-    # after all. Evaluate whether we can pull this out.
-
     self.hdfsServer = self.properties.getProperty(HIVE_NAMENODE_KEY)
 
     hadoopInstall = self.getHadoopInstaller()
@@ -146,7 +143,9 @@ class HiveInstall(toolinstall.ToolInstall):
     self.hiveParams["hive.metastore.metadb.dir"] = \
         "file://" + HIVE_METADB_DIR
     self.hiveParams["hive.metastore.uris"] = "file://" + HIVE_METADB_DIR
-    self.hiveParams["hive.metastore.warehouse.dir"] = HIVE_WAREHOUSE_DIR
+    # CH-150: full URI to warehouse required.
+    self.hiveParams["hive.metastore.warehouse.dir"] = \
+        self.hdfsServer + HIVE_WAREHOUSE_DIR
     self.hiveParams["hive.metastore.connect.retries"] = "5"
     self.hiveParams["hive.metastore.rawstore.impl"] = \
         "org.apache.hadoop.hive.metastore.ObjectStore"

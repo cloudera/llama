@@ -58,6 +58,10 @@ setLogVerbosity = properties.getProperty(output.LOG_VERBOSITY_PROP)
 if setLogVerbosity == None:
   properties.setProperty(output.LOG_VERBOSITY_PROP, DEFAULT_LOG_VERBOSITY)
 
+# CH-120: If we don't have a tty on stdin, then enforce noninteractive mode.
+if not sys.stdin.isatty():
+  logging.info("Could not find a tty on stdin; forcing unattended installation.")
+  properties.setProperty(UNATTEND_INSTALL_KEY, INSTALL_UNATTENDED_VAL)
 
 # record the directory where the user started, for use with relative paths
 # to hadoop-site.xml, slaves, etc.

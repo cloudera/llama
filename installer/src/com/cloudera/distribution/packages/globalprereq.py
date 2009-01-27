@@ -123,7 +123,7 @@ class GlobalPrereqInstall(ToolInstall):
       handle = open(filename)
       slave_lines = handle.read()
       handle.close()
-      
+
       handle = open(filename, "w")
       handle.write(self.get_slaves_file_boilerplate())
       handle.write(slave_lines)

@@ -31,7 +31,7 @@ INSTALL_INTERACTIVE_VAL = False
 
 # we assume there's a user at the controls unless they specifically
 # tell us otherwise.
-UNATTEND_DEFAULT = False
+UNATTEND_DEFAULT = INSTALL_INTERACTIVE_VAL
 
 # the DB user who can create databases, users, etc
 DB_SUPERUSER = "root"

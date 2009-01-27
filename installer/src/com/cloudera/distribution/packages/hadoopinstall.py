@@ -885,6 +885,15 @@ to do, just accept the default values.""")
     """ Always write in the following keys; don't poll the user for this """
     handle.write("""
 <property>
+  <name>mapred.jobtracker.taskScheduler</name>
+  <value>org.apache.hadoop.mapred.FairScheduler</value>
+</property>
+<property>
+  <name>mapred.fairscheduler.allocation.file</name>
+  <value>/usr/share/cloudera/hadoop/conf/fairscheduler.xml</value>
+</property>
+
+<property>
   <name>mapred.output.compression.type</name>
   <value>BLOCK</value>
   <description>If the job outputs are to compressed as SequenceFiles, how should
@@ -958,6 +967,22 @@ to do, just accept the default values.""")
     """ Return the filename where we installed hadoop-site.xml """
     return os.path.join(self.getConfDir(), "hadoop-site.xml")
 
+
+  def installFairScheduler(self):
+    """ Write out fairscheduler.xml """
+
+    fair_scheduler_file = os.path.join(self.getConfDir(), "fairscheduler.xml")
+    try:
+      handle = open(fair_scheduler_file, "w")
+      # File is currently empty -- just a placeholder.
+      handle.write("""<?xml version="1.0"?>
+<allocations>
+</allocations>
+""")
+      handle.close()
+    except IOError, ioe:
+      raise InstallError("Could not write fairscheduler.xml file (" \
+          + str(ioe) + ")")
 
   def installHadoopSiteFile(self):
     """ Write out the hadoop-site.xml file that the user configured. """
@@ -1424,6 +1449,7 @@ the Hadoop daemons. This will cause problems starting Hadoop.""" % \
       self.installDfsExcludesFile()
 
     self.installHadoopSiteFile()
+    self.installFairScheduler()
     self.installHadoopEnvFile()
     self.createPaths()
 
