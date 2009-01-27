@@ -984,6 +984,7 @@ to do, just accept the default values.""")
       raise InstallError("Could not write fairscheduler.xml file (" \
           + str(ioe) + ")")
 
+
   def installHadoopSiteFile(self):
     """ Write out the hadoop-site.xml file that the user configured. """
 
