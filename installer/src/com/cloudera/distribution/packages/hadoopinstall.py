@@ -236,6 +236,24 @@ interfere with the installation process. If errors occur, try stopping
 these services and reinstalling this distribution.
 """)
 
+
+  def get_start_hdfs_cmd(self):
+    """ Return the command to start HDFS """
+
+    hadoopBinPath = os.path.join(self.getFinalInstallPath(), "bin")
+    startDfsCmd = os.path.join(hadoopBinPath, "start-dfs.sh")
+    cmd = self.getUserSwitchCmdStr() + "\"" + startDfsCmd + "\""
+    return cmd
+
+
+  def set_hdfs_started_flag(self):
+    """ If we already started HDFS via another mechanism, set the flag
+        that makes ensureHdfsStarted() think that it has already been
+        started via that mechanism. """
+
+    self.startedHdfs = True
+
+
   def ensureHdfsStarted(self):
     """ Ensures that the HDFS cluster that we just put together is started
         (starting it if necessary). This must be run in postinstall or
@@ -253,12 +271,9 @@ these services and reinstalling this distribution.
       scribe_installer.ensureScribeStarted()
 
     output.printlnVerbose("Starting HDFS")
-    hadoopBinPath = os.path.join(self.getFinalInstallPath(), "bin")
-    startDfsCmd = os.path.join(hadoopBinPath, "start-dfs.sh")
-    cmd = self.getUserSwitchCmdStr() + "\"" + startDfsCmd + "\""
 
     try:
-      shell.sh(cmd)
+      shell.sh(self.get_start_hdfs_cmd())
     except shell.CommandError:
       raise InstallError("Can't start HDFS")
 
@@ -289,15 +304,22 @@ these services and reinstalling this distribution.
     self.startedMapRed = True
 
 
+  def get_hadoop_cmdline(self):
+    """ Returns the path to bin/hadoop """
+
+    hadoopBinPath = os.path.join(self.getFinalInstallPath(), "bin")
+    hadoopCmd = os.path.join(hadoopBinPath, "hadoop")
+    return self.getUserSwitchCmdStr() + "\"" + hadoopCmd + "\" "
+
+
   def hadoopCmd(self, args):
     """ Run a hadoop command with "bin/hadoop args" as the hadoop user.
         You are responsible for ensuring that the appropriate services
         are started by calling ensure*Started() yourself, first.
         Returns all lines returned by the hadoop command. """
 
-    hadoopBinPath = os.path.join(self.getFinalInstallPath(), "bin")
-    hadoopCmd = os.path.join(hadoopBinPath, "hadoop")
-    cmd = self.getUserSwitchCmdStr() + "\"" + hadoopCmd + "\" " + args
+    hadoop_cmdline = self.get_hadoop_cmdline()
+    cmd = hadoop_cmdline + args
 
     try:
       lines = shell.shLines(cmd)

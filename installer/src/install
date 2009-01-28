@@ -14,16 +14,18 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-# Installation tool for Cloudera Hadoop Distribution
-# main entry point
-#
-# Usage: install [options]
-# Type "install --help" for full usage instructions
-#
-#
+
+"""
+  Installation tool for Cloudera Hadoop Distribution
+  main entry point
+
+  Usage: install [options]
+  Type "install --help" for full usage instructions
+"""
 
 import logging
 import os
+import shutil
 import sys
 
 import com.cloudera.distribution.arch as arch
@@ -32,8 +34,10 @@ import com.cloudera.distribution.env as env
 from   com.cloudera.distribution.installerror import InstallError
 import com.cloudera.distribution.installproperties as installproperties
 import com.cloudera.distribution.manifest as manifest
+import com.cloudera.distribution.postinstall as postinstall
 import com.cloudera.distribution.remotemgr as remotemgr
 import com.cloudera.distribution.toolinstall as toolinstall
+import com.cloudera.tools.shell as shell
 import com.cloudera.util.output as output
 
 # do this before doing anything else.
@@ -97,6 +101,7 @@ if archDetector.getArch() == arch.ARCH_UNKNOWN:
   properties.setProperty(ALLOW_NATIVE_COMPRESSION_KEY, False)
 
 globalPrereqInstaller = None
+action_script = None
 
 try:
   # Assemble installation plan from command line flags
@@ -146,6 +151,39 @@ can select by pressing [enter].
     output.printlnInfo("Performing postinstall for " + tool.getName())
     tool.postInstall()
 
+  if globalPrereqInstaller.isMaster():
+    # Write out the postinstall script and move it to its destination.
+    action_script_src = postinstall.write_action_script()
+    action_script = os.path.join(globalPrereqInstaller.getInstallPrefix(), "postinstall")
+    shutil.move(action_script_src, action_script)
+    try:
+      shell.sh("chmod u+x " + action_script)
+    except shell.CommandError:
+      raise InstallError("Error writing postinstall action script")
+
+    if globalPrereqInstaller.mayStartDaemons():
+      # We're allowed to directly use Hadoop services in this installation if we'd
+      # like. Execute the post-install script now
+      logging.info("""Setting up your distributed filesystem and starting services...
+(This may take a few minutes)
+""")
+      try:
+        postinstall.execute_actions()
+        # if the actions ran successfully, just delete the script.
+        os.unlink(action_script)
+      except InstallError, ie:
+        logging.error("""Some operations need to be performed before your HDFS instance use ready
+for use. These operations have been written to a script, at:
+  %(installscript)s
+I tried running the script for you, but it failed part-way through:
+  %(err)s
+You need to correct the error, and then re-run it. You can delete the script
+when it has run successfully.
+
+""" % { "installscript" : action_script,
+        "err"           : str(ie) })
+        raise
+
   # Perform any verification steps that this all installed OK
   for tool in installPlan.getInstallItems():
     output.printlnInfo("Verifying installation of " + tool.getName())
@@ -157,24 +195,40 @@ except InstallError, ie:
   output.printlnError("Installation has been aborted")
   sys.exit(1)
 
-if len(remote_failed_hosts) == 0:
-  # all good
-  output.printlnInfo("""
 
-***********************************************************************
+# Calculate and display a large summary banner that describes the state of the install.
+remote_deploy_failed = len(remote_failed_hosts) > 0
+post_install_needed = action_script != None and os.path.exists(action_script)
+
+if not post_install_needed:
+  if not remote_deploy_failed:
+    summary = """
 The Cloudera Hadoop Distribution installation process is complete!
-***********************************************************************
-
-""")
-else:
-  output.printlnInfo("""
-
-***********************************************************************
-The Cloudera Hadoop Distribution installation process has completed
+"""
+  else:
+    summary = """
+The Cloudera Hadoop Distribution install process has completed
 locally. Errors were encountered when deploying to remote hosts.
+"""
+
+if post_install_needed:
+  summary = """
+The Cloudera Hadoop Distribution has been installed locally, but you
+must run a postinstall script before your system is ready for use.
+"""
+  if remote_deploy_failed:
+    summary += "Also, errors were encountered when deploying to remote hosts.\n"
+
+logging.info("""
+
+***********************************************************************
+%(summary)s
 ***********************************************************************
 
-""")
+""" % { "summary" : summary })
+
+
+# Now print some slightly-more technical information
 
 globalPrereqName = None
 if globalPrereqInstaller != None:
@@ -216,8 +270,22 @@ if len(remote_failed_hosts) > 0:
     output.printlnInfo("  " + host)
   output.printlnInfo("You may need to manually install on these hosts.")
 
+
+# any tool-specific user-run steps/warnings are emitted here:
 for tool in installPlan.getInstallItems():
   tool.printFinalInstructions()
+
+# if we have a postinstall script present, tell the user to run it.
+if post_install_needed:
+  logging.info("""
+Before your cluster is ready for use, a postinstall script must be run once.
+The command to run this script is:
+  %(script)s
+This should be run as your current username (%(user)s). This should run
+after any HDFS format commands.
+""" % { "script" : os.path.abspath(action_script),
+        "user"   : globalPrereqInstaller.getCurrUser() })
+
 
 # echo out information about the user's environment.
 env.writeEnvironmentScript()
