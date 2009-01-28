@@ -147,6 +147,9 @@ class StandaloneTest(VerboseTestCase):
     shell.sh("chmod a+w " + BASE_TMP_DIR)
     shell.sh("chmod o+t " + BASE_TMP_DIR)
 
+    # Delete things associated with logmover / scribe
+    shell.sh("rm -rf " + LOGMOVER_OUT_DIR)
+    shell.sh("rm -rf " + SCRIBE_OUT_DIR)
 
 
   def testHadoopOnly(self):
