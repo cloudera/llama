@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+#
 # (c) Copyright 2009 Cloudera, Inc.
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,6 +26,8 @@ import os
 
 import settings
 
+from   com.cloudera.util.pidfile import PidFile
+
 # log mover imports
 import log_to_dbs.scribe_unix_cmd as scribe_unix_cmd
 import log_to_dbs.scribe_hadoop as scribe_hadoop
@@ -43,6 +47,8 @@ file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
 # conf
+
+logger.info("*** - STARTUP_MSG - log_to_db.py")
 
 action_classes = {'vmstat':
                      scribe_unix_cmd.ScribeUnixCMDLogToDB(
@@ -82,4 +88,16 @@ def log_to_db():
     action_classes[mover].store_progress()
 
 if __name__ == "__main__":
-  log_to_db()
+  # only want to run one logmover at a time
+  pid_file_obj = PidFile(settings.hadoop_scribe_pidfile)
+  if not pid_file_obj.acquire():
+    logger.error("Could not lock pid file " + settings.hadoop_scribe_pidfile + " - exiting.")
+    sys.exit(1)
+  else:
+    try:
+      logger.debug("Acquired pidfile lock on " + settings.hadoop_scribe_pidfile)
+      log_to_db()
+    finally:
+      logger.debug("Releasing pidfile " + settings.hadoop_scribe_pidfile)
+      pid_file_obj.release()
+

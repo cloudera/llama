@@ -14,7 +14,8 @@ logMover = PythonTarget(
             "src/pruners",
             "src/settings.py",
             "src/db_init.sql",
-            "src/db_user_and_db.sql"])
+            "src/db_user_and_db.sql"],
+  requiredTargets = [ "python/Common" ])
 
 # packaging the log mover up for use in the tarball
 release = PythonRedistTarget(

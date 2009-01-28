@@ -375,7 +375,10 @@ SCRIBE_WRAPPER_NAME = "scribed-run"
 # The name of the file written to by the LogMover for ERROR entries.
 # Must be writable by whomever runs log_to_db.py, and readable by the
 # lighttpd user.
-LOG_MOVER_ERROR_FILE = "/var/log/hadoop/errors"
+# Note that these filenames are also controlled in log_mover's settings.py file
+LOG_MOVER_RECORD_DIR = "/var/log/hadoop"
+LOG_MOVER_ERROR_FILE = os.path.join(LOG_MOVER_RECORD_DIR, "errors")
+LOG_MOVER_OFFSET_FILE = os.path.join(LOG_MOVER_RECORD_DIR, "offset")
 
 
 #######################################################################

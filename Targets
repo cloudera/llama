@@ -146,10 +146,9 @@ docsComponent = DirComponent(
   srcDir  = "doc",
   destDir = "doc")
 
-# but promote the README to the toplevel, and exclude its redundant copy
-# in the doc dir.
+# and put a redundant copy of the README in the top level, so the
+# user sees it straight away.
 readmeComponent = FileComponent(srcFile = "doc/README")
-excludeExtraReadmeComponent = ExcludeComponent(name="doc/README")
 
 # dependencies such as scribe libraries, configuration files, etc
 depsComponent = DirComponent(
@@ -169,8 +168,7 @@ supportedDistro = PackageTarget(
     hivePackageComponent,
     depsComponent,
     docsComponent,
-    readmeComponent,
-    excludeExtraReadmeComponent
+    readmeComponent
   ],
   manifestFile = "manifest")
 

@@ -84,31 +84,35 @@ class LogMoverInstall(toolinstall.ToolInstall):
         set its permissions.
     """
 
-    log_dir = os.path.dirname(LOG_MOVER_ERROR_FILE)
-    try:
-      dirutils.mkdirRecursive(log_dir)
-    except OSError, ose:
-      raise InstallError("Could not create log directory: " + log_dir + " -- " + str(ose))
+    def make_file(filename):
+      log_dir = os.path.dirname(filename)
+      try:
+        dirutils.mkdirRecursive(log_dir)
+      except OSError, ose:
+        raise InstallError("Could not create log directory: " + log_dir + " -- " + str(ose))
 
-    try:
-      # Open the log file, creating it if it doesn't already exist.
-      handle = open(LOG_MOVER_ERROR_FILE, "a")
-      handle.close()
-    except IOError, ioe:
-      raise InstallError("Could not create log file: " + LOG_MOVER_ERROR_FILE + " -- " + str(ioe))
+      try:
+        # Open the log file, creating it if it doesn't already exist.
+        handle = open(filename, "a")
+        handle.close()
+      except IOError, ioe:
+        raise InstallError("Could not create log file: " + filename + " -- " + str(ioe))
 
-    try:
-      # chown/chmod it appropriately: the lighttpd user needs to read it,
-      # and the logmover user (hadoop_user) needs to write it.
-      cmd = "chmod 0644 \"" + LOG_MOVER_ERROR_FILE + "\""
-      shell.sh(cmd)
+      try:
+        # chown/chmod it appropriately: the lighttpd user needs to read it,
+        # and the logmover user (hadoop_user) needs to write it.
+        cmd = "chmod 0644 \"" + filename + "\""
+        shell.sh(cmd)
 
-      hadoop_tool = toolinstall.getToolByName("Hadoop")
-      hadoop_user = hadoop_tool.getHadoopUsername()
-      cmd = "chown " + hadoop_user + " \"" + LOG_MOVER_ERROR_FILE + "\""
-      shell.sh(cmd)
-    except shell.CommandError:
-      raise InstallError("Could not set permissions for " + LOG_MOVER_ERROR_FILE)
+        hadoop_tool = toolinstall.getToolByName("Hadoop")
+        hadoop_user = hadoop_tool.getHadoopUsername()
+        cmd = "chown " + hadoop_user + " \"" + filename + "\""
+        shell.sh(cmd)
+      except shell.CommandError:
+        raise InstallError("Could not set permissions for " + filename)
+
+    make_file(LOG_MOVER_ERROR_FILE)
+    make_file(LOG_MOVER_OFFSET_FILE)
 
 
   def installConfigs(self):
@@ -199,7 +203,7 @@ class LogMoverInstall(toolinstall.ToolInstall):
     need_log_to_db = True
     for existing_line in existing_cron:
       if existing_line.find("log_to_db.py") >= 0:
-        logging.debug("Found existing cron job for log_to_db.py")
+        logging.debug("Found existing cron job for log_to_db.py: " + existing_line.strip())
         need_log_to_db = False
 
     if need_log_to_db:

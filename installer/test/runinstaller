@@ -36,8 +36,11 @@ rm -rf /mnt/tmp/etc/cloudera
 rm -rf /tmp/cloudera
 rm -rf /tmp/cloudera-installer.log
 
-rm -f /var/log/hadoop/errors
+rm -rf /var/log/hadoop
 rm -rf /var/log/scribe
+
+# blow away hadoop user's crontab
+$sudoPrefix crontab - < /dev/null
 
 # remove extraneous trash slaves files.
 rm -f /tmp/slaves-*
