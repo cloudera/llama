@@ -16,6 +16,7 @@
 #
 # Defines the ToolInstall instance that installs Hadoop
 
+import pickle
 import logging
 import math
 import os
@@ -1603,5 +1604,55 @@ HDFS before using Hadoop, by running the command:
     if self.warn_need_ssh_keys:
       logging.info(self.get_ssh_warning())
 
+
+  def preserve_state(self, handle):
+    pmap = {
+      "configured_site_online" : self.configuredHadoopSiteOnline,
+      "hadoop_site_dict"       : self.hadoopSiteDict,
+      "lib_lzo_found"          : self.libLzoFound,
+      "lib_bzip_found"         : self.libBzipFound,
+      # TODO: These next two are transient state -- they should not be included in
+      # what we memoize ,and we should determine the correct values on restart.
+      "started_hdfs"           : self.startedHdfs,
+      "started_mr"             : self.startedMapRed,
+      "hadoop_user"            : self.hadoopUser,
+      "cur_username"           : self.curUsername,
+      "verified"               : self.verified,
+      "hdfs_format_msg"        : self.hdfsFormatMsg,
+      "hadoop_log_dir"         : self.hadoop_log_dir,
+      "create_ssh_key"         : self.create_ssh_key,
+      "redist_pubkey_filename" : self.redist_pubkey_filename,
+      "warn_need_ssh_keys"     : self.warn_need_ssh_keys
+    }
+
+    pickle.dump(handle, pmap)
+
+
+  def restore_state(self, handle, role_list, version):
+    self.role_list = role_list
+    pmap = pickle.load(handle)
+
+    if version == "0.2.0":
+      self.restore_0_2_0(pmap)
+    else:
+      raise InstallError("Cannot read state from file for version " + version)
+
+  def restore_0_2_0(self, pmap):
+    """ Read an 0.2.0 formatted pickle map """
+
+    self.configuredHadoopSiteOnline = pmap["configured_site_online"]
+    self.hadoopSiteDict             = pmap["hadoop_site_dict"]
+    self.libLzoFound                = pmap["lib_lzo_found"]
+    self.libBzipFound               = pmap["lib_bzip_found"]
+    self.startedHdfs                = pmap["started_hdfs"]
+    self.startedMapRed              = pmap["started_mr"]
+    self.hadoopUser                 = pmap["hadoop_user"]
+    self.curUsername                = pmap["cur_username"] # TODO(aaron) This needs validation.
+    self.verified                   = pmap["verified"]
+    self.hdfsFormatMsg              = pmap["hdfs_format_msg"]
+    self.hadoop_log_dir             = pmap["hadoop_log_dir"]
+    self.create_ssh_key             = pmap["create_ssh_key"]
+    self.redist_pubkey_filename     = pmap["redist_pubkey_filename"]
+    self.warn_need_ssh_keys         = pmap["warn_need_ssh_keys"]
 
 

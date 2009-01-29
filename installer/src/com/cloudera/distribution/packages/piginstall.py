@@ -16,6 +16,7 @@
 #
 # Defines the ToolInstall instance that installs Pig
 
+import pickle
 import logging
 import os
 import sys
@@ -239,6 +240,27 @@ Reason: %(ioe)s""" % { "ioe" : str(ioe) })
 
   def printFinalInstructions(self):
     pass
+
+  def preserve_state(self, handle):
+    pmap = {
+      "job_tracker_addr" : self.jobTrackerAddr
+    }
+
+    pickle.dump(handle, pmap)
+
+  def restore_state(self, handle, role_list, version):
+    self.role_list = role_list
+    pmap = pickle.load(handle)
+
+    if version == "0.2.0":
+      self.restore_0_2_0(pmap)
+    else:
+      raise InstallError("Cannot read state from file for version " + version)
+
+  def restore_0_2_0(self, pmap):
+    """ Read an 0.2.0 formatted pickle map """
+
+    self.jobTrackerAddr = pmap["job_tracker_addr"]
 
 
 

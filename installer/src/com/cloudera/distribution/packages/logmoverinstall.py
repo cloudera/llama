@@ -16,6 +16,7 @@
 #
 # Defines the ToolInstall instance that installs LogMover
 
+import pickle
 import logging
 import tempfile
 
@@ -29,9 +30,6 @@ import com.cloudera.distribution.toolinstall as toolinstall
 import com.cloudera.tools.dirutils as dirutils
 
 class LogMoverInstall(toolinstall.ToolInstall):
-
-  # the backup file (if any) of the .my.cnf file
-  myCnfBackup = None
 
   def __init__(self, properties):
     toolinstall.ToolInstall.__init__(self, "LogMover", properties)
@@ -365,4 +363,18 @@ again. (Same as above.)
   def getRedeployArgs(self):
     """ Provide any command-line arguments to the installer on the slaves """
     return []
+
+
+  def preserve_state(self, handle):
+    pass # doesn't write any state.
+
+
+  def restore_state(self, handle, role_list, version):
+    self.role_list = role_list
+
+    if version == "0.2.0":
+      pass # no state preserved in this state :D
+    else:
+      raise InstallError("Cannot read state from file for version " + version)
+
 

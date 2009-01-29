@@ -16,6 +16,7 @@
 #
 # Defines the ToolInstall instance that installs the web portal
 
+import pickle
 import os
 import logging
 
@@ -298,3 +299,15 @@ the installer.
     """ Provide any command-line arguments to the installer on the slaves """
     return []
 
+
+  def preserve_state(self, handle):
+    pass # doesn't write any state.
+
+
+  def restore_state(self, handle, role_list, version):
+    self.role_list = role_list
+
+    if version == "0.2.0":
+      pass # no state preserved in this state :D
+    else:
+      raise InstallError("Cannot read state from file for version " + version)

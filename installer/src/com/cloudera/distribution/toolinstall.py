@@ -29,6 +29,7 @@ import env
 # (aaron - This should be com.cloudera.distribution.env)
 
 import com.cloudera.distribution.arch as arch
+
 import com.cloudera.util.output as output
 import com.cloudera.tools.shell as shell
 
@@ -41,6 +42,42 @@ def getToolByName(name):
     return toolMap[name]
   except KeyError:
     return None
+
+
+def make_tool_for_name(name, properties):
+  """ If a tool with a given name already exists, return it. Otherwise, make the
+      appropriate object.
+  """
+
+  # Delayed module imports to defeat recursion.
+  from   com.cloudera.distribution.packages.globalprereq import GlobalPrereqInstall
+  from   com.cloudera.distribution.packages.hadoopinstall import HadoopInstall
+  from   com.cloudera.distribution.packages.hiveinstall import HiveInstall
+  from   com.cloudera.distribution.packages.logmoverinstall import LogMoverInstall
+  from   com.cloudera.distribution.packages.piginstall import PigInstall
+  from   com.cloudera.distribution.packages.portalinstall import PortalInstall
+  from   com.cloudera.distribution.packages.scribeinstall import ScribeInstall
+
+  existing_tool = getToolByName(name)
+  if existing_tool != None:
+    return existing_tool
+  else:
+    if name == "GlobalPrereq":
+      return GlobalPrereqInstall(properties)
+    elif name == "Hadoop":
+      return HadoopInstall(properties)
+    elif name == "Hive":
+      return HiveInstall(properties)
+    elif name == "LogMover":
+      return LogMoverInstall(properties)
+    elif name == "Pig":
+      return PigInstall(properties)
+    elif name == "Portal":
+      return PortalInstall(properties)
+    elif name == "Scribe":
+      return ScribeInstall(properties)
+    else:
+      raise InstallError("No installer for " + name)
 
 
 def getToolList():
@@ -374,10 +411,12 @@ class ToolInstall(object):
         all ToolInstall objects have run their install() operations. """
     raise InstallError("Called postInstall() on abstract ToolInstall")
 
+
   def verify(self):
     """ Run post-installation verification tests, if configured """
     output.printlnVerbose("No verification tests for " + self.getName() \
       + "; (ok)")
+
 
   def printFinalInstructions(self):
     """ If there are any final instructions to the user after installation
@@ -385,4 +424,28 @@ class ToolInstall(object):
 
     # default: no instructions:
     pass
+
+
+  def preserve_state(self, handle):
+    """ Write out the state of this object to the provided file handle in such
+        a way that we can restore the complete state of this object when we're
+        reloading.
+    """
+
+    raise InstallError("Called preserve_state() on abstract ToolInstall")
+
+
+  def restore_state(self, handle, role_list, version):
+    """ Initialize the state of this object with the intent of fulfilling installation
+        actions for the applicable roles from role_list.
+
+        The 'version' provided is the version of the installer who wrote the
+        state file; if this is lower than the current one, then either throw
+        an InstallError if the state cannot be upgraded, or perform the
+        transformation to the current version.
+    """
+
+    raise InstallError("Called restore_state() on abstract ToolInstall")
+
+
 

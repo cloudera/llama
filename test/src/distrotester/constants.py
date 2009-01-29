@@ -134,7 +134,7 @@ REMOTE_LOG_FILENAME = "/mnt/cloudera-tester.log"
 
 # How do we invoke the distribution installer
 # TODO (aaron): This should be parameterizable by version number
-DISTRIB_DEST_DIR = "/mnt/cloudera-hadoop-0.1.1/"
+DISTRIB_DEST_DIR = "/mnt/cloudera-hadoop-0.2.0/"
 INSTALLER_COMMAND = os.path.join(DISTRIB_DEST_DIR, "bin/install")
 
 INSTALL_PREFIX = "/mnt/installed-distro"

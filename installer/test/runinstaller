@@ -63,7 +63,7 @@ fi
   --log-level DEBUG \
   --format-hdfs \
   --install-bindir \
-  ../../../../bin/redist/projects/HadoopDist_supportedDistro/cloudera-hadoop-0.1.1/bin\
+  ../../../../bin/redist/projects/HadoopDist_supportedDistro/cloudera-hadoop-0.2.0/bin\
   --namenode "hdfs://$thishost:9000/" --jobtracker "$thishost:9001" \
   --debug \
   "$@"

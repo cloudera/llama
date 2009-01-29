@@ -18,6 +18,7 @@
 # prerequisite configuration
 #   e.g., get the user's ssh key file for slave machines, etc.
 
+import pickle
 import logging
 import os
 import tempfile
@@ -577,3 +578,42 @@ Press [enter] to continue.""")
     argList.append(javaHome)
 
     return argList
+
+  def preserve_state(self, handle):
+    pmap = {
+      "slaves_file_name" : self.slavesFileName,
+      "num_slaves"       : self.numSlaves,
+      "install_prefix"   : self.installPrefix,
+      "remote_prefix"    : self.remotePrefix,
+      "ssh_key"          : self.sshKey,
+      "upload_prefix"    : self.uploadPrefix,
+      "upload_user"      : self.uploadUser,
+      "config_dir"       : self.configDir,
+      "java_home"        : self.javaHome
+    }
+
+    pickle.dump(handle, pmap)
+
+  def restore_state(self, handle, role_list, version):
+    self.role_list = role_list
+    pmap = pickle.load(handle)
+
+    if version == "0.2.0":
+      self.restore_0_2_0(pmap)
+    else:
+      raise InstallError("Cannot read state from file for version " + version)
+
+  def restore_0_2_0(self, pmap):
+    """ Read an 0.2.0 formatted pickle map """
+
+    self.slavesFileName = pmap["slaves_file_name"]
+    self.numSlaves      = pmap["num_slaves"]
+    self.installPrefix  = pmap["install_prefix"]
+    self.remotePrefix   = pmap["remote_prefix"]
+    self.sshKey         = pmap["ssh_key"]
+    self.uploadPrefix   = pmap["upload_prefix"]
+    self.uploadUser     = pmap["upload_user"]
+    self.configDir      = pmap["config_dir"]
+    self.javaHome       = pmap["java_home"]
+
+

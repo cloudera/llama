@@ -81,7 +81,7 @@ supportedHadoopPackage = HadoopPackageTarget(
   packageName   = "distrib-hadoop",
   baseHadoopDir = "thirdparty/hadoop-0.18.2",
   baseVersion   = "0.18.2",
-  patchVersion  = "CH-0.1.1",
+  patchVersion  = "CH-0.2.0",
   patchPlan     = [
       "projects/HadoopDist/patches/scribe-log4j/scribe_hadoop_trunk_v4.patch",
       "projects/HadoopDist/patches/nn+jt_jsp/nn+jt_cloudera_0.18.2_noheader.patch",
@@ -136,7 +136,7 @@ pigPackageComponent = PackageComponent(
 # take the hive tgz package we assembled in thirdparty/hive/ and include
 # this in our distribution package
 hivePackageComponent = PackageComponent(
-  targetName = "thirdparty/hive-chd-0.1.1:hivePackage",
+  targetName = "thirdparty/hive-chd-0.2.0:hivePackage",
   includeZip = True,
   destDir    = "packages")
 
@@ -160,7 +160,7 @@ depsComponent = DirComponent(
 # supportedDistro is the one released to support clients
 supportedDistro = PackageTarget(
   packageName = "cloudera-hadoop",
-  version     = "0.1.1",
+  version     = "0.2.0",
   components  = [
     hadoopComponent,
     installerComponent,

@@ -16,6 +16,7 @@
 #
 # Defines the ToolInstall instance that installs Scribe
 
+import pickle
 import logging
 import os
 import socket
@@ -453,4 +454,32 @@ boot.
 
     if self.isDaemonRunning():
       output.printlnInfo("Note: scribed has already been started.")
+
+  def preserve_state(self, handle):
+    pmap = {
+      "hostname"          : self.hostname,
+      "scribe_log_home"   : self.scribeLogHome,
+      "scribe_user"       : self.scribeUser,
+      "master_host"       : self.masterHost,
+      "is_scribe_started" : self.isScribeStarted,
+    }
+
+    pickle.dump(handle, pmap)
+
+  def restore_state(self, handle, role_list, version):
+    self.role_list = role_list
+    pmap = pickle.load(handle)
+
+    if version == "0.2.0":
+      self.restore_0_2_0(pmap)
+    else:
+      raise InstallError("Cannot read state from file for version " + version)
+
+  def restore_0_2_0(self, pmap):
+    """ Read an 0.2.0 formatted pickle map """
+    self.hostname        = pmap["hostname"]
+    self.scribeLogHome   = pmap["scribe_log_home"]
+    self.scribeUser      = pmap["scribe_user"]
+    self.masterHost      = pmap["master_host"]
+    self.isScribestarted = pmap["is_scribe_started"]
 

@@ -36,6 +36,8 @@ import com.cloudera.distribution.installproperties as installproperties
 import com.cloudera.distribution.manifest as manifest
 import com.cloudera.distribution.postinstall as postinstall
 import com.cloudera.distribution.remotemgr as remotemgr
+import com.cloudera.distribution.roles as roles
+import com.cloudera.distribution.serializer as serializer
 import com.cloudera.distribution.toolinstall as toolinstall
 import com.cloudera.tools.shell as shell
 import com.cloudera.util.output as output
@@ -289,6 +291,11 @@ after any HDFS format commands.
 
 # echo out information about the user's environment.
 env.writeEnvironmentScript()
+
+serializer.preserve_state(SERIALIZATION_FILENAME)
+tools=serializer.restore_state(SERIALIZATION_FILENAME, roles.get_role_names(), properties)
+for tool in tools:
+  print "got tool back: " + tool.getName()
 
 sys.exit(0)
 

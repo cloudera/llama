@@ -16,6 +16,7 @@
 #
 # Defines the ToolInstall instance that installs Hive
 
+import pickle
 import logging
 import os
 import re
@@ -251,5 +252,29 @@ class HiveInstall(toolinstall.ToolInstall):
 
   def printFinalInstructions(self):
     pass
+
+  def preserve_state(self, handle):
+    pmap = {
+      "hive_params" : self.hiveParams,
+      "hdfs_server" : self.hdfsServer
+    }
+
+    pickle.dump(handle, pmap)
+
+
+  def restore_state(self, handle, role_list, version):
+    self.role_list = role_list
+    pmap = pickle.load(handle)
+
+    if version == "0.2.0":
+      self.restore_0_2_0(pmap)
+    else:
+      raise InstallError("Cannot read state from file for version " + version)
+
+  def restore_0_2_0(self, pmap):
+    """ Read an 0.2.0 formatted pickle map """
+
+    self.hiveParams = pmap["hive_params"]
+    self.hdfsSever  = pmap["hdfs_server"]
 
 

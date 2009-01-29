@@ -367,6 +367,12 @@ HIVE_METADB_DIR = "/var/metastore/metadb/"
 
 
 #######################################################################
+# Serialization and state preservation
+
+# Where do we write the state of the ToolInstall objects to?
+SERIALIZATION_FILENAME = os.path.expanduser("~/.cloudera_installer")
+
+#######################################################################
 # Scribe configuration
 
 # this exists within HADOOP_INSTALL_SUBDIR
@@ -444,7 +450,7 @@ HADOOP_PACKAGE = "hadoop-" + HADOOP_VERSION + ".tar.gz"
 # Hive and Pig don't have formal releases; we track their svn repository
 # version numbers from when we froze their commits.
 
-HIVE_VERSION = "r725920"
+HIVE_VERSION = "r736882"
 HIVE_INSTALL_SUBDIR = "hive-" + HIVE_VERSION
 HIVE_PACKAGE = "hive-" + HIVE_VERSION + ".tar.gz"
 
@@ -457,5 +463,5 @@ SCRIBE_PACKAGE = "scribe.tar.gz"
 
 # TODO(aaron): 0.2 Need 'svnstring' or something of the like to handle this.
 # (IS-65, CH-75)
-DISTRIB_VERSION = "0.1.1"
+DISTRIB_VERSION = "0.2.0"
 

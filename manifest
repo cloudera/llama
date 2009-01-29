@@ -108,4 +108,4 @@
 ./packages
 ./packages/hadoop-0.18.2-patched.tar.gz
 ./packages/pig-0.1.1.tar.gz
-./packages/hive-r725920.tar.gz
+./packages/hive-r736882.tar.gz
