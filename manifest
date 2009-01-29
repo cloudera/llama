@@ -69,6 +69,7 @@
 ./bin/com/cloudera/distribution/arch.py
 ./bin/com/cloudera/distribution/installerror.py
 ./bin/com/cloudera/distribution/hadoopconf.py
+./bin/com/cloudera/distribution/postinstall.py
 ./bin/com/cloudera/distribution/toolinstall.py
 ./bin/com/cloudera/distribution/packages
 ./bin/com/cloudera/distribution/packages/hiveinstall.py
