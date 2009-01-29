@@ -259,7 +259,7 @@ class HiveInstall(toolinstall.ToolInstall):
       "hdfs_server" : self.hdfsServer
     }
 
-    pickle.dump(handle, pmap)
+    pickle.dump(pmap, handle)
 
 
   def restore_state(self, handle, role_list, version):

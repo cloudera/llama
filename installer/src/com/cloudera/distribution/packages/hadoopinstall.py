@@ -1626,7 +1626,7 @@ HDFS before using Hadoop, by running the command:
       "warn_need_ssh_keys"     : self.warn_need_ssh_keys
     }
 
-    pickle.dump(handle, pmap)
+    pickle.dump(pmap, handle)
 
 
   def restore_state(self, handle, role_list, version):

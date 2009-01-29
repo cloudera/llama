@@ -246,7 +246,7 @@ Reason: %(ioe)s""" % { "ioe" : str(ioe) })
       "job_tracker_addr" : self.jobTrackerAddr
     }
 
-    pickle.dump(handle, pmap)
+    pickle.dump(pmap, handle)
 
   def restore_state(self, handle, role_list, version):
     self.role_list = role_list

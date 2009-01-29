@@ -81,11 +81,13 @@ def get_tools_for_roles(role_list):
 
   tools = []
   for role in role_list:
-    new_tools = get_tools_for_role(role_list)
+    new_tools = get_tools_for_role(role)
     for tool in new_tools:
       try:
         tools.index(tool)
       except ValueError:
         tools.append(tool)
+
+  return tools
 
 

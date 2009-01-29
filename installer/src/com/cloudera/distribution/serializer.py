@@ -19,6 +19,7 @@
     invocations.
 """
 
+import logging
 
 from   com.cloudera.distribution.constants import *
 from   com.cloudera.distribution.installerror import InstallError
@@ -36,27 +37,29 @@ def restore_state(filename, role_list, properties):
       on currently (as passed in as a roles list)
   """
 
+  logging.debug("Restoring state from file " + filename)
+  logging.debug("Restoring for role list:")
+  for role in role_list:
+    logging.debug("  role: " + role)
+
   try:
     handle = open(filename)
-    version = handle.readline().trim()
+    version = handle.readline().strip()
+    logging.debug("Got serialization format " + version)
     if len(version) == 0:
       raise InstallError("State file " + filename + " is empty")
 
     # Read all the serialized data back into the ToolInstall objects
     while True:
-      tool_name = handle.readline().trim()
+      tool_name = handle.readline().strip()
       if len(tool_name) == 0:
         # We've hit the end of the file; no more tools to deserialize.
-        return
+        logging.debug("End of serialized data")
+        break
       else:
+        logging.debug("Found record header for tool: " + tool_name)
         tool_obj = toolinstall.make_tool_for_name(tool_name, properties)
         tool_obj.restore_state(handle, role_list, version)
-        try:
-          required_tool_names.index(tool_name)
-          # TODO(aaron): this list is not guaranteed to be topo-sorted properly.
-          required_tools.append(tool_obj)
-        except ValueError:
-          pass # this tool isn't required; ok.
   except IOError, ioe:
     raise InstallError("Error deserializing from file " + filename + ": " + str(ioe))
   finally:
@@ -68,6 +71,8 @@ def restore_state(filename, role_list, properties):
   # This is the set of names of tools to return to the caller. Guaranteed to be
   # deduplicated.
   required_tool_names = roles.get_tools_for_roles(role_list)
+  for req_name in required_tool_names:
+    logging.debug("Got required tool name: " + req_name)
 
   # This is the list of associated ToolInstall items.
   required_tools = []
