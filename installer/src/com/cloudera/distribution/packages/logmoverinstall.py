@@ -49,19 +49,14 @@ class LogMoverInstall(toolinstall.ToolInstall):
   def getFinalInstallPath(self):
     return self.getLogMoverPrefix()
 
-  def getSuperUserPasswd(self):
-    return self.properties.getProperty(DB_SUPERUSER_PASSWD_KEY,
-                                       DB_SUPERUSER_PASSWD_DEFAULT)
-
   def install(self):
     """ Run the installation itself. """
 
     # the log mover is only installed on the NN
     if self.isMaster():
-      self.installMysql()
       self.installLogMover()
+      self.installLogFile()
       self.installConfigs()
-      self.bootstrapMysql()
       self.installCronjob()
 
   def installLogMover(self):
@@ -78,12 +73,48 @@ class LogMoverInstall(toolinstall.ToolInstall):
       dirutils.mkdirRecursive(logmover_prefix)
 
       # copy the log mover over
-      cmd = "cp -R " + logmover_src + " " + logmover_prefix
+      cmd = "cp -R " + logmover_src + " \"" + logmover_prefix + "\""
       shell.sh(cmd)
     except shell.CommandError:
       raise InstallError("Could not copy logmover files")
     except OSError, ose:
       raise InstallError("Could not copy logmover files: " + str(ose))
+
+  def installLogFile(self):
+    """ Create the file which the logmover expects to write, and
+        set its permissions.
+    """
+
+    def make_file(filename):
+      log_dir = os.path.dirname(filename)
+      try:
+        dirutils.mkdirRecursive(log_dir)
+      except OSError, ose:
+        raise InstallError("Could not create log directory: " + log_dir + " -- " + str(ose))
+
+      try:
+        # Open the log file, creating it if it doesn't already exist.
+        handle = open(filename, "a")
+        handle.close()
+      except IOError, ioe:
+        raise InstallError("Could not create log file: " + filename + " -- " + str(ioe))
+
+      try:
+        # chown/chmod it appropriately: the lighttpd user needs to read it,
+        # and the logmover user (hadoop_user) needs to write it.
+        cmd = "chmod 0644 \"" + filename + "\""
+        shell.sh(cmd)
+
+        hadoop_tool = toolinstall.getToolByName("Hadoop")
+        hadoop_user = hadoop_tool.getHadoopUsername()
+        cmd = "chown " + hadoop_user + " \"" + filename + "\""
+        shell.sh(cmd)
+      except shell.CommandError:
+        raise InstallError("Could not set permissions for " + filename)
+
+    make_file(LOG_MOVER_ERROR_FILE)
+    make_file(LOG_MOVER_OFFSET_FILE)
+
 
   def installConfigs(self):
     """Install configuration files"""
@@ -97,7 +128,7 @@ class LogMoverInstall(toolinstall.ToolInstall):
     # copy the generic file in
     try:
       output.printlnVerbose("Copying over generic log mover settings file")
-      cmd = "cp " + settings_gen + " " + logmover_prefix
+      cmd = "cp \"" + settings_gen + "\" \"" + logmover_prefix + "\""
       shell.sh(cmd)
     except shell.CommandError:
       raise InstallError("Could not copy generic log mover settings file")
@@ -149,124 +180,12 @@ class LogMoverInstall(toolinstall.ToolInstall):
 
     output.printlnInfo("Done configuring log mover")
 
-  def installMysql(self):
-    """Installs MySQL and required modules"""
-
-    pckg = {arch.PACKAGE_MGR_DEBIAN: ["mysql-server",
-                                      "python-mysqldb"],
-            arch.PACKAGE_MGR_RPM: ["mysql-server",
-                                   "MySQL-python"],
-            }
-    self.installPackage(pckg)
-
-  def bootstrapMysql(self):
-    """Bootstraps MySQL with the correct user, pasword, db, and schema"""
-    logmover_prefix = self.getLogMoverPrefix()
-
-    db_user = DB_SUPERUSER
-    use_passwd = not self.isUnattended() or \
-                 (self.isUnattended() and self.getSuperUserPasswd() != "")
-
-    if self.isUnattended() and self.getSuperUserPasswd() != "":
-      self.createMyCnf()
-
-    db_user_script = os.path.join(logmover_prefix, "db_user_and_db.sql")
-    db_init_script = os.path.join(logmover_prefix, "db_init.sql")
-
-    output.printlnVerbose("Attempting to bootstrap MySQL for the log mover")
-
-    # make sure MySQL is running
-    mysql_map = {arch.PLATFORM_UBUNTU: "/etc/init.d/mysql",
-                 arch.PLATFORM_FEDORA: "/etc/init.d/mysqld"
-                 }
-    state = "start"
-
-    output.printlnVerbose("Making sure MySQL is already running")
-
-    self.modifyDaemon(mysql_map, state)
-
-    if not self.isUnattended():
-      output.printlnInfo("""
-I am now going to create a MySQL user account for the log mover. If you have
-previously configured MySQL with a root password, please type it in below.
-If you have not configured a MySQL password, press [enter] to use a blank one.
-(If you aren't sure what this means, press [enter]. If that doesn't work, ask
-your sysadmin.)
-""")
-
-    try:
-      base_cmd = "mysql -u " + db_user + " "
-
-      # pass the -p param if we are using a password
-      if use_passwd:
-        base_cmd += "-p "
-
-      cmd = base_cmd + "< " + db_user_script
-
-      shell.sh(cmd)
-
-      if not self.isUnattended():
-        output.printlnInfo("""
-I need to run a second MySQL script. Please type your MySQL root password
-again. (Same as above.)
-""")
-
-      cmd = base_cmd + LOGMOVER_DB_NAME + " < " + db_init_script
-
-      shell.sh(cmd)
-    except shell.CommandError:
-      raise InstallError("Could not bootstrap MySQL with log mover schema and user")
-
-    if self.isUnattended() and self.getSuperUserPasswd() != "":
-      self.destroyMyCnf()
-
-    output.printlnInfo("Bootstrapped MySQL log mover schema and user")
-
-  def createMyCnf(self):
-    """Create the /root/.my.cnf file so we can login to mysql as root"""
-
-    output.printlnVerbose("Creating .my.cnf")
-
-    if os.path.exists(ROOT_MY_CNF_FILE):
-      self.myCnfBackup = toolinstall.ToolInstall.backupFile(ROOT_MY_CNF_FILE)
-      output.printlnVerbose(".my.cnf exists, backing up to " + self.myCnfBackup)
-
-    fh = open(ROOT_MY_CNF_FILE, 'w')
-    fh.write("[client]\n")
-    fh.write("password="+self.getSuperUserPasswd())
-    fh.close()
-
-    try:
-      cmd = "chmod 600 " + ROOT_MY_CNF_FILE
-      shell.sh(cmd)
-    except shell.CommandError:
-      raise InstallError("Could not change the permissions on the .my.cnf file")
-
-  def destroyMyCnf(self):
-    """Delete the /root/.my.cnf file created in createMyCnf()"""
-
-    output.printlnVerbose("Attempting to remote the mycnf file")
-
-    cmd = ""
-    # if a backup was created, move the backup back in place
-    if self.myCnfBackup != None:
-      cmd = "mv " + self.myCnfBackup + " " + ROOT_MY_CNF_FILE
-      output.printlnVerbose("Restoring .my.cnf backup")
-    # if a backup wasn't created, just delete the file
-    else:
-      cmd = "rm " + ROOT_MY_CNF_FILE
-
-    try:
-      shell.sh(cmd)
-    except shell.CommandError:
-      raise InstallError("Unable to clean up .my.cnf")
 
   def installCronjob(self):
     """Installs the log mover cron job"""
     hadoop_tool = toolinstall.getToolByName("Hadoop")
     hadoop_user = hadoop_tool.getHadoopUsername()
 
-    pruner = os.path.join(self.getInstallSymlinkPath("logmover"), "prune.py")
     log_to_db = os.path.join(self.getInstallSymlinkPath("logmover"), "log_to_db.py")
 
     # Get their existing crontab and concatenate our new commands
@@ -281,23 +200,15 @@ again. (Same as above.)
       logging.debug("Warning: could not read existing crontab")
       existing_cron = []
 
-    # CH-125: check to make sure pruner and log_to_db aren't already there.
-    need_prune = True
+    # CH-125: check to make sure log_to_db isn't already there.
     need_log_to_db = True
     for existing_line in existing_cron:
-      if existing_line.find("prune.py") >= 0:
-        logging.debug("Found existing cron job for prune.py")
-        need_prune = False
-      elif existing_line.find("log_to_db.py") >= 0:
-        logging.debug("Found existing cron job for log_to_db.py")
+      if existing_line.find("log_to_db.py") >= 0:
+        logging.debug("Found existing cron job for log_to_db.py: " + existing_line.strip())
         need_log_to_db = False
 
-    if need_prune:
-      existing_cron.append("* * * * * python " + pruner + "\n")
     if need_log_to_db:
       existing_cron.append("* * * * * python " + log_to_db + "\n")
-
-    if need_prune or need_log_to_db:
       # we changed something, so reinstall the cron.
       # put the new cron in a file to install
       try:
@@ -326,11 +237,13 @@ again. (Same as above.)
 
     output.printlnInfo("Installed log mover cron job")
 
+
   def configure(self):
     """ Run the configuration stage. This is responsible for
         setting up the config files and asking any questions
         of the user. The software is not installed yet """
     pass
+
 
   def postInstall(self):
     """ Run any post-installation activities. This occurs after
@@ -341,24 +254,11 @@ again. (Same as above.)
       self.createInstallSymlink("logmover")
       self.createEtcSymlink("logmover", self.getFinalInstallPath())
 
-      # if we don't want to start any daemon processes, kill mysql
-      if not self.mayStartDaemons():
-        mysql_map = {arch.PLATFORM_UBUNTU: "/etc/init.d/mysql",
-                     arch.PLATFORM_FEDORA: "/etc/init.d/mysqld"
-                     }
-
-        lighttpd_map = {arch.PLATFORM_UBUNTU: "/etc/init.d/lighttpd",
-                        arch.PLATFORM_FEDORA: "/etc/init.d/lighttpd"
-                         }
-
-        state = "stop"
-
-        self.modifyDaemon(mysql_map, state)
-        self.modifyDaemon(lighttpd_map, state)
 
   def verify(self):
     """ Run post-installation verification tests, if configured """
     pass
+
 
   def getRedeployArgs(self):
     """ Provide any command-line arguments to the installer on the slaves """

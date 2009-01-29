@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+#
 # (c) Copyright 2009 Cloudera, Inc.
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,9 +23,6 @@ import logging
 import os
 
 import settings
-
-# storage modules
-import db.connection
 
 # pruner imports
 import pruners.general as general

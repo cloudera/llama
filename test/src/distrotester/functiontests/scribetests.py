@@ -68,16 +68,6 @@ class ScribeTest(VerboseTestCase):
     shell.sh(cmd)
 
 
-  def testNoRedundantCronJobs(self):
-    " CH-125: scribe logmover should have exactly two entries in the crontab "
-
-    hadoop_user = self.getProperties().getProperty(HADOOP_USER_KEY)
-    logging.info("Checking crontab size for hadoop user: " + hadoop_user)
-    cron_lines = shell.shLines("crontab -u " + hadoop_user + " -l")
-    self.assertEqual(len(cron_lines), 2, "expected 2 crontab lines")
-    logging.info("crontab seems to be the correct size for hadoop user")
-
-
   def testScribeReceivesLogEntry(self):
     """ Run a MapReduce job that produces a log entry in scribe. We then
         check the logs on the master server to make sure it appears. """

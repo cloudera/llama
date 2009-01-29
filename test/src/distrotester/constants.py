@@ -150,6 +150,9 @@ DFS_NAME_DIR = os.path.join(BASE_TMP_DIR, "name")
 CHECKPOINT_DIR = os.path.join(BASE_TMP_DIR, "secondary")
 HADOOP_TMP_DIR = os.path.join(BASE_TMP_DIR, "hadoop")
 
+LOGMOVER_OUT_DIR = "/var/log/hadoop"
+SCRIBE_OUT_DIR = "/var/log/scribe"
+
 # Whom do we run hadoop daemons as?
 HADOOP_USER_KEY = "hadoop.user"
 HADOOP_USER = "hadoop"

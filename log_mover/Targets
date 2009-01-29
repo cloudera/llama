@@ -1,8 +1,6 @@
 #!/usr/bin/python
 #
-# (c) Copyright 2008 Cloudera, Inc.
-#
-# Installation system for Cloudera Hadoop
+# (c) Copyright 2009 Cloudera, Inc.
 #
 
 logMover = PythonTarget(
@@ -16,7 +14,8 @@ logMover = PythonTarget(
             "src/pruners",
             "src/settings.py",
             "src/db_init.sql",
-            "src/db_user_and_db.sql"])
+            "src/db_user_and_db.sql"],
+  requiredTargets = [ "python/Common" ])
 
 # packaging the log mover up for use in the tarball
 release = PythonRedistTarget(

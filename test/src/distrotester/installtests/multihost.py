@@ -180,6 +180,12 @@ class MultiHostTest(VerboseTestCase):
     self.doSshAll("chmod a+w " + BASE_TMP_DIR)
     self.doSshAll("chmod o+t " + BASE_TMP_DIR)
 
+    # Delete things associated with scribe on all hosts
+    self.doSshAll("rm -rf " + SCRIBE_OUT_DIR)
+
+    #  Delete things associated with logmover on master
+    shell.sh("rm -rf " + LOGMOVER_OUT_DIR)
+
 
   def testHadoopOnly(self):
     """ Install *only* the hadoop component.

@@ -83,7 +83,6 @@ argument.
         setting up the config files and asking any questions
         of the user. The software is not installed yet """
 
-
     # Set scribeLogHome; this should not end with a '/'; we trim if it does.
     maybeLogHome = self.properties.getProperty(SCRIBE_LOG_DIR_KEY, \
         SCRIBE_LOG_DIR_DEFAULT)

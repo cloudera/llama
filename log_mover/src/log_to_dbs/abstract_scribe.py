@@ -19,8 +19,6 @@ import logging
 import sys
 import os
 
-# storage imports
-import db.connection
 
 import settings
 
@@ -49,6 +47,10 @@ class AbstractScribeLogToDB:
 
   # keeps track of whether or not this is the
   # first time this stat has been tracked
+  # TODO(aaron): I think that this is no longer necessary; it was used
+  # to distinguish between the need for an INSERT INTO and an UPDATE TABLE
+  # statement when this was SQL-backed, but this is irrelevant for storing
+  # the offset info into flat files.
   __first_read = False
 
   # the number of bytes that have been read
@@ -59,31 +61,43 @@ class AbstractScribeLogToDB:
 
   def _get_last_read(self):
     """
-    Queries the last_read table
+    Queries the scribe_log_offset file
     to understand what filename
     and offset was read up to.
 
     @rtype : tuple
     @return: a filename, offest tuple
     """
-    conn = db.connection.connect()
-    c = conn.cursor()
 
-    c.execute("select * from last_read \
-               where l_r_mover = '%s'" %
-               self.__mover)
-
-    row = c.fetchone()
-    # if this class has been invoked before
-    if row != None:
-      filename = row[1]
-      offset = int(row[2])
-    # otherwise, use the starting values
-    else:
+    def starting_values():
+      """ Return the file, offset we use at the beginning of
+          the scribe log.
+      """
       filename = self.__file_prefix+"00000"
       offset = 0
       self.__first_read = True
-    return filename, offset
+      return filename, offset
+
+    # TODO(aaron): Since this is a single file that contains only the hadoop
+    # filename, offset pair, this class is no longer very "abstract". The filename
+    # where the offset information is maintained should also be abstracted through
+    # member variables / set in c'tor, rather than hardcoded in
+    # settings.hadoop_scribe_log_offset.
+    if not os.path.exists(settings.hadoop_scribe_log_offset):
+      return starting_values()
+    else:
+      handle = open(settings.hadoop_scribe_log_offset)
+      lines = handle.readlines()
+      handle.close()
+
+      if len(lines) < 2:
+        # malformed file.
+        return starting_values()
+      else:
+        filename = lines[0].strip()
+        offset = int(lines[1].strip())
+        return filename, offset
+
 
   def __init__(self, file_prefix):
     """
@@ -93,6 +107,7 @@ class AbstractScribeLogToDB:
     @param file_prefix: the file prefix for each Scribe log
     """
     self.__file_prefix = file_prefix
+
 
   def init(self, mover, log_dir):
     """
@@ -248,30 +263,13 @@ class AbstractScribeLogToDB:
 
   def store_progress(self):
     """
-    Updates the last_read table with the filename
+    Updates the offset file with the filename
     that was last read and the offset that was last
     analyzed
     """
-    conn = db.connection.connect()
-    c = conn.cursor()
 
-    # insert if this is the first time this mover
-    # has been invoked
-    if self.__first_read:
-      c.execute("insert into last_read values \
-                 ('%(mover)s', '%(filename)s', '%(offset)d')" %
-                 {'mover': self.__mover,
-                  'filename': self.__current_filename,
-                  'offset': self.__current_offset})
-    # otherwise just update
-    else:
-      c.execute("update last_read set \
-                 l_r_file = '%(filename)s', \
-                 l_r_offset = '%(offset)d' \
-                 where l_r_mover = '%(mover)s'" %
-                 {'filename': self.__current_filename,
-                  'offset': self.__current_offset,
-                  'mover': self.__mover})
+    handle = open(settings.hadoop_scribe_log_offset, "w")
+    handle.write(self.__current_filename + "\n")
+    handle.write(str(self.__current_offset) + "\n")
+    handle.close()
 
-    conn.commit()
-    c.close()

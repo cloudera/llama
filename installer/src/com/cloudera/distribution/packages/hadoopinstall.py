@@ -927,6 +927,7 @@ to do, just accept the default values.""")
 
   def writeHadoopSiteEpilogue(self, handle):
     """ Always write in the following keys; don't poll the user for this """
+
     handle.write("""
 <property>
   <name>mapred.jobtracker.taskScheduler</name>

@@ -21,8 +21,6 @@ import abstract_scribe
 import common
 import settings
 
-import db.connection
-
 class ScribeHadoopLogToDB(abstract_scribe.AbstractScribeLogToDB):
   """
   A LogToDB class that moves hadoop logs

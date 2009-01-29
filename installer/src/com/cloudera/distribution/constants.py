@@ -33,18 +33,6 @@ INSTALL_INTERACTIVE_VAL = False
 # tell us otherwise.
 UNATTEND_DEFAULT = INSTALL_INTERACTIVE_VAL
 
-# the DB user who can create databases, users, etc
-DB_SUPERUSER = "root"
-
-# db super user password information, for installing
-# the log mover in unattended mode
-DB_SUPERUSER_PASSWD_KEY = "db.superuser.passwd"
-DB_SUPERUSER_PASSWD_DEFAULT = ""
-
-# the root .my.cnf file to store the password
-# in for unattended mode
-ROOT_MY_CNF_FILE = "/root/.my.cnf"
-
 # by default, if localhost is in the slaves file, the installer will
 # not deploy to this host. Hadoop's start/stop scripts also depend on
 # Hadoop being installed on the same path on all machines. But for
@@ -390,15 +378,16 @@ SCRIBE_USER = "scribe"
 # The name of the script we generate to run scribed.
 SCRIBE_WRAPPER_NAME = "scribed-run"
 
-
 #######################################################################
 # Logmover configuration
 
-# The database that the log mover uses
-# note that if this changes from "ana," a lot of code is going to have
-# to change, including the log mover itself
-LOGMOVER_DB_NAME = "ana"
-
+# The name of the file written to by the LogMover for ERROR entries.
+# Must be writable by whomever runs log_to_db.py, and readable by the
+# lighttpd user.
+# Note that these filenames are also controlled in log_mover's settings.py file
+LOG_MOVER_RECORD_DIR = "/var/log/hadoop"
+LOG_MOVER_ERROR_FILE = os.path.join(LOG_MOVER_RECORD_DIR, "errors")
+LOG_MOVER_OFFSET_FILE = os.path.join(LOG_MOVER_RECORD_DIR, "offset")
 
 
 #######################################################################

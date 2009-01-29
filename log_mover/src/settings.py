@@ -14,6 +14,14 @@
 """
 General settings for log movers
 """
+
+
+# TODO(aaron) **** IMPORTANT ****
+# If you add things to this file, you must also add them to
+# projects/HadoopDist/deps/log_mover/settings.py as well; that is the
+# copy used in production deployments!
+
+
 import os
 
 # the path to $HADOOP_HOME
@@ -68,6 +76,13 @@ log_prefixes = {'vmstat': 'vmstat_',
 # where Hadoop ERROR logs are stored
 hadoop_error_log_dest = "/var/log/hadoop/errors"
 
+# The name of the file storing the (filename, offset) information into
+# the scribe log where we resume reading into the hadoop error log.
+hadoop_scribe_log_offset = "/var/log/hadoop/offset"
+
+# The name of the pidfile used to prevent multiple instances of log_to_db.py
+# from running concurrently.
+hadoop_scribe_pidfile = "/tmp/hadoop-logmover.pid"
 
 # the time in which logs should remain
 # in the db for each mover (in seconds)
@@ -96,12 +111,6 @@ log_prune_date_col = {'vmstat': 'v_date',
                       'mpstat': 'm_date',
                      }
 
-# DB connection information
-db_host = 'localhost'
-db_user = 'ana'
-db_password = 'ana'
-db_database = 'ana'
-
 # the size of the input buffer when
 # reading in a scribe log
 scribe_buffer_size = 1024
@@ -110,3 +119,10 @@ scribe_buffer_size = 1024
 # when looking at /proc/net/dev
 # output
 net_io_eth_card = "eth0"
+
+# DB connection information
+db_host = 'localhost'
+db_user = 'ana'
+db_password = 'ana'
+db_database = 'ana'
+

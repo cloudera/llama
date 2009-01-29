@@ -36,6 +36,12 @@ rm -rf /mnt/tmp/etc/cloudera
 rm -rf /tmp/cloudera
 rm -rf /tmp/cloudera-installer.log
 
+rm -rf /var/log/hadoop
+rm -rf /var/log/scribe
+
+# blow away hadoop user's crontab
+$sudoPrefix crontab - < /dev/null
+
 # remove extraneous trash slaves files.
 rm -f /tmp/slaves-*
 rm -f /tmp/distro-*.tar.gz
@@ -53,6 +59,7 @@ else
 fi
 
 # and launch the program
+echo "Running $installerPrgm"
 "$installerPrgm" --unattend --test-mode --prefix /mnt/tmp/master \
   --remote-prefix /mnt/tmp/slave \
   --hadoop-site /tmp/install-hadoop-site.xml \

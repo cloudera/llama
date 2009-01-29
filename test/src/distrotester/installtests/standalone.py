@@ -18,6 +18,7 @@ from   distrotester.constants import *
 import distrotester.testproperties as testproperties
 from   distrotester.functiontests.hadooptests import HadoopTest
 from   distrotester.functiontests.hivetests import HiveTest
+from   distrotester.functiontests.logmovertests import LogMoverTest
 from   distrotester.functiontests.pigtests import PigTest
 from   distrotester.functiontests.scribetests import ScribeTest
 
@@ -146,6 +147,9 @@ class StandaloneTest(VerboseTestCase):
     shell.sh("chmod a+w " + BASE_TMP_DIR)
     shell.sh("chmod o+t " + BASE_TMP_DIR)
 
+    # Delete things associated with logmover / scribe
+    shell.sh("rm -rf " + LOGMOVER_OUT_DIR)
+    shell.sh("rm -rf " + SCRIBE_OUT_DIR)
 
 
   def testHadoopOnly(self):
@@ -209,10 +213,11 @@ class StandaloneTest(VerboseTestCase):
     self.getProperties().setProperty(HADOOP_USER_KEY, HADOOP_USER)
     self.getProperties().setProperty(CLIENT_USER_KEY, CLIENT_USER)
 
-    hadoopSuite = unittest.makeSuite(HadoopTest, 'test')
-    hiveSuite   = unittest.makeSuite(HiveTest, 'test')
-    pigSuite    = unittest.makeSuite(PigTest, 'test')
-    scribeSuite = unittest.makeSuite(ScribeTest, 'test')
+    hadoopSuite   = unittest.makeSuite(HadoopTest, 'test')
+    hiveSuite     = unittest.makeSuite(HiveTest, 'test')
+    pigSuite      = unittest.makeSuite(PigTest, 'test')
+    scribeSuite   = unittest.makeSuite(ScribeTest, 'test')
+    logmoverSuite = unittest.makeSuite(LogMoverTest, 'test')
     functionalityTests = unittest.TestSuite([
         hadoopSuite,
         hiveSuite,

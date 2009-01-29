@@ -11,7 +11,7 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
-import MySQLdb
+
 
 import settings
 
@@ -28,9 +28,8 @@ def connect():
   @rtype : connection
   @return: a MySQL DB connection
   """
-  conn = MySQLdb.connect(host = HOST,
-                          user = USER,
-                          passwd = PASSWORD,
-                          db = DATABASE)
 
-  return conn
+  # NOTE(aaron): removed actual connection since it's no longer used.
+  # This is just a stub now since it's called from various places, though
+  # the actual logging is done to a flat file.
+  return None
