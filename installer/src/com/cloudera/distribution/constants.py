@@ -381,8 +381,11 @@ LIGHTTPD_FC_HTDOCS = "/srv/www/lighttpd"
 # TODO(aaron) 0.2 - make this configurable (CH-84)
 SCRIBE_USER = "scribe"
 
-# The name of the script we generate to run scribed.
-SCRIBE_WRAPPER_NAME = "scribed-run"
+# The name of the script we generate to run the local scribed.
+SCRIBE_LOCAL_WRAPPER_NAME = "scribed-local"
+
+# The name of the script we generate to run the central scribed.
+SCRIBE_CENTRAL_WRAPPER_NAME = "scribed-central"
 
 
 #######################################################################
