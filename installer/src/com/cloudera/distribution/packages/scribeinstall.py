@@ -189,7 +189,7 @@ argument.
       raise InstallError("Error removing Scribe library tarball")
 
 
-  def writeLibWrapper(self):
+  def writeLibWrapper(self, scribeWrapperName, scribeConfFile):
     """ Set LD_LIBRARY_PATH in a bash script that then runs scribed """
 
     installPath = os.path.abspath(os.path.join(self.getFinalInstallPath(),
@@ -203,14 +203,11 @@ argument.
         + ":$LD_LIBRARY_PATH"
 
     wrapperFileName = os.path.join(self.getFinalInstallPath(), \
-        SCRIBE_WRAPPER_NAME)
+        scribeWrapperName)
     output.printlnVerbose("Writing scribe wrapper script to " + wrapperFileName)
     dateStr = time.asctime()
 
-    localConfFile = os.path.join(self.getFinalInstallPath(), \
-        "scribe_local.conf")
-    masterConfFile = os.path.join(self.getFinalInstallPath(), \
-        "scribe_central.conf")
+    confFile = os.path.join(self.getFinalInstallPath(), scribeConfFile)
 
     try:
       handle = open(wrapperFileName, "w")
@@ -221,26 +218,20 @@ argument.
 # on %(thedate)s
 #
 # Usage: %(selfname)s
-# Runs the local scribe server
+# Runs the scribe server daemon
 #
 
 bindir=`dirname $0`
 bindir=`cd $bindir && pwd`
 export LD_LIBRARY_PATH=%(ldLibPath)s
 
-nohup ${bindir}/scribed %(localConfFile)s 2</dev/null </dev/null >/dev/null &
+nohup ${bindir}/scribed %(confFile)s 2</dev/null </dev/null >/dev/null &
 """ % {  "ver"           : DISTRIB_VERSION,
          "thedate"       : dateStr,
-         "selfname"      : SCRIBE_WRAPPER_NAME,
+         "selfname"      : scribeWrapperName,
          "ldLibPath"     : ldLibraryPath,
-         "localConfFile" : localConfFile
+         "confFile"      : confFile
       })
-
-      if self.isMaster():
-        # Also start the master scribe daemon
-        handle.write("""
-nohup ${bindir}/scribed %(masterConfFile)s 2</dev/null </dev/null >/dev/null &
-""" % { "masterConfFile" : masterConfFile })
 
       handle.close()
     except IOError, ioe:
@@ -363,8 +354,9 @@ Reason: %(ioe)s
 
     self.installScribe()
 
-    # Write a bash script that sets LD_LIBRARY_PATH and invokes scribed
-    self.writeLibWrapper()
+    # Write bash scripts that set LD_LIBRARY_PATH and invoke scribed
+    self.writeLibWrapper(SCRIBE_LOCAL_WRAPPER_NAME, "scribe_local.conf")
+    self.writeLibWrapper(SCRIBE_CENTRAL_WRAPPER_NAME, "scribe_central.conf")
 
     self.createPaths()
     self.installConfigFiles()
@@ -395,10 +387,16 @@ Reason: %(ioe)s
 
     # Start scribed.
     output.printlnInfo("Starting local scribe server")
-    cmd = os.path.join(self.getFinalInstallPath(), SCRIBE_WRAPPER_NAME)
+    scribeLocalCmd = os.path.join(self.getFinalInstallPath(),
+      SCRIBE_LOCAL_WRAPPER_NAME)
+    scribeCentralCmd = os.path.join(self.getFinalInstallPath(),
+      SCRIBE_CENTRAL_WRAPPER_NAME)
     try:
       # run the daemons
-      shell.sh(self.getScribeUserSudo() + cmd)
+      shell.sh(self.getScribeUserSudo() + scribeLocalCmd)
+
+      if self.isMaster():
+        shell.sh(self.getScribeUserSudo() + scribeCentralCmd)
 
       # don't return immediately; give the daemons time to turn on
       # so we don't miss statrup msgs if we start hadoop immediately
@@ -439,16 +437,23 @@ Reason: %(ioe)s
   def printFinalInstructions(self):
     """ Last instructions to the user on how to finish launching scribe """
 
-    cmd = os.path.join(self.getFinalInstallPath(), SCRIBE_WRAPPER_NAME)
+    cmd_local = os.path.join(self.getFinalInstallPath(),
+        SCRIBE_LOCAL_WRAPPER_NAME)
+    cmd_central = os.path.join(self.getFinalInstallPath(),
+        SCRIBE_CENTRAL_WRAPPER_NAME)
     output.printlnInfo("""
 To aggregate logs from all hosts, scribed must be started on each machine.
 scribed can be started by running the following command as user %(scribe)s:
-%(cmd)s
+%(cmd_local)s
 
-You may wish to put this command in your rc.local file to start scribe on
+On the master machine run the following command in addition:
+%(cmd_central)s
+
+You may wish to put these commands in your rc.local file to start scribe on
 boot.
-""" % { "scribe" : self.scribeUser,
-        "cmd"    : cmd })
+""" % { "scribe"     : self.scribeUser,
+        "cmd_local"   : cmd_local,
+        "cmd_central" : cmd_central })
 
     if self.isDaemonRunning():
       output.printlnInfo("Note: scribed has already been started.")

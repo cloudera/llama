@@ -1,5 +1,6 @@
 .
 ./doc
+./doc/hadoop_patches.txt
 ./doc/LICENSE.txt
 ./doc/README
 ./README
@@ -80,6 +81,8 @@
 ./bin/com/cloudera/distribution/env.py
 ./bin/com/cloudera/distribution/sshall.py
 ./bin/com/cloudera/distribution/scpall.py
+./bin/com/cloudera/distribution/postinstall.py
+./bin/com/cloudera/distribution/toolinstall.py
 ./bin/com/cloudera/distribution/packages
 ./bin/com/cloudera/distribution/packages/scribeinstall.py
 ./bin/com/cloudera/distribution/packages/__init__.py

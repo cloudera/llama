@@ -31,7 +31,7 @@ INSTALL_INTERACTIVE_VAL = False
 
 # we assume there's a user at the controls unless they specifically
 # tell us otherwise.
-UNATTEND_DEFAULT = False
+UNATTEND_DEFAULT = INSTALL_INTERACTIVE_VAL
 
 # by default, if localhost is in the slaves file, the installer will
 # not deploy to this host. Hadoop's start/stop scripts also depend on
@@ -212,6 +212,9 @@ DFS_DATA_DIR = "dfs.data.dir"
 DFS_NAME_DIR = "dfs.name.dir"
 MAPRED_LOCAL_DIR = "mapred.local.dir"
 
+HADOOP_LOG_DIR_KEY = "hadoop.log.dir"
+HADOOP_LOG_DIR_ARG = "--hadoop-log-dir"
+HADOOP_LOG_DIR_DEFAULT = "logs"
 
 # advanced config settings below here.
 
@@ -366,8 +369,11 @@ LIGHTTPD_FC_HTDOCS = "/srv/www/lighttpd"
 # TODO(aaron) 0.2 - make this configurable (CH-84)
 SCRIBE_USER = "scribe"
 
-# The name of the script we generate to run scribed.
-SCRIBE_WRAPPER_NAME = "scribed-run"
+# The name of the script we generate to run the local scribed.
+SCRIBE_LOCAL_WRAPPER_NAME = "scribed-local"
+
+# The name of the script we generate to run the central scribed.
+SCRIBE_CENTRAL_WRAPPER_NAME = "scribed-central"
 
 #######################################################################
 # Logmover configuration

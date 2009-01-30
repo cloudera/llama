@@ -51,6 +51,7 @@ class HadoopInstall(toolinstall.ToolInstall):
     self.curUsername = None # who are we running as? (`whoami`)
     self.verified = False
     self.hdfsFormatMsg = None
+    self.hadoop_log_dir = None
 
     self.create_ssh_key = False
     self.redist_pubkey_filename = None
@@ -235,6 +236,24 @@ interfere with the installation process. If errors occur, try stopping
 these services and reinstalling this distribution.
 """)
 
+
+  def get_start_hdfs_cmd(self):
+    """ Return the command to start HDFS """
+
+    hadoopBinPath = os.path.join(self.getFinalInstallPath(), "bin")
+    startDfsCmd = os.path.join(hadoopBinPath, "start-dfs.sh")
+    cmd = self.getUserSwitchCmdStr() + "\"" + startDfsCmd + "\""
+    return cmd
+
+
+  def set_hdfs_started_flag(self):
+    """ If we already started HDFS via another mechanism, set the flag
+        that makes ensureHdfsStarted() think that it has already been
+        started via that mechanism. """
+
+    self.startedHdfs = True
+
+
   def ensureHdfsStarted(self):
     """ Ensures that the HDFS cluster that we just put together is started
         (starting it if necessary). This must be run in postinstall or
@@ -252,12 +271,9 @@ these services and reinstalling this distribution.
       scribe_installer.ensureScribeStarted()
 
     output.printlnVerbose("Starting HDFS")
-    hadoopBinPath = os.path.join(self.getFinalInstallPath(), "bin")
-    startDfsCmd = os.path.join(hadoopBinPath, "start-dfs.sh")
-    cmd = self.getUserSwitchCmdStr() + "\"" + startDfsCmd + "\""
 
     try:
-      shell.sh(cmd)
+      shell.sh(self.get_start_hdfs_cmd())
     except shell.CommandError:
       raise InstallError("Can't start HDFS")
 
@@ -288,15 +304,22 @@ these services and reinstalling this distribution.
     self.startedMapRed = True
 
 
+  def get_hadoop_cmdline(self):
+    """ Returns the path to bin/hadoop """
+
+    hadoopBinPath = os.path.join(self.getFinalInstallPath(), "bin")
+    hadoopCmd = os.path.join(hadoopBinPath, "hadoop")
+    return self.getUserSwitchCmdStr() + "\"" + hadoopCmd + "\" "
+
+
   def hadoopCmd(self, args):
     """ Run a hadoop command with "bin/hadoop args" as the hadoop user.
         You are responsible for ensuring that the appropriate services
         are started by calling ensure*Started() yourself, first.
         Returns all lines returned by the hadoop command. """
 
-    hadoopBinPath = os.path.join(self.getFinalInstallPath(), "bin")
-    hadoopCmd = os.path.join(hadoopBinPath, "hadoop")
-    cmd = self.getUserSwitchCmdStr() + "\"" + hadoopCmd + "\" " + args
+    hadoop_cmdline = self.get_hadoop_cmdline()
+    cmd = hadoop_cmdline + args
 
     try:
       lines = shell.shLines(cmd)
@@ -499,11 +522,31 @@ or specify your own username with --hadoop-user""")
   def getMasterHost(self):
     return self.masterHost
 
+
   def getNumSlaves(self):
     return toolinstall.getToolByName("GlobalPrereq").getNumSlaves()
 
+
   def getTempSlavesFileName(self):
     return toolinstall.getToolByName("GlobalPrereq").getTempSlavesFileName()
+
+
+  def configHadoopLogDir(self):
+    """ Configure where Hadoop writes its log files """
+
+    # grab the path from --hadoop-log-dir, default is ${HADOOP_HOME}/logs
+    self.hadoop_log_dir = self.properties.getProperty(HADOOP_LOG_DIR_KEY, HADOOP_LOG_DIR_DEFAULT);
+    if not self.isUnattended():
+      logging.info("""
+Hadoop stores log files containing diagnostic information for troubleshooting.
+By default, these are stored in a subdirectory of the Hadoop installation. You
+can override this setting here. Any relative paths will be joined to the Hadoop
+install directory.
+""")
+      self.hadoop_log_dir = prompt.getString("Where should Hadoop log files be stored?", \
+          self.hadoop_log_dir, True)
+
+    logging.debug("Storing Hadoop logs in " + self.hadoop_log_dir)
 
 
   def configHadoopSite(self):
@@ -886,6 +929,15 @@ to do, just accept the default values.""")
 
     handle.write("""
 <property>
+  <name>mapred.jobtracker.taskScheduler</name>
+  <value>org.apache.hadoop.mapred.FairScheduler</value>
+</property>
+<property>
+  <name>mapred.fairscheduler.allocation.file</name>
+  <value>/usr/share/cloudera/hadoop/conf/fairscheduler.xml</value>
+</property>
+
+<property>
   <name>mapred.output.compression.type</name>
   <value>BLOCK</value>
   <description>If the job outputs are to compressed as SequenceFiles, how should
@@ -960,6 +1012,23 @@ to do, just accept the default values.""")
     return os.path.join(self.getConfDir(), "hadoop-site.xml")
 
 
+  def installFairScheduler(self):
+    """ Write out fairscheduler.xml """
+
+    fair_scheduler_file = os.path.join(self.getConfDir(), "fairscheduler.xml")
+    try:
+      handle = open(fair_scheduler_file, "w")
+      # File is currently empty -- just a placeholder.
+      handle.write("""<?xml version="1.0"?>
+<allocations>
+</allocations>
+""")
+      handle.close()
+    except IOError, ioe:
+      raise InstallError("Could not write fairscheduler.xml file (" \
+          + str(ioe) + ")")
+
+
   def installHadoopSiteFile(self):
     """ Write out the hadoop-site.xml file that the user configured. """
 
@@ -999,7 +1068,6 @@ to do, just accept the default values.""")
 
     # We need to open the file for append and, at minimum,  add JAVA_HOME
     # Also enable JMX on all the daemons.
-    # TODO(aaron): Also allow overriding of the logging stuff? (CH-76)
     # TODO(aaron): 0.2 -Eventually we'll want to overwrite the whole thing.
 
     destFileName = os.path.join(self.getConfDir(), "hadoop-env.sh")
@@ -1045,6 +1113,9 @@ to do, just accept the default values.""")
           + "-Dcom.sun.management.jmxremote.authenticate=false "\
           + "-Dcom.sun.management.jmxremote.ssl=false " \
           + "$HADOOP_BALANCER_OPTS\"\n")
+
+      log_dir = os.path.join("${HADOOP_HOME}", self.hadoop_log_dir)
+      handle.write("export HADOOP_LOG_DIR=" + log_dir + "\n")
 
       handle.close()
     except IOError, ioe:
@@ -1118,7 +1189,8 @@ to do, just accept the default values.""")
     makePathsForProperty(MAPRED_LOCAL_DIR)
 
     # Now make the log dir and chown it to the hadoop username.
-    logDir = os.path.join(self.getFinalInstallPath(), "logs")
+    logDir = self.hadoop_log_dir
+    logDir = os.path.join(self.getFinalInstallPath(), self.hadoop_log_dir)
     makeSinglePath(logDir)
 
   def get_ssh_warning(self):
@@ -1222,6 +1294,7 @@ the Hadoop daemons. This will cause problems starting Hadoop.""" % \
       self.configSshKeys()
 
     self.configMasterAddress()
+    self.configHadoopLogDir()
     self.configHadoopSite()
 
 
@@ -1248,11 +1321,9 @@ the Hadoop daemons. This will cause problems starting Hadoop.""" % \
     try:
       if not os.path.exists(sshKeyDir):
         dirutils.mkdirRecursive(sshKeyDir)
-        # permissions must be 0750 or more strict
-        shell.sh("chmod o-rwx \"" + sshKeyDir + "\"")
-        shell.sh("chmod g-w \"" + sshKeyDir + "\"")
-        shell.sh("chown " + hadoop_user + ":" + hadoop_user + " \"" \
-            + sshKeyDir + "\"")
+        # permissions must be 0750 or more strict. Just set them to 0700.
+        shell.sh("chmod go-rwx \"" + sshKeyDir + "\"")
+        shell.sh("chown " + hadoop_user + " \"" + sshKeyDir + "\"")
     except OSError, ose:
       raise InstallError("Could not create " + sshKeyDir + ": " + str(ose))
     except shell.CommandError:
@@ -1337,10 +1408,9 @@ the Hadoop daemons. This will cause problems starting Hadoop.""" % \
         raise InstallError("Cannot create ssh directory: " + str(ose))
 
       try:
-        # make sure the user owns the dir, and it's 0750 or better
+        # make sure the user owns the dir, and it's 0750 or better; use 0700.
         shell.sh("chown " + hadoop_user + " \"" + userSshDir + "\"")
-        shell.sh("chmod o-rwx \"" + userSshDir + "\"")
-        shell.sh("chmod g-w \"" + userSshDir + "\"")
+        shell.sh("chmod go-rwx \"" + userSshDir + "\"")
       except shell.CommandError:
         raise InstallError("Could not set permissions for " + userSshDir)
 
@@ -1425,6 +1495,7 @@ the Hadoop daemons. This will cause problems starting Hadoop.""" % \
       self.installDfsExcludesFile()
 
     self.installHadoopSiteFile()
+    self.installFairScheduler()
     self.installHadoopEnvFile()
     self.createPaths()
 
@@ -1521,6 +1592,9 @@ HDFS before using Hadoop, by running the command:
 
     argList.append("--hadoop-user")
     argList.append(self.getHadoopUsername())
+
+    argList.append(HADOOP_LOG_DIR_ARG)
+    argList.append(self.hadoop_log_dir)
 
     return argList
 

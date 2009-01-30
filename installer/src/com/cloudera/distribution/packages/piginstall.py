@@ -24,6 +24,7 @@ from   com.cloudera.distribution.constants import *
 import com.cloudera.distribution.dnsregex as dnsregex
 import com.cloudera.distribution.env as env
 from   com.cloudera.distribution.installerror import InstallError
+import com.cloudera.distribution.postinstall as postinstall
 import com.cloudera.distribution.toolinstall as toolinstall
 import com.cloudera.tools.dirutils as dirutils
 import com.cloudera.tools.shell as shell
@@ -36,9 +37,7 @@ class PigInstall(toolinstall.ToolInstall):
     toolinstall.ToolInstall.__init__(self, "Pig", properties)
     self.addDependency("Hadoop")
     self.addDependency("GlobalPrereq")
-
     self.jobTrackerAddr = None
-    self.hdfsErrMessage = None
 
 
   def precheck(self):
@@ -207,45 +206,18 @@ Reason: %(ioe)s""" % { "ioe" : str(ioe) })
         os.path.join(pigDir, "pig-" + PIG_VERSION + "-core.jar") + ":" \
         + hadoopDir)
 
-    # must create pig tmp directory  in HDFS
-    output.printlnInfo("Creating in-HDFS directories for Pig...")
+    # must create pig tmp directory in HDFS before use
     hadoopInstaller = toolinstall.getToolByName("Hadoop")
     if hadoopInstaller == None:
       raise InstallError("Pig depends on Hadoop")
 
-    # This is (basically) a code clone from hiveinstaller.py.
-    # TODO(aaron): refactor into hadoopinstaller.py (0.2)
-    if hadoopInstaller.isMaster() and self.mayStartDaemons():
-      safemodeOff = False
-      try:
-        output.printlnVerbose("Starting HDFS...")
-        hadoopInstaller.ensureHdfsStarted()
+    if hadoopInstaller.isMaster():
+     postinstall.add(hadoopInstaller.get_start_hdfs_cmd())
 
-        output.printlnVerbose("Waiting for HDFS Safemode exit...")
-        hadoopInstaller.waitForSafemode()
-        safemodeOff = True
-
-        output.printlnVerbose("Creating directories...")
-        try:
-          hadoopInstaller.hadoopCmd("fs -mkdir " + PIG_TEMP_DIR)
-        except InstallError:
-          pass # this dir may already exist; will detect real error @ chmod
-
-        output.printlnVerbose("Setting permissions...")
-        hadoopInstaller.hadoopCmd("fs -chmod a+w " + PIG_TEMP_DIR)
-      except InstallError, ie:
-        # Log a message to print to the user at the end of installation.
-        self.hdfsErrMessage = """
-(This installer was unable to successfully start HDFS and create these paths.)
-Reason: %(err)s
-""" % \
-            { "err" : str(ie) }
-        if not safemodeOff and self.properties.getBoolean(FORMAT_DFS_KEY, \
-            FORMAT_DFS_DEFAULT):
-          self.hdfsErrMessage = self.hdfsErrMessage + """
-(This may be because you did not format HDFS on installation. You can specify
---format-hdfs to allow this to occur automatically.)"""
-
+     hadoop_cmdline = hadoopInstaller.get_hadoop_cmdline()
+     postinstall.add(hadoop_cmdline + "dfsadmin -safemode wait")
+     postinstall.add(hadoop_cmdline + "fs -mkdir " + PIG_TEMP_DIR, False)
+     postinstall.add(hadoop_cmdline + "fs -chmod a+w " + PIG_TEMP_DIR)
 
 
   def verify(self):
@@ -266,20 +238,7 @@ Reason: %(err)s
 
 
   def printFinalInstructions(self):
-    if (self.isMaster() and not self.mayStartDaemons()) \
-        or self.hdfsErrMessage != None:
-      # Definitely print this out regardless of whether there was a particular
-      # error that prevented it from happening, or because the user has
-      # disabled daemon starts.
-      logging.info("""
-Before using Pig, you must start Hadoop HDFS and create the following
-directories, and set them world-readable/writable:
-  %(tmppath)s
-"""% \
-          { "tmppath" : PIG_TEMP_DIR })
-      if self.hdfsErrMessage != None:
-        # Then print the error reason, if any
-        logging.info(self.hdfsErrMessage)
+    pass
 
 
 

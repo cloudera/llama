@@ -86,6 +86,8 @@ class InstallProperties(Properties):
 
     "--scribe-log-dir" : SCRIBE_LOG_DIR_KEY,
 
+    HADOOP_LOG_DIR_ARG : HADOOP_LOG_DIR_KEY,
+
     # the following settings apply to master only
 
     "--make-dfs-hosts"    : MAKE_DFS_HOSTS_KEY,
