@@ -252,7 +252,8 @@ for tool in installPlan.getInstallItems():
     output.printlnVerbose("  " + tool.getName())
 
 hadoopInstaller = toolinstall.getToolByName("Hadoop")
-if hadoopInstaller != None:
+if hadoopInstaller != None and \
+    (hadoopInstaller.has_role("namenode") or hadoopInstaller.has_role("jobtracker")):
   hadoopStartCmd = os.path.join(hadoopInstaller.getHadoopBinDir(), \
       "start-all.sh")
   hadoopStopCmd = os.path.join(hadoopInstaller.getHadoopBinDir(), \
