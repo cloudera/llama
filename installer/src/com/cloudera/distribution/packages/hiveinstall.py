@@ -41,7 +41,7 @@ class HiveInstall(toolinstall.ToolInstall):
     self.addDependency("Hadoop")
 
     self.hiveParams = {}
-    self.hdfsServer = None # "hdfs://servername:port/"
+    self.hdfsServer = None # "servername:port"
 
 
   def precheck(self):
@@ -82,27 +82,16 @@ class HiveInstall(toolinstall.ToolInstall):
 
     self.hdfsServer = self.properties.getProperty(HIVE_NAMENODE_KEY)
 
-    hadoopInstall = self.getHadoopInstaller()
-    if self.hdfsServer == None:
-      try:
-        self.hdfsServer = \
-            hadoopInstall.getHadoopSiteProperty(FS_DEFAULT_NAME)
-      except KeyError:
-        # couldn't find it.
-        pass
-
     # regex for a legal namenode addr
-    dnsNamePortStr = dnsregex.getDnsNameAndPortRegexStr()
-    nameNodeAddrStr = "hdfs\://" + dnsNamePortStr + "/"
-    nameNodeRegex = re.compile(nameNodeAddrStr)
+    nameNodeRegex = dnsregex.getDnsNameAndPortRegex()
 
     if self.hdfsServer == None and not self.isUnattended():
       matchesRegex = False
       while not matchesRegex:
         output.printlnInfo("An HDFS NameNode address has the form: " \
-            +"hdfs://servername:port/")
+            +"servername:port")
         self.hdfsServer = prompt.getString( \
-            "Input the HDFS NameNode address for Hive to connect to:", \
+            "Input the HDFS NameNode DNS address and port for Hive to connect to:", \
             None, True)
         m = nameNodeRegex.match(self.hdfsServer)
         if m != None and m.start() == 0 and m.end() == len(self.hdfsServer):
@@ -117,7 +106,7 @@ class HiveInstall(toolinstall.ToolInstall):
     m = nameNodeRegex.match(self.hdfsServer)
     if m == None or m.start() != 0 or m.end() != len(self.hdfsServer):
       raise InstallError("Error: NameNode address must match the form " \
-          + "hdfs://address:port/")
+          + "address:port")
 
 
   def configure(self):
@@ -146,7 +135,7 @@ class HiveInstall(toolinstall.ToolInstall):
     self.hiveParams["hive.metastore.uris"] = "file://" + HIVE_METADB_DIR
     # CH-150: full URI to warehouse required.
     self.hiveParams["hive.metastore.warehouse.dir"] = \
-        self.hdfsServer + HIVE_WAREHOUSE_DIR
+        "hdfs://" + self.hdfsServer + HIVE_WAREHOUSE_DIR
     self.hiveParams["hive.metastore.connect.retries"] = "5"
     self.hiveParams["hive.metastore.rawstore.impl"] = \
         "org.apache.hadoop.hive.metastore.ObjectStore"

@@ -199,8 +199,7 @@ the installer.
     # just strip the port off the jobtracker
     jobtracker = self.getHost(jobtracker)
 
-    # remove the protocol (hdfs://) along with the port
-    namenode = namenode[7:]
+    # strip the port off the namenode
     namenode = self.getHost(namenode)
 
     try:

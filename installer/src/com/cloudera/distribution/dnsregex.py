@@ -33,6 +33,9 @@ dnsComponentStr = "[A-Za-z][0-9A-Za-z_-]*"
 dnsNameRegexStr = dnsComponentStr + "(\." + dnsComponentStr + ")*"
 dnsNameRegex = re.compile(dnsNameRegexStr)
 
+ipAddrAndPortStr = ipAddrRegexStr + "\:[0-9]+"
+ipAddrAndPortRegex = re.compile(ipAddrAndPortStr)
+
 dnsNameAndPortStr = dnsNameRegexStr + "\:[0-9]+"
 dnsNameAndPortRegex = re.compile(dnsNameAndPortStr)
 
@@ -79,6 +82,19 @@ def getDnsNameAndPortRegex():
 def isDnsNameAndPort(addr):
   """ Matches dnsname:portnum """
   m = getDnsNameAndPortRegex().match(addr)
+  return m != None and m.start() == 0 and m.end() == len(addr)
+
+def getIpAddrAndPortRegexStr():
+  global ipAddrAndPortRegexStr
+  return ipAddrAndPortRegexStr
+
+def getIpAddrAndPortRegex():
+  global ipAddrAndPortRegex
+  return ipAddrAndPortRegex
+
+def isIpAddressAndPort(addr):
+  """ Matches ipaddr:portnum """
+  m = getIpAddrAndPortRegex().match(addr)
   return m != None and m.start() == 0 and m.end() == len(addr)
 
 

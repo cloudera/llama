@@ -36,9 +36,7 @@ class InstallProperties(Properties):
   cmdLineArgMap = {
     "--unattend"       : UNATTEND_INSTALL_KEY,
     "--interactive"    : UNATTEND_INSTALL_KEY,
-    "--deploy-slaves"  : INSTALL_SLAVES_KEY,
 
-    "--hadoop-master"  : HADOOP_MASTER_ADDR_KEY,
     "--hadoop-slaves"  : HADOOP_SLAVES_FILE_KEY, # master-only
     "--hadoop-site"    : HADOOP_SITE_FILE_KEY,
     "--hadoop-user"    : HADOOP_USER_NAME_KEY,
@@ -70,12 +68,13 @@ class InstallProperties(Properties):
     # to the main daemons.
     # These are used in conjunction with a pre-supplied hadoop-site,
     # when we can't poll the user for these values directly.
-    "--jobtracker"     : JOB_TRACKER_KEY,
-    "--namenode"       : NAMENODE_KEY,
+    JOB_TRACKER_ARG    : JOB_TRACKER_KEY,
+    NAMENODE_ARG       : NAMENODE_KEY,
+    SECONDARY_NAMENODE_ARG : SECONDARY_NAMENODE_KEY,
+
     "--scribe-master"  : SCRIBE_MASTER_ADDR_KEY,
 
     "--scribe-log-dir" : SCRIBE_LOG_DIR_KEY,
-
     HADOOP_LOG_DIR_ARG : HADOOP_LOG_DIR_KEY,
 
     # the following settings apply to master only

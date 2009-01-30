@@ -459,64 +459,92 @@ or specify your own username with --hadoop-user""")
     return os.path.join(self.getHadoopInstallPrefix(), "conf")
 
 
-  def configMasterAddress(self):
-    """ Sets the masterHost property of this object to point to the
-        master server address for Hadoop, querying the user if necessary """
+  def configAddress(self, server_type, props_key, props_arg, with_port, \
+      default_host=None, default_port=None):
+    """ Sets a property (identified by props_key) that contains the hostname
+        associated with a particular server type (server_type).
 
-    # TODO(aaron): 0.2 - We currently conflate the master address here with
-    # the address used for the secondary namenode. we should have a better
-    # system which actually differentiates between the two, and puts scribe,
-    # and the 2NN on a separate machine. This is an 0.2+ feature. (CH-85)
+        If with_port is True, then we expect this to be a host:port pair.
+        Otherwise, just a hostname.
+    """
 
-    defHostName = self.properties.getProperty(HADOOP_MASTER_ADDR_KEY)
-    if defHostName == None:
-      # look up the fqdn of this machine; we assume it's the master
-      try:
-        hostNameLines = shell.shLines("hostname --fqdn")
-        if len(hostNameLines) == 0:
-          defHostName = None
-        else:
-          defHostName = hostNameLines[0].strip()
-      except shell.CommandError:
-        defHostName = None
+    logging.debug("configAddress(" + server_type + ", " + props_key + ", " \
+        + props_arg + "," + str(with_port) + ", " + str(default_host) + ", " \
+        + str(default_port))
+
+    defHostName = self.properties.getProperty(props_key, default_host)
 
     if self.isUnattended():
       if defHostName == None:
-        output.printlnError("No master address found, nor could it be inferred")
-        output.printlnError("Please specify one with --hadoop-master")
-        raise InstallError("Master address not set")
+        output.printlnError("No " + server_type + " address found, nor could it be inferred")
+        output.printlnError("Please specify one with " + props_arg)
+        raise InstallError(server_type + " address not set")
       else:
         maybeMasterHost = defHostName
     else:
+      if defHostName == None:
+        # look up the fqdn of this machine; use this as the starting point.
+        defHostName = socket.getfqdn()
+        if with_port and default_port != None:
+          defHostName = defHostName + ":" + str(default_port)
+
       set = False
+      if with_port:
+        prompt_text = "Input the hostname:port DNS address for the " + server_type
+      else:
+        prompt_text = "Input the DNS address for the " + server_type
       while not set:
-        maybeMasterHost = prompt.getString( \
-            "Input the master host DNS address", defHostName, True)
-        if dnsregex.isIpAddress(maybeMasterHost):
-          output.printlnError("The master address must be a DNS name, " \
-              + "not an IP address")
-        elif not dnsregex.isDnsName(maybeMasterHost):
-          output.printlnError("This does not appear to be a DNS address")
+        maybeMasterHost = prompt.getString(prompt_text, defHostName, True)
+        if with_port:
+          if dnsregex.isIpAddressAndPort(maybeMasterHost):
+            output.printlnError("The " + server_type + " address must be a DNS name, " \
+                + "not an IP address")
+          elif dnsregex.isDnsName(maybeMasterHost):
+            output.printlnError("This address requires a ':port' suffix.")
+          elif not dnsregex.isDnsNameAndPort(maybeMasterHost):
+            output.printlnError("This does not appear to be a DNS 'address:port' pair")
+          else:
+            set = True # seems legit.
         else:
-          set = True # this address seems legit.
+          if dnsregex.isIpAddress(maybeMasterHost):
+            output.printlnError("The " + server_type + " address must be a DNS name, " \
+                + "not an IP address")
+          elif dnsregex.isDnsNameAndPort(maybeMasterHost):
+            output.printlnError("This address should not have a ':port' suffix.")
+          elif not dnsregex.isDnsName(maybeMasterHost):
+            output.printlnError("This does not appear to be a DNS address")
+          else:
+            set = True # this address seems legit.
 
 
     # make sure that this is an FQDN, not an IP address
     # Check again here regardless of what codepath we took to get here
-    if dnsregex.isIpAddress(maybeMasterHost):
-      output.printlnError("The master address must be a DNS name, " \
+    if dnsregex.isIpAddress(maybeMasterHost) or dnsregex.isIpAddressAndPort(maybeMasterHost):
+      output.printlnError("The " + server_type + " address must be a DNS name, " \
           + "not an IP address")
-      raise InstallError("Master address format error")
-    if not dnsregex.isDnsName(maybeMasterHost):
-      raise InstallError("Master address does not appear to be a DNS name")
+      raise InstallError(server_type + " address format error")
 
-    # we're good.
-    self.masterHost = maybeMasterHost
+    if with_port and not dnsregex.isDnsNameAndPort(maybeMasterHost):
+        raise InstallError(server_type + " address does not appear to be a DNS name:port pair")
+    elif not with_port and not dnsregex.isDnsName(maybeMasterHost):
+        raise InstallError(server_type + " address does not appear to be a DNS name")
+
+    # we're good. set the property.
+    logging.debug("Setting " + props_key + " to " + maybeMasterHost)
+    self.properties.setProperty(props_key, maybeMasterHost)
 
 
-  def getMasterHost(self):
-    return self.masterHost
+  def getJobTracker(self):
+    """ Return the address of the jobtracker """
+    return self.properties.getProperty(JOB_TRACKER_KEY)
 
+  def getNameNode(self):
+    """ Return the address of the namenode """
+    return self.properties.getProperty(NAMENODE_KEY)
+
+  def getSecondaryNameNode(self):
+    """ Return the address of the secondary namenode """
+    return self.properties.getProperty(SECONDARY_NAMENODE_KEY)
 
   def getNumSlaves(self):
     return toolinstall.getToolByName("GlobalPrereq").getNumSlaves()
@@ -589,61 +617,11 @@ install directory.
       # time to actually query the user about these things.
       self.configuredHadoopSiteOnline = True
 
-      output.printlnInfo("\nMaster server addresses:")
-
-      daemonAddrsOk = False
-      localHostAddrRegex = re.compile("localhost\:")
-      legalHostPortRegex = dnsregex.getDnsNameAndPortRegex()
-
-      while not daemonAddrsOk:
-        defaultJobTracker = self.getMasterHost() + ":" + str(DEFAULT_JT_PORT)
-        jobTrackerName = \
-            prompt.getString("Enter the hostname:port for the JobTracker", \
-            defaultJobTracker, True)
-        self.hadoopSiteDict[MAPRED_JOB_TRACKER] = jobTrackerName
-        self.properties.setProperty(JOB_TRACKER_KEY, jobTrackerName)
-
-        defaultNameNode = self.getMasterHost() + ":" + str(DEFAULT_NN_PORT)
-        nameNodeName = \
-            prompt.getString("Enter the hostname:port for the HDFS NameNode", \
-            defaultNameNode, True)
-
-        nameNodeUri = "hdfs://" + nameNodeName + "/"
-        self.hadoopSiteDict[FS_DEFAULT_NAME] = nameNodeUri
-        self.properties.setProperty(NAMENODE_KEY, nameNodeUri)
-
-        # check to make sure they didn't put 'localhost' in either of these
-        # and that they're legal host:port pairs
-        jtMatch = localHostAddrRegex.match(jobTrackerName)
-        jobTrackerIsLocalhost = jtMatch != None and jtMatch.start() == 0
-
-        jtDnsMatch = legalHostPortRegex.match(jobTrackerName)
-        jobTrackerIsDns = jtDnsMatch != None and jtDnsMatch.start() == 0 \
-            and jtDnsMatch.end() == len(jobTrackerName)
-
-        nnMatch = localHostAddrRegex.match(nameNodeName)
-        nameNodeIsLocalhost = nnMatch != None and nnMatch.start() == 0
-
-        nnDnsMatch = legalHostPortRegex.match(nameNodeName)
-        nameNodeIsDns = nnDnsMatch != None and nnDnsMatch.start() == 0 \
-            and nnDnsMatch.end() == len(nameNodeName)
-
-        if jobTrackerIsLocalhost or nameNodeIsLocalhost:
-          output.printlnInfo("""
-WARNING: Master server address of 'localhost' will not be accessible by other
-nodes.
-""")
-          daemonAddrsOk = prompt.getBoolean( \
-              "Are you sure you want to use these addresses?", False, True)
-        elif not jobTrackerIsDns or not nameNodeIsDns:
-          output.printlnInfo("""
-WARNING: You must enter a hostname:port pair for both of these entries.
-Please enter a valid address for both the JobTracker and the NameNode.
-""")
-        else:
-          # looks good; proceed.
-          daemonAddrsOk = True
-
+      # affix the jt/nn in the hadoop-site config; the user has already
+      # entered valid data with configAddress()
+      self.hadoopSiteDict[MAPRED_JOB_TRACKER] = self.getJobTracker()
+      nameNodeUri = "hdfs://" + self.getNameNode() + "/"
+      self.hadoopSiteDict[FS_DEFAULT_NAME] = nameNodeUri
 
       output.printlnInfo("""
 When HDFS files are deleted using the command-line tools, they are moved
@@ -669,7 +647,7 @@ in the temp dir name (e.g., /tmp/hadoop-${user.name}).""")
           True)
 
       # TODO(aaron): 0.2 - future versions should scan for devices on the
-      # name node  and auto-recommend a comma-separated list
+      # name node and auto-recommend a comma-separated list
       output.printlnInfo("""
 You must choose one or more paths on the master node where the HDFS
 metadata will be written. (These will be created if they do not already
@@ -851,7 +829,7 @@ to do, just accept the default values.""")
     mastersFileName = os.path.join(self.getConfDir(), "masters")
     try:
       handle = open(mastersFileName, "w")
-      handle.write(self.getMasterHost())
+      handle.write(self.getSecondaryNameNode())
       handle.close()
     except IOError, ioe:
       raise InstallError("Could not write masters file: " + mastersFileName \
@@ -1279,6 +1257,77 @@ the Hadoop daemons. This will cause problems starting Hadoop.""" % \
       self.create_ssh_key = prompt.getBoolean( \
           "Should I create and distribute ssh keys now?", self.create_ssh_key)
 
+  def configureMasterHosts(self):
+    """ Configure JT, NN, and 2NN addresses """
+
+    localHostAddrRegex = re.compile("localhost\:")
+
+    # Configure the JobTracker address
+    if self.has_role("jobtracker"):
+      default_jt_name = socket.getfqdn()
+    else:
+      default_jt_name = None
+
+    self.configAddress("JobTracker", JOB_TRACKER_KEY, JOB_TRACKER_ARG, True, \
+        default_jt_name, DEFAULT_JT_PORT)
+    while True:
+      job_tracker_host = self.getJobTracker()
+
+      # check to make sure they didn't put 'localhost' in the JT address
+      jtMatch = localHostAddrRegex.match(job_tracker_host)
+      jobTrackerIsLocalhost = jtMatch != None and jtMatch.start() == 0
+
+      if jobTrackerIsLocalhost:
+        output.printlnInfo("""
+WARNING: JobTracker address of 'localhost' will not be accessible by other
+nodes.
+""")
+        accept_jobtracker = prompt.getBoolean( \
+            "Are you sure you want to use this address?", False, True)
+        if not accept_jobtracker:
+          self.configAddress("JobTracker", JOB_TRACKER_KEY, JOB_TRACKER_ARG, True, \
+              default_jt_name, DEFAULT_JT_PORT)
+      else:
+        break
+
+
+    # Configure the NameNode address
+    if self.has_role("namenode"):
+      default_nn_name = socket.getfqdn()
+    else:
+      default_nn_name = None
+    self.configAddress("NameNode", NAMENODE_KEY, NAMENODE_ARG, True, \
+        default_nn_name, DEFAULT_NN_PORT)
+    while True:
+      name_node_host = self.getNameNode()
+
+      # check to make sure they didn't put 'localhost' in the JT address
+      nnMatch = localHostAddrRegex.match(name_node_host)
+      nameNodeIsLocalhost = nnMatch != None and nnMatch.start() == 0
+
+      if nameNodeIsLocalhost:
+        output.printlnInfo("""
+WARNING: NameNode address of 'localhost' will not be accessible by other
+nodes.
+""")
+        accept_namenode = prompt.getBoolean( \
+            "Are you sure you want to use this address?", False, True)
+        if not accept_namenode:
+          self.configAddress("NameNode", NAMENODE_KEY, NAMENODE_ARG, True, \
+              default_nn_name, DEFAULT_NN_PORT)
+      else:
+        break
+
+
+    if self.has_role("namenode") or self.has_role("secondary_namenode"):
+      if self.has_role("secondary_namenode"):
+        default_2nn_name = socket.getfqdn()
+      else:
+        default_2nn_name = None
+      self.configAddress("SecondaryNameNode", SECONDARY_NAMENODE_KEY, SECONDARY_NAMENODE_ARG, \
+          False, default_2nn_name)
+      # ok for this one to be localhost, so no fancy checking here.
+
 
   def configure(self):
     """ Run the configuration stage. This is responsible for
@@ -1288,7 +1337,7 @@ the Hadoop daemons. This will cause problems starting Hadoop.""" % \
     if self.has_role("jobtracker") or self.has_role("namenode"):
       self.configSshKeys()
 
-    self.configMasterAddress()
+    self.configureMasterHosts()
     self.configHadoopLogDir()
     self.configHadoopSite()
 
@@ -1590,9 +1639,15 @@ HDFS before using Hadoop, by running the command:
 
   def getRedeployArgs(self):
     argList = []
-    hadoopMaster = self.getMasterHost()
-    argList.append("--hadoop-master")
-    argList.append(hadoopMaster)
+
+    argList.append(JOB_TRACKER_ARG)
+    argList.append(self.getJobTracker())
+
+    argList.append(NAMENODE_ARG)
+    argList.append(self.getNameNode())
+
+    argList.append(SECONDARY_NAMENODE_ARG)
+    argList.append(self.getSecondaryNameNode())
 
     argList.append("--hadoop-user")
     argList.append(self.getHadoopUsername())
@@ -1601,6 +1656,7 @@ HDFS before using Hadoop, by running the command:
     argList.append(self.hadoop_log_dir)
 
     return argList
+
 
   def printFinalInstructions(self):
     if self.hdfsFormatMsg != None:

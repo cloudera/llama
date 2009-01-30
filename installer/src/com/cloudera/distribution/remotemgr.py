@@ -214,12 +214,11 @@ def getRemoteDeployArgs(hadoopSiteFilename, slavesFilename, pub_key_filename, \
   argList = []
 
   argList.append("--unattend")
-  argList.append("--as-slave")
 
   if properties.getBoolean(NO_DAEMONS_KEY):
     argList.append("--no-start-daemons")
 
-  # determine --install / --without for each tool
+  # determine roles to apply to slave nodes.
   toolFlags = manifest.getInstallFlags(properties)
   argList.extend(toolFlags)
 
@@ -252,15 +251,7 @@ def getRemoteDeployArgs(hadoopSiteFilename, slavesFilename, pub_key_filename, \
     argList.append(pub_key_filename)
 
   # fold down the argument list into a string
-  def concat(x, y):
-    return x + y
-
-  def quote(s):
-    return "\"" + s + "\" "
-
-  return reduce(concat, map(quote, argList), "")
-
-
+  return reduce(lambda x, y: x + y, map(lambda s: " \"" + s + "\"", argList), "")
 
 
 ### primary public interface ###

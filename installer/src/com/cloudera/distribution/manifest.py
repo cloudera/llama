@@ -46,33 +46,27 @@ def createInstallPlan(tools_list, properties):
 
 def getInstallFlags(properties):
   """ Return the list of flags that completely describes the set of tools
-      the user has chosen to install or exclude """
+      the user has chosen to install or exclude.
 
-  # TODO(aaron) CH-85 - this method doesn't do the right thing any more.
-  # We need to transmit the appropriate worker roles to worker nodes if
-  # we're doing a master install with some set of roles.
+      This is implemented by translating the roles on the master node
+      into the appropriate roles to transmit to the slave nodes.
+  """
 
   flags = []
+  out_roles = []
 
-  if properties.getBoolean(INSTALL_HADOOP_KEY, INSTALL_HADOOP_DEFAULT):
-    flags.append("--install-hadoop")
-  else:
-    flags.append("--without-hadoop")
+  roles = properties.getProperty(EXPANDED_ROLES_KEY, [])
+  for role in roles:
+    if role == "jobtracker":
+      out_roles.append("tasktracker")
+    elif role == "namenode":
+      out_roles.append("datanode")
+    elif role == "scribe_master":
+      out_roles.append("scribe_slave")
 
-  if properties.getBoolean(INSTALL_HIVE_KEY, INSTALL_HIVE_DEFAULT):
-    flags.append("--install-hive")
-  else:
-    flags.append("--without-hive")
+  out_role_string = reduce(lambda acc, role: acc + "," + role, out_roles, "")
 
-  if properties.getBoolean(INSTALL_PIG_KEY, INSTALL_PIG_DEFAULT):
-    flags.append("--install-pig")
-  else:
-    flags.append("--without-pig")
-
-  if properties.getBoolean(INSTALL_SCRIBE_KEY, INSTALL_SCRIBE_DEFAULT):
-    flags.append("--install-scribe")
-  else:
-    flags.append("--without-scribe")
-
+  flags.append(ROLES_ARG)
+  flags.append(out_role_string)
   return flags
 

@@ -61,6 +61,7 @@ fi
 # and launch the program
 echo "Running $installerPrgm"
 "$installerPrgm" --unattend --test-mode --prefix /mnt/tmp/master \
+  --role master \
   --remote-prefix /mnt/tmp/slave \
   --hadoop-site /tmp/install-hadoop-site.xml \
   --hadoop-slaves ${bin}/../testdata/localhost-slaves \
@@ -71,7 +72,7 @@ echo "Running $installerPrgm"
   --format-hdfs \
   --install-bindir \
   ../../../../bin/redist/projects/HadoopDist_supportedDistro/cloudera-hadoop-0.2.0/bin\
-  --namenode "hdfs://$thishost:9000/" --jobtracker "$thishost:9001" \
+  --namenode "$thishost:9000" --jobtracker "$thishost:9001" \
   --debug \
   "$@"
 

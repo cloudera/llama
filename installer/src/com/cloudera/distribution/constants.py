@@ -44,9 +44,6 @@ TEST_MODE_DEFAULT = False
 # the same as install.prefix, unless test.mode is True
 REMOTE_PREFIX_KEY = "remote.prefix"
 
-# if not empty, deploy the distribution to the slaves in this file
-INSTALL_SLAVES_KEY = "install.slaves.file"
-
 OVERWRITE_HTDOCS_KEY = "ovewrite.htdocs"
 
 MAKE_DFS_HOSTS_KEY = "dfs.hosts.create"
@@ -61,13 +58,12 @@ OVERWRITE_HTDOCS_DEFAULT = False
 # what roles do we use when installing?
 # This is a comma-separated list of role names which may need expansion.
 ROLES_KEY = "install.roles"
-ROLES_ARG = "--roles"
+ROLES_ARG = "--role"
 
 # This is a list of strings which are all primitive roles.
 EXPANDED_ROLES_KEY = "expanded.roles"
 
 # arguments controlling hadoop-specific installation
-HADOOP_MASTER_ADDR_KEY = "hadoop.master.addr"
 HADOOP_SLAVES_FILE_KEY = "hadoop.slaves.file"
 HADOOP_SITE_FILE_KEY   = "hadoop.site.file"
 HADOOP_USER_NAME_KEY   = "hadoop.user.name"
@@ -88,8 +84,17 @@ BASE_DIR_KEY = "base.dir"
 SSH_IDENTITY_KEY = "ssh.identity"
 SSH_USER_KEY     = "ssh.user"
 
+# hostname:port for jobtracker
+JOB_TRACKER_ARG = "--jobtracker"
 JOB_TRACKER_KEY = "job.tracker"
-NAMENODE_KEY     = "namenode"
+
+# hostname:port for namenode
+NAMENODE_ARG = "--namenode"
+NAMENODE_KEY = "hdfs.namenode"
+
+# hostname for 2nn
+SECONDARY_NAMENODE_ARG = "--secondary"
+SECONDARY_NAMENODE_KEY = "hdfs.secondary"
 
 # which JT do we connect pig jobs to?
 PIG_JOBTRACKER_KEY = JOB_TRACKER_KEY

@@ -301,20 +301,24 @@ fully-qualified hostnames of the same machines.""")
 
       output.printlnInfo("""
 You must now provide the addresses of all slaves which are part of this
-cluster. This installer will install the Cloudera Hadoop distribution to all
-of these machines. This file should contain one address per line. You may
-use blank lines; lines beginning with '#' will be ignored.
+cluster. This file should contain one address per line. You may use blank
+lines; lines beginning with '#' will be ignored.
 
 All addresses must be fully-qualified DNS addresses. e.g., slave1.foocorp.com
 Do not use IP addresses (e.g., "10.1.100.1") or hostnames (e.g., "slave1").
 
-The master server's address should not be in this file. This will also be
-used as the basis for Hadoop's "slaves" file, and (if configured) the DFS hosts
-file.
+The master server's address should not be in this file. This will be used as
+the basis for Hadoop's "slaves" file, and (if configured) the DFS hosts file.
+""")
 
-If you do not want to install Cloudera Hadoop on some slaves, then omit these
-machine addresses for now. You can add these nodes to Hadoop's slaves file
-after installation is complete.
+      if self.has_role("deployment_master"):
+        output.printlnInfo("""
+
+This list of machines will be used to redeploy the Cloudera Hadoop Distribution
+to all of the listed slaves. If you do not want to install Cloudera Hadoop on
+some slaves, then omit these machine addresses for now. You can add these nodes
+to Hadoop's slaves file after installation is complete. (See the README file
+for instructions on "Deploying on Additional Slave Machines.")
 
 Press [enter] to continue.""")
 
@@ -502,7 +506,11 @@ Press [enter] to continue.""")
     # - remote slave machines to install on
     self.configInstallPrefix()
     self.configEtcDir()
-    self.configSlavesFile()
+
+    if self.has_role("deployment_master") or self.has_role("jobtracker") \
+        or self.has_role("namenode"):
+      # We'll need a slaves file on this machine.
+      self.configSlavesFile()
 
     # If we're the deployment_master, then we're going to redeploy to
     # other nodes. Make sure we have the info needed there.

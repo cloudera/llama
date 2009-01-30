@@ -69,7 +69,6 @@
 ./bin/com/cloudera/testutil/verbosetest.py
 ./bin/com/cloudera/testutil/asserts.py
 ./bin/com/cloudera/distribution
-./bin/com/cloudera/distribution/toolinstall.py
 ./bin/com/cloudera/distribution/installproperties.py
 ./bin/com/cloudera/distribution/__init__.py
 ./bin/com/cloudera/distribution/dnsregex.py
@@ -79,6 +78,8 @@
 ./bin/com/cloudera/distribution/installplan.py
 ./bin/com/cloudera/distribution/hadoopconf.py
 ./bin/com/cloudera/distribution/postinstall.py
+./bin/com/cloudera/distribution/roles.py
+./bin/com/cloudera/distribution/serializer.py
 ./bin/com/cloudera/distribution/toolinstall.py
 ./bin/com/cloudera/distribution/env.py
 ./bin/com/cloudera/distribution/sshall.py

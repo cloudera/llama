@@ -234,7 +234,7 @@ logging.info("""
 """ % { "summary" : summary })
 
 
-# Now print some slightly-more technical information
+# Now print some slightly-more technical information.
 
 globalPrereqName = None
 if globalPrereqInstaller != None:
@@ -298,10 +298,10 @@ env.writeEnvironmentScript()
 
 # TODO(aaron) - Remove this block.
 # This is only a test of the serializer/deserializer code.
-serializer.preserve_state(SERIALIZATION_FILENAME)
-tools=serializer.restore_state(SERIALIZATION_FILENAME, roles.get_role_names(), properties)
-for tool in tools:
-  print "got tool back: " + tool.getName()
+#serializer.preserve_state(SERIALIZATION_FILENAME)
+#tools=serializer.restore_state(SERIALIZATION_FILENAME, roles.get_role_names(), properties)
+#for tool in tools:
+#  print "got tool back: " + tool.getName()
 
 sys.exit(0)
 

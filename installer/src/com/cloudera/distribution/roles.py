@@ -153,8 +153,10 @@ def get_roles_from_properties(properties):
       raise InstallError("""
 I do not know what to install, because you did not select any roles with
 the %(arg)s argument. Please restart the installer with this parameter.
-You might want to try "%(arg)s master" to configure a master node, or
-"%(arg)s slave" to configure a worker.
+You might want to try one of the following settings:
+  "%(arg)s master"    - configures the cluster master node
+  "%(arg)s slave"     - configures a worker (slave) node
+  "%(arg)s developer" - configures a developer (client) workstation
 """ % { "arg" : ROLES_ARG })
     else:
       # ask the user what roles to use
@@ -193,7 +195,9 @@ please tell me the role of this machine by selecting a number from 1--4:
   true_roles = []
   for elem  in user_role_list:
     elem = elem.strip()
-    if is_basic_role(elem):
+    if len(elem) == 0:
+      continue
+    elif is_basic_role(elem):
       true_roles.append(elem)
     elif is_pseudo_role(elem):
       true_roles.extend(__expanding_roles[elem])
