@@ -42,9 +42,6 @@ class PortalInstall(ToolInstall):
     """ If anything must be verified before we even get going, check those
         constraints in this method """
 
-    if not self.isMaster():
-      return
-
     # check to see if htdocs exist
     htdocs = self.getPortalDest()
     files = []
@@ -85,13 +82,14 @@ the installer.
         if not overwrite:
           raise InstallError(htdocs + " has files; please move or erase them")
 
+
   def install(self):
     """ Run the installation itself. """
 
     # the portal is only installed on the NN
-    if self.isMaster():
-      self.install_httpd()
-      self.install_portal()
+    self.install_httpd()
+    self.install_portal()
+
 
   def install_httpd(self):
     """

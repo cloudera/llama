@@ -70,12 +70,6 @@ class HadoopInstall(toolinstall.ToolInstall):
     return self.verified
 
 
-  def isMaster(self):
-    """ Return true if we are installing on a master server, as opposed to
-        a slave server."""
-    return toolinstall.getToolByName("GlobalPrereq").isMaster()
-
-
   def getHadoopSiteProperty(self, propName):
     """ If the user configured hadoop-site in this tool, extract
         a property from the map the user created """
@@ -1178,7 +1172,7 @@ to do, just accept the default values.""")
     makePathForProperty(HADOOP_TMP_DIR)
 
     # namenode metadata path is only necessary on the master node.
-    if self.isMaster():
+    if self.has_role("namenode"):
       makePathsForProperty(DFS_NAME_DIR)
 
     # always create these paths on all machines in case the master
@@ -1217,8 +1211,8 @@ using ssh-keygen.""" % { "user" : hadoop_user }
     self.create_ssh_key = self.properties.getBoolean(CREATE_SSHKEYS_KEY, \
         CREATE_SSHKEYS_DEFAULT)
 
-    if self.isMaster() and self.isUnattended() and not self.hasSshKey() \
-        and not self.create_ssh_key:
+    if (self.has_role("jobtracker") or self.has_role("namenode")) \
+        and self.isUnattended() and not self.hasSshKey() and not self.create_ssh_key:
       if self.mayStartDaemons():
         raise InstallError("""Error: No ssh key available for the Hadoop user.
 Hadoop services will not be able to start. To create keys, run this installer
@@ -1291,7 +1285,7 @@ the Hadoop daemons. This will cause problems starting Hadoop.""" % \
         setting up the config files and asking any questions
         of the user. The software is not installed yet """
 
-    if self.isMaster():
+    if self.has_role("jobtracker") or self.has_role("namenode"):
       self.configSshKeys()
 
     self.configMasterAddress()
@@ -1445,7 +1439,7 @@ the Hadoop daemons. This will cause problems starting Hadoop.""" % \
         contents in the Hadoop user's authorized_keys file.
     """
 
-    if self.isMaster():
+    if self.has_role("jobtracker") or self.has_role("namenode"):
       if not self.hasSshKey() and self.shouldCreateSshKey():
         # Actually create the key files.
         self.createSshKeys()
@@ -1488,12 +1482,15 @@ the Hadoop daemons. This will cause problems starting Hadoop.""" % \
     self.installPackage()
 
     # write the config files out.
-    if self.isMaster():
-      output.printlnDebug("Performing master-specific Hadoop setup")
+    if self.has_role("namenode"):
+      output.printlnDebug("Performing namenode-specific Hadoop setup")
       self.installMastersFile()
-      self.installSlavesFile()
       self.installDfsHostsFile()
       self.installDfsExcludesFile()
+
+    if self.has_role("jobtracker") or self.has_role("namenode"):
+      output.printlnDebug("Performing JT/NN-specific Hadoop setup")
+      self.installSlavesFile()
 
     self.installHadoopSiteFile()
     self.installFairScheduler()
@@ -1559,7 +1556,7 @@ HDFS before using Hadoop, by running the command:
     """ Run any post-installation activities. This occurs after
         all ToolInstall objects have run their install() operations. """
 
-    if self.isMaster():
+    if self.has_role("namenode"):
       self.doFormatHdfs()
 
     self.createInstallSymlink("hadoop")
@@ -1572,15 +1569,21 @@ HDFS before using Hadoop, by running the command:
     """ Run post-installation verification tests, if configured """
     # TODO(aaron): Verify hadoop
 
-    if self.isMaster() and self.mayStartDaemons():
-      try:
-        self.ensureHdfsStarted()
-        self.ensureMapRedStarted()
-        self.hadoopCmd("fs -ls /")
-        self.verified = True
-      except InstallError, ie:
-        output.printlnError("Error starting Hadoop services: " + str(ie))
-        output.printlnError("Cannot verify correct Hadoop installation")
+    if self.mayStartDaemons():
+      if self.has_role("namenode"):
+        try:
+          self.ensureHdfsStarted()
+          self.hadoopCmd("fs -ls /")
+          self.verified = True
+        except InstallError, ie:
+          output.printlnError("Error starting Hadoop services: " + str(ie))
+          output.printlnError("Cannot verify correct Hadoop installation")
+
+      if self.has_role("jobtracker"):
+        try:
+          self.ensureMapRedStarted()
+        except InstallError, ie:
+          output.printlnError("Error starting Hadoop services: " + str(ie))
 
       # TODO(aaron): Run a sample 'pi' job. Also, do a touchz, ls, rm
 

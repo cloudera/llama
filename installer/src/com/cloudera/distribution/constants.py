@@ -47,11 +47,6 @@ REMOTE_PREFIX_KEY = "remote.prefix"
 # if not empty, deploy the distribution to the slaves in this file
 INSTALL_SLAVES_KEY = "install.slaves.file"
 
-# select components to install
-INSTALL_HADOOP_KEY = "hadoop.install"
-INSTALL_HIVE_KEY   = "hive.install"
-INSTALL_PIG_KEY    = "pig.install"
-INSTALL_SCRIBE_KEY = "scribe.install"
 OVERWRITE_HTDOCS_KEY = "ovewrite.htdocs"
 
 MAKE_DFS_HOSTS_KEY = "dfs.hosts.create"
@@ -61,13 +56,15 @@ MAKE_DFS_EXCLUDES_KEY = "dfs.excludes.create"
 # don't start any daemons.
 NO_DAEMONS_KEY = "no.daemons"
 
-# by default, we install all packages. Doing this just for good practice
-# in case we include some "optional" packages later.
-INSTALL_HADOOP_DEFAULT = True
-INSTALL_HIVE_DEFAULT   = True
-INSTALL_PIG_DEFAULT    = True
-INSTALL_SCRIBE_DEFAULT = True
 OVERWRITE_HTDOCS_DEFAULT = False
+
+# what roles do we use when installing?
+# This is a comma-separated list of role names which may need expansion.
+ROLES_KEY = "install.roles"
+ROLES_ARG = "--roles"
+
+# This is a list of strings which are all primitive roles.
+EXPANDED_ROLES_KEY = "expanded.roles"
 
 # arguments controlling hadoop-specific installation
 HADOOP_MASTER_ADDR_KEY = "hadoop.master.addr"
@@ -82,16 +79,10 @@ SCRIBE_LOG_DIR_KEY     = "scribe.log.dir"
 # (We run as the current user if non-root)
 HADOOP_USER_NAME_DEFAULT = "hadoop"
 
-HADOOP_PROFILE_KEY     = "hadoop.profile" # master or slave?
-
 # what is the dir where we started running the installer?
 # use this for relative path resolution, since we cd into the dir
 # where the installer executable is.
 BASE_DIR_KEY = "base.dir"
-
-# values for HADOOP_PROFILE_KEY
-PROFILE_MASTER_VAL = False
-PROFILE_SLAVE_VAL = True
 
 # how do we log into other systems to perform remote setups?
 SSH_IDENTITY_KEY = "ssh.identity"
@@ -291,6 +282,7 @@ DEFAULT_TRASH_INTERVAL = ONE_DAY_IN_MINUTES
 
 HADOOP_TMP_DEFAULT = "/tmp/hadoop-${user.name}"
 
+# TODO(aaron) - query /proc/cpuinfo and meminfo to seed these
 DEFAULT_RAM_GUESS = 2048
 DEFAULT_CORES_GUESS = 2
 

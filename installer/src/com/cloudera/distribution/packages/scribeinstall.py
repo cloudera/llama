@@ -44,8 +44,9 @@ class ScribeInstall(toolinstall.ToolInstall):
     toolinstall.ToolInstall.__init__(self, "Scribe", properties)
 
     self.addDependency("Hadoop")
-    self.addDependency("LogMover")
-    self.addDependency("Portal")
+    if self.has_role("scribe_master"):
+      self.addDependency("LogMover")
+      self.addDependency("Portal")
 
     self.hostname = socket.getfqdn()
     self.scribeLogHome = None
@@ -101,9 +102,9 @@ argument.
       self.scribeLogHome = self.scribeLogHome[0:len(self.scribeLogHome)-1]
 
     # Determine the hostname for the master scribe server
-    if self.isMaster():
+    if self.has_role("scribe_master"):
       self.masterHost = self.hostname
-    else:
+    elif self.has_role("scribe_slave"):
       self.masterHost = self.properties.getProperty(SCRIBE_MASTER_ADDR_KEY)
       if not self.isUnattended():
         self.masterHost = prompt.getString( \
@@ -112,6 +113,9 @@ argument.
       if self.masterHost == None:
         raise InstallError("Scribe master hostname not set; " \
             + "please configure one with --scribe-master")
+    else:
+      # How did we get into this installer?
+      raise InstallError("Improper role specification: need scribe_master or scribe_slave")
 
     # Check the hostname for RFC 1035 compliance.
     if not dnsregex.isIpAddress(self.masterHost) \
@@ -255,7 +259,7 @@ Reason: %(ioe)s
     localDir = os.path.join(self.scribeLogHome, "local")
     dirutils.mkdirRecursive(localDir)
 
-    if self.isMaster():
+    if self.has_role("scribe_master"):
       masterDir = os.path.join(self.scribeLogHome, "central")
       dirutils.mkdirRecursive(masterDir)
 
@@ -294,7 +298,7 @@ Reason: %(ioe)s
       raise InstallError("Error rewriting config file for scribe")
 
     # master server gets scribe_central.conf too.
-    if self.isMaster():
+    if self.has_role("scribe_master"):
       masterConfSrc = os.path.join(configSource, "scribe_central.conf")
       masterConfDest = os.path.join(configDest, "scribe_central.conf")
       try:
@@ -396,7 +400,7 @@ Reason: %(ioe)s
       # run the daemons
       shell.sh(self.getScribeUserSudo() + scribeLocalCmd)
 
-      if self.isMaster():
+      if self.has_role("scribe_master"):
         shell.sh(self.getScribeUserSudo() + scribeCentralCmd)
 
       # don't return immediately; give the daemons time to turn on

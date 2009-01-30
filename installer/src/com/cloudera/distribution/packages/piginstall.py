@@ -181,44 +181,45 @@ Reason: %(ioe)s""" % { "ioe" : str(ioe) })
     """ Run any post-installation activities. This occurs after
         all ToolInstall objects have run their install() operations. """
 
-    self.createInstallSymlink("pig")
-    configDirSrc = os.path.join(self.getFinalInstallPath(), "conf")
-    self.createEtcSymlink("pig", configDirSrc)
+    if self.has_role("pig_developer"):
+      self.createInstallSymlink("pig")
+      configDirSrc = os.path.join(self.getFinalInstallPath(), "conf")
+      self.createEtcSymlink("pig", configDirSrc)
 
-    # Pig requires that users set several environment variables; calculate
-    # their values and add them to the list for the user here.
+      # Pig requires that users set several environment variables; calculate
+      # their values and add them to the list for the user here.
 
-    hadoopInstaller = toolinstall.getToolByName("Hadoop")
-    if None == hadoopInstaller:
-      raise InstallError("Pig cannot be installed without Hadoop")
+      hadoopInstaller = toolinstall.getToolByName("Hadoop")
+      if None == hadoopInstaller:
+        raise InstallError("Pig cannot be installed without Hadoop")
 
-    globalPrereq = toolinstall.getToolByName("GlobalPrereq")
-    if None == globalPrereq:
-      raise InstallError("Missing global prereq installer")
+      globalPrereq = toolinstall.getToolByName("GlobalPrereq")
+      if None == globalPrereq:
+        raise InstallError("Missing global prereq installer")
 
-    javaDir = globalPrereq.getJavaHome()
-    hadoopDir = os.path.join(hadoopInstaller.getFinalInstallPath(), "conf")
-    pigDir = self.getFinalInstallPath()
+      javaDir = globalPrereq.getJavaHome()
+      hadoopDir = os.path.join(hadoopInstaller.getFinalInstallPath(), "conf")
+      pigDir = self.getFinalInstallPath()
 
-    env.addToEnvironment("JAVA_HOME", javaDir)
-    env.addToEnvironment("HADOOPDIR", hadoopDir)
-    env.addToEnvironment("PIGDIR", pigDir)
-    env.addToEnvironment("PIG_CLASSPATH", \
-        os.path.join(pigDir, "pig-" + PIG_VERSION + "-core.jar") + ":" \
-        + hadoopDir)
+      env.addToEnvironment("JAVA_HOME", javaDir)
+      env.addToEnvironment("HADOOPDIR", hadoopDir)
+      env.addToEnvironment("PIGDIR", pigDir)
+      env.addToEnvironment("PIG_CLASSPATH", \
+          os.path.join(pigDir, "pig-" + PIG_VERSION + "-core.jar") + ":" \
+          + hadoopDir)
 
-    # must create pig tmp directory in HDFS before use
-    hadoopInstaller = toolinstall.getToolByName("Hadoop")
-    if hadoopInstaller == None:
-      raise InstallError("Pig depends on Hadoop")
+    if self.has_role("pig_master"):
+      # must create pig tmp directory in HDFS before use
+      hadoopInstaller = toolinstall.getToolByName("Hadoop")
+      if hadoopInstaller == None:
+        raise InstallError("Pig depends on Hadoop")
 
-    if hadoopInstaller.isMaster():
-     postinstall.add(hadoopInstaller.get_start_hdfs_cmd())
+      postinstall.add(hadoopInstaller.get_start_hdfs_cmd())
 
-     hadoop_cmdline = hadoopInstaller.get_hadoop_cmdline()
-     postinstall.add(hadoop_cmdline + "dfsadmin -safemode wait")
-     postinstall.add(hadoop_cmdline + "fs -mkdir " + PIG_TEMP_DIR, False)
-     postinstall.add(hadoop_cmdline + "fs -chmod a+w " + PIG_TEMP_DIR)
+      hadoop_cmdline = hadoopInstaller.get_hadoop_cmdline()
+      postinstall.add(hadoop_cmdline + "dfsadmin -safemode wait")
+      postinstall.add(hadoop_cmdline + "fs -mkdir " + PIG_TEMP_DIR, False)
+      postinstall.add(hadoop_cmdline + "fs -chmod a+w " + PIG_TEMP_DIR)
 
 
   def verify(self):

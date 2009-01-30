@@ -53,11 +53,11 @@ class LogMoverInstall(toolinstall.ToolInstall):
     """ Run the installation itself. """
 
     # the log mover is only installed on the NN
-    if self.isMaster():
-      self.installLogMover()
-      self.installLogFile()
-      self.installConfigs()
-      self.installCronjob()
+    self.installLogMover()
+    self.installLogFile()
+    self.installConfigs()
+    self.installCronjob()
+
 
   def installLogMover(self):
     logmover_prefix = self.getLogMoverPrefix()
@@ -249,10 +249,9 @@ class LogMoverInstall(toolinstall.ToolInstall):
     """ Run any post-installation activities. This occurs after
         all ToolInstall objects have run their install() operations. """
 
-    if self.isMaster():
-      # We only installed this on the head node; only start this on the same
-      self.createInstallSymlink("logmover")
-      self.createEtcSymlink("logmover", self.getFinalInstallPath())
+    # We only installed this on the head node; only start this on the same
+    self.createInstallSymlink("logmover")
+    self.createEtcSymlink("logmover", self.getFinalInstallPath())
 
 
   def verify(self):

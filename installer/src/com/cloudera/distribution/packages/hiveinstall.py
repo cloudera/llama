@@ -203,35 +203,42 @@ class HiveInstall(toolinstall.ToolInstall):
   def install(self):
     """ Run the installation itself. """
 
-    self.installHiveTarball()
-    self.installHiveDefaultConfig()
+    if self.has_role("hive_developer"):
+      self.installHiveTarball()
+      self.installHiveDefaultConfig()
 
 
   def postInstall(self):
     """ Run any post-installation activities. This occurs after
         all ToolInstall objects have run their install() operations. """
 
-    self.createInstallSymlink("hive")
-    self.createEtcSymlink("hive", self.getConfDir())
+    if self.has_role("hive_developer"):
+      self.createInstallSymlink("hive")
+      self.createEtcSymlink("hive", self.getConfDir())
 
-    # must set HADOOP_HOME variable for Hive to work with Hadoop
-    hadoopInstallDir = self.getHadoopHome()
-    env.addToEnvironment("HADOOP_HOME", hadoopInstallDir)
+      # must set HADOOP_HOME variable for Hive to work with Hadoop
+      hadoopInstallDir = self.getHadoopHome()
+      env.addToEnvironment("HADOOP_HOME", hadoopInstallDir)
 
-    # must create metastore directory in HDFS
-    hadoopInstaller = toolinstall.getToolByName("Hadoop")
-    if hadoopInstaller == None:
-      raise InstallError("Hive depends on Hadoop")
 
-    if hadoopInstaller.isMaster():
-     postinstall.add(hadoopInstaller.get_start_hdfs_cmd())
+    if self.has_role("hive_master"):
+      # Must create metastore directory in HDFS
+      # This is done on the hive "master" machine, which doesn't actually
+      # necessarily have Hive installed (but does have Hadoop running);
+      # the point is to issue these commands only once.
 
-     hadoop_cmdline = hadoopInstaller.get_hadoop_cmdline()
-     postinstall.add(hadoop_cmdline + "dfsadmin -safemode wait")
-     postinstall.add(hadoop_cmdline + "fs -mkdir " + HIVE_WAREHOUSE_DIR, False)
-     postinstall.add(hadoop_cmdline + "fs -mkdir " + HIVE_TEMP_DIR, False)
-     postinstall.add(hadoop_cmdline + "fs -chmod a+w " + HIVE_WAREHOUSE_DIR)
-     postinstall.add(hadoop_cmdline + "fs -chmod a+w " + HIVE_TEMP_DIR)
+      hadoopInstaller = toolinstall.getToolByName("Hadoop")
+      if hadoopInstaller == None:
+        raise InstallError("Hive depends on Hadoop")
+
+      postinstall.add(hadoopInstaller.get_start_hdfs_cmd())
+
+      hadoop_cmdline = hadoopInstaller.get_hadoop_cmdline()
+      postinstall.add(hadoop_cmdline + "dfsadmin -safemode wait")
+      postinstall.add(hadoop_cmdline + "fs -mkdir " + HIVE_WAREHOUSE_DIR, False)
+      postinstall.add(hadoop_cmdline + "fs -mkdir " + HIVE_TEMP_DIR, False)
+      postinstall.add(hadoop_cmdline + "fs -chmod a+w " + HIVE_WAREHOUSE_DIR)
+      postinstall.add(hadoop_cmdline + "fs -chmod a+w " + HIVE_TEMP_DIR)
 
 
   def verify(self):

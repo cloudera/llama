@@ -106,9 +106,15 @@ globalPrereqInstaller = None
 action_script = None
 
 try:
-  # Assemble installation plan from command line flags
-  output.printlnDebug("Creating installation plan...")
-  installPlan = manifest.createInstallPlan(properties)
+  # Determine the roles to install for
+  output.printlnDebug("Gathering roles...")
+  role_list = roles.get_roles_from_properties(properties)
+  output.printlnDebug("Got roles from user: " + str(role_list))
+
+  # Assemble the installation plan from the roles.
+  tools_list = roles.get_tools_for_roles(role_list)
+  installPlan = manifest.createInstallPlan(tools_list, properties)
+  installPlan.verify_dependencies()
   globalPrereqInstaller = toolinstall.getToolByName("GlobalPrereq")
 
   # Detect any prereqs that we cannot install:
@@ -139,9 +145,7 @@ can select by pressing [enter].
     tool.install()
 
   # If we're the master, perform automated deployment to additional machines
-  if globalPrereqInstaller.isMaster():
-    # TODO(aaron): Unattended install  should only do this if DEPLOY_SLAVES_KEY
-    # is true; interactive installation should prompt for whether/not to do this
+  if globalPrereqInstaller.has_role("deployment_master"):
     output.printlnInfo("Deploying distribution to remote hosts.")
     output.printlnInfo("(This may take a few minutes)")
     remote_failed_hosts = remotemgr.deployRemotes(properties)
@@ -153,7 +157,7 @@ can select by pressing [enter].
     output.printlnInfo("Performing postinstall for " + tool.getName())
     tool.postInstall()
 
-  if globalPrereqInstaller.isMaster():
+  if postinstall.has_actions():
     # Write out the postinstall script and move it to its destination.
     action_script_src = postinstall.write_action_script()
     action_script = os.path.join(globalPrereqInstaller.getInstallPrefix(), "postinstall")

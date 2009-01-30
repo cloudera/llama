@@ -18,6 +18,7 @@
 # installing a single tool (e.g., "Hadoop", "Hive", etc,
 # are separate tools).
 
+import logging
 import os
 
 from   com.cloudera.distribution.constants import *
@@ -234,12 +235,18 @@ class ToolInstall(object):
 
     return attempt
 
-  def isMaster(self):
-    """ Return true if we are installing on a master server, as opposed to
-        a slave server."""
-    # For the time being, the 'hadoop profile' is a bool true/false for
-    # isMaster
-    return self.properties.getBoolean(HADOOP_PROFILE_KEY) == PROFILE_MASTER_VAL
+
+  def has_role(self, role_name):
+    """ Return true if this instance of the installer is installing for
+        role_name (e.g., "scribe_master")
+    """
+    roles_list = self.properties.getProperty(EXPANDED_ROLES_KEY)
+    for real_role in roles_list:
+      if real_role == role_name:
+        return True
+
+    return False
+
 
   def getCurrUser(self):
     """Returns the user running this installer"""
@@ -252,6 +259,7 @@ class ToolInstall(object):
     if len(whoamiLines) == 0:
       raise InstallError("'whoami' returned no result.")
     return whoamiLines[0].strip()
+
 
   def installPackage(self, package_map):
     """
@@ -344,11 +352,8 @@ class ToolInstall(object):
 
     try:
       output.printlnVerbose("Attempting to " + state + " " + init_script)
-
       command = init_script + " " + state
-
       lines = shell.shLines(command, False)
-
       output.printlnVerbose(lines)
 
       output.printlnInfo("Performed a " + state + " on " + init_script)
@@ -359,18 +364,21 @@ class ToolInstall(object):
   def createEtcSymlink(self, appName, confDir):
     """ Create a symlink from /etc/cloudera/$appName to $confDir """
 
-    # remove the existing symlink first if it exists.
+    logging.debug("Creating etc symlink for " + appName + " to conf dir " + confDir)
 
+    # remove the existing symlink first if it exists.
     configDirRoot = getToolByName("GlobalPrereq").getConfigDir()
     configDirDest = os.path.join(configDirRoot, appName)
     if os.path.exists(configDirDest):
       try:
+        logging.debug("Removing existing target: " + configDirDest)
         os.unlink(configDirDest)
       except OSError, ose:
         raise InstallError("Cannot remove link " + configDirDest + " (" \
             + str(ose) + ")")
 
     try:
+      logging.debug("Symlink " + confDir + " -> " + configDirDest)
       os.symlink(confDir, configDirDest)
     except OSError, ose:
       raise InstallError("Cannot create link " + configDirDest + " (" \
@@ -448,4 +456,6 @@ class ToolInstall(object):
     raise InstallError("Called restore_state() on abstract ToolInstall")
 
 
+  def __str__(self):
+    return self.getName()
 

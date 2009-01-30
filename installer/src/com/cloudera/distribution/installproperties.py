@@ -17,6 +17,7 @@
 # This class manages user settings that can be loaded in to the 'install'
 # program for the Cloudera Hadoop distribution
 
+import logging
 import os
 import sys
 
@@ -37,23 +38,10 @@ class InstallProperties(Properties):
     "--interactive"    : UNATTEND_INSTALL_KEY,
     "--deploy-slaves"  : INSTALL_SLAVES_KEY,
 
-    "--install-hadoop" : INSTALL_HADOOP_KEY,
-    "--without-hadoop" : INSTALL_HADOOP_KEY,
     "--hadoop-master"  : HADOOP_MASTER_ADDR_KEY,
     "--hadoop-slaves"  : HADOOP_SLAVES_FILE_KEY, # master-only
     "--hadoop-site"    : HADOOP_SITE_FILE_KEY,
     "--hadoop-user"    : HADOOP_USER_NAME_KEY,
-    "--as-master"      : HADOOP_PROFILE_KEY,
-    "--as-slave"       : HADOOP_PROFILE_KEY,
-
-    "--install-hive"   : INSTALL_HIVE_KEY,
-    "--without-hive"   : INSTALL_HIVE_KEY,
-
-    "--install-pig"    : INSTALL_PIG_KEY,
-    "--without-pig"    : INSTALL_PIG_KEY,
-
-    "--install-scribe" : INSTALL_SCRIBE_KEY,
-    "--without-scribe" : INSTALL_SCRIBE_KEY,
 
     "--overwrite-htdocs": OVERWRITE_HTDOCS_KEY,
 
@@ -61,6 +49,8 @@ class InstallProperties(Properties):
 
     "--prefix"         : INSTALL_PREFIX_KEY,
     "--config-prefix"  : CONFIG_DIR_KEY,
+
+    ROLES_ARG          : ROLES_KEY,
 
     # if true, create missing ~hadoop/.ssh/id_rsa
     "--create-keys"    : CREATE_SSHKEYS_KEY,
@@ -110,11 +100,6 @@ class InstallProperties(Properties):
   # Non-boolean flags take an argument;
   # these just set the property to 'true'
   booleanFlags = [
-    "--as-slave",
-    "--install-hadoop",
-    "--install-hive",
-    "--install-pig",
-    "--install-scribe",
     "--overwrite-htdocs",
     "--format-hdfs",
     "--unattend",
@@ -125,11 +110,6 @@ class InstallProperties(Properties):
 
   # these disable boolean flags
   negativeFlags = [
-    "--as-master",
-    "--without-hadoop",
-    "--without-hive",
-    "--without-pig",
-    "--without-scribe",
     "--no-format-hdfs",
     "--interactive",
     "--start-daemons"
@@ -230,7 +210,7 @@ def loadAllProperties(properties, argv):
     sys.exit(1)
 
   # actually load the properties file here now that we know its name
-  output.printlnDebug("Reading properties file: " + propsFileName)
+  logging.debug("Reading properties file: " + propsFileName)
   try:
     # Relative paths loaded here must be normalized to be relative
     # to dirname(propsfilename)

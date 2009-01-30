@@ -47,6 +47,7 @@ class GlobalPrereqInstall(ToolInstall):
     self.configDir = None
     self.javaHome = None
 
+
   def precheckJava(self):
     """ Check that Java 1.6 is installed """
     # We have to check for Sun Java 1.6
@@ -499,13 +500,16 @@ Press [enter] to continue.""")
     # Any global config settings are retrieved here
     # - install prefix (/usr/share/cloudera)
     # - remote slave machines to install on
-    # - ssh key for installation user on all slave machines
-    # - installation username on all slave machines
-    # - upload prefix on slave machines (e.g., /tmp/)
     self.configInstallPrefix()
     self.configEtcDir()
     self.configSlavesFile()
-    if self.getNumSlaves() > 0 and self.isMaster():
+
+    # If we're the deployment_master, then we're going to redeploy to
+    # other nodes. Make sure we have the info needed there.
+    # - ssh key for installation user on all slave machines
+    # - installation username on all slave machines
+    # - upload prefix on slave machines (e.g., /tmp/)
+    if self.getNumSlaves() > 0 and self.has_role("deployment_master"):
       self.configInstallUser()
       self.configSshIdentityKey()
       self.configUploadPrefix()
