@@ -309,17 +309,20 @@ Do not use IP addresses (e.g., "10.1.100.1") or hostnames (e.g., "slave1").
 
 The master server's address should not be in this file. This will be used as
 the basis for Hadoop's "slaves" file, and (if configured) the DFS hosts file.
+
 """)
 
       if self.has_role("deployment_master"):
         output.printlnInfo("""
-
 This list of machines will be used to redeploy the Cloudera Hadoop Distribution
 to all of the listed slaves. If you do not want to install Cloudera Hadoop on
 some slaves, then omit these machine addresses for now. You can add these nodes
 to Hadoop's slaves file after installation is complete. (See the README file
 for instructions on "Deploying on Additional Slave Machines.")
 
+""")
+
+      output.printlnInfo("""
 Press [enter] to continue.""")
 
       # Just wait for the user to hit enter, then launch the editor.

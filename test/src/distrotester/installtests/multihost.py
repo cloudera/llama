@@ -19,8 +19,10 @@ from   distrotester.constants import *
 import distrotester.testproperties as testproperties
 from   distrotester.functiontests.hadooptests import HadoopTest
 from   distrotester.functiontests.hivetests import HiveTest
+from   distrotester.functiontests.logmovertests import LogMoverTest
 from   distrotester.functiontests.pigtests import PigTest
 from   distrotester.functiontests.scribetests import ScribeTest
+from   distrotester.functiontests.secondarynamenodetests import SecondaryNameNodeTest
 
 class MultiHostTest(VerboseTestCase):
 
@@ -195,7 +197,7 @@ class MultiHostTest(VerboseTestCase):
     javaHome = self.getProperties().getProperty(JAVA_HOME_KEY)
 
     cmd = INSTALLER_COMMAND + " --unattend --prefix " + INSTALL_PREFIX \
-        + " --without-scribe --without-pig --without-hive" \
+        + " --role jobtracker,namenode,secondary_namenode,deployment_master" \
         + " --config-prefix " + CONFIG_PREFIX \
         + " --log-filename " + INSTALLER_LOG_FILE \
         + " --format-hdfs --hadoop-user root " \
@@ -238,7 +240,7 @@ class MultiHostTest(VerboseTestCase):
 
     try:
       cmd = INSTALLER_COMMAND + " --unattend --prefix " + INSTALL_PREFIX \
-          + " --without-scribe --without-pig --without-hive" \
+          + " --role jobtracker,namenode,secondary_namenode,deployment_master" \
           + " --config-prefix " + CONFIG_PREFIX \
           + " --log-filename " + INSTALLER_LOG_FILE \
           + " --format-hdfs --hadoop-user " + HADOOP_USER \
@@ -281,6 +283,7 @@ class MultiHostTest(VerboseTestCase):
     javaHome = self.getProperties().getProperty(JAVA_HOME_KEY)
 
     cmd = INSTALLER_COMMAND + " --unattend --prefix " + INSTALL_PREFIX \
+        + " --role master,developer" \
         + " --config-prefix " + CONFIG_PREFIX \
         + " --log-filename " + INSTALLER_LOG_FILE \
         + " --format-hdfs --hadoop-user " + HADOOP_USER \
@@ -289,7 +292,7 @@ class MultiHostTest(VerboseTestCase):
         + " --identity /root/.ssh/id_rsa" \
         + " --hadoop-site " \
         + self.prepHadoopSite("hadoop-configs/basic-config.xml") \
-        + ' --namenode "hdfs://' + self.hostname + ':9000/" ' \
+        + ' --namenode "' + self.hostname + ':9000" ' \
         + ' --jobtracker "' + self.hostname + ':9001"' \
         + " --overwrite-htdocs" \
         + " --debug"
@@ -300,13 +303,15 @@ class MultiHostTest(VerboseTestCase):
     self.getProperties().setProperty(HADOOP_USER_KEY, HADOOP_USER)
     self.getProperties().setProperty(CLIENT_USER_KEY, CLIENT_USER)
 
-    hadoopSuite = unittest.makeSuite(HadoopTest, 'test')
-    hiveSuite   = unittest.makeSuite(HiveTest, 'test')
-    pigSuite    = unittest.makeSuite(PigTest, 'test')
-    scribeSuite = unittest.makeSuite(ScribeTest, 'test')
+    hadoopSuite   = unittest.makeSuite(HadoopTest, 'test')
+    hiveSuite     = unittest.makeSuite(HiveTest, 'test')
+    logMoverSuite = unittest.makeSuite(LogMoverTest, 'test')
+    pigSuite      = unittest.makeSuite(PigTest, 'test')
+    scribeSuite   = unittest.makeSuite(ScribeTest, 'test')
     functionalityTests = unittest.TestSuite([
         hadoopSuite,
         hiveSuite,
+        logMoverSuite,
         pigSuite,
         scribeSuite
         ])
@@ -316,6 +321,7 @@ class MultiHostTest(VerboseTestCase):
     if not runner.run(functionalityTests).wasSuccessful():
       self.fail()
 
+
   def testWithHostsFiles(self):
     """ All apps, separate accounts, with dfs.hosts and dfs.hosts.exclude
         files set in place.
@@ -324,6 +330,7 @@ class MultiHostTest(VerboseTestCase):
     javaHome = self.getProperties().getProperty(JAVA_HOME_KEY)
 
     cmd = INSTALLER_COMMAND + " --unattend --prefix " + INSTALL_PREFIX \
+        + " --role master,developer" \
         + " --config-prefix " + CONFIG_PREFIX \
         + " --log-filename " + INSTALLER_LOG_FILE \
         + " --format-hdfs --hadoop-user " + HADOOP_USER \
@@ -334,7 +341,7 @@ class MultiHostTest(VerboseTestCase):
         + " --make-dfs-excludes dfs.hosts.exclude" \
         + " --hadoop-site " \
         + self.prepHadoopSite("hadoop-configs/hosts-config.xml") \
-        + ' --namenode "hdfs://' + self.hostname + ':9000/" ' \
+        + ' --namenode "' + self.hostname + ':9000" ' \
         + ' --jobtracker "' + self.hostname + ':9001"' \
         + " --overwrite-htdocs" \
         + " --debug"
@@ -382,3 +389,99 @@ class MultiHostTest(VerboseTestCase):
     logging.info("Performing second install/test in repeated batch.")
     self.testAllApps()
 
+
+  def testSeparateSecondary(self):
+    """ Install all components.
+        Put the NN and JT on one machine.
+        Put the 2NN on the other machine, along with DN and TT.
+        Use a separate hadoop user account and a separate client account. """
+
+    javaHome = self.getProperties().getProperty(JAVA_HOME_KEY)
+
+    # Use the first slave as the 2nn.
+    slavesList = self.getSlavesList()
+    if len(slavesList) == 0:
+      fail("No slaves available to check separate 2NN")
+    secondary_node_addr = slavesList[0]
+
+    hadoop_site_file = self.prepHadoopSite("hadoop-configs/fast-checkpoint.xml")
+
+    cmd = INSTALLER_COMMAND + " --unattend --prefix " + INSTALL_PREFIX \
+        + " --role namenode,jobtracker,scribe_master" \
+        + " --config-prefix " + CONFIG_PREFIX \
+        + " --log-filename " + INSTALLER_LOG_FILE \
+        + " --format-hdfs --hadoop-user " + HADOOP_USER \
+        + " --java-home " + javaHome \
+        + " --hadoop-slaves " + self.getSlavesFile() \
+        + " --identity /root/.ssh/id_rsa" \
+        + " --hadoop-site " + hadoop_site_file \
+        + ' --namenode "' + self.hostname + ':9000" ' \
+        + ' --jobtracker "' + self.hostname + ':9001"' \
+        + ' --secondary "' + secondary_node_addr \
+        + " --overwrite-htdocs" \
+        + " --debug"
+
+    logging.debug("Installing with command: " + cmd)
+    shell.sh(cmd)
+
+
+    # Upload the prepped hadoop-site.xml file to the slave
+    shell.scp(hadoop_site_file, "root", secondary_node_addr, hadoop_site_file, \
+        self.getProperties())
+
+    # Recompress the distribution, upload that to the slave, and uncompress it.
+    new_tarball = "/mnt/recompressed-distro.tar.gz"
+    unzip_dir = os.path.dirname(new_tarball)
+
+    if DISTRIB_DEST_DIR.endswith(os.sep):
+      recompress_target = DISTRIB_DEST_DIR[0:len(DISTRIB_DEST_DIR)-1]
+    else:
+      recompress_target = DISTRIB_DEST_DIR
+
+    recompress_component = os.path.basename(recompress_target)
+    recompress_basedir = os.path.dirname(recompress_target)
+
+    if os.path.exists(new_tarball):
+      os.unlink(new_tarball)
+    cmd = "tar czf \"" + new_tarball + "\" -C \"" + recompress_basedir + "\" " \
+        + "\"" + recompress_component + "\""
+    shell.sh(cmd)
+
+    shell.scp(new_tarball, "root", secondary_node_addr, new_tarball, self.getProperties())
+    shell.ssh("root", secondary_node_addr, "tar zxf " + new_tarball + " -C " + unzip_dir, \
+        self.getProperties())
+
+    # Now actually run the installer on the other node
+    logging.info("Performing second node installation")
+
+    cmd = INSTALLER_COMMAND + " --unattend --prefix " + INSTALL_PREFIX \
+        + " --role secondary_namenode,datanode,tasktracker,scribe_client" \
+        + " --config-prefix " + CONFIG_PREFIX \
+        + " --log-filename " + INSTALLER_LOG_FILE \
+        + " --format-hdfs --hadoop-user " + HADOOP_USER \
+        + " --java-home " + javaHome \
+        + " --identity /root/.ssh/id_rsa" \
+        + " --hadoop-site " + hadoop_site_file \
+        + ' --namenode ' + self.hostname + ':9000 ' \
+        + ' --jobtracker ' + self.hostname + ':9001' \
+        + ' --secondary ' + secondary_node_addr \
+        + " --overwrite-htdocs" \
+        + " --debug"
+
+    logging.debug("Performing remote install with command: " + cmd)
+    shell.ssh("root", secondary_node_addr, cmd, self.getProperties())
+
+    self.getProperties().setProperty(HADOOP_USER_KEY, HADOOP_USER)
+    self.getProperties().setProperty(CLIENT_USER_KEY, CLIENT_USER)
+
+    hadoopSuite      = unittest.makeSuite(HadoopTest, 'test')
+    secondaryNNSuite = unittest.makeSute(SecondaryNameNodeTest, 'test')
+    functionalityTests = unittest.TestSuite([
+        hadoopSuite,
+        secondaryNNSuite
+        ])
+
+    print "Running Hadoop functionality tests"
+    runner = unittest.TextTestRunner()
+    if not runner.run(functionalityTests).wasSuccessful():
+      self.fail()

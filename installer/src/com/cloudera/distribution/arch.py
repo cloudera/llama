@@ -152,17 +152,29 @@ class ArchDetector(object):
           distributionName = distributionLines[0].strip()
           output.printlnVerbose("Got distribution name: " + distributionName)
       except shell.CommandError, ce:
-        # couldn't run this command
+        # couldn't run this command.
         output.printlnDebug("Could not run lsb_release:" + str(ce))
 
 
     if distributionName == None:
-      # check using older platform.dist()
-      # this is the least reliable method
+      # Check using older platform.dist().
+      # This is the least reliable method python provides.
       output.printlnDebug("Trying platform.dist()")
       (distributionName, ignored, ignored2) = platform.dist()
       output.printlnVerbose("Got distributionName: " + distributionName)
 
+    if distributionName == None and os.path.exists("/etc/redhat-release"):
+      # Might be able to inspect this file manually and confirm Fedora
+      try:
+        handle = open("/etc/redhat-release")
+        lines = handle.readlines()
+        if len(lines) > 0 and lines[0].startswith("Fedora"):
+          # sweet, got Fedora.
+          distributionName = "Fedora"
+        handle.close()
+      except IOError, ioe:
+        # This isn't fatal; it just means we didn't establish Fedora-ness.
+        output.printlnDebug("IOError reading /etc/redhat-release: " + str(ioe))
 
     if distributionName == "Ubuntu":
       output.printlnVerbose("Found linux distribution: Ubuntu")

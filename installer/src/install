@@ -27,6 +27,7 @@ import logging
 import os
 import shutil
 import sys
+import time
 
 import com.cloudera.distribution.arch as arch
 from   com.cloudera.distribution.constants import *
@@ -74,15 +75,35 @@ if not sys.stdin.isatty():
 basedir = os.path.abspath(os.getcwd())
 properties.setProperty(BASE_DIR_KEY, basedir)
 
-# set up the console. Also starts logging to the specified file
+# set up the console. Also starts logging to the specified file.
 output.setupConsole(properties)
 
-# if we are here, then properties and argv parsing succeeded
+# if we are here, then properties and argv parsing succeeded.
+
+# record some information for the debug log
+logging.debug("*** STARTUP_MSG: installer started: " + time.asctime())
+try:
+  whoamiLines = shell.shLines("whoami")
+  for line in whoamiLines:
+    logging.debug("whoami: " + line)
+except shell.CommandError:
+  pass # This was for debugging only; ignore.
+
+try:
+  unameLines = shell.shLines("uname -a")
+  for line in unameLines:
+    logging.debug("uname -a: " + line)
+except shell.CommandError:
+  pass # This was for debugging only; ignore.
+
 
 # Where are we? Switch into installer's base dir
 binName = sys.argv[0]
 binDir = properties.getProperty(INSTALL_BINDIR_KEY, os.path.dirname(binName))
 os.chdir(binDir)
+
+logging.debug("installation base dir: "+ basedir)
+logging.debug("installer bin dir: " + binDir)
 
 # determine what architecture / platform we're running on.
 archDetector = arch.getArchDetector()

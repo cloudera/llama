@@ -472,7 +472,13 @@ or specify your own username with --hadoop-user""")
         + props_arg + "," + str(with_port) + ", " + str(default_host) + ", " \
         + str(default_port))
 
-    defHostName = self.properties.getProperty(props_key, default_host)
+    if default_host != None:
+      if with_port and default_port != None:
+        default_substitute = default_host + ":" + str(default_port)
+      else:
+        default_substitute = default_host
+
+    defHostName = self.properties.getProperty(props_key, default_substitute)
 
     if self.isUnattended():
       if defHostName == None:
@@ -813,7 +819,7 @@ to do, just accept the default values.""")
           defaultSubmitReplication, True)
 
       self.hadoopSiteDict[MAPRED_SYSTEM_DIR] = prompt.getString( \
-          MAPRED_SYSTEM_DIR, DEFAULT_MAPRED_SYS_DIR, True)
+          MAPRED_SYSTEM_DIR + " (path in HDFS)", DEFAULT_MAPRED_SYS_DIR, True)
 
       defaultHostsFile = os.path.join(self.getConfDir(), "dfs.hosts")
       self.hadoopSiteDict[DFS_HOSTS_FILE] = prompt.getString( \
@@ -900,6 +906,7 @@ to do, just accept the default values.""")
   def writeHadoopSiteEpilogue(self, handle):
     """ Always write in the following keys; don't poll the user for this """
 
+    hadoop_conf_dir = self.getConfDir()
     handle.write("""
 <property>
   <name>mapred.jobtracker.taskScheduler</name>
@@ -907,7 +914,7 @@ to do, just accept the default values.""")
 </property>
 <property>
   <name>mapred.fairscheduler.allocation.file</name>
-  <value>/usr/share/cloudera/hadoop/conf/fairscheduler.xml</value>
+  <value>%(confdir)s/fairscheduler.xml</value>
 </property>
 
 <property>
@@ -937,7 +944,7 @@ to do, just accept the default values.""")
   <value></value>
   <final>true</final>
 </property>
-""")
+""" % { "confdir" : hadoop_conf_dir })
 
     # if LZO is available, turn this on by default.
     if self.canUseLzo():
@@ -1158,13 +1165,19 @@ to do, just accept the default values.""")
     # us to create the NN dir and not the DN dir, we create and chown
     # it in advance to prevent errors later on. If unused, it'll just
     # stay quietly empty.
-    makePathsForProperty(DFS_DATA_DIR)
+    if self.has_role("namenode") or self.has_role("datanode"):
+      makePathsForProperty(DFS_DATA_DIR)
+
     makePathsForProperty(MAPRED_LOCAL_DIR)
+
+    if self.has_role("secondary_namenode"):
+      makePathsForProperty(NN2_CHECKPOINT_DIR)
 
     # Now make the log dir and chown it to the hadoop username.
     logDir = self.hadoop_log_dir
     logDir = os.path.join(self.getFinalInstallPath(), self.hadoop_log_dir)
     makeSinglePath(logDir)
+
 
   def get_ssh_warning(self):
     " return a warning msg regarding the lack of ssh keys for the hadoop user "
@@ -1362,16 +1375,31 @@ nodes.
 
     # mkdir ~hadoop/.ssh and set it mode 0750
     sshKeyDir = os.path.join(os.path.expanduser("~" + hadoop_user), ".ssh")
+    create_dir_ok = True
     try:
       if not os.path.exists(sshKeyDir):
+        create_dir_ok = False
         dirutils.mkdirRecursive(sshKeyDir)
         # permissions must be 0750 or more strict. Just set them to 0700.
         shell.sh("chmod go-rwx \"" + sshKeyDir + "\"")
         shell.sh("chown " + hadoop_user + " \"" + sshKeyDir + "\"")
+        create_dir_ok = True
     except OSError, ose:
       raise InstallError("Could not create " + sshKeyDir + ": " + str(ose))
     except shell.CommandError:
       raise InstallError("Could not set owner for " + sshKeyDir)
+    finally:
+      if not create_dir_ok:
+        # We tried to create the dir and failed. Remove it so that we recreate
+        # it again the next time around; this prevents a permissions error
+        # in the middle. (CH-171)
+        if os.path.exists(sshKeyDir):
+          try:
+            shutil.rmtree(sshKeyDir)
+          except OSError, ose:
+            # Weird that this happened -- just log the error, but we're already
+            # throwing an exception so don't throw another.
+            logging.error("Could not remove ssh key dir when handling error: " + str(ose))
 
     # create the key file id_rsa and id_rsa.pub (we'll rename this below)
     try:

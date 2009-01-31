@@ -160,7 +160,7 @@ class StandaloneTest(VerboseTestCase):
     javaHome = self.getProperties().getProperty(JAVA_HOME_KEY)
 
     cmd = INSTALLER_COMMAND + " --unattend --prefix " + INSTALL_PREFIX \
-        + " --without-scribe --without-pig --without-hive" \
+        + " --role jobtracker,namenode,secondary_namenode,datanode,tasktracker,hadoop_developer" \
         + " --config-prefix " + CONFIG_PREFIX \
         + " --log-filename " + INSTALLER_LOG_FILE \
         + " --format-hdfs --hadoop-user root " \
@@ -194,6 +194,7 @@ class StandaloneTest(VerboseTestCase):
     javaHome = self.getProperties().getProperty(JAVA_HOME_KEY)
 
     cmd = INSTALLER_COMMAND + " --unattend --prefix " + INSTALL_PREFIX \
+        + " --role master,slave,developer" \
         + " --config-prefix " + CONFIG_PREFIX \
         + " --log-filename " + INSTALLER_LOG_FILE \
         + " --format-hdfs --hadoop-user " + HADOOP_USER \
@@ -202,8 +203,9 @@ class StandaloneTest(VerboseTestCase):
         + " --identity /root/.ssh/id_rsa" \
         + " --hadoop-site " \
         + self.prepHadoopSite("hadoop-configs/basic-config.xml") \
-        + ' --namenode "hdfs://' + self.hostname + ':9000/" ' \
+        + ' --namenode "' + self.hostname + ':9000" ' \
         + ' --jobtracker "' + self.hostname + ':9001"' \
+        + ' --secondary ' + self.hostname \
         + " --overwrite-htdocs" \
         + " --debug"
 
@@ -238,6 +240,7 @@ class StandaloneTest(VerboseTestCase):
     javaHome = self.getProperties().getProperty(JAVA_HOME_KEY)
 
     cmd = INSTALLER_COMMAND + " --unattend --prefix " + INSTALL_PREFIX \
+        + " --role standalone" \
         + " --config-prefix " + CONFIG_PREFIX \
         + " --log-filename " + INSTALLER_LOG_FILE \
         + " --format-hdfs --hadoop-user " + HADOOP_USER \
@@ -250,6 +253,7 @@ class StandaloneTest(VerboseTestCase):
         + self.prepHadoopSite("hadoop-configs/hosts-config.xml") \
         + ' --namenode "hdfs://' + self.hostname + ':9000/" ' \
         + ' --jobtracker "' + self.hostname + ':9001"' \
+        + ' --secondary ' + self.hostname \
         + " --overwrite-htdocs" \
         + " --debug"
 
@@ -292,6 +296,7 @@ class StandaloneTest(VerboseTestCase):
     platformSetup.removePackage("lzo")
     try:
       cmd = INSTALLER_COMMAND + " --unattend --prefix " + INSTALL_PREFIX \
+          + " --role standalone" \
           + " --config-prefix " + CONFIG_PREFIX \
           + " --log-filename " + INSTALLER_LOG_FILE \
           + " --format-hdfs --hadoop-user " + HADOOP_USER \

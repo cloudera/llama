@@ -47,10 +47,13 @@ __roles_list = [
 # We provide "shorthand" roles that expand into the true roles
 # (listed above). The shorthand roles are provided in this map.
 __expanding_roles = {
-  "master"    : [ "jobtracker", "namenode", "secondary_namenode", "scribe_master", \
-                  "deployment_master", "hive_master", "pig_master" ],
-  "slave"     : [ "datanode", "tasktracker", "scribe_slave" ],
-  "developer" : [ "hadoop_developer", "pig_developer", "hive_developer" ]
+  "master"     : [ "jobtracker", "namenode", "secondary_namenode", "scribe_master",
+                   "deployment_master", "hive_master", "pig_master" ],
+  "slave"      : [ "datanode", "tasktracker", "scribe_slave" ],
+  "developer"  : [ "hadoop_developer", "pig_developer", "hive_developer" ],
+  "standalone" : [ "jobtracker", "namenode", "secondary_namenode", "scribe_master",
+                   "hive_master", "pig_master", "datanode", "hive_developer",
+                   "tasktracker", "scribe_slave", "hadoop_developer", "pig_developer" ]
 }
 
 
@@ -154,9 +157,10 @@ def get_roles_from_properties(properties):
 I do not know what to install, because you did not select any roles with
 the %(arg)s argument. Please restart the installer with this parameter.
 You might want to try one of the following settings:
-  "%(arg)s master"    - configures the cluster master node
-  "%(arg)s slave"     - configures a worker (slave) node
-  "%(arg)s developer" - configures a developer (client) workstation
+  "%(arg)s master"     - configures the cluster master node
+  "%(arg)s slave"      - configures a worker (slave) node
+  "%(arg)s developer"  - configures a developer (client) workstation
+  "%(arg)s standalone" - configures a standalone machine that acts as its own cluster
 """ % { "arg" : ROLES_ARG })
     else:
       # ask the user what roles to use
@@ -168,7 +172,8 @@ please tell me the role of this machine by selecting a number from 1--4:
   1) This is the cluster master node
   2) This is a worker (slave) node
   3) This is a developer's machine that connects to a cluster
-  4) (Advanced) Select explicit roles
+  4) This is a standalone machine that acts like a complete cluster
+  5) (Advanced) Select explicit roles
 """)
       initial_role_num = prompt.getInteger("Please enter a number between 1--4", \
           1, 4, None, True)
@@ -179,6 +184,8 @@ please tell me the role of this machine by selecting a number from 1--4:
       elif initial_role_num == 3:
         user_roles = "developer"
       elif initial_role_num == 4:
+        user_roles = "standalone"
+      elif initial_role_num == 5:
         logging.info("Please enter a comma-delimited list of all roles this machine uses.")
         logging.info("Available roles are:")
         for role in get_role_names():
