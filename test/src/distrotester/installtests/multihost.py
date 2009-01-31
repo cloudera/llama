@@ -22,7 +22,7 @@ from   distrotester.functiontests.hivetests import HiveTest
 from   distrotester.functiontests.logmovertests import LogMoverTest
 from   distrotester.functiontests.pigtests import PigTest
 from   distrotester.functiontests.scribetests import ScribeTest
-from   distrotester.functiontests.secondarynamenodetests import SecondaryNameNodeTest
+import distrotester.functiontests.secondarynamenodetests as secondarynamenodetests
 
 class MultiHostTest(VerboseTestCase):
 
@@ -474,8 +474,11 @@ class MultiHostTest(VerboseTestCase):
     self.getProperties().setProperty(HADOOP_USER_KEY, HADOOP_USER)
     self.getProperties().setProperty(CLIENT_USER_KEY, CLIENT_USER)
 
+    # set up server addr for use in this test.
+    secondarynamenodetests.set_secondary_server(secondary_node_addr)
+
     hadoopSuite      = unittest.makeSuite(HadoopTest, 'test')
-    secondaryNNSuite = unittest.makeSute(SecondaryNameNodeTest, 'test')
+    secondaryNNSuite = unittest.makeSuite(secondarynamenodetests.SecondaryNameNodeTest, 'test')
     functionalityTests = unittest.TestSuite([
         hadoopSuite,
         secondaryNNSuite

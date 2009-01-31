@@ -20,7 +20,7 @@ CHECKPOINT_INTERVAL = 10
 
 
 __secondary_server = None
-def setSecondaryServer(server_addr):
+def set_secondary_server(server_addr):
   """ Sets the address of the 2NN which should be used for this unit test. """
   global __secondary_server
 
