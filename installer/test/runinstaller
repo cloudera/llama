@@ -58,8 +58,11 @@ else
   CUR_JAVA="$JAVA_HOME"
 fi
 
+# Get the distribution version string
+DISTRO_VER=`/usr/bin/env python ../../../../bin/python/installer/version.py"
+
 # and launch the program
-echo "Running $installerPrgm"
+echo "Running $installerPrgm version $DISTRO_VER"
 "$installerPrgm" --unattend --test-mode --prefix /mnt/tmp/master \
   --remote-prefix /mnt/tmp/slave \
   --hadoop-site /tmp/install-hadoop-site.xml \
@@ -70,7 +73,7 @@ echo "Running $installerPrgm"
   --log-level DEBUG \
   --format-hdfs \
   --install-bindir \
-  ../../../../bin/redist/projects/HadoopDist_supportedDistro/cloudera-hadoop-0.1.1/bin\
+  ../../../../bin/redist/projects/HadoopDist_supportedDistro/cloudera-hadoop-$DISTRO_VER/bin\
   --namenode "hdfs://$thishost:9000/" --jobtracker "$thishost:9001" \
   --debug \
   "$@"
