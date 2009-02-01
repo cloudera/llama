@@ -5,10 +5,15 @@
 # Installation system for Cloudera Hadoop
 #
 
+installerVersion = VerStringTarget(
+  version     ="0.2.0",
+  pythonModule="installer.version")
+
 installer = PythonTarget(
   sources=[ "src/install",
             "src/com"],
-  requiredTargets=[ "python/Common" ])
+  requiredTargets=[ "python/Common",
+                    ":installerVersion" ])
 
 installerTest = PythonTestTarget(
   sources = ["test/com/"],
