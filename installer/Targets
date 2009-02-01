@@ -7,6 +7,7 @@
 
 installer = PythonTarget(
   sources=[ "src/install",
+            "src/installer",
             "src/com"],
   requiredTargets=[ "python/Common",
                     "projects/HadoopDist:version" ])

@@ -59,7 +59,7 @@ else
 fi
 
 # Get the distribution version string
-DISTRO_VER=`/usr/bin/env python ../../../../bin/python/installer/version.py"
+DISTRO_VER=`/usr/bin/env python ../../../../bin/python/installer/version.py`
 
 # and launch the program
 echo "Running $installerPrgm version $DISTRO_VER"
