@@ -120,6 +120,11 @@
 ./bin/com/cloudera/tools/shellflags.py
 ./bin/com/__init__.py
 ./bin/install
+./bin/installer
+./bin/installer/__init__.py
+./bin/installer/pigversion.py
+./bin/installer/hiveversion.py
+./bin/installer/version.py
 ./deps
 ./deps/scribe-conf
 ./deps/scribe-conf/scribe_central.conf
@@ -139,6 +144,6 @@
 ./deps/log_mover
 ./deps/log_mover/settings.py
 ./packages
-./packages/hadoop-0.18.2-patched.tar.gz
-./packages/pig-0.1.1.tar.gz
-./packages/hive-r736882.tar.gz
+./packages/hadoop-0.18.3-patched.tar.gz
+./packages/pig-0.1.1$TEST.tar.gz
+./packages/hive-r736882$TEST.tar.gz

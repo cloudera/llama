@@ -10,7 +10,7 @@ installer = PythonTarget(
             "src/installer",
             "src/com"],
   requiredTargets=[ "python/Common",
-                    "projects/HadoopDist:version" ])
+                    "projects/HadoopDist:versionStamps" ])
 
 installerTest = PythonTestTarget(
   sources = ["test/com/"],
