@@ -17,6 +17,7 @@
 # Determine architecture-specific values and act as a factory
 # for architecture-specific installers
 
+import logging
 import os
 import platform
 import sys
@@ -147,13 +148,29 @@ class ArchDetector(object):
       # invoke lsb_release program if available
       output.printlnDebug("Trying lsb_release program")
       try:
-        distributionLines = shell.shLines("lsb_release -d | awk '{ print $2 }'")
+        distributionLines = shell.shLines("lsb_release -d 2>/dev/null | awk '{ print $2 }'")
         if len(distributionLines) > 0:
           distributionName = distributionLines[0].strip()
           output.printlnVerbose("Got distribution name: " + distributionName)
       except shell.CommandError, ce:
         # couldn't run this command.
         output.printlnDebug("Could not run lsb_release:" + str(ce))
+
+
+    if distributionName == None and os.path.exists("/etc/redhat-release"):
+      # Might be able to inspect this file manually and confirm Fedora
+      logging.debug("Trying to read /etc/redhat-release")
+      try:
+        handle = open("/etc/redhat-release")
+        lines = handle.readlines()
+        if len(lines) > 0 and lines[0].startswith("Fedora"):
+          # sweet, got Fedora.
+          distributionName = "Fedora"
+        # TODO(aaron) - Check for signatures of other redhat-derived distributions.
+        handle.close()
+      except IOError, ioe:
+        # This isn't fatal; it just means we didn't establish Fedora-ness.
+        output.printlnDebug("IOError reading /etc/redhat-release: " + str(ioe))
 
 
     if distributionName == None:
@@ -163,18 +180,6 @@ class ArchDetector(object):
       (distributionName, ignored, ignored2) = platform.dist()
       output.printlnVerbose("Got distributionName: " + distributionName)
 
-    if distributionName == None and os.path.exists("/etc/redhat-release"):
-      # Might be able to inspect this file manually and confirm Fedora
-      try:
-        handle = open("/etc/redhat-release")
-        lines = handle.readlines()
-        if len(lines) > 0 and lines[0].startswith("Fedora"):
-          # sweet, got Fedora.
-          distributionName = "Fedora"
-        handle.close()
-      except IOError, ioe:
-        # This isn't fatal; it just means we didn't establish Fedora-ness.
-        output.printlnDebug("IOError reading /etc/redhat-release: " + str(ioe))
 
     if distributionName == "Ubuntu":
       output.printlnVerbose("Found linux distribution: Ubuntu")

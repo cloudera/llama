@@ -23,7 +23,9 @@ else
 fi
 
 # stop hadoop if it was already running.
-$sudoPrefix /mnt/tmp/master/apps/hadoop-0.18.2-patched/bin/stop-all.sh
+# TODO(aaron): After version stamps are in place for HadoopPackageTargets,
+# use the version label here.
+$sudoPrefix /mnt/tmp/master/apps/hadoop-0.18.3-patched/bin/stop-all.sh
 killall scribed
 
 # remove all the directories that this will create
@@ -75,7 +77,7 @@ echo "Running $installerPrgm version $DISTRO_VER"
   --format-hdfs \
   --install-bindir \
   ../../../../bin/redist/projects/HadoopDist_supportedDistro/cloudera-hadoop-$DISTRO_VER/bin\
-  --namenode "hdfs://$thishost:9000/" --jobtracker "$thishost:9001" \
+  --namenode "$thishost:9000" --jobtracker "$thishost:9001" \
   --debug \
   "$@"
 

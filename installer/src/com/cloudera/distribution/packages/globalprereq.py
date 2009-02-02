@@ -81,7 +81,7 @@ class GlobalPrereqInstall(ToolInstall):
         raise InstallError("Could not find compatible JAVA_HOME")
       else:
         # Ask the user for a better value for JAVA_HOME.
-        javaHome = getJavaHomeFromUser(javaHome)
+        javaHome = java.getJavaHomeFromUser(javaHome)
 
     self.javaHome = javaHome
 

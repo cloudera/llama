@@ -469,14 +469,16 @@ or specify your own username with --hadoop-user""")
     """
 
     logging.debug("configAddress(" + server_type + ", " + props_key + ", " \
-        + props_arg + "," + str(with_port) + ", " + str(default_host) + ", " \
-        + str(default_port))
+        + props_arg + ", " + str(with_port) + ", " + str(default_host) + ", " \
+        + str(default_port) + ")")
 
     if default_host != None:
       if with_port and default_port != None:
         default_substitute = default_host + ":" + str(default_port)
       else:
         default_substitute = default_host
+    else:
+      default_substitute = default_host
 
     defHostName = self.properties.getProperty(props_key, default_substitute)
 
@@ -528,12 +530,14 @@ or specify your own username with --hadoop-user""")
     if dnsregex.isIpAddress(maybeMasterHost) or dnsregex.isIpAddressAndPort(maybeMasterHost):
       output.printlnError("The " + server_type + " address must be a DNS name, " \
           + "not an IP address")
-      raise InstallError(server_type + " address format error")
+      raise InstallError(server_type + " address format error (" + maybeMasterHost + ")")
 
     if with_port and not dnsregex.isDnsNameAndPort(maybeMasterHost):
-        raise InstallError(server_type + " address does not appear to be a DNS name:port pair")
+        raise InstallError(server_type + " address " + maybeMasterHost \
+            + " does not appear to be a DNS name:port pair")
     elif not with_port and not dnsregex.isDnsName(maybeMasterHost):
-        raise InstallError(server_type + " address does not appear to be a DNS name")
+        raise InstallError(server_type + " address " + maybeMasterHost \
+            + " does not appear to be a DNS name")
 
     # we're good. set the property.
     logging.debug("Setting " + props_key + " to " + maybeMasterHost)

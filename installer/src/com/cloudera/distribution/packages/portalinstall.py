@@ -21,13 +21,16 @@ import os
 import logging
 
 from   com.cloudera.distribution.installerror import InstallError
+import com.cloudera.distribution.postinstall as postinstall
 from   com.cloudera.distribution.toolinstall import ToolInstall
 from   com.cloudera.distribution.constants import *
 
 import com.cloudera.distribution.arch as arch
 import com.cloudera.util.output as output
 import com.cloudera.util.prompt as prompt
+import com.cloudera.tools.dirutils as dirutils
 import com.cloudera.tools.shell as shell
+
 
 class PortalInstall(ToolInstall):
 
@@ -163,12 +166,11 @@ the installer.
     except shell.CommandError:
       raise InstallError("Could not copy a custom php.ini")
 
-    try:
-      shell.sh("/etc/init.d/lighttpd restart", logging.INFO, False)
-    except shell.CommandError:
-      raise InstallError("Could not restart lighttpd using /etc/init.d/lighttpd")
+    # Before this is ready, lighttpd needs to be bounced with the new config.
+    postinstall.add("/etc/init.d/lighttpd restart")
 
     output.printlnInfo("Installed lighttpd with PHP support.")
+
 
   def install_portal(self):
     """
@@ -183,15 +185,18 @@ the installer.
     src_folder = os.path.join(src_folder,
                               "*")
 
-    output.printlnVerbose("Copying portal files to htdocs")
-
     dest_folder = self.getPortalDest()
+
+    logging.debug("Creating htdocs dest: " + dest_folder)
+    dirutils.mkdirRecursive(dest_folder)
+
+    logging.debug("Copying portal files to htdocs dest: " + dest_folder)
     try:
       shell.sh("cp -R " + src_folder + " " + dest_folder)
     except shell.CommandError:
       raise InstallError("Portal web app could not be copied to " + dest_folder)
 
-    output.printlnInfo("Successfully installed the portal")
+    output.printlnInfo("Successfully installed the support portal")
 
     jobtracker = self.properties.getProperty(JOB_TRACKER_KEY)
     namenode = self.properties.getProperty(NAMENODE_KEY)
@@ -216,6 +221,7 @@ the installer.
       raise InstallError("Could not sed the portal's index.html file")
 
     self.updatePortalConf()
+
 
   @staticmethod
   def getHost(host_and_port):
@@ -273,15 +279,6 @@ the installer.
     """ Run any post-installation activities. This occurs after
         all ToolInstall objects have run their install() operations. """
 
-    # if we don't want to start any daemon processes, kill lighttpd
-    if not self.mayStartDaemons():
-      lighttpd_map = {arch.PLATFORM_UBUNTU: "/etc/init.d/lighttpd",
-                      arch.PLATFORM_FEDORA: "/etc/init.d/lighttpd"
-                       }
-
-      state = "stop"
-
-      self.modifyDaemon(lighttpd_map, state)
 
   def verify(self):
     """ Run post-installation verification tests, if configured """

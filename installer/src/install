@@ -199,6 +199,7 @@ can select by pressing [enter].
         # if the actions ran successfully, just delete the script.
         os.unlink(action_script)
       except InstallError, ie:
+        # If not, display a warning msg but continue the installer.
         logging.error("""Some operations need to be performed before your HDFS instance use ready
 for use. These operations have been written to a script, at:
   %(installscript)s
@@ -209,7 +210,7 @@ when it has run successfully.
 
 """ % { "installscript" : action_script,
         "err"           : str(ie) })
-        raise
+
 
   # Perform any verification steps that this all installed OK
   for tool in installPlan.getInstallItems():

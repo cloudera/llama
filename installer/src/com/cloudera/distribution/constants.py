@@ -435,7 +435,8 @@ DOCS_SUBDIR = "doc"
 # Underneath of $prefix/apps/, where do all the individual programs go?
 # TODO (aaron): 0.2 Need some way of embedding this in the build process
 # so that we don't have to manually change this every time. (IS-65)
-HADOOP_VERSION = "0.18.2-patched"
+# (HadoopPackageTarget needs to take VerStampTarget)
+HADOOP_VERSION = "0.18.3-patched"
 HADOOP_INSTALL_SUBDIR = "hadoop-" + HADOOP_VERSION
 HADOOP_PACKAGE = "hadoop-" + HADOOP_VERSION + ".tar.gz"
 
