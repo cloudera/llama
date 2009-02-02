@@ -7,6 +7,7 @@
 import os
 
 import com.cloudera.util.output as output
+import installer.version
 
 
 # Which test platform to run on (e.g., FC8.i386)
@@ -133,8 +134,8 @@ REMOTE_TEST_COMMAND = "python /mnt/distrotest/remotetest " + RUN_TESTS_ARG
 REMOTE_LOG_FILENAME = "/mnt/cloudera-tester.log"
 
 # How do we invoke the distribution installer
-# TODO (aaron): This should be parameterizable by version number
-DISTRIB_DEST_DIR = "/mnt/cloudera-hadoop-0.2.0/"
+DISTRIB_VERSION = installer.version.get_version()
+DISTRIB_DEST_DIR = "/mnt/cloudera-hadoop-" + DISTRIB_VERSION + "/"
 INSTALLER_COMMAND = os.path.join(DISTRIB_DEST_DIR, "bin/install")
 
 INSTALL_PREFIX = "/mnt/installed-distro"

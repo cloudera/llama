@@ -18,6 +18,7 @@
 
 import os
 import com.cloudera.util.output as output
+import installer.version
 
 #######################################################################
 ### Here are the constants for all properties keys we use in the installer ###
@@ -450,7 +451,5 @@ PIG_PACKAGE = "pig-" + PIG_VERSION + ".tar.gz"
 SCRIBE_INSTALL_SUBDIR = "scribe"
 SCRIBE_PACKAGE = "scribe.tar.gz"
 
-# TODO(aaron): 0.2 Need 'svnstring' or something of the like to handle this.
-# (IS-65, CH-75)
-DISTRIB_VERSION = "0.2.0"
+DISTRIB_VERSION = installer.version.get_version()
 

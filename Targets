@@ -10,6 +10,10 @@
 allDistributions = EmptyPackageTarget(
   requiredTargets = [ ":supportedDistro" ])
 
+version = VerStringTarget(
+  version      = "0.2.0",
+  pythonModule = "installer.version")
+
 # Scribe required libraries
 libfb303Component = FileComponent(
   srcFile = "patches/scribe-log4j/lib/libfb303.jar",
@@ -159,7 +163,7 @@ depsComponent = DirComponent(
 # supportedDistro is the one released to support clients
 supportedDistro = PackageTarget(
   packageName = "cloudera-hadoop",
-  version     = "0.2.0",
+  version     = ":version",
   components  = [
     hadoopComponent,
     installerComponent,
