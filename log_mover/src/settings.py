@@ -120,9 +120,4 @@ scribe_buffer_size = 1024
 # output
 net_io_eth_card = "eth0"
 
-# DB connection information
-db_host = 'localhost'
-db_user = 'ana'
-db_password = 'ana'
-db_database = 'ana'
 
