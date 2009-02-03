@@ -192,7 +192,7 @@ class LogMoverInstall(toolinstall.ToolInstall):
     # on the end, don't just replace whatever they already have, completely.
     try:
       logging.debug("Retrieving existing crontab for " + hadoop_user)
-      existing_cron = shell.shLines("crontab -l -u " + hadoop_user, False)
+      existing_cron = shell.shLines("crontab -l -u " + hadoop_user + " 2>/dev/null", False)
     except shell.CommandError:
       # somehow this failed? oh well, maybe it's just because there
       # was no such crontab. fail only on the case below where we

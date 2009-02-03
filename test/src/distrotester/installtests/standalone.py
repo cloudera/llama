@@ -251,7 +251,7 @@ class StandaloneTest(VerboseTestCase):
         + " --make-dfs-excludes dfs.hosts.exclude" \
         + " --hadoop-site " \
         + self.prepHadoopSite("hadoop-configs/hosts-config.xml") \
-        + ' --namenode "hdfs://' + self.hostname + ':9000/" ' \
+        + ' --namenode ' + self.hostname + ':9000' \
         + ' --jobtracker "' + self.hostname + ':9001"' \
         + ' --secondary ' + self.hostname \
         + " --overwrite-htdocs" \
@@ -305,7 +305,7 @@ class StandaloneTest(VerboseTestCase):
           + " --identity /root/.ssh/id_rsa" \
           + " --hadoop-site " \
           + self.prepHadoopSite("hadoop-configs/no-compress-config.xml") \
-          + ' --namenode "hdfs://' + self.hostname + ':9000/" ' \
+          + ' --namenode ' + self.hostname + ':9000 ' \
           + ' --jobtracker "' + self.hostname + ':9001"' \
           + " --overwrite-htdocs" \
           + " --debug"

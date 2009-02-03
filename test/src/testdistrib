@@ -5,8 +5,10 @@
 
 import logging
 import os
+import socket
 import sys
 import tempfile
+import time
 
 import com.cloudera.tools.ec2 as ec2
 import com.cloudera.tools.shell as shell
@@ -45,6 +47,10 @@ if setLogVerbosity == None:
 
 # set up the console. Also starts logging to the specified file
 output.setupConsole(properties)
+
+logging.info("*** STARTUP_MSG - Starting distribution tester")
+logging.info("Test run start time: " + time.asctime())
+logging.info("Local test host: " + socket.gethostname())
 
 # if we are here, then properties and argv parsing succeeded
 

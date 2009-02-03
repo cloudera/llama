@@ -167,7 +167,8 @@ the installer.
       raise InstallError("Could not copy a custom php.ini")
 
     # Before this is ready, lighttpd needs to be bounced with the new config.
-    postinstall.add("/etc/init.d/lighttpd restart")
+    # NOTE(aaron): This will hang indefinitely if stderr is left open.
+    postinstall.add("/etc/init.d/lighttpd restart 2>/dev/null")
 
     output.printlnInfo("Installed lighttpd with PHP support.")
 

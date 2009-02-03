@@ -352,7 +352,7 @@ class ToolInstall(object):
 
     try:
       output.printlnVerbose("Attempting to " + state + " " + init_script)
-      command = init_script + " " + state
+      command = init_script + " " + state + " 2>/dev/null"
       lines = shell.shLines(command, False)
       output.printlnVerbose(lines)
 

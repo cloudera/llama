@@ -74,7 +74,9 @@ def execute_actions():
 
   for (action, critical) in __install_actions:
     try:
-      shell.sh(action)
+      logging.debug("Executing postinstall action: " + action)
+      # Execute these actions exactly as written; do not redirect stderr.
+      shell.sh(action, logging.INFO, False)
     except shell.CommandError:
       if critical:
         logging.error("Critical postinstall action failed: " + action)

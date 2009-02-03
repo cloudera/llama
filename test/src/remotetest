@@ -46,7 +46,9 @@ output.setupConsole(properties)
 # if we are here, then properties and argv parsing succeeded
 binName = sys.argv[0]
 binDir = os.path.dirname(binName)
+logging.debug("Switching to directory: " + binDir)
 os.chdir(binDir)
+logging.debug("Current working dir is " + os.path.abspath(os.getcwd()))
 
 platformName = properties.getProperty(TEST_PLATFORM_KEY)
 

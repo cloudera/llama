@@ -197,6 +197,7 @@ can select by pressing [enter].
       try:
         postinstall.execute_actions()
         # if the actions ran successfully, just delete the script.
+        logging.debug("Removing postinstall script after success: " + action_script)
         os.unlink(action_script)
       except InstallError, ie:
         # If not, display a warning msg but continue the installer.

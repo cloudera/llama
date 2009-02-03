@@ -173,6 +173,14 @@ class HiveInstall(toolinstall.ToolInstall):
     except shell.CommandError, ce:
       raise InstallError("Error unpacking hive (tar returned error)")
 
+    # And chmod a+x bin/hive (since the newer build script disables this).
+    hive_exec_name = os.path.join(installPath, HIVE_INSTALL_SUBDIR, "bin/hive")
+    cmd = "chmod a+x \"" + hive_exec_name + "\""
+    try:
+      shell.sh(cmd)
+    except shell.CommandError, ce:
+      raise InstallError("Error enabling access to hive shell.")
+
 
   def installHiveDefaultConfig(self):
     """ Write the hive-default.xml file out """

@@ -84,6 +84,8 @@ class HiveTest(VerboseTestCase):
         + clientUser + " /user/" + clientUser
     shell.sh(cmd)
 
+    logging.debug("Setting up hive working environment")
+    logging.debug("Current working dir: " + os.getcwd())
 
     hiveWorkDir = self.getHiveWorkDir()
     cmd = "mkdir -p " + hiveWorkDir
