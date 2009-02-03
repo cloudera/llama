@@ -12,7 +12,7 @@ tester = PythonTarget(
             "src/testdistrib"],
   requiredTargets=[ "python/Common",
                     "projects/HadoopDist/installer",
-                    "projects/HadoopDist/:version" ],
+                    "projects/HadoopDist:versionStamps" ],
   dataPaths = [ "profiles",
                 "hadoop-configs",
                 "pig-tests",

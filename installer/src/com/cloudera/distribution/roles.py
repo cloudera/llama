@@ -168,15 +168,15 @@ You might want to try one of the following settings:
 Welcome to the Cloudera Hadoop Distribution installer. This installer
 configures a family of programs to operate together on a cluster.
 I need to know how this machine interacts with the rest of the cluster;
-please tell me the role of this machine by selecting a number from 1--4:
+please tell me the role of this machine by selecting a number from 1--5:
   1) This is the cluster master node
   2) This is a worker (slave) node
   3) This is a developer's machine that connects to a cluster
   4) This is a standalone machine that acts like a complete cluster
   5) (Advanced) Select explicit roles
 """)
-      initial_role_num = prompt.getInteger("Please enter a number between 1--4", \
-          1, 4, None, True)
+      initial_role_num = prompt.getInteger("Please enter a number between 1--5", \
+          1, 5, None, True)
       if initial_role_num == 1:
         user_roles = "master"
       elif initial_role_num == 2:

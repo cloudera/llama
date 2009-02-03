@@ -1422,7 +1422,7 @@ nodes.
     self.is_standalone_secondary = self.properties.getBoolean(
         STANDALONE_SECONDARY_KEY, STANDALONE_SECONDARY_DEFAULT)
 
-    if self.has_role("secondarynamenode") and not self.has_role("namenode") \
+    if self.has_role("secondary_namenode") and not self.has_role("namenode") \
         and not self.isUnattended():
       # give the user the change to correct the lack of this flag
       self.is_standalone_secondary = prompt.getBoolean( \
