@@ -1,6 +1,7 @@
 # (c) Copyright 2009 Cloudera, Inc.
 #
 # Functionality unit test cases for Hadoop SecondaryNameNode
+# This is intended to be used with the fast-checkpoint.xml test configuration.
 
 import logging
 import os
@@ -12,19 +13,9 @@ import com.cloudera.tools.shell as shell
 from   distrotester.constants import *
 import distrotester.testproperties as testproperties
 
-# This is intended to be used with the fast-checkpoint.xml test configuration.
 
 # This is the number of seconds in the hadoop-site.xml config between 2NN syncs.
 CHECKPOINT_INTERVAL = 10
-
-
-
-__secondary_server = None
-def set_secondary_server(server_addr):
-  """ Sets the address of the 2NN which should be used for this unit test. """
-  global __secondary_server
-
-  __secondary_server = server_addr
 
 
 class SecondaryNameNodeTest(VerboseTestCase):
@@ -68,13 +59,14 @@ class SecondaryNameNodeTest(VerboseTestCase):
 
     # Wait for safemode off
     logging.debug("Waiting for safemode to exit...")
-    safemode_cmd = self.getDaemonSudo() + getHadoopCmd + " dfsadmin -safemode wait"
+    safemode_cmd = self.getDaemonSudo() + self.getHadoopCmd() + " dfsadmin -safemode wait"
     shell.sh(safemode_cmd)
     logging.debug("Safemode is over!")
 
     # Sleep for twice the checkpoint interval
     logging.debug("Waiting for initial checkpoint sync...")
     time.sleep(2 * CHECKPOINT_INTERVAL)
+    logging.debug("Wait complete.")
 
 
   def testSecondaryViaScribe(self):
@@ -103,28 +95,36 @@ class SecondaryNameNodeTest(VerboseTestCase):
         changes if we change metadata in hdfs.
     """
 
-    global __secondary_server
     global CHECKPOINT_INTERVAL
     global CHECKPOINT_DIR
 
     self.start_dfs_daemons()
 
+    secondary_server = self.getProperties().getProperty(SECONDARY_HOSTNAME_KEY)
+    logging.debug("Secondary server addr is: " + secondary_server)
+
     # The 2NN should now have a static snapshot.
     # Grab the md5sum of the 'edits' and 'fsimage' files.
+    logging.debug("Grabbing edits file md5")
     edits_file = os.path.join(CHECKPOINT_DIR, "edits")
-    editsLines = shell.sshLines("root", __secondary_server, "md5sum " + edits_file)
+    editsLines = shell.sshLines("root", secondary_server, "md5sum " + edits_file, \
+        self.getProperties())
     if len(editsLines) > 0:
       initial_edit_md5 = editsLines[0]
     else:
       self.fail("Couldn't read md5sum for edits file in round 1")
 
     fsimage_file = os.path.join(CHECKPOINT_DIR, "fsimage")
-    fsimageLines = shell.sshLines("root", __secondary_server, "md5sum " + fsimage_file)
+    logging.debug("Grabbing fsimage md5")
+    fsimageLines = shell.sshLines("root", secondary_server, "md5sum " + fsimage_file, \
+        self.getProperties())
     if len(fsimageLines) > 0:
       initial_fsimage_md5 = fsimageLines[0]
     else:
       self.fail("Couldn't read md5sum for fsimage file in round 1")
 
+
+    logging.debug("Updating filesystem metadata to detect change")
 
     # Now change the filesystem metadata.
     nonce_filename = "nonce_file_" + str(time.time())
@@ -133,15 +133,20 @@ class SecondaryNameNodeTest(VerboseTestCase):
     # Now wait for 2 checkpoint intervals again.
     logging.debug("Waiting for checkpoint to synchronize...")
     time.sleep(2 * CHECKPOINT_INTERVAL)
+    logging.debug("Wait complete")
 
     # Now re-query the md5sums. At least one of these should be different.
-    editsLines = shell.sshLines("root", __secondary_server, "md5sum " + edits_file)
+    logging.debug("Grabbing edits file md5")
+    editsLines = shell.sshLines("root", secondary_server, "md5sum " + edits_file, \
+        self.getProperties())
     if len(editsLines) > 0:
       second_edit_md5 = editsLines[0]
     else:
       self.fail("Couldn't read md5sum for edits file in round 2")
 
-    fsimageLines = shell.sshLines("root", __secondary_server, "md5sum " + fsimage_file)
+    logging.debug("Grabbing fsimage md5")
+    fsimageLines = shell.sshLines("root", secondary_server, "md5sum " + fsimage_file, \
+        self.getProperties())
     if len(fsimageLines) > 0:
       second_fsimage_md5 = fsimageLines[0]
     else:

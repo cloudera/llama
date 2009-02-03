@@ -33,12 +33,12 @@
 </property>
 <property>
   <name>dfs.hosts</name>
-  <value>/mnt/installed-distro/apps/hadoop-0.18.2-patched/conf/dfs.hosts</value>
+  <value>/mnt/installed-distro/apps/hadoop-0.18.3-patched/conf/dfs.hosts</value>
   <final>true</final>
 </property>
 <property>
   <name>dfs.hosts.exclude</name>
-  <value>/mnt/installed-distro/apps/hadoop-0.18.2-patched/conf/dfs.hosts.exclude</value>
+  <value>/mnt/installed-distro/apps/hadoop-0.18.3-patched/conf/dfs.hosts.exclude</value>
   <final>true</final>
 </property>
 <property>

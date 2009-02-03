@@ -391,7 +391,8 @@ class MultiHostTest(VerboseTestCase):
 
 
   def testSeparateSecondary(self):
-    """ Install all components.
+    """ Test separate secondarynamenode.
+        Install all components.
         Put the NN and JT on one machine.
         Put the 2NN on the other machine, along with DN and TT.
         Use a separate hadoop user account and a separate client account. """
@@ -417,7 +418,7 @@ class MultiHostTest(VerboseTestCase):
         + " --hadoop-site " + hadoop_site_file \
         + ' --namenode "' + self.hostname + ':9000" ' \
         + ' --jobtracker "' + self.hostname + ':9001"' \
-        + ' --secondary "' + secondary_node_addr \
+        + ' --secondary "' + secondary_node_addr + '"'\
         + " --overwrite-htdocs" \
         + " --debug"
 
@@ -455,7 +456,7 @@ class MultiHostTest(VerboseTestCase):
     logging.info("Performing second node installation")
 
     cmd = INSTALLER_COMMAND + " --unattend --prefix " + INSTALL_PREFIX \
-        + " --role secondary_namenode,datanode,tasktracker,scribe_client" \
+        + " --role secondary_namenode,datanode,tasktracker,scribe_slave" \
         + " --config-prefix " + CONFIG_PREFIX \
         + " --log-filename " + INSTALLER_LOG_FILE \
         + " --format-hdfs --hadoop-user " + HADOOP_USER \
@@ -465,22 +466,31 @@ class MultiHostTest(VerboseTestCase):
         + ' --namenode ' + self.hostname + ':9000 ' \
         + ' --jobtracker ' + self.hostname + ':9001' \
         + ' --secondary ' + secondary_node_addr \
+        + ' --scribe-master ' + self.hostname \
         + " --overwrite-htdocs" \
         + " --debug"
 
+    # TODO(aaron) pass -t to ssh to allow a tty here.
     logging.debug("Performing remote install with command: " + cmd)
     shell.ssh("root", secondary_node_addr, cmd, self.getProperties())
 
     self.getProperties().setProperty(HADOOP_USER_KEY, HADOOP_USER)
     self.getProperties().setProperty(CLIENT_USER_KEY, CLIENT_USER)
 
+    # Start Hadoop daemons.
+    logging.debug("Starting Hadoop daemons...")
+    start_daemons_cmd = os.path.join(self.getHadoopDir(), "bin/start-all.sh")
+    cmd = "sudo -H -u " + HADOOP_USER + " " + start_daemons_cmd
+    shell.sh(cmd)
+
     # set up server addr for use in this test.
-    secondarynamenodetests.set_secondary_server(secondary_node_addr)
+    self.getProperties().setProperty(SECONDARY_HOSTNAME_KEY, secondary_node_addr)
 
     hadoopSuite      = unittest.makeSuite(HadoopTest, 'test')
     secondaryNNSuite = unittest.makeSuite(secondarynamenodetests.SecondaryNameNodeTest, 'test')
     functionalityTests = unittest.TestSuite([
-        hadoopSuite,
+      # TODO: Enable this.
+      #  hadoopSuite,
         secondaryNNSuite
         ])
 

@@ -15,11 +15,6 @@
 
 import settings
 
-HOST = settings.db_host
-USER = settings.db_user
-PASSWORD = settings.db_password
-DATABASE = settings.db_database
-
 def connect():
   """
   Establish and return a connection to

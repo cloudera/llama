@@ -171,6 +171,8 @@ ROOT_USER = "root"
 # Where is java stored on this machine?
 JAVA_HOME_KEY = "java.home"
 
+# What is the hostname the 2NN is running on?
+SECONDARY_HOSTNAME_KEY = "secondary.host"
 
 # Where are the hive test files, relative to where the test harness runs?
 HIVE_TEST_DIR = "hive-tests"
