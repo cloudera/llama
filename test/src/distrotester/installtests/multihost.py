@@ -397,7 +397,8 @@ class MultiHostTest(VerboseTestCase):
         Put the 2NN on the other machine, along with DN and TT.
         Use a separate hadoop user account and a separate client account. """
 
-    javaHome = self.getProperties().getProperty(JAVA_HOME_KEY)
+    properties = self.getProperties()
+    javaHome = properties.getProperty(JAVA_HOME_KEY)
 
     # Use the first slave as the 2nn.
     slavesList = self.getSlavesList()
@@ -428,7 +429,7 @@ class MultiHostTest(VerboseTestCase):
 
     # Upload the prepped hadoop-site.xml file to the slave
     shell.scp(hadoop_site_file, "root", secondary_node_addr, hadoop_site_file, \
-        self.getProperties())
+        properties)
 
     # Recompress the distribution, upload that to the slave, and uncompress it.
     new_tarball = "/mnt/recompressed-distro.tar.gz"
@@ -448,9 +449,9 @@ class MultiHostTest(VerboseTestCase):
         + "\"" + recompress_component + "\""
     shell.sh(cmd)
 
-    shell.scp(new_tarball, "root", secondary_node_addr, new_tarball, self.getProperties())
+    shell.scp(new_tarball, "root", secondary_node_addr, new_tarball, properties)
     shell.ssh("root", secondary_node_addr, "tar zxf " + new_tarball + " -C " + unzip_dir, \
-        self.getProperties())
+        properties)
 
     # Now actually run the installer on the other node
     logging.info("Performing second node installation")
@@ -468,14 +469,18 @@ class MultiHostTest(VerboseTestCase):
         + ' --secondary ' + secondary_node_addr \
         + ' --scribe-master ' + self.hostname \
         + " --overwrite-htdocs" \
-        + " --debug"
+        + " --debug" \
+        + " --standalone-secondarynamenode" # Necessary for this unique config.
 
-    # TODO(aaron) pass -t to ssh to allow a tty here.
+    # pass -t to ssh to allow a tty for the remote installer.
+    sshOpts = properties.getProperty("ssh.options", "")
+    properties.setProperty("ssh.options", sshOpts + " -t")
     logging.debug("Performing remote install with command: " + cmd)
-    shell.ssh("root", secondary_node_addr, cmd, self.getProperties())
+    shell.ssh("root", secondary_node_addr, cmd, properties)
+    properties.setProperty("ssh.options", sshOpts)
 
-    self.getProperties().setProperty(HADOOP_USER_KEY, HADOOP_USER)
-    self.getProperties().setProperty(CLIENT_USER_KEY, CLIENT_USER)
+    properties.setProperty(HADOOP_USER_KEY, HADOOP_USER)
+    properties.setProperty(CLIENT_USER_KEY, CLIENT_USER)
 
     # Start Hadoop daemons.
     logging.debug("Starting Hadoop daemons...")
@@ -484,13 +489,12 @@ class MultiHostTest(VerboseTestCase):
     shell.sh(cmd)
 
     # set up server addr for use in this test.
-    self.getProperties().setProperty(SECONDARY_HOSTNAME_KEY, secondary_node_addr)
+    properties.setProperty(SECONDARY_HOSTNAME_KEY, secondary_node_addr)
 
     hadoopSuite      = unittest.makeSuite(HadoopTest, 'test')
     secondaryNNSuite = unittest.makeSuite(secondarynamenodetests.SecondaryNameNodeTest, 'test')
     functionalityTests = unittest.TestSuite([
-      # TODO: Enable this.
-      #  hadoopSuite,
+        hadoopSuite,
         secondaryNNSuite
         ])
 
@@ -498,3 +502,4 @@ class MultiHostTest(VerboseTestCase):
     runner = unittest.TextTestRunner()
     if not runner.run(functionalityTests).wasSuccessful():
       self.fail()
+

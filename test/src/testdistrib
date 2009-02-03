@@ -48,10 +48,6 @@ if setLogVerbosity == None:
 # set up the console. Also starts logging to the specified file
 output.setupConsole(properties)
 
-logging.info("*** STARTUP_MSG - Starting distribution tester")
-logging.info("Test run start time: " + time.asctime())
-logging.info("Local test host: " + socket.gethostname())
-
 # if we are here, then properties and argv parsing succeeded
 
 localDistribTarball = properties.getProperty(DISTRIB_TARBALL_KEY)
@@ -68,6 +64,10 @@ os.chdir(binDir)
 if properties.getBoolean(LIST_PLATFORMS_KEY):
   platforms.listPlatforms()
   sys.exit(1)
+
+logging.info("*** STARTUP_MSG - Starting distribution tester")
+logging.info("Test run start time: " + time.asctime())
+logging.info("Local test host: " + socket.gethostname())
 
 # Make sure we have AWS credentials; we'll need these after we make an instance
 awsSecretKey = properties.getProperty(AWS_SECRET_ACCESS_KEY)

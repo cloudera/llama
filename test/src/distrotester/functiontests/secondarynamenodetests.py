@@ -106,7 +106,7 @@ class SecondaryNameNodeTest(VerboseTestCase):
     # The 2NN should now have a static snapshot.
     # Grab the md5sum of the 'edits' and 'fsimage' files.
     logging.debug("Grabbing edits file md5")
-    edits_file = os.path.join(CHECKPOINT_DIR, "edits")
+    edits_file = os.path.join(CHECKPOINT_DIR, "current/edits")
     editsLines = shell.sshLines("root", secondary_server, "md5sum " + edits_file, \
         self.getProperties())
     if len(editsLines) > 0:
@@ -114,7 +114,7 @@ class SecondaryNameNodeTest(VerboseTestCase):
     else:
       self.fail("Couldn't read md5sum for edits file in round 1")
 
-    fsimage_file = os.path.join(CHECKPOINT_DIR, "fsimage")
+    fsimage_file = os.path.join(CHECKPOINT_DIR, "current/fsimage")
     logging.debug("Grabbing fsimage md5")
     fsimageLines = shell.sshLines("root", secondary_server, "md5sum " + fsimage_file, \
         self.getProperties())
@@ -128,7 +128,7 @@ class SecondaryNameNodeTest(VerboseTestCase):
 
     # Now change the filesystem metadata.
     nonce_filename = "nonce_file_" + str(time.time())
-    safemode_cmd = self.getDaemonSudo() + getHadoopCmd + " fs -touchz " + nonce_filename
+    safemode_cmd = self.getDaemonSudo() + self.getHadoopCmd() + " fs -touchz " + nonce_filename
 
     # Now wait for 2 checkpoint intervals again.
     logging.debug("Waiting for checkpoint to synchronize...")

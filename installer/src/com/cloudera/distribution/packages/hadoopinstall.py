@@ -60,6 +60,7 @@ class HadoopInstall(toolinstall.ToolInstall):
 
     # TODO(aaron) add this to the [de]serializer.
     self.is_standalone_secondary = True
+    self.manual_2nn_modify = False
 
 
   def getPubKeyFile(self):
@@ -1048,54 +1049,67 @@ to do, just accept the default values.""")
       hadoopSiteFileName = os.path.join(self.properties.getProperty(BASE_DIR_KEY), \
           hadoopSiteFileName)
       shutil.copyfile(hadoopSiteFileName, destFileName)
+      self.patch_2nn_hadoop_site(destFileName)
 
-      # if we're instructed to do so, correct the dfs.http.addr from
-      # 0.0.0.0:50070 to (namenodeaddr):50070. This is done by string replacement.
-      # TODO(aaron): The current method of doing this is a hack. We should really
-      # parse the XML properly and insert/modify the appropriate element.
-      if self.is_standalone_secondary:
-        namenode_host_and_port = self.getNameNode()
-        replacement = namenode_host_and_port.split(":")[0] + ":50070"
 
-        try:
-          handle = open(destFileName)
-          hadoop_site_data = handle.read()
-          handle.close()
-        except IOError, ioe:
-          raise InstallError("Could not read back hadoop-site.xml: " + str(ioe))
+  def get_dfs_http_addr(self):
+    """ Return the XML string to insert to set dfs.http.address for standalone 2nn """
+    namenode_host_and_port = self.getNameNode()
+    replacement = namenode_host_and_port.split(":")[0] + ":50070"
+    return "<property><name>dfs.http.address</name><value>" + replacement \
+        + "</value></property>"
 
-        # See if they have dfs.http.address in there.
-        try:
-          hadoop_site_data.index("dfs.http_address")
 
-          # Yes they do.
-          # The following regex matches 0.0.0.0:50070 (which is only used for 'dfs.http.address',
-          # unless you're doing something very bizarre with your config), and is used to replace
-          # it with your namenode address.
+  def patch_2nn_hadoop_site(self, filename):
+    """ If the current system we're configuring is a standalone secondary
+        namenode, then we need to insert an overriding dfs.http.address flag
+        in the user-provided hadoop-site.xml file.
+    """
 
-          r = re.compile("0.0.0.0:50070")
-          hadoop_site_data = r.sub(replacement, hadoop_site_data)
-        except ValueError:
-          # no, they don't. See if it has a </configuration> we can match.
-          try:
-            hadoop_site_data.index("</configuration>")
+    # TODO(aaron): The current method of doing this is a hack. We should really
+    # parse the XML properly and insert/modify the appropriate element.
+    if self.is_standalone_secondary:
+      logging.debug("Modifying hadoop-site.xml for standalone 2nn")
+      try:
+        handle = open(filename)
+        hadoop_site_data = handle.read()
+        handle.close()
+      except IOError, ioe:
+        raise InstallError("Could not read back hadoop-site.xml: " + str(ioe))
 
-            # They have this. Insert the new config item just above it.
-            r = re.compile("</configuration>")
-            property_text = "<property><name>dfs.http.address</name><value>" + replacement \
-                + "</value></property></configuration>"
-            hadoop_site_data = r.sub(property_text, hadoop_site_data)
-          except ValueError:
-            # They don't have that either. We can't fix this.
-            raise InstallError("Modification of hadoop-site.xml requested, but I can't parse it.")
+      # See if they have dfs.http.address in there.
+      try:
+        hadoop_site_data.index("dfs.http.address")
 
-        # Now write this file back.
-        try:
-          handle = open(destFileName, "w")
-          handle.write(hadoop_site_data)
-          handle.close()
-        except IOError, ioe:
-          raise InstallError("Could not write modified hadoop-site.xml: " + str(ioe))
+        # Yes they do. So that means they're already doing something nonstandard.
+        # Don't try to modify this file, they know what they're doing more than us.
+        logging.debug("Existing dfs.http.address found; making no change.")
+        return
+      except ValueError:
+        pass # No.
+
+      try:
+        # See if it has a </configuration> we can match.
+        hadoop_site_data.index("</configuration>")
+
+        # They have this. Insert the new config item just above it.
+        logging.debug("Inserting dfs.http.address as new config item.")
+        property_text = self.get_dfs_http_addr() + "\n</configuration>"
+        r = re.compile("</configuration>")
+        hadoop_site_data = r.sub(property_text, hadoop_site_data)
+      except ValueError:
+        # They don't have that either. We can't fix this.
+        self.manual_2nn_modify = True
+        logging.info("Warning: Modification of hadoop-site.xml requested, but I can't parse it.")
+        return
+
+      # Now write this file back.
+      try:
+        handle = open(filename, "w")
+        handle.write(hadoop_site_data)
+        handle.close()
+      except IOError, ioe:
+        raise InstallError("Could not write modified hadoop-site.xml: " + str(ioe))
 
 
   def installHadoopEnvFile(self):
@@ -1773,6 +1787,16 @@ HDFS before using Hadoop, by running the command:
       logging.info(self.hdfsFormatMsg)
     if self.warn_need_ssh_keys:
       logging.info(self.get_ssh_warning())
+    if self.manual_2nn_modify:
+      logging.info("""
+A SecondaryNameNode running on a different node than the NameNode requires
+the following line to be inserted in %(hadoopsite)s.
+I could not modify your existing configuration; please add the following
+line:
+
+%(dfshttpaddr)s
+""" % { "hadoopsite"  : self.getHadoopSiteFilename(),
+        "dfshttpaddr" : self.get_dfs_http_addr() })
 
 
   def preserve_state(self, handle):
