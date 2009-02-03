@@ -58,6 +58,9 @@ class HadoopInstall(toolinstall.ToolInstall):
     self.redist_pubkey_filename = None
     self.warn_need_ssh_keys = False
 
+    # TODO(aaron) add this to the [de]serializer.
+    self.is_standalone_secondary = True
+
 
   def getPubKeyFile(self):
     """ Return the name of the hadoop user's public key file to redistribute
@@ -834,6 +837,8 @@ to do, just accept the default values.""")
           DFS_EXCLUDE_FILE, defaultExcludeFile, True)
 
 
+
+
   def installMastersFile(self):
     """ Put the 'masters' file in hadoop conf dir """
     mastersFileName = os.path.join(self.getConfDir(), "masters")
@@ -1043,6 +1048,54 @@ to do, just accept the default values.""")
       hadoopSiteFileName = os.path.join(self.properties.getProperty(BASE_DIR_KEY), \
           hadoopSiteFileName)
       shutil.copyfile(hadoopSiteFileName, destFileName)
+
+      # if we're instructed to do so, correct the dfs.http.addr from
+      # 0.0.0.0:50070 to (namenodeaddr):50070. This is done by string replacement.
+      # TODO(aaron): The current method of doing this is a hack. We should really
+      # parse the XML properly and insert/modify the appropriate element.
+      if self.is_standalone_secondary:
+        namenode_host_and_port = self.getNameNode()
+        replacement = namenode_host_and_port.split(":")[0] + ":50070"
+
+        try:
+          handle = open(destFileName)
+          hadoop_site_data = handle.read()
+          handle.close()
+        except IOError, ioe:
+          raise InstallError("Could not read back hadoop-site.xml: " + str(ioe))
+
+        # See if they have dfs.http.address in there.
+        try:
+          hadoop_site_data.index("dfs.http_address")
+
+          # Yes they do.
+          # The following regex matches 0.0.0.0:50070 (which is only used for 'dfs.http.address',
+          # unless you're doing something very bizarre with your config), and is used to replace
+          # it with your namenode address.
+
+          r = re.compile("0.0.0.0:50070")
+          hadoop_site_data = r.sub(replacement, hadoop_site_data)
+        except ValueError:
+          # no, they don't. See if it has a </configuration> we can match.
+          try:
+            hadoop_site_data.index("</configuration>")
+
+            # They have this. Insert the new config item just above it.
+            r = re.compile("</configuration>")
+            property_text = "<property><name>dfs.http.address</name><value>" + replacement \
+                + "</value></property></configuration>"
+            hadoop_site_data = r.sub(property_text, hadoop_site_data)
+          except ValueError:
+            # They don't have that either. We can't fix this.
+            raise InstallError("Modification of hadoop-site.xml requested, but I can't parse it.")
+
+        # Now write this file back.
+        try:
+          handle = open(destFileName, "w")
+          handle.write(hadoop_site_data)
+          handle.close()
+        except IOError, ioe:
+          raise InstallError("Could not write modified hadoop-site.xml: " + str(ioe))
 
 
   def installHadoopEnvFile(self):
@@ -1345,6 +1398,30 @@ nodes.
           False, default_2nn_name)
       # ok for this one to be localhost, so no fancy checking here.
 
+  def config_standalone_secondary(self):
+    """ If we're configuring a node to be 2nn and not nn, then patch the user's
+        config file. In unattend mode, we only patch with the explicit command-line
+        flag. In interactive mode, we ask permission if the roles are lined up,
+        and the
+    """
+
+    self.is_standalone_secondary = self.properties.getBoolean(
+        STANDALONE_SECONDARY_KEY, STANDALONE_SECONDARY_DEFAULT)
+
+    if self.has_role("secondarynamenode") and not self.has_role("namenode") \
+        and not self.isUnattended():
+      # give the user the change to correct the lack of this flag
+      self.is_standalone_secondary = prompt.getBoolean( \
+"""Are you currently configuring a SecondaryNameNode that runs on a different
+node than the NameNode?""", True, True)
+
+    if self.is_standalone_secondary:
+      # This is a standalone secondary-namenode.
+      # Set dfs.http.address to bind to the namenode's address,
+      # not the 0.0.0.0 wildcard.
+      namenode_host_and_port = self.getNameNode()
+      self.hadoopSiteDict[DFS_HTTP_ADDR] = namenode_host_and_port.split(":")[0] + ":50070"
+
 
   def configure(self):
     """ Run the configuration stage. This is responsible for
@@ -1357,6 +1434,7 @@ nodes.
     self.configureMasterHosts()
     self.configHadoopLogDir()
     self.configHadoopSite()
+    self.config_standalone_secondary()
 
 
   def getFinalInstallPath(self):

@@ -174,6 +174,15 @@ HADOOP_PID_DIR_KEY = "hadoop.pid.dir"
 HADOOP_PID_DIR_ENV = "HADOOP_PID_DIR"
 HADOOP_PID_DIR_DEFAULT = "/tmp" # this is hardcoded in Hadoop.
 
+# The SecondaryNameNode needs to have a different value of
+# dfs.http.address than the NameNode (the value on DNs is irrelevant).
+# This is only the case if deploying a 2NN on a different node than
+# the NN. This flag will patch up the installed hadoop-site.xml
+# (even if this is user-provided) with the correct value.
+STANDALONE_SECONDARY_ARG = "--standalone-secondarynamenode"
+STANDALONE_SECONDARY_KEY = "standalone.secondary.namenode"
+STANDALONE_SECONDARY_DEFAULT = False # must be user-enabled.
+
 #######################################################################
 ### Some more constants affecting the installer system itself
 
@@ -255,6 +264,9 @@ MAPRED_TEMP_DIR = "mapred.temp.dir"
 # autoconfigure these for the user
 DFS_HOSTS_FILE = "dfs.hosts"
 DFS_EXCLUDE_FILE = "dfs.hosts.exclude"
+
+
+DFS_HTTP_ADDR = "dfs.http.address"
 
 # This is a list of properties we configure
 # that should be marked "final" in hadoop-site

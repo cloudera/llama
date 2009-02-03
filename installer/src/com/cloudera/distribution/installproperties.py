@@ -50,6 +50,10 @@ class InstallProperties(Properties):
 
     ROLES_ARG          : ROLES_KEY,
 
+    # Hadoop-specific: modify configuration in a specific
+    # fashion for 2NN's on separate machines from namenodes.
+    STANDALONE_SECONDARY_ARG : STANDALONE_SECONDARY_KEY,
+
     # if true, create missing ~hadoop/.ssh/id_rsa
     "--create-keys"    : CREATE_SSHKEYS_KEY,
     # filename of the remote public key file
@@ -104,7 +108,8 @@ class InstallProperties(Properties):
     "--unattend",
     "--test-mode",
     "--no-start-daemons",
-    "--create-keys"
+    "--create-keys",
+    STANDALONE_SECONDARY_ARG
   ]
 
   # these disable boolean flags
