@@ -134,7 +134,20 @@ class GlobalPrereqInstall(ToolInstall):
       raise InstallError("Could not open the slaves file " + filename + " for editing: " + str(ioe))
 
     # Run whatever editor the user specified with $EDITOR or --editor
-    editorPrgm = self.properties.getProperty(EDITOR_KEY, EDITOR_DEFAULT)
+    editorPrgm = self.properties.getProperty(EDITOR_KEY, None)
+    logging.debug("User-supplied editor: " + str(editorPrgm))
+    if editorPrgm == None or len(editorPrgm) == 0:
+      # User has not set --editor or $EDITOR. Determine a suitable backup.
+      try:
+        # Try to find pico, the friendly editor, first.
+        shell.shLines("which pico")
+        logging.debug("Setting editor to pico.")
+        editorPrgm = "pico"
+      except shell.CommandError:
+        # Couldn't find pico. Fall back to vim.
+        logging.debug("Couldn't find pico. Setting editor to " + EDITOR_DEFAULT)
+        editPrgm = EDITOR_DEFAULT
+
     editorString = editorPrgm + " \"" + filename + "\""
     ret = os.system(editorString)
     if ret > 0:
