@@ -30,6 +30,7 @@ from   com.cloudera.distribution.constants import *
 import com.cloudera.distribution.dnsregex as dnsregex
 import com.cloudera.distribution.hadoopconf as hadoopconf
 from   com.cloudera.distribution.installerror import InstallError
+import com.cloudera.distribution.postinstall as postinstall
 import com.cloudera.distribution.toolinstall as toolinstall
 import com.cloudera.tools.dirutils as dirutils
 import com.cloudera.tools.shell as shell
@@ -1737,6 +1738,43 @@ HDFS before using Hadoop, by running the command:
     configDirSrc = os.path.join(self.getFinalInstallPath(), "conf")
     self.createEtcSymlink("hadoop", configDirSrc)
 
+    # CH-173: Create /user/$USER for the current user, if we're installing
+    # as a hadoop developer.
+    if self.has_role("hadoop_developer"):
+
+      # Fake superuser credentials for this operation.
+      cur_user = self.getCurrUser()
+
+      if not self.has_role("namenode") and not self.has_role("jobtracker") \
+          and not self.has_role("datanode") and not self.has_role("secondary_namenode") \
+          and not self.has_role("tasktracker"):
+        # We are not a server installation -- only installing for a client.
+        # In this case, if we're not installing as root, then earlier in the
+        # configuration tool we auto-configured the hadoop daemon username to
+        # be the cur user. But this has nothing to do with the actual hadoop
+        # daemon username. This is most likely 'hadoop'.
+        if cur_user != "root":
+          # If the cur_user is not root, then we have set the hadoop daemon user
+          # as cur_user. This is most likely wrong; use the default.
+          # TODO(aaron): Must be able to inform client-only installs of true hadoop daemon username.
+          hadoop_user = HADOOP_USER_NAME_DEFAULT
+        else:
+          # If cur_user is root, then use the configured value; it is correct.
+          hadoop_user = self.getHadoopUsername()
+      else:
+        # We are installing daemons, so getHadoopUsername() returns the right thing.
+        hadoop_user = self.getHadoopUsername()
+
+      hadoop_cmdline = self.get_hadoop_cmdline()
+      fake_auth = " -D hadoop.job.ugi=" + hadoop_user + "," + hadoop_user
+
+      mkdir_action = hadoop_cmdline + " fs" + fake_auth + " -mkdir /user/" + cur_user
+      chown_action = hadoop_cmdline + " fs" + fake_auth + " -chown " + cur_user + ":" + cur_user \
+          + " /user/" + cur_user
+
+      # Set these to run after services are started.
+      postinstall.add(mkdir_action, False)
+      postinstall.add(chown_action, True)
 
   def verify(self):
     """ Run post-installation verification tests, if configured """

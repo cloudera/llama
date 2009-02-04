@@ -4,6 +4,10 @@
 #
 # Master Targets file for Cloudera Hadoop distribution (CH) system
 
+# Set some version constants which appear throughout this project.
+base_hadoop_ver = "0.18.3"
+hadoop_ver_string = "hadoop-" + base_hadoop_ver + "-patched"
+
 
 # List of all distribution editions we compile from this tree.
 # This is the default target.
@@ -11,17 +15,17 @@ allDistributions = EmptyPackageTarget(
   requiredTargets = [ ":supportedDistro" ])
 
 version = VerStringTarget(
-  version      = "0.2.0",
+  version      = "0.2.1",
   pythonModule = "installer.version")
 
 # Scribe required libraries
 libfb303Component = FileComponent(
   srcFile = "patches/scribe-log4j/lib/libfb303.jar",
-  destDir = "build/hadoop-0.18.3-patched/src/contrib/scribe-log4j/lib",)
+  destDir = "build/" + hadoop_ver_string + "/src/contrib/scribe-log4j/lib",)
 
 libthriftComponent = FileComponent(
   srcFile = "patches/scribe-log4j/lib/libthrift.jar",
-  destDir = "build/hadoop-0.18.3-patched/src/contrib/scribe-log4j/lib",)
+  destDir = "build/" + hadoop_ver_string + "/src/contrib/scribe-log4j/lib",)
 
 libfb303Component2 = FileComponent(
   srcFile = "patches/scribe-log4j/lib/libfb303.jar",
@@ -36,16 +40,16 @@ log4jpropComponent = ExcludeComponent(
   name = "conf/log4j.properties",)
 
 log4jpropComponent2 = ExcludeComponent(
-  name = "build/hadoop-0.18.3-patched/conf/log4j.properties",)
+  name = "build/" + hadoop_ver_string + "/conf/log4j.properties",)
 
 #nn and jt JSP change dependencies
 bluebarComponent = FileComponent(
   srcFile = "patches/nn+jt_jsp/static/images/bluebar.png",
-  destDir = "build/hadoop-0.18.3-patched/src/webapps/static/images/",)
+  destDir = "build/" + hadoop_ver_string + "/src/webapps/static/images/",)
 
 logoComponent = FileComponent(
   srcFile = "patches/nn+jt_jsp/static/images/logo.png",
-  destDir = "build/hadoop-0.18.3-patched/src/webapps/static/images/",)
+  destDir = "build/" + hadoop_ver_string + "/src/webapps/static/images/",)
 
 bluebarComponent2 = FileComponent(
   srcFile = "patches/nn+jt_jsp/static/images/bluebar.png",
@@ -60,13 +64,13 @@ logoComponent2 = FileComponent(
 # include the pre-compiled native libs, since we don't build those ourselves
 hadoopNativeLibs = DirComponent(
   srcDir  = "native",
-  destDir = "build/hadoop-0.18.3-patched/lib/native")
+  destDir = "build/" + hadoop_ver_string + "/lib/native")
 
 # mapred jdbc component has extra lib dirs required
 mapredJdbcLibs = DirComponent(srcDir = "patches/mapred_jdbc/lib",
                               destDir = "lib")
 mapredJdbcRedistLibs = DirComponent(srcDir = "patches/mapred_jdbc/lib",
-                              destDir = "build/hadoop-0.18.3-patched/lib")
+                              destDir = "build/" + hadoop_ver_string + "/lib")
 
 # include the portal source code
 portalComponent = DirComponent(
@@ -83,9 +87,9 @@ fairshareComponent = HadoopContribComponent(
 
 supportedHadoopPackage = HadoopPackageTarget(
   packageName   = "distrib-hadoop",
-  baseHadoopDir = "thirdparty/hadoop-0.18.3",
-  baseVersion   = "0.18.3",
-  patchVersion  = "CH-0.2.0",
+  baseHadoopDir = "thirdparty/hadoop-" + base_hadoop_ver,
+  baseVersion   = base_hadoop_ver,
+  patchVersion  = "CH-0.2.1",
   patchPlan     = [
       "projects/HadoopDist/patches/scribe-log4j/scribe_hadoop_trunk_v4.patch",
       "projects/HadoopDist/patches/nn+jt_jsp/nn+jt_cloudera_0.18.2_noheader.patch",
