@@ -146,7 +146,7 @@ class GlobalPrereqInstall(ToolInstall):
       except shell.CommandError:
         # Couldn't find pico. Fall back to vim.
         logging.debug("Couldn't find pico. Setting editor to " + EDITOR_DEFAULT)
-        editPrgm = EDITOR_DEFAULT
+        editorPrgm = EDITOR_DEFAULT
 
     editorString = editorPrgm + " \"" + filename + "\""
     ret = os.system(editorString)
