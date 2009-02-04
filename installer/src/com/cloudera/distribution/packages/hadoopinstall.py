@@ -1726,20 +1726,11 @@ HDFS before using Hadoop, by running the command:
 %(cmd)s""" % { "cmd" : formatCmd }
 
 
-  def postInstall(self):
-    """ Run any post-installation activities. This occurs after
-        all ToolInstall objects have run their install() operations. """
+  def create_user_home_dir(self):
+    """ postinstallation action: Create /user/$USER for the current user, if we're
+        installing as a hadoop developer (CH-173).
+    """
 
-    if self.has_role("namenode"):
-      self.doFormatHdfs()
-
-    self.createInstallSymlink("hadoop")
-
-    configDirSrc = os.path.join(self.getFinalInstallPath(), "conf")
-    self.createEtcSymlink("hadoop", configDirSrc)
-
-    # CH-173: Create /user/$USER for the current user, if we're installing
-    # as a hadoop developer.
     if self.has_role("hadoop_developer"):
 
       # Fake superuser credentials for this operation.
@@ -1765,6 +1756,11 @@ HDFS before using Hadoop, by running the command:
         # We are installing daemons, so getHadoopUsername() returns the right thing.
         hadoop_user = self.getHadoopUsername()
 
+        # In which case, start the daemons before we modify HDFS.
+        # (For developer-only install, we assume the sysadmin has already switched
+        # on the cluster.)
+        postinstall.add(self.get_start_hdfs_cmd())
+
       hadoop_cmdline = self.get_hadoop_cmdline()
       fake_auth = " -D hadoop.job.ugi=" + hadoop_user + "," + hadoop_user
 
@@ -1775,6 +1771,22 @@ HDFS before using Hadoop, by running the command:
       # Set these to run after services are started.
       postinstall.add(mkdir_action, False)
       postinstall.add(chown_action, True)
+
+
+  def postInstall(self):
+    """ Run any post-installation activities. This occurs after
+        all ToolInstall objects have run their install() operations. """
+
+    if self.has_role("namenode"):
+      self.doFormatHdfs()
+
+    self.createInstallSymlink("hadoop")
+
+    configDirSrc = os.path.join(self.getFinalInstallPath(), "conf")
+    self.createEtcSymlink("hadoop", configDirSrc)
+
+    self.create_user_home_dir()
+
 
   def verify(self):
     """ Run post-installation verification tests, if configured """

@@ -138,7 +138,8 @@ class LogMoverInstall(toolinstall.ToolInstall):
 
     # sed the generic file so all appropriate pathes exist
 
-    hadoop_home = toolinstall.getToolByName("Hadoop").getFinalInstallPath()
+    hadoop_tool = toolinstall.getToolByName("Hadoop")
+    hadoop_home = hadoop_tool.getFinalInstallPath()
     log_out = os.path.join(logmover_prefix, "logs")
 
     # get the location of the scribe logs
@@ -173,7 +174,8 @@ class LogMoverInstall(toolinstall.ToolInstall):
     try:
       output.printlnVerbose("Attempting to create the log mover log dir")
       dirutils.mkdirRecursive(log_out)
-      cmd = "chown hadoop -R " + log_out
+      hadoop_user = hadoop_tool.getHadoopUsername()
+      cmd = "chown " + hadoop_user + " -R " + log_out
       shell.sh(cmd)
     except:
       raise InstallError("Couldn't create log mover's log directory")
