@@ -40,9 +40,9 @@ def writePropertiesBody(handle, dict, finalKeys):
       finalStr = ""
 
     outVal = dict[key]
-    if outVal == True:
+    if outVal is True:
       outVal = "true"
-    elif outVal == False:
+    elif outVal is False:
       outVal = "false"
     else:
       outVal = str(outVal)

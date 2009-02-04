@@ -367,7 +367,7 @@ these services and reinstalling this distribution.
         # non-root install: run hadoop as yourself.
         self.hadoopUser = self.curUsername
     elif self.curUsername != "root" and self.hadoopUser != self.curUsername \
-        and self.isUnattexnded():
+        and self.isUnattended():
       raise InstallError( \
 """In unattended mode, you cannot specify another username to run hadoop
 if you are not installing as root. Please re-run the installer as root,
