@@ -441,8 +441,6 @@ or specify your own username with --hadoop-user""")
 
   def canUseBzip(self):
     """ Return True if precheckBzipLibs detected the correct bzip libraries """
-    # TODO(aaron): Watch HADOOP-4918; it seems as though bzip2 does not
-    # work with sequence files. Think hard before we use this.
     return self.libBzipFound
 
 
@@ -984,7 +982,8 @@ to do, just accept the default values.""")
         + "org.apache.hadoop.io.compress.GzipCodec"
     if self.canUseLzo():
       codecList = codecList + ",org.apache.hadoop.io.compress.LzoCodec"
-    # TODO(aaron): 0.2 - include bzip2 in official codec list after Hadoop .19
+    if self.canUseBzip():
+      codecList = codecList + ",org.apache.hadoop.io.compress.BZip2Codec"
     handle.write("""
 <property>
   <name>io.compression.codecs</name>
