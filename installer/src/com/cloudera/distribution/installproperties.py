@@ -240,7 +240,6 @@ def loadAllProperties(properties, argv):
   properties.parseArgs(argv)
 
   output.setupConsole(properties)
-  properties.printTable(output.DEBUG)
 
   return properties
 

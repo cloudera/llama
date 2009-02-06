@@ -410,6 +410,8 @@ Press [enter] to continue.""")
   def configSshIdentityKey(self):
     """ Determine where the id_{d|r}sa key is that we should use to
         access all the slaves when we log in there. """
+
+    logging.debug("configSshIdentityKey())")
     maybeSshKey = self.properties.getProperty(SSH_IDENTITY_KEY)
     if maybeSshKey == None:
       userDir = os.path.expanduser("~")
@@ -422,6 +424,8 @@ Press [enter] to continue.""")
       elif os.path.exists(dsaKey):
         output.printlnVerbose("Trying default dsa key: " + dsaKey)
         maybeSshKey = dsaKey
+      else:
+        logging.debug("No default rsa/dsa keys could be found.")
 
     if not self.isUnattended():
       maybeSshKey = prompt.getString("What SSH key should this installer " \
@@ -432,11 +436,17 @@ Press [enter] to continue.""")
            + " does not exist; ignoring")
       maybeSshKey = None
 
-    if self.isUnattended() and maybeSshKey == None:
-      output.printlnError("Error: Cannot deploy to slaves without an " \
-          + "ssh key in unattended mode.")
-      output.printlnError("You must provide one with --identity")
-      raise InstallError("No ssh key provided")
+    if maybeSshKey == None:
+      if self.isUnattended():
+        # TODO(aaron) - If they have specified an ssh-agent-based authentication (switch
+        # to specify this is yet to be implemented), then ignore this warning.
+        output.printlnError("Error: Cannot deploy to slaves without an " \
+            + "ssh key in unattended mode.")
+        output.printlnError("You must provide one with --identity")
+        raise InstallError("No ssh key provided")
+      else:
+        logging.info("""Warning: no ssh key has been specified. You may need to enter login
+credentials manually.""")
 
     self.sshKey = maybeSshKey
 
@@ -482,6 +492,8 @@ Press [enter] to continue.""")
   def configInstallUser(self):
     """ Determine what username we should use to log in to the remote
         machines with. """
+
+    logging.debug("Configuring installation user (configInstallUser())")
 
     maybeUploadUser = self.properties.getProperty(SSH_USER_KEY)
 

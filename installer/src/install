@@ -96,6 +96,7 @@ try:
 except shell.CommandError:
   pass # This was for debugging only; ignore.
 
+properties.printTable(logging.DEBUG)
 
 # Where are we? Switch into installer's base dir
 binName = sys.argv[0]
@@ -326,6 +327,8 @@ env.writeEnvironmentScript()
 #tools=serializer.restore_state(SERIALIZATION_FILENAME, roles.get_role_names(), properties)
 #for tool in tools:
 #  print "got tool back: " + tool.getName()
+
+logging.debug("*** installer exit")
 
 sys.exit(0)
 

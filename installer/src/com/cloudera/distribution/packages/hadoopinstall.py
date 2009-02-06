@@ -1341,6 +1341,8 @@ the Hadoop daemons. This will cause problems starting Hadoop.""" % \
 
       self.create_ssh_key = prompt.getBoolean( \
           "Should I create and distribute ssh keys now?", self.create_ssh_key)
+      logging.debug("create_ssh_key: " + str(self.create_ssh_key))
+
 
   def configureMasterHosts(self):
     """ Configure JT, NN, and 2NN addresses """
