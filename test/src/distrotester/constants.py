@@ -178,8 +178,8 @@ SECONDARY_HOSTNAME_KEY = "secondary.host"
 HIVE_TEST_DIR = "hive-tests"
 
 # Where are the scribe test files
-SCRIBE_TEST_DIR = "scribe-tests"
-SCRIBE_TEST_JAR = os.path.join(SCRIBE_TEST_DIR, "ScribeDistribTest.jar")
+TEST_JAR_DIR = "testjar"
+DISTRIB_TEST_JAR = os.path.join(TEST_JAR_DIR, "DistribTest.jar")
 
 ############################################################
 # constants pertaining to making bootstrap installations

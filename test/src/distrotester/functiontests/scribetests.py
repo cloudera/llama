@@ -46,7 +46,7 @@ class ScribeTest(VerboseTestCase):
 
   def getTestJar(self):
     """ Return the filename of the jar containing the Java code to run """
-    return SCRIBE_TEST_JAR
+    return DISTRIB_TEST_JAR
 
 
   def setUp(self):

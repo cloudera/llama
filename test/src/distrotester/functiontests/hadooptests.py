@@ -40,6 +40,11 @@ class HadoopTest(VerboseTestCase):
       return ""
 
 
+  def getTestJar(self):
+    """ Return the filename of the jar containing the Java code to run """
+    return DISTRIB_TEST_JAR
+
+
   def setUp(self):
     """ Perform setup tasks for tests """
 
@@ -98,6 +103,22 @@ class HadoopTest(VerboseTestCase):
           found = True
     if not found:
       self.fail("Could not run pi example to completion")
+
+
+  def testBzipMR(self):
+    """ Run a job which writes out numbers to a text file, compresses this in a
+        SequenceFile with bzip2, sorts that file, and confirms that the same
+        numbers come back.
+    """
+
+    logging.info("Testing bzip2 / SequenceFile integration...")
+    cmd = self.getClientSudo() + self.getHadoopCmd() + " jar " \
+        + self.getTestJar() + " com.cloudera.bzip2test.BzipDriver"
+    try:
+      shell.sh(cmd)
+      logging.info("SequenceFile + bzip2 integration seems to work!")
+    except shell.CommandError:
+      self.fail("BZip2/SequenceFile MapReduce exited with non-zero status.")
 
 
 if __name__ == '__main__':
