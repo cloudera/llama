@@ -19,7 +19,7 @@ allDistributions = EmptyPackageTarget(
   requiredTargets = [ ":supportedDistro" ])
 
 version = VerStringTarget(
-  version      = base_ch_ver
+  version      = base_ch_ver,
   pythonModule = "installer.version")
 
 # Scribe required libraries
