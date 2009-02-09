@@ -19,6 +19,6 @@ logMover = PythonTarget(
 
 # packaging the log mover up for use in the tarball
 release = PythonRedistTarget(
-  distribName     = "log_mover",
+  packageName     = "log_mover",
   requiredTargets = [ ":logMover" ])
 

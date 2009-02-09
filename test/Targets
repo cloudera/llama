@@ -21,7 +21,7 @@ tester = PythonTarget(
 
 # package containing all the above python sources
 pyRelease = PythonRedistTarget(
-  distribName     = "distroTestPython",
+  packageName     = "distroTestPython",
   requiredTargets = [ ":tester" ])
 
 # Jar containing Java code to run to for MapReduce tests

@@ -20,7 +20,7 @@ installerTest = PythonTestTarget(
 
 # packaging the installer up for use in the tarball
 release = PythonRedistTarget(
-  distribName     = "installer",
+  packageName     = "installer",
   requiredTargets = [ ":installer" ])
 
 defaultTarget(release)
