@@ -5,9 +5,13 @@
 # Master Targets file for Cloudera Hadoop distribution (CH) system
 
 # Set some version constants which appear throughout this project.
+
+# Version of Hadoop our system is based on:
 base_hadoop_ver = "0.18.3"
 hadoop_ver_string = "hadoop-" + base_hadoop_ver + "-patched"
 
+# Cloudera Hadoop dist version.
+base_ch_ver = "0.2.1"
 
 # List of all distribution editions we compile from this tree.
 # This is the default target.
@@ -15,7 +19,7 @@ allDistributions = EmptyPackageTarget(
   requiredTargets = [ ":supportedDistro" ])
 
 version = VerStringTarget(
-  version      = "0.2.1",
+  version      = base_ch_ver
   pythonModule = "installer.version")
 
 # Scribe required libraries
@@ -89,7 +93,9 @@ supportedHadoopPackage = HadoopPackageTarget(
   packageName   = "distrib-hadoop",
   baseHadoopDir = "thirdparty/hadoop-" + base_hadoop_ver,
   baseVersion   = base_hadoop_ver,
-  patchVersion  = "CH-0.2.1",
+  patchVersion  = "CH-" + base_ch_ver,
+  # TODO(aaron): If you modify the patch plan, write up your changes
+  # in doc/hadoop_patches.txt.
   patchPlan     = [
       "projects/HadoopDist/patches/scribe-log4j/scribe_hadoop_trunk_v4.patch",
       "projects/HadoopDist/patches/nn+jt_jsp/nn+jt_cloudera_0.18.2_noheader.patch",
