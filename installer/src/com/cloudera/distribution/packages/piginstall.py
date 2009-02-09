@@ -199,6 +199,7 @@ Reason: %(ioe)s""" % { "ioe" : str(ioe) })
 
       javaDir = globalPrereq.getJavaHome()
       hadoopDir = os.path.join(hadoopInstaller.getFinalInstallPath(), "conf")
+      hadoopLib = os.path.join(hadoopInstaller.getFinalInstallPath(), "lib/*")
       pigDir = self.getFinalInstallPath()
 
       env.addToEnvironment("JAVA_HOME", javaDir)
@@ -206,7 +207,7 @@ Reason: %(ioe)s""" % { "ioe" : str(ioe) })
       env.addToEnvironment("PIGDIR", pigDir)
       env.addToEnvironment("PIG_CLASSPATH", \
           os.path.join(pigDir, "pig-" + PIG_VERSION + "-core.jar") + ":" \
-          + hadoopDir)
+          + hadoopDir + ":" + hadoopLib)
 
     if self.has_role("pig_master"):
       # must create pig tmp directory in HDFS before use
