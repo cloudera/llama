@@ -112,6 +112,7 @@ supportedHadoopPackage = PackageTarget(
   components    = [
     DirComponent(
       srcDir=("../../thirdparty/hadoop-" + base_hadoop_ver + "/"),
+      excludePatterns = [ "build/" ],
       forceRefresh = True),
     libfb303Component,
     libthriftComponent,
@@ -141,6 +142,30 @@ supportedHadoopPackage = PackageTarget(
     TarComponent(
       filename= hadoop_ver_string + ".tar.gz",
       subdir="build/" + hadoop_ver_string)
+    ],
+
+  # Define build-phase outputs that other programs compiled against our distro need.
+  outputs = [
+      "build/" + hadoop_ver_string + "-core.jar",
+      "build/" + hadoop_ver_string + "-test.jar",
+      "build/" + hadoop_ver_string + "-tools.jar",
+      "build/" + hadoop_ver_string + "-examples.jar",
+      "build/" + hadoop_ver_string + "/lib/commons-cli-2.0-SNAPSHOT.jar",
+      "build/" + hadoop_ver_string + "/lib/commons-codec-1.3.jar",
+      "build/" + hadoop_ver_string + "/lib/commons-httpclient-3.0.1.jar",
+      "build/" + hadoop_ver_string + "/lib/commons-logging-1.0.4.jar",
+      "build/" + hadoop_ver_string + "/lib/commons-logging-api-1.0.4.jar",
+      "build/" + hadoop_ver_string + "/lib/commons-net-1.4.1.jar",
+      "build/" + hadoop_ver_string + "/lib/jets3t-0.6.0.jar",
+      "build/" + hadoop_ver_string + "/lib/jetty-5.1.4.jar",
+      "build/" + hadoop_ver_string + "/lib/junit-3.8.1.jar",
+      "build/" + hadoop_ver_string + "/lib/kfs-0.1.3.jar",
+      "build/" + hadoop_ver_string + "/lib/log4j-1.2.15.jar",
+      "build/" + hadoop_ver_string + "/lib/oro-2.0.8.jar",
+      "build/" + hadoop_ver_string + "/lib/servlet-api.jar",
+      "build/" + hadoop_ver_string + "/lib/slf4j-api-1.4.3.jar",
+      "build/" + hadoop_ver_string + "/lib/slf4j-log4j12-1.4.3.jar",
+      "build/" + hadoop_ver_string + "/lib/xmlenc-0.52.jar",
     ])
 
 # components for packaging

@@ -28,7 +28,7 @@ pyRelease = PythonRedistTarget(
 testsJar = JarTarget(
   jarName = "DistribTest.jar",
   sources = [ "mapreduce-tests" ],
-  requiredTargets = [ "thirdparty/hadoop-0.19.0" ])
+  requiredTargets = [ "projects/HadoopDist:supportedHadoopPackage" ])
 
 
 # Now we bundle all of the above together
