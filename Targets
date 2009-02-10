@@ -81,46 +81,67 @@ portalComponent = DirComponent(
   srcDir  = "portal/src",
   destDir = "src/webapps/portal")
 
-# Enable inclusion of scribe-log4j contrib jar that we build.
-scribeLog4JComponent = HadoopContribComponent(
-  name = "scribe-log4j")
 
-# Include Matei's fairshare scheduler contrib jar
-fairshareComponent = HadoopContribComponent(
-  name = "fairscheduler")
-
-supportedHadoopPackage = HadoopPackageTarget(
-  packageName   = "distrib-hadoop",
-  baseHadoopDir = "thirdparty/hadoop-" + base_hadoop_ver,
+# Define the action when we compile hadoop for the distribution.
+compile_distro =  CompileHadoopComponent(
   baseVersion   = base_hadoop_ver,
   patchVersion  = "CH-" + base_ch_ver,
   # TODO(aaron): If you modify the patch plan, write up your changes
   # in doc/hadoop_patches.txt.
   patchPlan     = [
-      "projects/HadoopDist/patches/scribe-log4j/scribe_hadoop_trunk_v4.patch",
-      "projects/HadoopDist/patches/nn+jt_jsp/nn+jt_cloudera_0.18.2_noheader.patch",
-      "projects/HadoopDist/patches/mapred_jdbc/HADOOP-2536-0.18.2.patch",
-      "thirdparty/fairshare/fairscheduler-0.18.3.patch",
-      "projects/HadoopDist/patches/bzip2/HADOOP-3646-0.18.3.patch",
-      "projects/HadoopDist/patches/bzip2/HADOOP-4918-0.18.3.patch",
-                  ],
-  components    = [ libfb303Component,
-                    libthriftComponent,
-                    libfb303Component2,
-                    libthriftComponent2,
-                    bluebarComponent,
-                    logoComponent,
-                    bluebarComponent2,
-                    logoComponent2,
-                    log4jpropComponent,
-                    log4jpropComponent2,
-                    hadoopNativeLibs,
-                    portalComponent,
-                    scribeLog4JComponent,
-                    fairshareComponent,
-                    mapredJdbcLibs,
-                    mapredJdbcRedistLibs
-                   ])
+    "projects/HadoopDist/patches/scribe-log4j/scribe_hadoop_trunk_v4.patch",
+    "projects/HadoopDist/patches/nn+jt_jsp/nn+jt_cloudera_0.18.2_noheader.patch",
+    "projects/HadoopDist/patches/mapred_jdbc/HADOOP-2536-0.18.2.patch",
+    "thirdparty/fairshare/fairscheduler-0.18.3.patch",
+    "projects/HadoopDist/patches/bzip2/HADOOP-3646-0.18.3.patch",
+    "projects/HadoopDist/patches/bzip2/HADOOP-4918-0.18.3.patch",
+  ])
+
+# Enable inclusion of scribe-log4j contrib jar that we build.
+scribeLog4JComponent = HadoopContribComponent(
+  name = "scribe-log4j",
+  compileComponent = compile_distro)
+
+# Include Matei's fairshare scheduler contrib jar
+fairshareComponent = HadoopContribComponent(
+  name = "fairscheduler",
+  compileComponent = compile_distro)
+
+supportedHadoopPackage = PackageTarget(
+  packageName   = "distrib-hadoop",
+  components    = [
+    DirComponent(
+      srcDir=("../../thirdparty/hadoop-" + base_hadoop_ver + "/"),
+      forceRefresh = True),
+    libfb303Component,
+    libthriftComponent,
+    libfb303Component2,
+    libthriftComponent2,
+    bluebarComponent,
+    logoComponent,
+    bluebarComponent2,
+    logoComponent2,
+    hadoopNativeLibs,
+    portalComponent,
+    mapredJdbcLibs,
+    mapredJdbcRedistLibs,
+
+    # Actually compile Hadoop
+    compile_distro,
+
+    # Enable these contrib libs
+    scribeLog4JComponent,
+    fairshareComponent,
+
+    # Remove log4j.properties files since we now use log4j.xml
+    log4jpropComponent,
+    log4jpropComponent2,
+
+    # Create hadoop tarball.
+    TarComponent(
+      filename= hadoop_ver_string + ".tar.gz",
+      subdir="build/" + hadoop_ver_string)
+    ])
 
 # components for packaging
 
