@@ -140,7 +140,13 @@ supportedHadoopPackage = PackageTarget(
     # Create hadoop tarball.
     TarComponent(
       filename= hadoop_ver_string + ".tar.gz",
-      subdir="build/" + hadoop_ver_string)
+      subdir="build/" + hadoop_ver_string),
+
+    # Create hadoop RPMs
+    DirComponent(
+      srcDir =  "pkg_scripts/rpm",
+      destDir = "pkg_scripts/rpm"),
+    RpmComponent( specFile = "hadoop.spec", rpmBuildCmd= "-bb --target noarch,i386,amd64" )
     ])
 
 # components for packaging
