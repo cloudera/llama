@@ -1,10 +1,14 @@
 # 
 # Hadoop RPM spec file 
 # 
-%define opt_hadoop /opt/hadoop-@VERSION@
-%define doc_hadoop /usr/share/doc/hadoop-@VERSION@
 %define hadoop_name hadoop
+%define etc_hadoop %{_sysconfdir}/%{hadoop_name}
+%define lib_hadoop %{_libdir}/%{hadoop_name}
+%define log_hadoop %{_localstatedir}/log/%{hadoop_name}
+%define bin_hadoop %{_bindir}
+%define doc_hadoop /usr/share/doc/hadoop-@VERSION@
 %define hadoop_build_path @PKGROOT@/build/hadoop-@VERSION@
+%define hadoop_username hadoop
 
 Name: %{hadoop_name} 
 Vendor: Hadoop
@@ -15,6 +19,7 @@ License: Apache License v2.0
 URL: http://hadoop.apache.org/core/
 Group: System/Daemons
 Buildroot: @RPMBUILDROOT@
+Prereq: sh-utils, textutils, /usr/sbin/useradd, /sbin/chkconfig, /sbin/service
 Provides: %{hadoop_name}
 
 %define global_description Hadoop is a software platform that lets one easily write and  \
@@ -35,16 +40,25 @@ Hadoop implements MapReduce, using the Hadoop Distributed File System (HDFS). \
 MapReduce divides applications into many small blocks of work. HDFS creates \
 multiple replicas of data blocks for reliability, placing them on compute \
 nodes around the cluster. MapReduce can then process the data where it is \
-located.\
-\
-Hadoop has been demonstrated on clusters with 2000 nodes. The current \
-design target is 10,000 node clusters.
+located.
 
 %description 
 %{global_description}
 
 # List of packages which do not depend on any particular architecture
 %ifarch noarch
+
+%package pseudo
+Summary: Hadoop installation in pseudo-distributed mode
+Group: System/Daemons
+Requires: hadoop-namenode hadoop-datanode hadoop-jobtracker hadoop-tasktracker
+
+%description pseudo
+Installation of this RPM will setup your machine to run in pseudo-distributed mode
+where each Hadoop daemon runs in a separate Java process.
+
+%{global_description}
+
 
 %package namenode
 Summary: The Hadoop namenode manages the block locations of HDFS files
@@ -64,10 +78,9 @@ Group: System/Daemons
 Requires: hadoop-common = @RPMVERSION@
 
 %description secondarynamenode
-A Hadoop Distributed Filesystem (HDFS) requires one unique server, the 
-namenode. This is a single point of failure for an HDFS installation. 
-If the namenode goes down, the entire filesystem is offline. To reduce 
-the impact of such an event, the secondarynamenode is used for failover.
+The Secondary Name Node periodically compacts the Name Node EditLog
+into a checkpoint.  This compaction ensures that Name Node restarts
+do not incur unnecessary downtime.
 
 %{global_description}
 
@@ -123,12 +136,12 @@ Documentation for Hadoop
 %{global_description}
 
 %package common
-Summary: Common files (e.g. jars) needed by all Hadoop Services and Clients
+Summary: Common files (e.g., jars) needed by all Hadoop Services and Clients
 Group: Development/Libraries
-Prefix: %{opt_hadoop}
+Prefix: %{lib_hadoop}
 
 %description common
-Common files (e.g. jars) needed by all Hadoop Services and Clients
+Common files (e.g., jars) needed by all Hadoop Services and Clients
 
 %{global_description}
 
@@ -136,13 +149,13 @@ Common files (e.g. jars) needed by all Hadoop Services and Clients
 %else
 
 %package native
-Summary: Native libraries for Hadoop (e.g. compression, Hadoop pipes)
+Summary: Native libraries for Hadoop (e.g., compression, Hadoop pipes)
 Group: Development/Libraries
-Prefix: %{opt_hadoop}
+Prefix: %{lib_hadoop}
 Requires: hadoop-common = @RPMVERSION@
 
 %description native
-Native libraries for Hadoop (e.g. compression, Hadoop pipes)
+Native libraries for Hadoop (e.g., compression, Hadoop pipes)
 
 %{global_description}
 
@@ -155,73 +168,143 @@ Native libraries for Hadoop (e.g. compression, Hadoop pipes)
 %install
 %__rm -rf $RPM_BUILD_ROOT
 
-%__install -d -m 0755 $RPM_BUILD_ROOT/%{opt_hadoop}
+%__install -d -m 0755 $RPM_BUILD_ROOT/%{lib_hadoop}
 
 %ifarch noarch
 # Init.d scripts
-%__install -d -m 0755 $RPM_BUILD_ROOT/etc/init.d/
-%__cp @PKGROOT@/pkg_scripts/rpm/* $RPM_BUILD_ROOT/etc/init.d/
+%__install -d -m 0755 $RPM_BUILD_ROOT/etc/rc.d/init.d/
+services="datanode jobtracker namenode secondarynamenode tasktracker"
+for service in $services; 
+do
+	init_file=$RPM_BUILD_ROOT/etc/rc.d/init.d/hadoop-${service}
+	%__cp @PKGROOT@/pkg_scripts/rpm/hadoop-init.tmpl $init_file 
+	%__sed -i -e 's|@HADOOP_USERNAME@|%{hadoop_username}|' $init_file
+	%__sed -i -e 's|@HADOOP_PREFIX@|%{lib_hadoop}|' $init_file
+	%__sed -i -e "s|@HADOOP_DAEMON@|${service}|" $init_file
+	%__sed -i -e "s|@HADOOP_PROG@|hadoop-${service}|" $init_file
+	%__sed -i -e 's|@HADOOP_CONF_DIR@|%{etc_hadoop}|' $init_file
+	chmod 755 $init_file
+done
+
+# Logs
+%__install -d -m 0755 $RPM_BUILD_ROOT/%{log_hadoop}
 
 # Docs
 %__install -d -m 0755 $RPM_BUILD_ROOT/%{doc_hadoop}
 (cd %{hadoop_build_path}/docs && tar -cf - .) | (cd $RPM_BUILD_ROOT/%{doc_hadoop} && tar -xf -)
 
 # The whole deal...
-(cd %{hadoop_build_path} && tar -cf - .) | (cd $RPM_BUILD_ROOT/%{opt_hadoop} && tar -xf -)
+(cd %{hadoop_build_path} && tar -cf - .) | (cd $RPM_BUILD_ROOT/%{lib_hadoop} && tar -xf -)
+
 # Take out the docs...
-rm -rf $RPM_BUILD_ROOT/%{opt_hadoop}/docs
+%__rm -rf $RPM_BUILD_ROOT/%{lib_hadoop}/docs
 # Take out the native libraries...
-rm -rf $RPM_BUILD_ROOT/%{opt_hadoop}/lib/native
+%__rm -rf $RPM_BUILD_ROOT/%{lib_hadoop}/lib/native
+# Take out the src...
+%__rm -rf $RPM_BUILD_ROOT/%{lib_hadoop}/src
+# Take out the configuration...
+%__rm -rf $RPM_BUILD_ROOT/%{lib_hadoop}/conf
+
+# Setup hadoop and hadoop-config.sh in bin
+%__install -d -m 0755 $RPM_BUILD_ROOT/%{bin_hadoop}
+# First, lets point all the bin scripts to the correct hadoop-config.sh file
+for file in $RPM_BUILD_ROOT/%{lib_hadoop}/bin/*
+do
+	%__sed -i -e 's|^.*hadoop-config.sh.*$|. %{bin_hadoop}/hadoop-config.sh|' $file
+	%__sed -i -e 's|"$HADOOP_HOME"/bin/hadoop|%{bin_hadoop}/hadoop|' $file
+done
+# move hadoop bin
+%__mv $RPM_BUILD_ROOT/%{lib_hadoop}/bin/hadoop $RPM_BUILD_ROOT/%{bin_hadoop}
+# remove the standard hadoop-config.sh file
+%__rm $RPM_BUILD_ROOT/%{lib_hadoop}/bin/hadoop-config.sh
+# copy in our new and improved hadoop-config.sh
+hadoop_config=@PKGROOT@/pkg_scripts/rpm/hadoop-config.sh
+%__sed -i -e 's|@HADOOP_HOME@|%{lib_hadoop}|' $hadoop_config 
+%__sed -i -e 's|@HADOOP_CONF_DIR@|%{etc_hadoop}|' $hadoop_config
+%__sed -i -e 's|@HADOOP_LOG_DIR@|%{log_hadoop}|' $hadoop_config
+%__cp $hadoop_config $RPM_BUILD_ROOT/%{bin_hadoop}
+ 
+# Configuration
+%__install -d -m 0755 $RPM_BUILD_ROOT/%{etc_hadoop}
+(cd %{hadoop_build_path}/conf && tar -cf - .) | (cd $RPM_BUILD_ROOT/%{etc_hadoop} && tar -xf -)
+%__rm $RPM_BUILD_ROOT/%{etc_hadoop}/hadoop-site.xml
+%__cp @PKGROOT@/pkg_scripts/rpm/hadoop-site-pseudo.xml $RPM_BUILD_ROOT/%{etc_hadoop}/hadoop-site.xml
+#hadoop_env=$RPM_BUILD_ROOT/%{etc_hadoop}/hadoop-env.sh
+# Point to the correct log directory
+#%__sed -i -e 's|^.*export HADOOP_LOG_DIR.*$|export HADOOP_LOG_DIR="%{log_hadoop}"|' $hadoop_env
+# Point to the correct JAVA_HOME
+#%__sed -i -e 's|^.*export JAVA_HOME.*$|export JAVA_HOME="/usr/java/default"|' $hadoop_env
+
+%__install -d -m 0755 $RPM_BUILD_ROOT/var/lib/hadoop/cache
+ 
 %endif
 
-# TODO: clean up this copy/paste
 %ifarch i386
-%__install -d -m 0755 $RPM_BUILD_ROOT/%{opt_hadoop}/lib/native
-(cd %{hadoop_build_path}/lib/native && cp -r ./Linux-i386-32 $RPM_BUILD_ROOT/%{opt_hadoop}/lib/native)
+%__install -d -m 0755 $RPM_BUILD_ROOT/%{lib_hadoop}/lib/native
+(cd %{hadoop_build_path}/lib/native && cp -r ./Linux-i386-32 $RPM_BUILD_ROOT/%{lib_hadoop}/lib/native)
 %endif
 %ifarch amd64
-%__install -d -m 0755 $RPM_BUILD_ROOT/%{opt_hadoop}/lib/native
-(cd %{hadoop_build_path}/lib/native && cp -r ./Linux-amd64-64 $RPM_BUILD_ROOT/%{opt_hadoop}/lib/native)
+%__install -d -m 0755 $RPM_BUILD_ROOT/%{lib_hadoop}/lib/native
+(cd %{hadoop_build_path}/lib/native && cp -r ./Linux-amd64-64 $RPM_BUILD_ROOT/%{lib_hadoop}/lib/native)
 %endif
 
- 
+%define useradd_cmd /usr/sbin/useradd -c "Hadoop" -s /sbin/nologin -r -d / %{hadoop_username} 2> /dev/null || :
+%define chkconfig_add /sbin/chkconfig --add
+%define chkconfig_del /sbin/chkconfig --del
 
-###########################
-###### FILES SECTION ######
-###########################
 %ifarch noarch
-%files namenode
-%defattr(-,root,root)
-/etc/init.d/hadoop-namenode
+%define service_install() \
+%pre %1 \
+%{useradd_cmd} \
+\
+%post %1 \
+%{chkconfig_add} hadoop-%1 \
+\
+%preun %1 \
+if [ $1 = 0 ]; then \
+        /sbin/service hadoop-%1 stop > /dev/null 2>&1 \
+        %{chkconfig_del} hadoop-%1 \
+fi \
+\
+%files %1 \
+/etc/rc.d/init.d/hadoop-%1 \
+%attr(0700,%{hadoop_username},%{hadoop_username}) %dir %{log_hadoop}
 
-%files datanode
-%defattr(-,root,root)
-/etc/init.d/hadoop-datanode
-
-%files jobtracker
-%defattr(-,root,root)
-/etc/init.d/hadoop-jobtracker
-
-%files tasktracker
-%defattr(-,root,root)
-/etc/init.d/hadoop-tasktracker
-
-%files secondarynamenode
-%defattr(-,root,root)
-/etc/init.d/hadoop-secondarynamenode
+%service_install namenode
+%service_install secondarynamenode
+%service_install datanode
+%service_install jobtracker
+%service_install tasktracker
 
 %files docs
 %defattr(-,root,root)
-%{doc_hadoop}
-
+%doc %{doc_hadoop}
+ 
 %files common
 %defattr(-,root,root)
-%{opt_hadoop}
+%{lib_hadoop}
+%attr(0755,root,root) %{bin_hadoop}/hadoop
+%attr(0755,root,root) %{bin_hadoop}/hadoop-config.sh
+
+%post pseudo
+nn_dfs_dir="/var/lib/hadoop/cache/hadoop/dfs"
+if [ -z "$(ls -A $nn_dfs_dir 2>/dev/null)" ]; then
+	sudo -u hadoop hadoop namenode -format
+fi
+/sbin/service hadoop-namenode start
+/sbin/service hadoop-datanode start 
+/sbin/service hadoop-tasktracker start
+/sbin/service hadoop-jobtracker start
+
+%files pseudo
+%config %attr(755,hadoop,hadoop) %{etc_hadoop}
+%attr(0755,hadoop,hadoop) /var/lib/hadoop
+%attr(1777,hadoop,hadoop) /var/lib/hadoop/cache
 
 # non-noarch files (aka architectural specific files)
 %else
 %files native
 %defattr(-,root,root)
-%{opt_hadoop}
+%{lib_hadoop}
 
 %endif

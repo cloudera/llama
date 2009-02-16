@@ -1,38 +1,36 @@
 #!/bin/bash
-#
+# 
 # (c) Copyright 2009 Cloudera, Inc.
-#
+# 
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
 #   You may obtain a copy of the License at
-#
+# 
 #       http://www.apache.org/licenses/LICENSE-2.0
-#
+# 
 #   Unless required by applicable law or agreed to in writing, software
 #   distributed under the License is distributed on an "AS IS" BASIS,
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
-#
-# Starts a Hadoop datanode
-#
+# 
+# Starts a Hadoop @HADOOP_DAEMON@
+# 
 # chkconfig: 2345 90 10
-# description: Hadoop datanode
-
+# description: Hadoop @HADOOP_DAEMON@
 
 source /etc/rc.d/init.d/functions
 
-source /etc/cloudera/user_env
-
 RETVAL=0
-HADOOP_USER="hadoop"
-daemon="datanode"
-prog="hadoop-datanode"
+HADOOP_USER="@HADOOP_USERNAME@"
+HADOOP_PREFIX="@HADOOP_PREFIX@"
+daemon="@HADOOP_DAEMON@"
+prog="@HADOOP_PROG@"
 desc="Hadoop $daemon daemon"
 
 start() {
   echo -n $"Starting $desc ($prog): "
-  daemon --user $HADOOP_USER ${HADOOP_HOME}/bin/hadoop-daemon.sh start $daemon
+  daemon --user $HADOOP_USER ${HADOOP_PREFIX}/bin/hadoop-daemon.sh --config "@HADOOP_CONF_DIR@" start $daemon
   RETVAL=$?
   echo
   [ $RETVAL -eq 0 ] && touch /var/lock/subsys/$prog
@@ -41,15 +39,15 @@ start() {
 
 stop() {
   echo -n $"Stopping $desc ($prog): "
-  daemon --user $HADOOP_USER ${HADOOP_HOME}/bin/hadoop-daemon.sh stop $daemon
+  daemon --user $HADOOP_USER ${HADOOP_PREFIX}/bin/hadoop-daemon.sh --config "@HADOOP_CONF_DIR@" stop $daemon
   RETVAL=$?
+  sleep 5
   echo
   [ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/$prog
 }
 
 restart() {
   stop
-  sleep 5
   start
 }
 
