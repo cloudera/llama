@@ -95,6 +95,7 @@ compile_distro =  CompileHadoopComponent(
     "thirdparty/fairshare/fairscheduler-0.18.3.patch",
     "projects/HadoopDist/patches/bzip2/HADOOP-3646-0.18.3.patch",
     "projects/HadoopDist/patches/bzip2/HADOOP-4918-0.18.3.patch",
+    "projects/HadoopDist/patches/build/HADOOP-5240-0.18.3.patch",
   ])
 
 # Enable inclusion of scribe-log4j contrib jar that we build.
