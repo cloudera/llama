@@ -1,0 +1,159 @@
+NAME
+           __  __          __                
+          / / / /___ _____/ /___  ____  ____ 
+         / /_/ / __ `/ __  / __ \/ __ \/ __ \
+        / __  / /_/ / /_/ / /_/ / /_/ / /_/ /
+       /_/ /_/\__,_/\__,_/\____/\____/ .___/ 
+                                    /_/      
+
+    Hadoop - Hadoop is a software platform that lets one easily write and
+    run applications that process vast amounts of data.
+
+SYNOPSIS
+    Usage: hadoop [--config confdir] COMMAND
+
+DESCRIPTION
+    Here's what makes Hadoop especially useful:
+
+    Scalable
+        Hadoop can reliably store and process petabytes.
+
+    Economical
+        It distributes the data and processing across clusters of commonly
+        available computers. These clusters can number into the thousands of
+        nodes.
+
+    Efficient
+        By distributing the data, Hadoop can process it in parallel on the
+        nodes where the data is located. This makes it extremely rapid.
+
+    Reliable
+        Hadoop automatically maintains multiple copies of data and
+        automatically redeploys computing tasks based on failures.
+
+    Hadoop implements MapReduce, using the Hadoop Distributed File System
+    (HDFS) (see figure below.) MapReduce divides applications into many
+    small blocks of work. HDFS creates multiple replicas of data blocks for
+    reliability, placing them on compute nodes around the cluster. MapReduce
+    can then process the data where it is located.
+
+    For more details about hadoop, see the Hadoop Wiki at
+    http://wiki.apache.org/hadoop/.
+
+OPTIONS
+    --config configdir
+        Overrides the "HADOOP_CONF_DIR" environment variable. See
+        "ENVIRONMENT" section below.
+
+COMMANDS
+    namenode -format
+        format the DFS filesystem
+
+    secondarynamenode i
+        run the DFS secondary namenode
+
+    namenode
+        run the DFS namenode
+
+    datanode
+        run a DFS datanode
+
+    dfsadmin
+        run a DFS admin client
+
+    fsck
+        run a DFS filesystem checking utility
+
+    fs  run a generic filesystem user client
+
+    balancer
+        run a cluster balancing utility
+
+    jobtracker
+        run the MapReduce job Tracker node
+
+    pipes
+        run a Pipes job
+
+    tasktracker
+        run a MapReduce task Tracker node
+
+    job manipulate MapReduce jobs
+
+    version
+        print the version
+
+    jar <jar>
+        run a jar file
+
+    distcp <srcurl> <desturl>
+        copy file or directories recursively
+
+    archive -archiveName NAME <src>* <dest>
+        create a hadoop archive
+
+    daemonlog
+        get/set the log level for each daemon
+
+    CLASSNAME
+        run the class named CLASSNAME
+
+    Most commands print help when invoked w/o parameters.
+
+FILES
+    /etc/hadoop/config
+        This symbolic link points to the currently active Hadoop
+        configuration directory. This link is managed by the alternatives(8)
+        command. Hadoop system administrators can deploy new Hadoop
+        configurations manually or by installing a Hadoop configuration RPM.
+
+        To manually manage alternative configurations...
+
+    /etc/hadoop/config/hadoop-site.xml
+        This is the path to the currently deployed Hadoop site
+        configuration. See "/etc/hadoop/config" above.
+
+    /usr/bin/hadoop-config.sh
+        This script searches for a useable "JAVA_HOME" location if
+        "JAVA_HOME" is not already set. It also sets up environment
+        variables that Hadoop components need at startup (see "ENVIRONMENT"
+        section).
+
+    /etc/init.d/hadoop-namenode
+        Service script for starting and stopping the Hadoop NameNode.
+
+    /etc/init.d/hadoop-datanode
+        Service script for starting and stopping the Hadoop DataNode.
+
+    /etc/init.d/hadoop-secondarynamenode
+        Service script for starting and stopping the Hadoop Secondary
+        NameNode
+
+    /etc/init.d/hadoop-jobtracker
+        Service script for starting and stopping the Hadoop JobTracker
+
+    /etc/init.d/hadoop-tasktracker
+        Service script for starting and stopping the Hadoop TaskTracker
+
+ENVIRONMENT
+        JAVA_HOME
+            Hadoop will honor the location of your "JAVA_HOME" environment
+            variable. Hadoop requires Sun Java 1.6.
+
+        HADOOP_CONF_DIR
+            The location of the Hadoop configuration files. Defaults to
+            "/etc/hadoop/config". For more details, see the "FILES" section.
+
+EXAMPLES
+           $ mkdir input
+           $ cp <txt files> input
+           $ hadoop jar /usr/lib/hadoop/*example*.jar input output 'grep string'
+           $ cat output/*
+
+COPYRIGHT
+        Copyright © 2008 The Apache Software Foundation. All rights
+        reserved.
+
+SEE ALSO
+        java(1), alternatives(8)
+
