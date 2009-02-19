@@ -1,0 +1,4 @@
+#!/bin/sh
+pod2text hadoop-doc.pod > README
+pod2man --section 1 --center Hadoop --name hadoop --release hadoop hadoop-doc.pod hadoop.1
+gzip -f hadoop.1
