@@ -25,21 +25,21 @@ RETVAL=0
 desc="Hadoop @HADOOP_DAEMON@ daemon"
 
 start() {
-  echo -n $"Starting $desc (@HADOOP_PROG@): "
-  daemon --user @HADOOP_USERNAME@ @HADOOP_PREFIX@/bin/hadoop-daemon.sh --config "@HADOOP_CONF_DIR@" start @HADOOP_DAEMON@
+  echo -n $"Starting $desc (hadoop-@HADOOP_DAEMON@): "
+  daemon --user @HADOOP_USERNAME@ @HADOOP_COMMON_ROOT@/bin/hadoop-daemon.sh --config "@HADOOP_CONF_DIR@" start @HADOOP_DAEMON@
   RETVAL=$?
   echo
-  [ $RETVAL -eq 0 ] && touch /var/lock/subsys/@HADOOP_PROG@
+  [ $RETVAL -eq 0 ] && touch /var/lock/subsys/hadoop-@HADOOP_DAEMON@
   return $RETVAL
 }
 
 stop() {
-  echo -n $"Stopping $desc (@HADOOP_PROG@): "
-  daemon --user @HADOOP_USERNAME@ @HADOOP_PREFIX@/bin/hadoop-daemon.sh --config "@HADOOP_CONF_DIR@" stop @HADOOP_DAEMON@
+  echo -n $"Stopping $desc (hadoop-@HADOOP_DAEMON@): "
+  daemon --user @HADOOP_USERNAME@ @HADOOP_COMMON_ROOT@/bin/hadoop-daemon.sh --config "@HADOOP_CONF_DIR@" stop @HADOOP_DAEMON@
   RETVAL=$?
   sleep 5
   echo
-  [ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/@HADOOP_PROG@
+  [ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/hadoop-@HADOOP_DAEMON@
 }
 
 restart() {
@@ -48,7 +48,7 @@ restart() {
 }
 
 condrestart(){
-  [ -e /var/lock/subsys/@HADOOP_PROG@ ] && restart || :
+  [ -e /var/lock/subsys/hadoop-@HADOOP_DAEMON@ ] && restart || :
 }
 
 case "$1" in

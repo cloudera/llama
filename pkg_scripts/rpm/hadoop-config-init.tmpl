@@ -27,11 +27,12 @@ start() {
   echo -n $"Starting Hadoop config (@HADOOP_CONF_NAME@): "
   for service in @HADOOP_SERVICES@
   do
-  	daemon --user @HADOOP_USERNAME@ @HADOOP_COMMON_ROOT@/bin/hadoop-daemon.sh --config "@HADOOP_CONF_DIR@" start $service
+	service hadoop-$service start
 	RETVAL=$?
         [ $RETVAL -eq 0 ] || return $RETVAL
   done
   touch "/var/lock/subsys/hadoop-conf-@HADOOP_CONF_NAME@"
+  echo
   return 0
 }
 
@@ -39,11 +40,12 @@ stop() {
   echo -n $"Stopping Hadoop config (@HADOOP_CONF_NAME@): "
   for service in @HADOOP_SERVICES@
   do
-  	daemon --user @HADOOP_USERNAME@ @HADOOP_COMMON_ROOT@/bin/hadoop-daemon.sh --config "@HADOOP_CONF_DIR@" stop $service
+	service hadoop-$service stop
   	RETVAL=$?
 	[ $RETVAL -eq 0 ] || return $RETVAL
   done
   rm -f "/var/lock/subsys/hadoop-conf-@HADOOP_CONF_NAME@"
+  echo
   return 0
 }
 
