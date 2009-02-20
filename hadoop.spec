@@ -90,7 +90,9 @@ Native libraries for Hadoop (e.g., compression, Hadoop pipes).
 %__install -d -m 0755 $RPM_BUILD_ROOT/%{lib_hadoop}
 
 %ifarch noarch
-
+# man page
+%__install -d -m 0755 $RPM_BUILD_ROOT/%{_mandir}/man1/
+cp @PKGROOT@/pkg_scripts/rpm/hadoop.1.gz $RPM_BUILD_ROOT/%{_mandir}/man1/
 # Init.d scripts
 %__install -d -m 0755 $RPM_BUILD_ROOT/etc/rc.d/init.d/
 # For the common-only installation
@@ -216,7 +218,7 @@ fi
 %{lib_hadoop}
 %attr(0755,root,root) %{bin_hadoop}/hadoop
 %attr(0755,root,root) %{bin_hadoop}/hadoop-config.sh
-
+%{_mandir}/man1/hadoop.1.gz
 
 
 %post conf-pseudo
