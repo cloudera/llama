@@ -262,7 +262,7 @@ hadoop_config=@PKGROOT@/pkg_scripts/rpm/hadoop-config.sh
 \
 %preun %1 \
 if [ $1 = 0 ]; then \
-        /sbin/service hadoop-%1 stop > /dev/null 2>&1 \
+        /sbin/service hadoop-%1 stop > /dev/null \
         %{chkconfig_del} hadoop-%1 \
 fi \
 \
@@ -289,7 +289,7 @@ fi \
 %post pseudo
 nn_dfs_dir="/var/lib/hadoop/cache/hadoop/dfs"
 if [ -z "$(ls -A $nn_dfs_dir 2>/dev/null)" ]; then
-	sudo -u hadoop hadoop namenode -format
+	/sbin/runuser -s /bin/bash - %{hadoop_username} -c 'hadoop namenode -format'
 fi
 /sbin/service hadoop-namenode start
 /sbin/service hadoop-datanode start 
