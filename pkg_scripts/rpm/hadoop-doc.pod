@@ -143,13 +143,10 @@ This symbolic link points to the currently active Hadoop configuration directory
 
 =over 8
 
-=item Note to Hadoop System Admins
+=item B<Note to Hadoop System Admins>
 
-Hadoop users can skip this information.
-
-The C</etc/hadoop/config> link is managed by the alternatives(8) command.  You should B<not> change this
-symlink directly.  Instead, use Hadoop configuration RPMs (highly recommended)
-or run the alternatives(8) command from the commandline.  
+The C</etc/hadoop/config> link is managed by the alternatives(8) command so you should B<not> change this
+symlink directly.
 
 To see what current alternative(8) Hadoop configurations you have, run the following command:
 
@@ -162,17 +159,20 @@ To see what current alternative(8) Hadoop configurations you have, run the follo
 
 This shows that the link point to C</etc/hadoop/conf.pseudo> (for the Hadoop Pseudo-Distributed configuration).
 
-To add your custom configuration, run the following commands as root:
+To add a new custom configuration, run the following commands as root:
 
  # cp -r /etc/hadoop/conf.empty /etc/hadoop/conf.my
- # cp /etc/init.d/hadoop-conf-empty /etc/init.d/hadoop-conf-my
 
-This will create a new empty configuration and empty service description.  
-Edit the configuration files in C</etc/hadoop/conf.my> and C</etc/init.d/hadoop-conf-my> to taste.
+This will create a new configuration directory, C</etc/hadoop/conf.my>, that serves as a
+starting point for a new configuration.  Edit the configuration files in C</etc/hadoop/conf.my>
+until you have the configuration you want.
 
 To activate your new configuration and see the new configuration list:
 
- # alternatives --install /etc/hadoop/config hadoop /etc/hadoop/conf.my 90 --initscript hadoop-conf-my
+ # alternatives --install /etc/hadoop/config hadoop /etc/hadoop/conf.my 90
+
+You can verify your new configuration is active by runnning the following:
+
  # alternatives --display hadoop
  hadoop - status is auto.
   link currently points to /etc/hadoop/conf.my
@@ -181,8 +181,9 @@ To activate your new configuration and see the new configuration list:
  /etc/hadoop/conf.my - priority 90
  Current `best' version is /etc/hadoop/conf.my.
 
-You now have a custom configuration with a priority of 90 activated.  The services in your C</etc/init.d/hadoop-conf-my>
-service file will start on boot with the configuration in C</etc/hadoop/conf>.
+At this point, it might be a good idea to restart your services with the new configuration, e.g.,
+
+ # /etc/init.d/hadoop-namenode restart
 
 =back
 
