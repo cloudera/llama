@@ -10,6 +10,7 @@
 %define doc_hadoop /usr/share/doc/hadoop-@VERSION@
 %define hadoop_build_path @PKGROOT@/build/hadoop-@VERSION@
 %define hadoop_username hadoop
+%define hadoop_services namenode secondarynamenode datanode jobtracker tasktracker
 
 Name: %{hadoop_name} 
 Vendor: Hadoop
@@ -48,11 +49,66 @@ located.
 
 %ifarch noarch
 
+%package namenode
+Summary: The Hadoop namenode manages the block locations of HDFS files
+Group: System/Daemons
+Requires: hadoop = @RPMVERSION@
+
+%description namenode
+The Hadoop Distributed Filesystem (HDFS) requires one unique server, the
+namenode, which manages the block locations of files on the filesystem.
+
+
+%package secondarynamenode
+Summary: Hadoop Secondary namenode
+Group: System/Daemons
+Requires: hadoop = @RPMVERSION@
+
+%description secondarynamenode
+The Secondary Name Node periodically compacts the Name Node EditLog
+into a checkpoint.  This compaction ensures that Name Node restarts
+do not incur unnecessary downtime.
+
+
+%package jobtracker
+Summary: Hadoop Job Tracker
+Group: System/Daemons
+Requires: hadoop = @RPMVERSION@
+
+%description jobtracker
+The jobtracker is a central service which is responsible for managing
+the tasktracker services running on all nodes in a Hadoop Cluster.
+The jobtracker allocates work to the tasktracker nearest to the data
+with an available work slot.
+
+
+%package datanode
+Summary: Hadoop Data Node
+Group: System/Daemons
+Requires: hadoop = @RPMVERSION@
+
+%description datanode
+The Data Nodes in the Hadoop Cluster are responsible for serving up
+blocks of data over the network to Hadoop Distributed Filesystem
+(HDFS) clients.
+
+
+%package tasktracker
+Summary: Hadoop Task Tracker
+Group: System/Daemons
+Requires: hadoop = @RPMVERSION@
+
+%description tasktracker
+The tasktracker has a fixed number of work slots.  The jobtracker
+assigns MapReduce work to the tasktracker that is nearest the data
+with an available work slot.
+
+
 %package conf-pseudo
 Summary: Hadoop installation in pseudo-distributed mode
 Group: System/Daemons
-Requires: hadoop
-Provides: %{config_hadoop} 
+Requires: hadoop = @RPMVERSION@
+Provides: %{config_hadoop}
 
 %description conf-pseudo
 Installation of this RPM will setup your machine to run in pseudo-distributed mode
@@ -98,9 +154,8 @@ cp @PKGROOT@/pkg_scripts/rpm/hadoop.1.gz $RPM_BUILD_ROOT/%{_mandir}/man1/
 # For the common-only installation
 %__install -d -m 0755 $RPM_BUILD_ROOT/%{etc_hadoop}/conf.empty
 (cd %{hadoop_build_path}/conf && tar -cf - .) | (cd $RPM_BUILD_ROOT/%{etc_hadoop}/conf.empty && tar -xf -)
-
-services="datanode jobtracker namenode secondarynamenode tasktracker"
-for service in $services; 
+# Generate the init.d scripts
+for service in %{hadoop_services}
 do
        init_file=$RPM_BUILD_ROOT/etc/rc.d/init.d/hadoop-${service}
        %__cp @PKGROOT@/pkg_scripts/rpm/hadoop-init.tmpl $init_file 
@@ -116,25 +171,6 @@ done
 (cd %{hadoop_build_path}/conf && tar -cf - .) | (cd $RPM_BUILD_ROOT/%{etc_hadoop}/conf.pseudo && tar -xf -)
 # Overwrite the hadoop-site.xml with our special pseudo-distributed one
 %__cp @PKGROOT@/pkg_scripts/rpm/hadoop-site-pseudo.xml $RPM_BUILD_ROOT/%{etc_hadoop}/conf.pseudo/hadoop-site.xml
-# Make up our pseudo-init script
-init_file=$RPM_BUILD_ROOT/etc/rc.d/init.d/hadoop-conf-pseudo
-%__cp @PKGROOT@/pkg_scripts/rpm/hadoop-config-init.tmpl $init_file
-%__sed -i -e 's|@HADOOP_USERNAME@|%{hadoop_username}|' $init_file
-%__sed -i -e 's|@HADOOP_COMMON_ROOT@|%{lib_hadoop}|' $init_file
-%__sed -i -e "s|@HADOOP_SERVICES@|namenode datanode tasktracker jobtracker|" $init_file
-%__sed -i -e 's|@HADOOP_CONF_DIR@|%{config_hadoop}|' $init_file
-%__sed -i -e 's|@HADOOP_CONF_NAME@|pseudo-distributed|' $init_file
-chmod 755 $init_file
-# Make up out empty config
-init_file=$RPM_BUILD_ROOT/etc/rc.d/init.d/hadoop-conf-empty
-%__cp @PKGROOT@/pkg_scripts/rpm/hadoop-config-init.tmpl $init_file
-%__sed -i -e 's|@HADOOP_USERNAME@|%{hadoop_username}|' $init_file
-%__sed -i -e 's|@HADOOP_COMMON_ROOT@|%{lib_hadoop}|' $init_file
-# don't start any services
-%__sed -i -e "s|@HADOOP_SERVICES@||" $init_file
-%__sed -i -e 's|@HADOOP_CONF_DIR@|%{config_hadoop}|' $init_file
-%__sed -i -e 's|@HADOOP_CONF_NAME@|empty|' $init_file
-chmod 755 $init_file
 
 # Logs
 %__install -d -m 0755 $RPM_BUILD_ROOT/%{log_hadoop}
@@ -173,8 +209,10 @@ hadoop_config=@PKGROOT@/pkg_scripts/rpm/hadoop-config.sh
 %__sed -i -e 's|@HADOOP_CONF_DIR@|%{config_hadoop}|' $hadoop_config
 %__sed -i -e 's|@HADOOP_LOG_DIR@|%{log_hadoop}|' $hadoop_config
 %__cp $hadoop_config $RPM_BUILD_ROOT/%{bin_hadoop}
- 
+# /var/lib/hadoop/cache
 %__install -d -m 0755 $RPM_BUILD_ROOT/var/lib/hadoop/cache
+# /var/log/hadoop
+%__install -d -m 0600 $RPM_BUILD_ROOT/%{log_hadoop}
  
 %endif
 
@@ -197,47 +235,61 @@ hadoop_config=@PKGROOT@/pkg_scripts/rpm/hadoop-config.sh
 /usr/sbin/useradd -c "Hadoop" -s /sbin/nologin -r -d / %{hadoop_username} 2> /dev/null || :
 
 %post 
-%{_sbindir}/alternatives --install %{config_hadoop} hadoop %{etc_hadoop}/conf.empty 10 --initscript hadoop-conf-empty
+%{_sbindir}/alternatives --install %{config_hadoop} hadoop %{etc_hadoop}/conf.empty 10
 
 %preun 
 if [ "$1" = 0 ]; then
-	service hadoop-conf-empty stop >/dev/null 2>&1
-	chkconfig --del hadoop-conf-empty
 	%{_sbindir}/alternatives --remove hadoop %{etc_hadoop}/conf.empty
 fi
 
 %files 
 %defattr(-,root,root)
-%attr(0755,root,root)/etc/rc.d/init.d/hadoop-conf-empty
 %attr(0755,root,root)/etc/rc.d/init.d/hadoop-namenode
-%attr(0755,root,root)/etc/rc.d/init.d/hadoop-secondarynamenode
 %attr(0755,root,root)/etc/rc.d/init.d/hadoop-datanode
-%attr(0755,root,root)/etc/rc.d/init.d/hadoop-tasktracker
 %attr(0755,root,root)/etc/rc.d/init.d/hadoop-jobtracker
+%attr(0755,root,root)/etc/rc.d/init.d/hadoop-tasktracker
+%attr(0755,root,root)/etc/rc.d/init.d/hadoop-secondarynamenode
 %config %attr(755,hadoop,hadoop) %{etc_hadoop}/conf.empty
 %{lib_hadoop}
 %attr(0755,root,root) %{bin_hadoop}/hadoop
 %attr(0755,root,root) %{bin_hadoop}/hadoop-config.sh
 %{_mandir}/man1/hadoop.1.gz
+%attr(0700,hadoop,hadoop) %{log_hadoop}
 
+# Service file management RPMs
+%define service_macro() \
+%files %1 \
+%attr(0755,root,root)/etc/rc.d/init.d/hadoop-%1 \
+%{lib_hadoop}/bin/hadoop-daemon.sh \
+%{bin_hadoop}/hadoop-config.sh \
+%post %1 \
+chkconfig --add hadoop-%1 \
+\
+%preun %1 \
+if [ $1 = 0 ]; then \
+	service hadoop-%1 stop > /dev/null \
+	chkconfig --del hadoop-%1 \
+fi
+%service_macro namenode
+%service_macro secondarynamenode
+%service_macro datanode
+%service_macro jobtracker
+%service_macro tasktracker
 
+# Pseudo-distributed Hadoop installation
 %post conf-pseudo
-%{_sbindir}/alternatives --install %{config_hadoop} hadoop %{etc_hadoop}/conf.pseudo 30 --initscript hadoop-conf-pseudo
+%{_sbindir}/alternatives --install %{config_hadoop} hadoop %{etc_hadoop}/conf.pseudo 30
 nn_dfs_dir="/var/lib/hadoop/cache/hadoop/dfs"
 if [ -z "$(ls -A $nn_dfs_dir 2>/dev/null)" ]; then
 	/sbin/runuser -s /bin/bash - %{hadoop_username} -c 'hadoop namenode -format'
 fi
-service hadoop-conf-pseudo start
 
 %preun conf-pseudo
 if [ "$1" = 0 ]; then
-        service hadoop-conf-pseudo stop
-        chkconfig --del hadoop-conf-pseudo
         %{_sbindir}/alternatives --remove hadoop %{etc_hadoop}/conf.pseudo
 fi
 
 %files conf-pseudo
-%attr(0755,root,root)/etc/rc.d/init.d/hadoop-conf-pseudo
 %config %attr(755,hadoop,hadoop) %{etc_hadoop}/conf.pseudo
 %attr(0755,hadoop,hadoop) /var/lib/hadoop
 %attr(1777,hadoop,hadoop) /var/lib/hadoop/cache
