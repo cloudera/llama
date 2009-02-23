@@ -93,8 +93,11 @@ compile_distro =  CompileHadoopComponent(
     "projects/HadoopDist/patches/nn+jt_jsp/nn+jt_cloudera_0.18.2_noheader.patch",
     "projects/HadoopDist/patches/mapred_jdbc/HADOOP-2536-0.18.2.patch",
     "thirdparty/fairshare/fairscheduler-0.18.3.patch",
+#    "thirdparty/fairshare/HADOOP-5154-v4.patch",
     "projects/HadoopDist/patches/bzip2/HADOOP-3646-0.18.3.patch",
     "projects/HadoopDist/patches/bzip2/HADOOP-4918-0.18.3.patch",
+    "projects/HadoopDist/patches/HADOOP-4346-0.18.3.patch",
+#    "projects/HadoopDist/patches/HADOOP-4963.patch",
   ])
 
 # Enable inclusion of scribe-log4j contrib jar that we build.
