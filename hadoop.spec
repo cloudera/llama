@@ -3,10 +3,11 @@
 # 
 %define hadoop_name hadoop
 %define etc_hadoop %{_sysconfdir}/%{hadoop_name}
-%define config_hadoop %{etc_hadoop}/config
+%define config_hadoop %{etc_hadoop}/conf
 %define lib_hadoop %{_libdir}/%{hadoop_name}
 %define log_hadoop %{_localstatedir}/log/%{hadoop_name}
 %define bin_hadoop %{_bindir}
+%define hadoop_config_virtual hadoop_active_configuration
 %define doc_hadoop /usr/share/doc/hadoop-@VERSION@
 %define hadoop_build_path @PKGROOT@/build/hadoop-@VERSION@
 %define hadoop_username hadoop
@@ -22,7 +23,6 @@ URL: http://hadoop.apache.org/core/
 Group: Development/Libraries
 Buildroot: @RPMBUILDROOT@
 Prereq: sh-utils, textutils, /usr/sbin/useradd, /sbin/chkconfig, /sbin/service
-Provides: %{hadoop_name} %{config_hadoop}
 Summary: Standalone installation of Hadoop
 
 %description 
@@ -52,7 +52,7 @@ located.
 %package namenode
 Summary: The Hadoop namenode manages the block locations of HDFS files
 Group: System/Daemons
-Requires: hadoop = @RPMVERSION@
+Requires: hadoop = @RPMVERSION@,  %{hadoop_config_virtual}
 
 %description namenode
 The Hadoop Distributed Filesystem (HDFS) requires one unique server, the
@@ -62,7 +62,7 @@ namenode, which manages the block locations of files on the filesystem.
 %package secondarynamenode
 Summary: Hadoop Secondary namenode
 Group: System/Daemons
-Requires: hadoop = @RPMVERSION@
+Requires: hadoop = @RPMVERSION@,  %{hadoop_config_virtual}
 
 %description secondarynamenode
 The Secondary Name Node periodically compacts the Name Node EditLog
@@ -73,7 +73,7 @@ do not incur unnecessary downtime.
 %package jobtracker
 Summary: Hadoop Job Tracker
 Group: System/Daemons
-Requires: hadoop = @RPMVERSION@
+Requires: hadoop = @RPMVERSION@, %{hadoop_config_virtual}
 
 %description jobtracker
 The jobtracker is a central service which is responsible for managing
@@ -85,7 +85,7 @@ with an available work slot.
 %package datanode
 Summary: Hadoop Data Node
 Group: System/Daemons
-Requires: hadoop = @RPMVERSION@
+Requires: hadoop = @RPMVERSION@, %{hadoop_config_virtual}
 
 %description datanode
 The Data Nodes in the Hadoop Cluster are responsible for serving up
@@ -96,7 +96,7 @@ blocks of data over the network to Hadoop Distributed Filesystem
 %package tasktracker
 Summary: Hadoop Task Tracker
 Group: System/Daemons
-Requires: hadoop = @RPMVERSION@
+Requires: hadoop = @RPMVERSION@, %{hadoop_config_virtual}
 
 %description tasktracker
 The tasktracker has a fixed number of work slots.  The jobtracker
@@ -108,7 +108,7 @@ with an available work slot.
 Summary: Hadoop installation in pseudo-distributed mode
 Group: System/Daemons
 Requires: hadoop = @RPMVERSION@
-Provides: %{config_hadoop}
+Provides: %{hadoop_config_virtual}
 
 %description conf-pseudo
 Installation of this RPM will setup your machine to run in pseudo-distributed mode
