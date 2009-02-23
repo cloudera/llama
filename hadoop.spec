@@ -23,7 +23,6 @@ URL: http://hadoop.apache.org/core/
 Group: Development/Libraries
 Buildroot: @RPMBUILDROOT@
 Prereq: sh-utils, textutils, /usr/sbin/useradd, /sbin/chkconfig, /sbin/service
-Summary: Standalone installation of Hadoop
 
 %description 
 Hadoop is a software platform that lets one easily write and  
