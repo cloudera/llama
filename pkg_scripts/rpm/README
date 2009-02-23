@@ -101,12 +101,12 @@ COMMANDS
     Most commands print help when invoked w/o parameters.
 
 FILES
-    /etc/hadoop/config
+    /etc/hadoop/conf
         This symbolic link points to the currently active Hadoop
         configuration directory.
 
         Note to Hadoop System Admins
-                The "/etc/hadoop/config" link is managed by the
+                The "/etc/hadoop/conf" link is managed by the
                 alternatives(8) command so you should not change this
                 symlink directly.
 
@@ -137,7 +137,7 @@ FILES
                 To activate your new configuration and see the new
                 configuration list:
 
-                 # alternatives --install /etc/hadoop/config hadoop /etc/hadoop/conf.my 90
+                 # alternatives --install /etc/hadoop/conf hadoop /etc/hadoop/conf.my 90
 
                 You can verify your new configuration is active by runnning
                 the following:
@@ -155,9 +155,9 @@ FILES
 
                  # /etc/init.d/hadoop-namenode restart
 
-    /etc/hadoop/config/hadoop-site.xml
+    /etc/hadoop/conf/hadoop-site.xml
         This is the path to the currently deployed Hadoop site
-        configuration. See "/etc/hadoop/config" above.
+        configuration. See "/etc/hadoop/conf" above.
 
     /usr/bin/hadoop-config.sh
         This script searches for a useable "JAVA_HOME" location if
@@ -194,7 +194,7 @@ ENVIRONMENT
 
     HADOOP_CONF_DIR
         The location of the Hadoop configuration files. Defaults to
-        "/etc/hadoop/config". For more details, see the "FILES" section.
+        "/etc/hadoop/conf". For more details, see the "FILES" section.
 
     HADOOP_LOG_DIR
         All Hadoop services log to "/var/log/hadoop" by default. You can

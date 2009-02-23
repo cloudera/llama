@@ -137,7 +137,7 @@ Most commands print help when invoked w/o parameters.
 
 =over 4
 
-=item /etc/hadoop/config
+=item /etc/hadoop/conf
 
 This symbolic link points to the currently active Hadoop configuration directory.  
 
@@ -145,7 +145,7 @@ This symbolic link points to the currently active Hadoop configuration directory
 
 =item B<Note to Hadoop System Admins>
 
-The C</etc/hadoop/config> link is managed by the alternatives(8) command so you should B<not> change this
+The C</etc/hadoop/conf> link is managed by the alternatives(8) command so you should B<not> change this
 symlink directly.
 
 To see what current alternative(8) Hadoop configurations you have, run the following command:
@@ -169,7 +169,7 @@ until you have the configuration you want.
 
 To activate your new configuration and see the new configuration list:
 
- # alternatives --install /etc/hadoop/config hadoop /etc/hadoop/conf.my 90
+ # alternatives --install /etc/hadoop/conf hadoop /etc/hadoop/conf.my 90
 
 You can verify your new configuration is active by runnning the following:
 
@@ -187,9 +187,9 @@ At this point, it might be a good idea to restart your services with the new con
 
 =back
 
-=item /etc/hadoop/config/hadoop-site.xml
+=item /etc/hadoop/conf/hadoop-site.xml
 
-This is the path to the currently deployed Hadoop site configuration.  See C</etc/hadoop/config> above.
+This is the path to the currently deployed Hadoop site configuration.  See C</etc/hadoop/conf> above.
 
 =item /usr/bin/hadoop-config.sh
 
@@ -234,7 +234,7 @@ with this environment variable (not recommeded).
 
 =item HADOOP_CONF_DIR
 
-The location of the Hadoop configuration files.  Defaults to C</etc/hadoop/config>.  For more details,
+The location of the Hadoop configuration files.  Defaults to C</etc/hadoop/conf>.  For more details,
 see the C<FILES> section.
 
 =item HADOOP_LOG_DIR
