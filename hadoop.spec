@@ -2,11 +2,12 @@
 # Hadoop RPM spec file 
 # 
 %define hadoop_name hadoop
-%define etc_hadoop %{_sysconfdir}/%{hadoop_name}
+%define etc_hadoop /etc/%{hadoop_name}
 %define config_hadoop %{etc_hadoop}/conf
-%define lib_hadoop %{_libdir}/%{hadoop_name}
-%define log_hadoop %{_localstatedir}/log/%{hadoop_name}
-%define bin_hadoop %{_bindir}
+%define lib_hadoop /usr/lib/%{hadoop_name}
+%define log_hadoop /var/log/%{hadoop_name}
+%define bin_hadoop /usr/bin
+%define man_hadoop /usr/share/man
 %define hadoop_config_virtual hadoop_active_configuration
 %define doc_hadoop /usr/share/doc/hadoop-@VERSION@
 %define hadoop_build_path @PKGROOT@/build/hadoop-@VERSION@
@@ -23,7 +24,6 @@ URL: http://hadoop.apache.org/core/
 Group: Development/Libraries
 Buildroot: @RPMBUILDROOT@
 Prereq: sh-utils, textutils, /usr/sbin/useradd, /sbin/chkconfig, /sbin/service
-Summary: Standalone installation of Hadoop
 
 %description 
 Hadoop is a software platform that lets one easily write and  
@@ -147,8 +147,8 @@ Native libraries for Hadoop (e.g., compression, Hadoop pipes).
 
 %ifarch noarch
 # man page
-%__install -d -m 0755 $RPM_BUILD_ROOT/%{_mandir}/man1/
-cp @PKGROOT@/pkg_scripts/rpm/hadoop.1.gz $RPM_BUILD_ROOT/%{_mandir}/man1/
+%__install -d -m 0755 $RPM_BUILD_ROOT/%{man_hadoop}/man1/
+cp @PKGROOT@/pkg_scripts/rpm/hadoop.1.gz $RPM_BUILD_ROOT/%{man_hadoop}/man1/
 # Init.d scripts
 %__install -d -m 0755 $RPM_BUILD_ROOT/etc/rc.d/init.d/
 # For the common-only installation
@@ -235,11 +235,11 @@ hadoop_config=@PKGROOT@/pkg_scripts/rpm/hadoop-config.sh
 /usr/sbin/useradd -c "Hadoop" -s /sbin/nologin -r -d / %{hadoop_username} 2> /dev/null || :
 
 %post 
-%{_sbindir}/alternatives --install %{config_hadoop} hadoop %{etc_hadoop}/conf.empty 10
+alternatives --install %{config_hadoop} hadoop %{etc_hadoop}/conf.empty 10
 
 %preun 
 if [ "$1" = 0 ]; then
-	%{_sbindir}/alternatives --remove hadoop %{etc_hadoop}/conf.empty
+	alternatives --remove hadoop %{etc_hadoop}/conf.empty
 fi
 
 %files 
@@ -253,7 +253,7 @@ fi
 %{lib_hadoop}
 %attr(0755,root,root) %{bin_hadoop}/hadoop
 %attr(0755,root,root) %{bin_hadoop}/hadoop-config.sh
-%{_mandir}/man1/hadoop.1.gz
+%{man_hadoop}/man1/hadoop.1.gz
 %attr(0700,hadoop,hadoop) %{log_hadoop}
 
 # Service file management RPMs
@@ -278,7 +278,7 @@ fi
 
 # Pseudo-distributed Hadoop installation
 %post conf-pseudo
-%{_sbindir}/alternatives --install %{config_hadoop} hadoop %{etc_hadoop}/conf.pseudo 30
+alternatives --install %{config_hadoop} hadoop %{etc_hadoop}/conf.pseudo 30
 nn_dfs_dir="/var/lib/hadoop/cache/hadoop/dfs"
 if [ -z "$(ls -A $nn_dfs_dir 2>/dev/null)" ]; then
 	/sbin/runuser -s /bin/bash - %{hadoop_username} -c 'hadoop namenode -format'
@@ -286,7 +286,7 @@ fi
 
 %preun conf-pseudo
 if [ "$1" = 0 ]; then
-        %{_sbindir}/alternatives --remove hadoop %{etc_hadoop}/conf.pseudo
+        alternatives --remove hadoop %{etc_hadoop}/conf.pseudo
 fi
 
 %files conf-pseudo
