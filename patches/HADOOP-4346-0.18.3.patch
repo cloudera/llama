@@ -1,7 +1,7 @@
 diff --git a/src/core/org/apache/hadoop/ipc/Client.java b/src/core/org/apache/hadoop/ipc/Client.java
 index 1aaefd6..8319dec 100644
---- a/src/core/org/apache/hadoop/ipc/Client.java
-+++ b/src/core/org/apache/hadoop/ipc/Client.java
+--- src/core/org/apache/hadoop/ipc/Client.java
++++ src/core/org/apache/hadoop/ipc/Client.java
 @@ -298,7 +298,7 @@ public class Client {
              this.socket = socketFactory.createSocket();
              this.socket.setTcpNoDelay(tcpNoDelay);
@@ -13,8 +13,8 @@ index 1aaefd6..8319dec 100644
            } catch (SocketTimeoutException toe) {
 diff --git a/src/core/org/apache/hadoop/net/NetUtils.java b/src/core/org/apache/hadoop/net/NetUtils.java
 index 7e1906d..4c624ad 100644
---- a/src/core/org/apache/hadoop/net/NetUtils.java
-+++ b/src/core/org/apache/hadoop/net/NetUtils.java
+--- src/core/org/apache/hadoop/net/NetUtils.java
++++ src/core/org/apache/hadoop/net/NetUtils.java
 @@ -22,7 +22,9 @@ import java.io.InputStream;
  import java.io.OutputStream;
  import java.net.InetSocketAddress;
@@ -67,8 +67,8 @@ index 7e1906d..4c624ad 100644
  }
 diff --git a/src/core/org/apache/hadoop/net/SocketIOWithTimeout.java b/src/core/org/apache/hadoop/net/SocketIOWithTimeout.java
 index c24a8a8..f48d2d2 100644
---- a/src/core/org/apache/hadoop/net/SocketIOWithTimeout.java
-+++ b/src/core/org/apache/hadoop/net/SocketIOWithTimeout.java
+--- src/core/org/apache/hadoop/net/SocketIOWithTimeout.java
++++ src/core/org/apache/hadoop/net/SocketIOWithTimeout.java
 @@ -20,11 +20,13 @@ package org.apache.hadoop.net;
  
  import java.io.IOException;
@@ -197,8 +197,8 @@ index c24a8a8..f48d2d2 100644
      return timeout + " millis timeout while " +
 diff --git a/src/hdfs/org/apache/hadoop/dfs/DFSClient.java b/src/hdfs/org/apache/hadoop/dfs/DFSClient.java
 index c8ce403..0acd059 100644
---- a/src/hdfs/org/apache/hadoop/dfs/DFSClient.java
-+++ b/src/hdfs/org/apache/hadoop/dfs/DFSClient.java
+--- src/hdfs/org/apache/hadoop/dfs/DFSClient.java
++++ src/hdfs/org/apache/hadoop/dfs/DFSClient.java
 @@ -1325,7 +1325,7 @@ class DFSClient implements FSConstants {
  
          try {
@@ -228,8 +228,8 @@ index c8ce403..0acd059 100644
          LOG.debug("Send buf size " + s.getSendBufferSize());
 diff --git a/src/hdfs/org/apache/hadoop/dfs/DataNode.java b/src/hdfs/org/apache/hadoop/dfs/DataNode.java
 index cfcc526..aac8537 100644
---- a/src/hdfs/org/apache/hadoop/dfs/DataNode.java
-+++ b/src/hdfs/org/apache/hadoop/dfs/DataNode.java
+--- src/hdfs/org/apache/hadoop/dfs/DataNode.java
++++ src/hdfs/org/apache/hadoop/dfs/DataNode.java
 @@ -1251,7 +1251,7 @@ public class DataNode extends Configured
              int timeoutValue = numTargets * socketTimeout;
              int writeTimeout = socketWriteTimeout + 
