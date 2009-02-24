@@ -1,13 +1,11 @@
 <?xml version="1.0"?>
 <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
 
-<!-- Put site-specific property overrides in this file. -->
-
 <configuration>
 
   <property>
     <name>fs.default.name</name>
-    <value>hdfs://localhost:9000</value>
+    <value>hdfs://localhost:8020</value>
   </property>
   <property>
     <name>mapred.job.tracker</name>
@@ -21,6 +19,9 @@
      <name>hadoop.tmp.dir</name>
      <value>/var/lib/hadoop/cache/${user.name}</value>
   </property>
-
+  <property>
+     <name>dfs.permissions</name>
+     <value>false</value>
+  </property>
 
 </configuration>

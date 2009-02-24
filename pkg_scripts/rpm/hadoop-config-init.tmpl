@@ -14,32 +14,39 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 # 
-# Starts a Hadoop @HADOOP_DAEMON@
+# Starts Hadoop configuration @HADOOP_CONF_NAME@ 
 # 
 # chkconfig: 2345 90 10
-# description: Hadoop @HADOOP_DAEMON@
+# description: Hadoop @HADOOP_CONF_NAME@
 
 source /etc/rc.d/init.d/functions
 
 RETVAL=0
-desc="Hadoop @HADOOP_DAEMON@ daemon"
 
 start() {
-  echo -n $"Starting $desc (hadoop-@HADOOP_DAEMON@): "
-  daemon --user @HADOOP_USERNAME@ @HADOOP_COMMON_ROOT@/bin/hadoop-daemon.sh --config "@HADOOP_CONF_DIR@" start @HADOOP_DAEMON@
-  RETVAL=$?
+  echo -n $"Starting Hadoop config (@HADOOP_CONF_NAME@): "
+  for service in @HADOOP_SERVICES@
+  do
+	service hadoop-$service start
+	RETVAL=$?
+        [ $RETVAL -eq 0 ] || return $RETVAL
+  done
+  touch "/var/lock/subsys/hadoop-conf-@HADOOP_CONF_NAME@"
   echo
-  [ $RETVAL -eq 0 ] && touch /var/lock/subsys/hadoop-@HADOOP_DAEMON@
-  return $RETVAL
+  return 0
 }
 
 stop() {
-  echo -n $"Stopping $desc (hadoop-@HADOOP_DAEMON@): "
-  daemon --user @HADOOP_USERNAME@ @HADOOP_COMMON_ROOT@/bin/hadoop-daemon.sh --config "@HADOOP_CONF_DIR@" stop @HADOOP_DAEMON@
-  RETVAL=$?
-  sleep 5
+  echo -n $"Stopping Hadoop config (@HADOOP_CONF_NAME@): "
+  for service in @HADOOP_SERVICES@
+  do
+	service hadoop-$service stop
+  	RETVAL=$?
+	[ $RETVAL -eq 0 ] || return $RETVAL
+  done
+  rm -f "/var/lock/subsys/hadoop-conf-@HADOOP_CONF_NAME@"
   echo
-  [ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/hadoop-@HADOOP_DAEMON@
+  return 0
 }
 
 restart() {
@@ -48,7 +55,7 @@ restart() {
 }
 
 condrestart(){
-  [ -e /var/lock/subsys/hadoop-@HADOOP_DAEMON@ ] && restart || :
+  [ -e "/var/lock/subsys/hadoop-conf-@HADOOP_CONF_NAME@" ] && restart || :
 }
 
 case "$1" in

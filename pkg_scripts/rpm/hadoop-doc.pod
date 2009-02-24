@@ -1,0 +1,261 @@
+=pod
+
+=head1 NAME
+
+     __  __          __                
+    / / / /___ _____/ /___  ____  ____ 
+   / /_/ / __ `/ __  / __ \/ __ \/ __ \
+  / __  / /_/ / /_/ / /_/ / /_/ / /_/ /
+ /_/ /_/\__,_/\__,_/\____/\____/ .___/ 
+                              /_/      
+
+Hadoop -  Hadoop is a software platform that lets one easily write and run applications that process vast amounts of data.
+
+=head1 SYNOPSIS
+
+Usage: hadoop [--config confdir] COMMAND
+
+=head1 DESCRIPTION
+
+Here's what makes Hadoop especially useful:
+
+=over 4
+
+=item Scalable
+
+Hadoop can reliably store and process petabytes.
+
+=item Economical
+
+It distributes the data and processing across clusters of commonly available computers. These clusters can number into the thousands of nodes.
+
+=item Efficient
+
+By distributing the data, Hadoop can process it in parallel on the nodes where the data is located. This makes it extremely rapid.
+
+=item Reliable
+
+Hadoop automatically maintains multiple copies of data and automatically redeploys computing tasks based on failures.
+
+=back
+
+Hadoop implements MapReduce, using the Hadoop Distributed File System (HDFS) (see figure below.) MapReduce divides applications into many small blocks of work. HDFS creates multiple replicas of data blocks for reliability, placing them on compute nodes around the cluster. MapReduce can then process the data where it is located.
+
+For more details about hadoop, see the Hadoop Wiki at http://wiki.apache.org/hadoop/. 
+
+=head1 OPTIONS
+
+=over 4
+
+=item --config configdir 
+
+Overrides the C<HADOOP_CONF_DIR> environment variable.  See C<ENVIRONMENT> section below.
+
+=back
+
+=head1 COMMANDS
+
+=over 4
+
+=item namenode -format     
+
+format the DFS filesystem
+
+=item secondarynamenode
+
+run the DFS secondary namenode
+
+=item namenode
+
+run the DFS namenode
+
+=item datanode
+
+run a DFS datanode
+
+=item dfsadmin
+
+run a DFS admin client
+
+=item fsck
+
+run a DFS filesystem checking utility
+
+=item fs
+
+run a generic filesystem user client
+
+=item balancer
+
+run a cluster balancing utility
+
+=item jobtracker
+
+run the MapReduce job Tracker node
+
+=item pipes
+
+run a Pipes job
+
+=item tasktracker
+
+run a MapReduce task Tracker node
+
+=item job
+
+manipulate MapReduce jobs
+
+=item version
+
+print the version
+
+=item jar <jar>
+
+run a jar file
+
+=item distcp <srcurl> <desturl> 
+
+copy file or directories recursively
+
+=item archive -archiveName NAME <src>* <dest> 
+
+create a hadoop archive
+
+=item daemonlog
+
+get/set the log level for each daemon
+
+=item CLASSNAME
+
+run the class named CLASSNAME
+
+=back
+
+Most commands print help when invoked w/o parameters.
+
+=head1 FILES
+
+=over 4
+
+=item /etc/hadoop/conf
+
+This symbolic link points to the currently active Hadoop configuration directory.  
+
+=over 8
+
+=item B<Note to Hadoop System Admins>
+
+The C</etc/hadoop/conf> link is managed by the alternatives(8) command so you should B<not> change this
+symlink directly.
+
+To see what current alternative(8) Hadoop configurations you have, run the following command:
+
+ # alternatives --display hadoop
+ hadoop - status is auto.
+  link currently points to /etc/hadoop/conf.pseudo
+ /etc/hadoop/conf.empty - priority 10
+ /etc/hadoop/conf.pseudo - priority 30
+ Current `best' version is /etc/hadoop/conf.pseudo.
+
+This shows that the link point to C</etc/hadoop/conf.pseudo> (for the Hadoop Pseudo-Distributed configuration).
+
+To add a new custom configuration, run the following commands as root:
+
+ # cp -r /etc/hadoop/conf.empty /etc/hadoop/conf.my
+
+This will create a new configuration directory, C</etc/hadoop/conf.my>, that serves as a
+starting point for a new configuration.  Edit the configuration files in C</etc/hadoop/conf.my>
+until you have the configuration you want.
+
+To activate your new configuration and see the new configuration list:
+
+ # alternatives --install /etc/hadoop/conf hadoop /etc/hadoop/conf.my 90
+
+You can verify your new configuration is active by runnning the following:
+
+ # alternatives --display hadoop
+ hadoop - status is auto.
+  link currently points to /etc/hadoop/conf.my
+ /etc/hadoop/conf.empty - priority 10
+ /etc/hadoop/conf.pseudo - priority 30
+ /etc/hadoop/conf.my - priority 90
+ Current `best' version is /etc/hadoop/conf.my.
+
+At this point, it might be a good idea to restart your services with the new configuration, e.g.,
+
+ # /etc/init.d/hadoop-namenode restart
+
+=back
+
+=item /etc/hadoop/conf/hadoop-site.xml
+
+This is the path to the currently deployed Hadoop site configuration.  See C</etc/hadoop/conf> above.
+
+=item /usr/bin/hadoop-config.sh
+
+This script searches for a useable C<JAVA_HOME> location if C<JAVA_HOME> is not already set.  It
+also sets up environment variables that Hadoop components need at startup (see C<ENVIRONMENT> section).
+
+=item /etc/init.d/hadoop-namenode
+
+Service script for starting and stopping the Hadoop NameNode
+
+=item /etc/init.d/hadoop-datanode
+
+Service script for starting and stopping the Hadoop DataNode
+
+=item /etc/init.d/hadoop-secondarynamenode
+
+Service script for starting and stopping the Hadoop Secondary NameNode
+
+=item /etc/init.d/hadoop-jobtracker
+
+Service script for starting and stopping the Hadoop JobTracker
+
+=item /etc/init.d/hadoop-tasktracker
+
+Service script for starting and stopping the Hadoop TaskTracker
+
+=back
+
+=head1 ENVIRONMENT
+
+=over 4
+
+=item JAVA_HOME
+
+Hadoop will honor the location of your C<JAVA_HOME> environment variable.  Hadoop requires Sun Java 1.6
+which can be downloaded from http://java.sun.com.
+
+=item HADOOP_HOME
+
+The location of the Hadoop jar files are by default in C</usr/lib/hadoop>.  You can change the location 
+with this environment variable (not recommeded).
+
+=item HADOOP_CONF_DIR
+
+The location of the Hadoop configuration files.  Defaults to C</etc/hadoop/conf>.  For more details,
+see the C<FILES> section.
+
+=item HADOOP_LOG_DIR
+
+All Hadoop services log to C</var/log/hadoop> by default.  You can change the location with this environment variable.
+
+=back
+
+=head1 EXAMPLES
+
+ $ mkdir input
+ $ cp <txt files> input
+ $ hadoop jar /usr/lib/hadoop/*example*.jar input output 'grep string'
+ $ cat output/*
+
+=head1 COPYRIGHT
+
+Copyright © 2008 The Apache Software Foundation. All rights reserved.
+
+=head1 SEE ALSO
+
+java(1), alternatives(8)
+
+=cut
