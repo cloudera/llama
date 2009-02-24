@@ -11,7 +11,7 @@ base_hadoop_ver = "0.18.3"
 hadoop_ver_string = "hadoop-" + base_hadoop_ver + "-patched"
 
 # Cloudera Hadoop dist version.
-base_ch_ver = "0.2.1"
+base_ch_ver = "0.3.0"
 
 # List of all distribution editions we compile from this tree.
 # This is the default target.
@@ -199,15 +199,17 @@ logMoverComponent = PackageComponent(
   includeZip = False, # we need this unpackacked
   destDir    = "bin/logmover")
 
-# take the pig tgz package we assembled in thirdparty/pig/ and include that
+# Take the pig tgz package we assembled in thirdparty/pig/ and include that
 # in our distribution package.
+# NOTE(aaron): If you change this, change the version stamp below.
 pigPackageComponent = PackageComponent(
   targetName = "thirdparty/pig-0.1.1:pigPackage",
   includeZip = True,
   destDir    = "packages")
 
-# take the hive tgz package we assembled in thirdparty/hive/ and include
-# this in our distribution package
+# Take the hive tgz package we assembled in thirdparty/hive/ and include
+# this in our distribution package.
+# NOTE(aaron): If you change this, change the version stamp below.
 hivePackageComponent = PackageComponent(
   targetName = "thirdparty/hive-chd-0.3.0:hivePackage",
   includeZip = True,
@@ -251,7 +253,7 @@ supportedDistro = PackageTarget(
 # package version numbers in this single Targets file.
 versionStamps = EmptyTarget(
   requiredTargets = [
-    "thirdparty/hive-chd-0.2.0:version",
+    "thirdparty/hive-chd-0.3.0:version",
     "thirdparty/pig-0.1.1:version",
     ":version" ])
 
