@@ -108,6 +108,7 @@ compile_distro =  CompileHadoopComponent(
     "projects/HadoopDist/patches/bzip2/HADOOP-4918-0.18.3.patch",
 
     # Hadoop Bugfixes
+    "projects/HadoopDist/patches/HADOOP-3950.patch", # 0.19 backport
     "projects/HadoopDist/patches/HADOOP-4346-0.18.3.patch", # 0.20 backport
 
     # Build system tweaks
