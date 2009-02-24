@@ -209,7 +209,7 @@ pigPackageComponent = PackageComponent(
 # take the hive tgz package we assembled in thirdparty/hive/ and include
 # this in our distribution package
 hivePackageComponent = PackageComponent(
-  targetName = "thirdparty/hive-chd-0.2.0:hivePackage",
+  targetName = "thirdparty/hive-chd-0.3.0:hivePackage",
   includeZip = True,
   destDir    = "packages")
 
