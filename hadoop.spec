@@ -13,10 +13,11 @@
 %define hadoop_build_path @PKGROOT@/build/hadoop-@VERSION@
 %define hadoop_username hadoop
 %define hadoop_services namenode secondarynamenode datanode jobtracker tasktracker
+%define hadoop_version %(echo @VERSION@ | awk -F- '{print $1}')
 
 Name: %{hadoop_name} 
-Vendor: Hadoop
-Version: @RPMVERSION@
+Vendor: Cloudera <http://www.cloudera.com/>
+Version: %{hadoop_version}
 Release: @RELEASE@
 Summary: Hadoop is a software platform that lets one easily write and run applications that process vast amounts of data. 
 License: Apache License v2.0
