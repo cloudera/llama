@@ -150,7 +150,7 @@ supportedHadoopPackage = PackageTarget(
       destDir = "pkg_scripts/rpm"),
     RpmComponent( specFile = "hadoop.spec", 
                   rpmBuildCmd= "-bb --target noarch,i386,amd64",
-                  rpmRelease= 2)
+                  rpmRelease= 3)
   ],
 
   # Define build-phase outputs that other programs compiled against our distro need.

@@ -23,7 +23,7 @@ License: Apache License v2.0
 URL: http://hadoop.apache.org/core/
 Group: Development/Libraries
 Buildroot: @RPMBUILDROOT@
-Prereq: sh-utils, textutils, /usr/sbin/useradd, /sbin/chkconfig, /sbin/service
+Prereq: sh-utils, textutils, /usr/sbin/useradd, /sbin/chkconfig, /sbin/service, jdk >= 1.6
 
 %description 
 Hadoop is a software platform that lets one easily write and  
