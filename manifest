@@ -146,4 +146,4 @@
 ./packages
 ./packages/hadoop-0.18.3-patched.tar.gz
 ./packages/pig-0.1.1$TEST.tar.gz
-./packages/hive-r736882$TEST.tar.gz
+./packages/hive-r747223$TEST.tar.gz
