@@ -97,6 +97,7 @@ compile_distro =  CompileHadoopComponent(
 
     # JDBC Support (0.19 backport)
     "projects/HadoopDist/patches/mapred_jdbc/HADOOP-2536-0.18.2.patch",
+    "projects/HadoopDist/patches/mapred_jdbc/HADOOP-4955.patch",
 
     # Fair Scheduler
     "thirdparty/fairshare/fairscheduler-0.18.3.patch",
