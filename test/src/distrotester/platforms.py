@@ -16,6 +16,7 @@ import com.cloudera.tools.shell as shell
 from   com.cloudera.util.properties import Properties
 
 from   distrotester.setup.fedora8 import Fedora8Setup
+from   distrotester.setup.centos5 import Centos5Setup
 from   distrotester.constants import *
 from   distrotester.testerror import TestError
 from   distrotester.installtests.standalone import StandaloneTest
@@ -59,6 +60,8 @@ def setupForPlatform(platformName, properties):
     return Fedora8Setup("i386", properties)
   elif platformName == "fc8.multi.x86_64":
     return Fedora8Setup("x86_64", properties)
+  elif platformName == "centos5.i386":
+    return Centos5Setup("i386", properties)
   else:
     raise TestError("No Setup object available for platform: " + platformName)
 
@@ -80,6 +83,8 @@ def testSuiteForPlatform(platformName, properties):
     return unittest.makeSuite(MultiHostTest, testNamePrefix)
   elif platformName == "fc8.multi.x86_64":
     return unittest.makeSuite(MultiHostTest, testNamePrefix)
+  elif platformName == "centos5.i386":
+    return unittest.makeSuite(StandaloneTest, testNamePrefix)
   else:
     raise TestError("No test suite available for platform: " + platformName)
 
