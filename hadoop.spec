@@ -13,10 +13,11 @@
 %define hadoop_build_path @PKGROOT@/build/hadoop-@VERSION@
 %define hadoop_username hadoop
 %define hadoop_services namenode secondarynamenode datanode jobtracker tasktracker
+%define hadoop_version %(echo @VERSION@ | awk -F- '{print $1}')
 
 Name: %{hadoop_name} 
-Vendor: Hadoop
-Version: @RPMVERSION@
+Vendor: Cloudera <http://www.cloudera.com/>
+Version: %{hadoop_version}
 Release: @RELEASE@
 Summary: Hadoop is a software platform that lets one easily write and run applications that process vast amounts of data. 
 License: Apache License v2.0
@@ -52,7 +53,7 @@ located.
 %package namenode
 Summary: The Hadoop namenode manages the block locations of HDFS files
 Group: System/Daemons
-Requires: hadoop = @RPMVERSION@,  %{hadoop_config_virtual}
+Requires: hadoop = %{hadoop_version},  %{hadoop_config_virtual}
 
 %description namenode
 The Hadoop Distributed Filesystem (HDFS) requires one unique server, the
@@ -62,7 +63,7 @@ namenode, which manages the block locations of files on the filesystem.
 %package secondarynamenode
 Summary: Hadoop Secondary namenode
 Group: System/Daemons
-Requires: hadoop = @RPMVERSION@,  %{hadoop_config_virtual}
+Requires: hadoop = %{hadoop_version},  %{hadoop_config_virtual}
 
 %description secondarynamenode
 The Secondary Name Node periodically compacts the Name Node EditLog
@@ -73,7 +74,7 @@ do not incur unnecessary downtime.
 %package jobtracker
 Summary: Hadoop Job Tracker
 Group: System/Daemons
-Requires: hadoop = @RPMVERSION@, %{hadoop_config_virtual}
+Requires: hadoop = %{hadoop_version}, %{hadoop_config_virtual}
 
 %description jobtracker
 The jobtracker is a central service which is responsible for managing
@@ -85,7 +86,7 @@ with an available work slot.
 %package datanode
 Summary: Hadoop Data Node
 Group: System/Daemons
-Requires: hadoop = @RPMVERSION@, %{hadoop_config_virtual}
+Requires: hadoop = %{hadoop_version}, %{hadoop_config_virtual}
 
 %description datanode
 The Data Nodes in the Hadoop Cluster are responsible for serving up
@@ -96,7 +97,7 @@ blocks of data over the network to Hadoop Distributed Filesystem
 %package tasktracker
 Summary: Hadoop Task Tracker
 Group: System/Daemons
-Requires: hadoop = @RPMVERSION@, %{hadoop_config_virtual}
+Requires: hadoop = %{hadoop_version}, %{hadoop_config_virtual}
 
 %description tasktracker
 The tasktracker has a fixed number of work slots.  The jobtracker
@@ -107,7 +108,7 @@ with an available work slot.
 %package conf-pseudo
 Summary: Hadoop installation in pseudo-distributed mode
 Group: System/Daemons
-Requires: hadoop = @RPMVERSION@
+Requires: hadoop = %{hadoop_version}
 Provides: %{hadoop_config_virtual}
 
 %description conf-pseudo
@@ -129,7 +130,7 @@ Documentation for Hadoop
 Summary: Native libraries for Hadoop (e.g., compression, Hadoop pipes)
 Group: Development/Libraries
 Prefix: %{lib_hadoop}
-Requires: hadoop = @RPMVERSION@
+Requires: hadoop = %{hadoop_version}
 
 %description native
 Native libraries for Hadoop (e.g., compression, Hadoop pipes).

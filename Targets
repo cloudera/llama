@@ -97,6 +97,7 @@ compile_distro =  CompileHadoopComponent(
 
     # JDBC Support (0.19 backport)
     "projects/HadoopDist/patches/mapred_jdbc/HADOOP-2536-0.18.2.patch",
+    "projects/HadoopDist/patches/mapred_jdbc/HADOOP-4955.patch",
 
     # Fair Scheduler
     "thirdparty/fairshare/fairscheduler-0.18.3.patch",
@@ -166,9 +167,10 @@ supportedHadoopPackage = PackageTarget(
     DirComponent(
       srcDir =  "pkg_scripts/rpm",
       destDir = "pkg_scripts/rpm"),
+    # The release should follow the format <release>.cloudera.CH<ch version with _>
     RpmComponent( specFile = "hadoop.spec", 
                   rpmBuildCmd= "-bb --target noarch,i386,amd64",
-                  rpmRelease= 3)
+                  rpmRelease= "1.cloudera.CH0_3")
   ],
 
   # Define build-phase outputs that other programs compiled against our distro need.
