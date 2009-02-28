@@ -160,7 +160,7 @@ aws_secret_access_key: %(secret)s
     handle.write("""
 [cloudera]
 name=Cloudera
-baseurl=http://cloudera-yum.s3.amazonaws.com/
+baseurl=http://cloudera-yum-devel.s3.amazonaws.com/
 gpgcheck=0
 enabled=1
 """)
