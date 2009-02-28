@@ -5,52 +5,20 @@
 import logging
 import os
 
-from   com.cloudera.testutil.verbosetest import VerboseTestCase
 import com.cloudera.tools.shell as shell
 
 from   distrotester.constants import *
+import distrotester.functiontests.basetest as basetest
 import distrotester.testproperties as testproperties
 
 
-class HiveTest(VerboseTestCase):
-
-  def getInstallRoot(self):
-    return INSTALL_PREFIX
-
-  def getProperties(self):
-    return testproperties.getProperties()
+class HiveTest(basetest.BaseTest):
 
   def getHiveDir(self):
-    return os.path.join(INSTALL_PREFIX, "hive")
+    return "/usr/lib/hive"
 
   def getHiveCmd(self):
-    return os.path.join(self.getHiveDir(), "bin/hive")
-
-  # TODO(aaron): Refactor getHadoopDir, Cmd, get*Sudo into common abstract base
-  # (CH-77)
-  def getHadoopDir(self):
-    return os.path.join(INSTALL_PREFIX, "hadoop")
-
-  def getHadoopCmd(self):
-    return os.path.join(self.getHadoopDir(), "bin/hadoop")
-
-  def getClientSudo(self):
-    """ Return the shell cmd prefix to access a client hadoop program """
-    clientUser = self.getProperties().getProperty(CLIENT_USER_KEY)
-
-    if clientUser != ROOT_USER:
-      return "sudo -H -u " + clientUser + " "
-    else:
-      return ""
-
-  def getDaemonSudo(self):
-    """ Return the shell cmd prefix to run a superuser hadoop program """
-    superUser = self.getProperties().getProperty(HADOOP_USER_KEY)
-    if superUser != ROOT_USER:
-      return "sudo -H -u " + superUser + " "
-    else:
-      return ""
-
+    return "/usr/bin/hive"
 
   def getHiveWorkDir(self):
     """ Hive wants to write a bunch of files to the current directory.
@@ -66,23 +34,7 @@ class HiveTest(VerboseTestCase):
   def setUp(self):
     """ Perform setup tasks for tests """
 
-    VerboseTestCase.setUp(self)
-
-    # TODO(aaron): user dir creation is in Pig and Hive (also Hadoop)Test?
-    # Refactor out. (CH-77)
-
-    # Ensure that the user's home dir exists in HDFS
-    clientUser = self.getProperties().getProperty(CLIENT_USER_KEY)
-    cmd = self.getDaemonSudo() + self.getHadoopCmd() + " fs -mkdir /user/" \
-        + clientUser
-    try:
-      shell.sh(cmd)
-    except shell.CommandError, ce:
-      pass # ok for this to cause error (if dir already exists)
-
-    cmd = self.getDaemonSudo() + self.getHadoopCmd() + " fs -chown " \
-        + clientUser + " /user/" + clientUser
-    shell.sh(cmd)
+    basetest.BaseTest.setUp(self)
 
     logging.debug("Setting up hive working environment")
     logging.debug("Current working dir: " + os.getcwd())
@@ -105,6 +57,7 @@ class HiveTest(VerboseTestCase):
     """
 
     logging.info("Testing Hive Invites query...")
+    # TODO(aaron): Is this still needed / relevant?
     envScript = os.path.join(self.getInstallRoot(), "user_env")
 
     workDir = self.getHiveWorkDir()

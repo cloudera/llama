@@ -81,24 +81,9 @@ class StandaloneTest(installbase.InstallBaseTest):
     """ Install all components.
         Use a separate hadoop user account and a separate client account. """
 
-    platform_setup = self.getPlatformSetup()
-
     # install basic configuration
-    platform_setup.installPackage("hadoop")
+    platform_setup = self.getPlatformSetup()
     platform_setup.installPackage("hadoop-conf-pseudo")
-
-    # install virtual packages for services
-    platform_setup.installPackage("hadoop-namenode")
-    platform_setup.installPackage("hadoop-secondarynamenode")
-    platform_setup.installPackage("hadoop-datanode")
-    platform_setup.installPackage("hadoop-jobtracker")
-    platform_setup.installPackage("hadoop-tasktracker")
-
-    # install additional bundled applications
-    platform_setup.installPackage("hadoop-pig")
-
-    # TODO(aaron): Test MRUnit here.
-    # platform_setup.installPackage("mrunit")
 
     self.start_hadoop()
 

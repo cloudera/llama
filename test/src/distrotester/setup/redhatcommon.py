@@ -166,12 +166,21 @@ enabled=1
 """)
     handle.close()
 
+  def install_distro(self):
+    """ Install distribution-wide config files """
+
+    installPackage("hadoop")
+    installPackage("hadoop-pig")
+
+    # TODO(aaron): install other bundled apps (e.g., MRUnit)
+
 
   def redhat_common_setup(self):
     """ Setup instructions common to FC 8, CentOS, etc """
 
     self.install_s3cmd()
     self.install_java()
+    self.install_distro()
 
     # configure ssh so that it doesn't raise a fuss about unknown hosts.
     handle = open("/root/.ssh/config", "w")

@@ -9,64 +9,17 @@ from   com.cloudera.testutil.verbosetest import VerboseTestCase
 import com.cloudera.tools.shell as shell
 
 from   distrotester.constants import *
+import distrotester.functiontests.basetest as basetest
 import distrotester.testproperties as testproperties
 
 
-class PigTest(VerboseTestCase):
-
-  def getInstallRoot(self):
-    return INSTALL_PREFIX
-
-  def getProperties(self):
-    return testproperties.getProperties()
+class PigTest(basetest.BaseTest):
 
   def getPigDir(self):
-    return os.path.join(INSTALL_PREFIX, "pig")
+    return "/usr/lib/pig"
 
   def getPigCmd(self):
-    return os.path.join(self.getPigDir(), "bin/pig")
-
-  def getHadoopDir(self):
-    return os.path.join(INSTALL_PREFIX, "hadoop")
-
-  def getHadoopCmd(self):
-    return os.path.join(self.getHadoopDir(), "bin/hadoop")
-
-  def getClientSudo(self):
-    """ Return the shell cmd prefix to access a client hadoop program """
-    clientUser = self.getProperties().getProperty(CLIENT_USER_KEY)
-
-    if clientUser != ROOT_USER:
-      return "sudo -H -u " + clientUser + " "
-    else:
-      return ""
-
-  def getDaemonSudo(self):
-    """ Return the shell cmd prefix to run a superuser hadoop program """
-    superUser = self.getProperties().getProperty(HADOOP_USER_KEY)
-    if superUser != ROOT_USER:
-      return "sudo -H -u " + superUser + " "
-    else:
-      return ""
-
-
-  def setUp(self):
-    """ Perform setup tasks for tests """
-
-    VerboseTestCase.setUp(self)
-
-    # Ensure that the user's home dir exists in HDFS
-    clientUser = self.getProperties().getProperty(CLIENT_USER_KEY)
-    cmd = self.getDaemonSudo() + self.getHadoopCmd() + " fs -mkdir /user/" \
-        + clientUser
-    try:
-      shell.sh(cmd)
-    except shell.CommandError, ce:
-      pass # ok for this to cause error (if dir already exists)
-
-    cmd = self.getDaemonSudo() + self.getHadoopCmd() + " fs -chown " \
-        + clientUser + " /user/" + clientUser
-    shell.sh(cmd)
+    return "/usr/bin/pig"
 
 
   def testPigPasswdId(self):
@@ -96,6 +49,7 @@ class PigTest(VerboseTestCase):
     logging.info("Running pig script...")
 
     # run the id.pig script
+    # TODO(aaron): is the env script still relevant?
     envScript = os.path.join(self.getInstallRoot(), "user_env")
     runPig = self.getPigCmd()
     cmd = "source " + envScript + " && cd pig-tests && " \

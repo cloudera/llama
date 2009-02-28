@@ -6,44 +6,14 @@ import logging
 import os
 import time
 
-from   com.cloudera.testutil.verbosetest import VerboseTestCase
 import com.cloudera.tools.shell as shell
 
 from   distrotester.constants import *
+import distrotester.functiontests.basetest as basetest
 import distrotester.testproperties as testproperties
 
 
-class LogMoverTest(VerboseTestCase):
-
-  def getInstallRoot(self):
-    return INSTALL_PREFIX
-
-  def getProperties(self):
-    return testproperties.getProperties()
-
-  def getHadoopDir(self):
-    return os.path.join(INSTALL_PREFIX, "hadoop")
-
-  def getHadoopCmd(self):
-    return os.path.join(self.getHadoopDir(), "bin/hadoop")
-
-  def getClientSudo(self):
-    """ Return the shell cmd prefix to access a client hadoop program """
-    clientUser = self.getProperties().getProperty(CLIENT_USER_KEY)
-
-    if clientUser != ROOT_USER:
-      return "sudo -H -u " + clientUser + " "
-    else:
-      return ""
-
-  def getDaemonSudo(self):
-    """ Return the shell cmd prefix to run a superuser hadoop program """
-    superUser = self.getProperties().getProperty(HADOOP_USER_KEY)
-    if superUser != ROOT_USER:
-      return "sudo -H -u " + superUser + " "
-    else:
-      return ""
-
+class LogMoverTest(basetest.BaseTest):
 
   def testNoRedundantCronJobs(self):
     " CH-125: scribe logmover should have exactly one entry in the crontab "
