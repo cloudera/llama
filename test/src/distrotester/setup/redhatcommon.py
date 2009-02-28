@@ -171,6 +171,7 @@ enabled=1
 
     installPackage("hadoop")
     installPackage("hadoop-pig")
+    installPackage("hadoop-hive")
 
     # TODO(aaron): install other bundled apps (e.g., MRUnit)
 
