@@ -640,7 +640,7 @@ Index: src/contrib/scribe-log4j/src/java/org/apache/hadoop/scribe_log4j/ScribeAp
 ===================================================================
 --- src/contrib/scribe-log4j/src/java/org/apache/hadoop/scribe_log4j/ScribeAppender.java  (revision 0)
 +++ src/contrib/scribe-log4j/src/java/org/apache/hadoop/scribe_log4j/ScribeAppender.java  (revision 0)
-@@ -0,0 +1,148 @@
+@@ -0,0 +1,156 @@
 +package org.apache.hadoop.scribe_log4j;
 +
 +import com.facebook.thrift.protocol.TBinaryProtocol;
@@ -651,6 +651,7 @@ Index: src/contrib/scribe-log4j/src/java/org/apache/hadoop/scribe_log4j/ScribeAp
 +
 +import org.apache.hadoop.scribe_log4j.thrift.scribe.Client;
 +import org.apache.hadoop.scribe_log4j.thrift.LogEntry;
++import org.apache.hadoop.util.StringUtils;
 +
 +import org.apache.log4j.AppenderSkeleton;
 +import org.apache.log4j.spi.LoggingEvent;
@@ -726,33 +727,41 @@ Index: src/contrib/scribe-log4j/src/java/org/apache/hadoop/scribe_log4j/ScribeAp
 +  public void activateOptions() {
 +    try {
 +      synchronized(this) {
-+  if (hostname == null) {
-+    try {
-+      hostname = InetAddress.getLocalHost().getCanonicalHostName();
-+    } catch (UnknownHostException e) {
-+      // can't get hostname
-+    }
-+  }
-+  if (scribeHost == null) {
-+    scribeHost = DEFAULT_SCRIBE_HOST;
-+  }
-+  if (scribePort == 0) {
-+    scribePort = DEFAULT_SCRIBE_PORT;
-+  }
-+  if (scribeCategory == null) {
-+    scribeCategory = DEFAULT_SCRIBE_CATEGORY;
-+  }
++        if (hostname == null) {
++          try {
++            hostname = InetAddress.getLocalHost().getCanonicalHostName();
++          } catch (UnknownHostException e) {
++            // can't get hostname
++          }
++        }
++        if (scribeHost == null) {
++          scribeHost = DEFAULT_SCRIBE_HOST;
++        }
++        if (scribePort == 0) {
++          scribePort = DEFAULT_SCRIBE_PORT;
++        }
++        if (scribeCategory == null) {
++          scribeCategory = DEFAULT_SCRIBE_CATEGORY;
++        }
 +        // Thrift boilerplate code
 +        logEntries = new ArrayList<LogEntry>(1);
 +        TSocket sock = new TSocket(new Socket(scribeHost, scribePort));
 +        transport = new TFramedTransport(sock);
 +        TBinaryProtocol protocol = new TBinaryProtocol(transport, false, false);
 +        client = new Client(protocol, protocol);
-+        transport.open();
++        // This is commented out because it was throwing Exceptions for no good reason.
++//        transport.open();
 +      }
++    } catch (TTransportException e) {
++      System.err.println(StringUtils.stringifyException(e));
++    } catch (UnknownHostException e) {
++      System.err.println(StringUtils.stringifyException(e));
++    } catch (ConnectException e) {
++      System.err.println(StringUtils.stringifyException(e));
++    } catch (IOException e) {
++      System.err.println(StringUtils.stringifyException(e));
 +    } catch (Exception e) {
-+      // Do nothing, because loss of log data shouldn't
-+      // break Hadoop
++      System.err.println(StringUtils.stringifyException(e));
 +    }
 +  }
 +
@@ -771,8 +780,7 @@ Index: src/contrib/scribe-log4j/src/java/org/apache/hadoop/scribe_log4j/ScribeAp
 +      try {
 +        client.Log(list);
 +      } catch (Exception e) {
-+        // Do nothing, because loss of log data shouldn't
-+        // break Hadoop
++  System.err.println(StringUtils.stringifyException(e));
 +      }
 +    }
 +  }
