@@ -121,15 +121,14 @@ existingInstanceNames = properties.getProperty(EXISTING_INSTANCES_KEY)
 userSuppliedInstances = False
 if existingInstanceNames != None:
   instances = existingInstanceNames.split(",")
-  userSuppliedInstances = True
+  user_supplied_instances = True
   logging.info("Using instances:")
 
-# call this method regardless of whether it actually does the launch;
-# at minimum it sets up properties in our global configuation
-newInstances = platforms.launchInstances(platformName, properties, \
-    userSuppliedInstances)
-if existingInstanceNames == None:
-  instances = newInstances
+
+# Set up properties in our global configuration
+platforms.configure_instances(platformName, properties)
+if not user_supplied_instances:
+  instances = platforms.launch_instances(platformName, properties)
   logging.info("Started instances:")
 
 # TODO(aaron): Documentation: We need to set EC2_HOME, EC2_PRIVATE_KEY, EC2_CERT

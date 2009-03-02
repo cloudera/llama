@@ -82,7 +82,7 @@ class StandaloneTest(installbase.InstallBaseTest):
         Use a separate hadoop user account and a separate client account. """
 
     # install basic configuration
-    platform_setup = self.getPlatformSetup()
+    platform_setup = self.get_platform_setup()
     platform_setup.installPackage("hadoop-conf-pseudo")
 
     self.start_hadoop()

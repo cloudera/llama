@@ -77,8 +77,8 @@ class MultiHostTest(installbase.InstallBaseTest):
     """ Install all components.
         Use a separate hadoop user account and a separate client account. """
 
-    # TODO(aaron): Install configuration and enable via alternatives
-
+    # Install configuration and enable via alternatives
+    self.enable_configuration("fast-checkpoint", socket.getfqdn())
     self.start_hadoop(None)
 
     self.getProperties().setProperty(HADOOP_USER_KEY, HADOOP_USER)
@@ -117,8 +117,8 @@ class MultiHostTest(installbase.InstallBaseTest):
       fail("No slaves available to check separate 2NN")
     secondary_node_addr = slavesList[0]
 
-    # TODO(aaron): Install configuration and enable via alternatives
-
+    # Install configuration and enable via alternatives
+    self.enable_configuration("fast-checkpoint", socket.getfqdn())
     self.start_hadoop(secondary_node_addr)
 
     properties = self.getProperties()

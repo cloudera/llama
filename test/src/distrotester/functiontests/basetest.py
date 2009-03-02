@@ -57,7 +57,7 @@ class BaseTest(VerboseTestCase):
 
     VerboseTestCase.setUp(self)
 
-    if not self.getProperties().getBoolean(IS_HOME_DIR_SETUP):
+    if not self.getProperties().getBoolean(IS_HOME_DIR_SETUP_KEY):
       # Ensure that the user's home dir exists in HDFS
       clientUser = self.getProperties().getProperty(CLIENT_USER_KEY)
       cmd = self.getDaemonSudo() + self.getHadoopCmd() + " fs -mkdir /user/" \
@@ -71,6 +71,6 @@ class BaseTest(VerboseTestCase):
           + clientUser + " /user/" + clientUser
       shell.sh(cmd)
 
-      self.getProperties().setProperty(IS_HOME_DIR_SETUP, True)
+      self.getProperties().setProperty(IS_HOME_DIR_SETUP_KEY, True)
 
 

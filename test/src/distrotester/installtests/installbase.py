@@ -33,7 +33,7 @@ class InstallBaseTest(VerboseTestCase):
     self.hostname = socket.getfqdn()
 
 
-  def getPlatformSetup(self):
+  def get_platform_setup(self):
     """ Get the PlatformSetup object used to initialize the node """
 
     # delaying this import til this thunk is used to avoid
@@ -43,6 +43,27 @@ class InstallBaseTest(VerboseTestCase):
     properties = self.getProperties()
     platformName = properties.getProperty(TEST_PLATFORM_KEY)
     return platforms.setupForPlatform(platformName, properties)
+
+
+  def enable_configuration(self, config_name, master_host):
+    """
+        Copy a Hadoop configuration from the distro tester into
+        /etc/alternatives and enable it.
+    """
+
+    cur_config = self.getProperties().getProperty(CURRENT_CONFIG_KEY)
+
+    if cur_config != config_name:
+      src_path = os.path.join(HADOOP_CONFIG_SRCDIR, config_name)
+      dest_path = HADOOP_CONFIG_DESTDIR
+      self.doSshAll("cp -r " + src_path + " " + dest_path)
+
+      full_dest_path = os.path.join(dest_path, config_name)
+      hadoop_site_file = os.path.join(full_dest_path, "hadoop-site.xml")
+      self.doSshAll("sed -i -e 's/MASTER_HOST/" + master_host+ "/' " + hadoop_site_file)
+      self.doSshAll("alternatives --set hadoop " + full_dest_path)
+
+      self.getProperties().setProperty(CURRENT_CONFIG_KEY, config_name)
 
 
   def getHadoopDir(self):
