@@ -45,7 +45,7 @@
 </property>
 <property>
   <name>dfs.permissions</name>
-  <value>True</value>
+  <value>true</value>
   <final>true</final>
 </property>
 <property>
@@ -104,7 +104,7 @@
 </property>
 <property>
   <name>mapred.map.tasks.speculative.execution</name>
-  <value>True</value>
+  <value>true</value>
 </property>
 <property>
   <name>mapred.reduce.parallel.copies</name>
