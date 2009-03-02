@@ -766,10 +766,10 @@ Index: src/contrib/scribe-log4j/src/java/org/apache/hadoop/scribe_log4j/ScribeAp
 +      LogEntry entry = new LogEntry(scribeCategory, message);
 +
 +      logEntries.clear();
-+      list.add(entry);
++      logEntries.add(entry);
 +
 +      try {
-+        client.Log(list);
++        client.Log(logEntries);
 +      } catch (Exception e) {
 +        // Do nothing, because loss of log data shouldn't
 +        // break Hadoop
