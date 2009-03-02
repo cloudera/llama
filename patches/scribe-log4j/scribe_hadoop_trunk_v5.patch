@@ -1,206 +1,44 @@
 Index: conf/log4j.properties
 ===================================================================
---- conf/log4j.properties	(revision 726070)
-+++ conf/log4j.properties	(working copy)
-@@ -1,94 +0,0 @@
--# Define some default values that can be overridden by system properties
--hadoop.root.logger=INFO,console
--hadoop.log.dir=.
--hadoop.log.file=hadoop.log
--
--# Define the root logger to the system property "hadoop.root.logger".
--log4j.rootLogger=${hadoop.root.logger}, EventCounter
--
--# Logging Threshold
--log4j.threshhold=ALL
--
--#
--# Daily Rolling File Appender
--#
--
--log4j.appender.DRFA=org.apache.log4j.DailyRollingFileAppender
--log4j.appender.DRFA.File=${hadoop.log.dir}/${hadoop.log.file}
--
--# Rollver at midnight
--log4j.appender.DRFA.DatePattern=.yyyy-MM-dd
--
--# 30-day backup
--#log4j.appender.DRFA.MaxBackupIndex=30
--log4j.appender.DRFA.layout=org.apache.log4j.PatternLayout
--
--# Pattern format: Date LogLevel LoggerName LogMessage
--log4j.appender.DRFA.layout.ConversionPattern=%d{ISO8601} %p %c: %m%n
--# Debugging Pattern format
--#log4j.appender.DRFA.layout.ConversionPattern=%d{ISO8601} %-5p %c{2} (%F:%M(%L)) - %m%n
--
--
--#
--# console
--# Add "console" to rootlogger above if you want to use this 
--#
--
--log4j.appender.console=org.apache.log4j.ConsoleAppender
--log4j.appender.console.target=System.err
--log4j.appender.console.layout=org.apache.log4j.PatternLayout
--log4j.appender.console.layout.ConversionPattern=%d{yy/MM/dd HH:mm:ss} %p %c{2}: %m%n
--
--#
--# TaskLog Appender
--#
--
--#Default values
--hadoop.tasklog.taskid=null
--hadoop.tasklog.noKeepSplits=4
--hadoop.tasklog.totalLogFileSize=100
--hadoop.tasklog.purgeLogSplits=true
--hadoop.tasklog.logsRetainHours=12
--
--log4j.appender.TLA=org.apache.hadoop.mapred.TaskLogAppender
--log4j.appender.TLA.taskId=${hadoop.tasklog.taskid}
--log4j.appender.TLA.totalLogFileSize=${hadoop.tasklog.totalLogFileSize}
--
--log4j.appender.TLA.layout=org.apache.log4j.PatternLayout
--log4j.appender.TLA.layout.ConversionPattern=%d{ISO8601} %p %c: %m%n
--
--#
--# Rolling File Appender
--#
--
--#log4j.appender.RFA=org.apache.log4j.RollingFileAppender
--#log4j.appender.RFA.File=${hadoop.log.dir}/${hadoop.log.file}
--
--# Logfile size and and 30-day backups
--#log4j.appender.RFA.MaxFileSize=1MB
--#log4j.appender.RFA.MaxBackupIndex=30
--
--#log4j.appender.RFA.layout=org.apache.log4j.PatternLayout
--#log4j.appender.RFA.layout.ConversionPattern=%d{ISO8601} %-5p %c{2} - %m%n
--#log4j.appender.RFA.layout.ConversionPattern=%d{ISO8601} %-5p %c{2} (%F:%M(%L)) - %m%n
--
--#
--# FSNamesystem Audit logging
--# All audit events are logged at INFO level
--#
--log4j.logger.org.apache.hadoop.fs.FSNamesystem.audit=WARN
--
--# Custom Logging levels
--
--#log4j.logger.org.apache.hadoop.mapred.JobTracker=DEBUG
--#log4j.logger.org.apache.hadoop.mapred.TaskTracker=DEBUG
--#log4j.logger.org.apache.hadoop.fs.FSNamesystem=DEBUG
--
--# Jets3t library
--log4j.logger.org.jets3t.service.impl.rest.httpclient.RestS3Service=ERROR
--
--#
--# Event Counter Appender
--# Sends counts of logging messages at different severity levels to Hadoop Metrics.
--#
--log4j.appender.EventCounter=org.apache.hadoop.metrics.jvm.EventCounter
-Index: conf/log4j.xml
-===================================================================
---- conf/log4j.xml	(revision 0)
-+++ conf/log4j.xml	(revision 0)
-@@ -0,0 +1,68 @@
-+<?xml version="1.0" encoding="UTF-8"?>
-+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
-+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
-+  <!-- console appender -->
-+  <appender name="console" class="org.apache.log4j.ConsoleAppender">
-+    <param name="threshold" value="all"/>
-+    <param name="Target" value="System.err"/>
-+    <layout class="org.apache.log4j.PatternLayout">
-+      <param name="ConversionPattern" value="%d{yy/MM/dd HH:mm:ss} %p %c{2}: %m%n"/>
-+    </layout>
-+  </appender>
-+
-+  <!-- scribe asyncronous appender -->
-+  <appender name="scribe-async" class="org.apache.log4j.AsyncAppender">
-+    <appender-ref ref="scribe"/>
-+  </appender>
-+
-+  <!-- "regular" scribe appender -->
-+  <appender name="scribe" class="com.cloudera.scribe_log4j.ScribeAppender">
-+    <param name="threshold" value="all"/>
-+    <param name="hostname" value="hostname.domain"/>
-+    <layout class="org.apache.log4j.PatternLayout">
-+      <param name="ConversionPattern" value="%d{yy/MM/dd HH:mm:ss} %p %c{2}: %m%n"/>
-+    </layout>
-+  </appender>
-+
-+  <!-- EventCounter appender -->
-+  <appender name="EventCounter" class="org.apache.hadoop.metrics.jvm.EventCounter">
-+    <param name="threshold" value="all"/>
-+  </appender>
-+
-+  <!-- DRFA appender (not used currently) -->
-+  <appender name="DRFA" class="org.apache.log4j.DailyRollingFileAppender">
-+    <param name="threshold" value="all"/>
-+    <param name="File" value="./hadoop.log"/>
-+    <param name="DatePattern" value=".yyyy-MM-dd"/>
-+    <layout class="org.apache.log4j.PatternLayout">
-+      <param name="ConversationPattern" value="%d{ISO8601} %p %c: %m%n"/>
-+    </layout>
-+  </appender>
-+
-+  <!-- TLA appender (not used currently) -->
-+  <appender name="TLA" class="org.apache.hadoop.mapred.TaskLogAppender">
-+    <param name="threshold" value="all"/>
-+    <param name="taskID" value="null"/>
-+    <param name="totalLogFileSize" value="100"/>
-+    <layout class="org.apache.log4j.PatternLayout">
-+      <param name="ConversationPattern" value="%d{ISO8601} %p %c: %m%n"/>
-+    </layout>
-+  </appender>
-+
-+  <!-- custom loggers -->
-+  <logger name="org.jets3t.service.impl.rest.httpclient.RestS3Service">
-+    <level value="error"/>
-+  </logger>
-+  <logger name="org.apache.hadoop.fs.FSNamesystem.audit">
-+    <level value="warn"/>
-+  </logger>
-+
-+  <!-- root logging configuration -->
-+  <root>
-+    <priority value="info"/>
-+
-+    <appender-ref ref="console"/>
-+    <!--<appender-ref ref="scribe-async"/>-->
-+    <appender-ref ref="EventCounter"/>
-+  </root>
-+</log4j:configuration>
-Index: src/contrib/scribe-log4j/lib/libfb303.jar
-===================================================================
-Cannot display: file marked as a binary type.
-svn:mime-type = application/octet-stream
+--- conf/log4j.properties  (revision 748707)
++++ conf/log4j.properties  (working copy)
+@@ -40,6 +40,25 @@
+ log4j.appender.console.layout.ConversionPattern=%d{yy/MM/dd HH:mm:ss} %p %c{2}: %m%n
 
-Property changes on: src/contrib/scribe-log4j/lib/libfb303.jar
-___________________________________________________________________
-Name: svn:mime-type
-   + application/octet-stream
+ #
++# scribe
++# Add "scribe" to rootlogger above if you want to use this.
++# You need to add the Scribe/Log4j libraries to Hadoop's classpath.
++#
++
++log4j.appender.scribe=org.apache.hadoop.scribe_log4j.AsyncScribeAppender
++
++# Hostname defaults to the host's FQDN, but may be overridden by setting this
++# property
++#log4j.appender.scribe.hostname=
++
++log4j.appender.scribe.scribeHost=127.0.0.1
++log4j.appender.scribe.scribePort=1463
++log4j.appender.scribe.scribeCategory=hadoop
++
++log4j.appender.scribe.layout=org.apache.log4j.PatternLayout
++log4j.appender.scribe.layout.ConversionPattern=%d{yy/MM/dd HH:mm:ss} %p %c{2}: %m%n
++
++#
+ # TaskLog Appender
+ #
 
-Index: src/contrib/scribe-log4j/lib/libthrift.jar
+Index: src/contrib/scribe-log4j/src/java/org/apache/hadoop/scribe_log4j/thrift/LogEntry.java
 ===================================================================
-Cannot display: file marked as a binary type.
-svn:mime-type = application/octet-stream
-
-Property changes on: src/contrib/scribe-log4j/lib/libthrift.jar
-___________________________________________________________________
-Name: svn:mime-type
-   + application/octet-stream
-
-Index: src/contrib/scribe-log4j/src/java/com/cloudera/scribe_log4j/thrift/LogEntry.java
-===================================================================
---- src/contrib/scribe-log4j/src/java/com/cloudera/scribe_log4j/thrift/LogEntry.java	(revision 0)
-+++ src/contrib/scribe-log4j/src/java/com/cloudera/scribe_log4j/thrift/LogEntry.java	(revision 0)
+--- src/contrib/scribe-log4j/src/java/org/apache/hadoop/scribe_log4j/thrift/LogEntry.java  (revision 0)
++++ src/contrib/scribe-log4j/src/java/org/apache/hadoop/scribe_log4j/thrift/LogEntry.java  (revision 0)
 @@ -0,0 +1,159 @@
 +/**
 + * Autogenerated by Thrift
 + *
 + * DO NOT EDIT UNLESS YOU ARE SURE THAT YOU KNOW WHAT YOU ARE DOING
 + */
-+package com.cloudera.scribe_log4j.thrift;
++package org.apache.hadoop.scribe_log4j.thrift;
 +
 +import java.util.List;
 +import java.util.ArrayList;
@@ -354,17 +192,17 @@ Index: src/contrib/scribe-log4j/src/java/com/cloudera/scribe_log4j/thrift/LogEnt
 +
 +}
 +
-Index: src/contrib/scribe-log4j/src/java/com/cloudera/scribe_log4j/thrift/scribe.java
+Index: src/contrib/scribe-log4j/src/java/org/apache/hadoop/scribe_log4j/thrift/scribe.java
 ===================================================================
---- src/contrib/scribe-log4j/src/java/com/cloudera/scribe_log4j/thrift/scribe.java	(revision 0)
-+++ src/contrib/scribe-log4j/src/java/com/cloudera/scribe_log4j/thrift/scribe.java	(revision 0)
+--- src/contrib/scribe-log4j/src/java/org/apache/hadoop/scribe_log4j/thrift/scribe.java  (revision 0)
++++ src/contrib/scribe-log4j/src/java/org/apache/hadoop/scribe_log4j/thrift/scribe.java  (revision 0)
 @@ -0,0 +1,349 @@
 +/**
 + * Autogenerated by Thrift
 + *
 + * DO NOT EDIT UNLESS YOU ARE SURE THAT YOU KNOW WHAT YOU ARE DOING
 + */
-+package com.cloudera.scribe_log4j.thrift;
++package org.apache.hadoop.scribe_log4j.thrift;
 +
 +import java.util.List;
 +import java.util.ArrayList;
@@ -708,29 +546,112 @@ Index: src/contrib/scribe-log4j/src/java/com/cloudera/scribe_log4j/thrift/scribe
 +  }
 +
 +}
-Index: src/contrib/scribe-log4j/src/java/com/cloudera/scribe_log4j/thrift/ResultCode.java
+Index: src/contrib/scribe-log4j/src/java/org/apache/hadoop/scribe_log4j/thrift/ResultCode.java
 ===================================================================
---- src/contrib/scribe-log4j/src/java/com/cloudera/scribe_log4j/thrift/ResultCode.java	(revision 0)
-+++ src/contrib/scribe-log4j/src/java/com/cloudera/scribe_log4j/thrift/ResultCode.java	(revision 0)
+--- src/contrib/scribe-log4j/src/java/org/apache/hadoop/scribe_log4j/thrift/ResultCode.java  (revision 0)
++++ src/contrib/scribe-log4j/src/java/org/apache/hadoop/scribe_log4j/thrift/ResultCode.java  (revision 0)
 @@ -0,0 +1,12 @@
 +/**
 + * Autogenerated by Thrift
 + *
 + * DO NOT EDIT UNLESS YOU ARE SURE THAT YOU KNOW WHAT YOU ARE DOING
 + */
-+package com.cloudera.scribe_log4j.thrift;
++package org.apache.hadoop.scribe_log4j.thrift;
 +
 +
 +public class ResultCode {
 +  public static final int OK = 0;
 +  public static final int TRY_LATER = 1;
 +}
-Index: src/contrib/scribe-log4j/src/java/com/cloudera/scribe_log4j/ScribeAppender.java
+Index: src/contrib/scribe-log4j/src/java/org/apache/hadoop/scribe_log4j/AsyncScribeAppender.java
 ===================================================================
---- src/contrib/scribe-log4j/src/java/com/cloudera/scribe_log4j/ScribeAppender.java	(revision 0)
-+++ src/contrib/scribe-log4j/src/java/com/cloudera/scribe_log4j/ScribeAppender.java	(revision 0)
-@@ -0,0 +1,108 @@
-+package com.cloudera.scribe_log4j;
+--- src/contrib/scribe-log4j/src/java/org/apache/hadoop/scribe_log4j/AsyncScribeAppender.java  (revision 0)
++++ src/contrib/scribe-log4j/src/java/org/apache/hadoop/scribe_log4j/AsyncScribeAppender.java  (revision 0)
+@@ -0,0 +1,67 @@
++package org.apache.hadoop.scribe_log4j;
++
++import org.apache.log4j.AsyncAppender;
++
++/*
++ * An asynchronous version of {@link ScribeAppender}, which extends
++ * Log4j's AsyncAppender.
++ */
++public class AsyncScribeAppender extends AsyncAppender {
++
++  private String hostname;
++  private String scribeHost;
++  private int scribePort;
++  private String scribeCategory;
++
++  public String getHostname() {
++    return hostname;
++  }
++
++  public void setHostname(String hostname) {
++    this.hostname = hostname;
++  }
++
++  public String getScribeHost() {
++    return scribeHost;
++  }
++
++  public void setScribeHost(String scribeHost) {
++    this.scribeHost = scribeHost;
++  }
++
++  public int getScribePort() {
++    return scribePort;
++  }
++
++  public void setScribePort(int scribePort) {
++    this.scribePort = scribePort;
++  }
++
++  public String getScribeCategory() {
++    return scribeCategory;
++  }
++
++  public void setScribeCategory(String scribeCategory) {
++    this.scribeCategory = scribeCategory;
++  }
++
++  @Override
++  public void activateOptions() {
++    super.activateOptions();
++    synchronized(this) {
++      ScribeAppender scribeAppender = new ScribeAppender();
++      scribeAppender.setLayout(getLayout());
++      scribeAppender.setHostname(getHostname());
++      scribeAppender.setScribeHost(getScribeHost());
++      scribeAppender.setScribePort(getScribePort());
++      scribeAppender.setScribeCategory(getScribeCategory());
++      addAppender(scribeAppender);
++    }
++  }
++
++  @Override
++  public boolean requiresLayout() {
++    return true;
++  }
++
++}
+\ No newline at end of file
+Index: src/contrib/scribe-log4j/src/java/org/apache/hadoop/scribe_log4j/ScribeAppender.java
+===================================================================
+--- src/contrib/scribe-log4j/src/java/org/apache/hadoop/scribe_log4j/ScribeAppender.java  (revision 0)
++++ src/contrib/scribe-log4j/src/java/org/apache/hadoop/scribe_log4j/ScribeAppender.java  (revision 0)
+@@ -0,0 +1,156 @@
++package org.apache.hadoop.scribe_log4j;
++
++import com.facebook.thrift.protocol.TBinaryProtocol;
++import com.facebook.thrift.transport.TSocket;
++import com.facebook.thrift.transport.TFramedTransport;
++import com.facebook.thrift.transport.TTransportException;
++import com.facebook.thrift.TException;
++
++import org.apache.hadoop.scribe_log4j.thrift.scribe.Client;
++import org.apache.hadoop.scribe_log4j.thrift.LogEntry;
++import org.apache.hadoop.util.StringUtils;
 +
 +import org.apache.log4j.AppenderSkeleton;
 +import org.apache.log4j.spi.LoggingEvent;
@@ -745,30 +666,26 @@ Index: src/contrib/scribe-log4j/src/java/com/cloudera/scribe_log4j/ScribeAppende
 +import java.io.BufferedReader;
 +import java.io.InputStreamReader;
 +
-+import com.facebook.thrift.protocol.TBinaryProtocol;
-+import com.facebook.thrift.transport.TSocket;
-+import com.facebook.thrift.transport.TFramedTransport;
-+import com.facebook.thrift.transport.TTransportException;
-+import com.facebook.thrift.TException;
-+
-+import com.cloudera.scribe_log4j.thrift.scribe.Client;
-+import com.cloudera.scribe_log4j.thrift.LogEntry;
-+
 +/*
-+ * An implementation of log4j's AppenderSkeleton
-+ * that writes its output to a Scribe server
-+ * running on the local machine, through port 1463
++ * A Log4j Appender that writes log entries to a Scribe server.
++ * By default the Scribe server is expected to run on localhost, port 1463.
++ * Messages are written with a category of "hadoop".
 + */
 +public class ScribeAppender extends AppenderSkeleton {
-+  private List<LogEntry> list;
 +
-+  // Thrift-specific
-+  private Client client;
-+  private TSocket sock;
-+  private TFramedTransport transport;
-+  private TBinaryProtocol protocol;
++  public static final String DEFAULT_SCRIBE_HOST = "127.0.0.1";
++  public static final int DEFAULT_SCRIBE_PORT = 1463;
++  public static final String DEFAULT_SCRIBE_CATEGORY = "hadoop";
 +
 +  private String hostname;
++  private String scribeHost;
++  private int scribePort;
++  private String scribeCategory;
++
++  private List<LogEntry> logEntries;
++
++  private Client client;
++  private TFramedTransport transport;
 +
 +  public String getHostname() {
 +    return hostname;
@@ -778,26 +695,73 @@ Index: src/contrib/scribe-log4j/src/java/com/cloudera/scribe_log4j/ScribeAppende
 +    this.hostname = hostname;
 +  }
 +
++  public String getScribeHost() {
++    return scribeHost;
++  }
++
++  public void setScribeHost(String scribeHost) {
++    this.scribeHost = scribeHost;
++  }
++
++  public int getScribePort() {
++    return scribePort;
++  }
++
++  public void setScribePort(int scribePort) {
++    this.scribePort = scribePort;
++  }
++
++  public String getScribeCategory() {
++    return scribeCategory;
++  }
++
++  public void setScribeCategory(String scribeCategory) {
++    this.scribeCategory = scribeCategory;
++  }
++
 +  /*
 +   * Activates this Appender by opening
-+   * a transport to the Scribe server
-+   * on the local machine, through port 1463
++   * a transport to the Scribe server.
 +   */
 +  @Override
 +  public void activateOptions() {
 +    try {
 +      synchronized(this) {
++        if (hostname == null) {
++          try {
++            hostname = InetAddress.getLocalHost().getCanonicalHostName();
++          } catch (UnknownHostException e) {
++            // can't get hostname
++          }
++        }
++        if (scribeHost == null) {
++          scribeHost = DEFAULT_SCRIBE_HOST;
++        }
++        if (scribePort == 0) {
++          scribePort = DEFAULT_SCRIBE_PORT;
++        }
++        if (scribeCategory == null) {
++          scribeCategory = DEFAULT_SCRIBE_CATEGORY;
++        }
 +        // Thrift boilerplate code
-+        list = new ArrayList<LogEntry>();
-+        sock = new TSocket(new Socket("127.0.0.1", 1463));
++        logEntries = new ArrayList<LogEntry>(1);
++        TSocket sock = new TSocket(new Socket(scribeHost, scribePort));
 +        transport = new TFramedTransport(sock);
-+        protocol = new TBinaryProtocol(transport, false, false);
++        TBinaryProtocol protocol = new TBinaryProtocol(transport, false, false);
 +        client = new Client(protocol, protocol);
-+        transport.open();
++        // This is commented out because it was throwing Exceptions for no good reason.
++//        transport.open();
 +      }
++    } catch (TTransportException e) {
++      System.err.println(StringUtils.stringifyException(e));
++    } catch (UnknownHostException e) {
++      System.err.println(StringUtils.stringifyException(e));
++    } catch (ConnectException e) {
++      System.err.println(StringUtils.stringifyException(e));
++    } catch (IOException e) {
++      System.err.println(StringUtils.stringifyException(e));
 +    } catch (Exception e) {
-+      // Do nothing, because loss of log data shouldn't
-+      // break Hadoop
++      System.err.println(StringUtils.stringifyException(e));
 +    }
 +  }
 +
@@ -807,30 +771,25 @@ Index: src/contrib/scribe-log4j/src/java/com/cloudera/scribe_log4j/ScribeAppende
 +  @Override
 +  public void append(LoggingEvent event) {
 +    synchronized(this) {
-+      String message = this.layout.format(event);
++      String message = String.format("%s %s", hostname, layout.format(event));
++      LogEntry entry = new LogEntry(scribeCategory, message);
 +
-+      // get the class that requested the log
-+      String callingClass = event.getLocationInformation().getClassName();
-+      message = hostname + " " + callingClass + " " + message;
-+
-+      // write this message to the 'hadoop' category
-+      LogEntry entry = new LogEntry("hadoop", message);
-+
-+      list.clear();
-+      list.add(entry);
++      logEntries.clear();
++      logEntries.add(entry);
 +
 +      try {
-+        client.Log(list);
++        client.Log(logEntries);
 +      } catch (Exception e) {
-+        // Do nothing, because loss of log data shouldn't
-+        // break Hadoop
++  System.err.println(StringUtils.stringifyException(e));
 +      }
 +    }
 +  }
 +
 +  @Override
 +  public void close() {
-+    transport.close();
++    if (transport != null) {
++      transport.close();
++    }
 +  }
 +
 +  @Override
@@ -841,36 +800,19 @@ Index: src/contrib/scribe-log4j/src/java/com/cloudera/scribe_log4j/ScribeAppende
 \ No newline at end of file
 Index: src/contrib/scribe-log4j/README
 ===================================================================
---- src/contrib/scribe-log4j/README	(revision 0)
-+++ src/contrib/scribe-log4j/README	(revision 0)
-@@ -0,0 +1,13 @@
-+In order to use this project, you must make sure that your
-+log4j.properties has been updated with the file attached
-+with this patch.
+--- src/contrib/scribe-log4j/README  (revision 0)
++++ src/contrib/scribe-log4j/README  (revision 0)
+@@ -0,0 +1,4 @@
++This contrib package provides an Apache Log4j appender that sends log events
++to a scribe server.
 +
-+IMPORTANT: you must also edit the packaged log4j.properties
-+file and add a field for log4j.appender.scribe.hostname.  For example:
-+
-+log4j.appender.scribe.hostname=server1.cloudera.com
-+
-+The rest for needing this is because hostname information cannot be
-+fetched from within Hadoop's runtime, and having the hostname is
-+instrumental when disambiguiating between logs from two different
-+machines.
-\ No newline at end of file
++See conf/log4j.properties for how to configure the appender.
 Index: src/contrib/scribe-log4j/build.xml
 ===================================================================
---- src/contrib/scribe-log4j/build.xml	(revision 0)
-+++ src/contrib/scribe-log4j/build.xml	(revision 0)
-@@ -0,0 +1,13 @@
+--- src/contrib/scribe-log4j/build.xml  (revision 0)
++++ src/contrib/scribe-log4j/build.xml  (revision 0)
+@@ -0,0 +1,6 @@
 +<?xml version="1.0"?>
-+
-+<!--
-+
-+(c) Copyright 2008 Cloudera, Inc.
-+
-+-->
-+
 +<project name="scribe-log4j" default="jar">
 +
 +  <import file="../build-contrib.xml"/>
