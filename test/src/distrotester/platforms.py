@@ -62,6 +62,8 @@ def setupForPlatform(platformName, properties):
     return Fedora8Setup("x86_64", properties)
   elif platformName == "centos5.i386":
     return Centos5Setup("i386", properties)
+  elif platformName == "centos5.multi.i386":
+    return Centos5Setup("i386", properties)
   else:
     raise TestError("No Setup object available for platform: " + platformName)
 
@@ -85,6 +87,8 @@ def testSuiteForPlatform(platformName, properties):
     return unittest.makeSuite(MultiHostTest, testNamePrefix)
   elif platformName == "centos5.i386":
     return unittest.makeSuite(StandaloneTest, testNamePrefix)
+  elif platformName == "centos5.multi.i386":
+    return unittest.makeSuite(MultiHostTest, testNamePrefix)
   else:
     raise TestError("No test suite available for platform: " + platformName)
 

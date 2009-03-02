@@ -67,7 +67,7 @@ class InstallBaseTest(VerboseTestCase):
 
 
   def getHadoopDir(self):
-    return os.path.join(INSTALL_PREFIX, "hadoop")
+    return "/usr/lib/hadoop"
 
   def getHadoopCmd(self):
     return "hadoop"

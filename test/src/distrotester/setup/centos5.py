@@ -4,7 +4,7 @@
 #
 # Sets up expected/necessary packages on a CentOS 5 installation
 
-
+import logging
 import os
 
 import com.cloudera.tools.shell as shell
@@ -22,7 +22,7 @@ class Centos5Setup(redhatcommon.RedHatCommonSetup):
   """
 
   def __init__(self, arch, properties):
-    RedHatCommonSetup.__init__(self, arch, properties)
+    redhatcommon.RedHatCommonSetup.__init__(self, arch, properties)
 
 
   def remoteBootstrap(self):
@@ -42,18 +42,21 @@ class Centos5Setup(redhatcommon.RedHatCommonSetup):
     self.redhat_common_setup()
 
     # install python 2.5 to run the rest of our code.
-    python_25_package = "python-25-2.5.1-25.i386.rpm"
+    logging.debug("Installing python 2.5")
+    python_25_package = "python25-2.5.1-25.i386.rpm"
     python_package_dest = os.path.join(PACKAGE_TARGET, python_25_package)
     self.s3get(self.bucket, "packages/" + python_25_package, python_package_dest)
     shell.sh("yum -y install \"" + python_package_dest + "\"")
 
     # install other packages that make this a more sane system to use.
+    logging.debug("Installing some more packages with yum...")
     shell.sh("yum -y install screen lzo")
     shell.sh("yum -y install xml-commons-apis")
 
     # if this is x86_64, then we need to install the correct version
     # of curl for compatibility with php (used by the support portal).
     if self.arch == "x86_64":
+      logging.debug("Installing correct x86_64 curl package")
       shell.sh("yum -y remove curl.i386")
       shell.sh("yum -y install curl.x86_64")
 

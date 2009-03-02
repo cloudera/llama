@@ -45,17 +45,12 @@ setLogVerbosity = properties.getProperty(output.LOG_VERBOSITY_PROP)
 if setLogVerbosity == None:
   properties.setProperty(output.LOG_VERBOSITY_PROP, DEFAULT_LOG_VERBOSITY)
 
-# set up the console. Also starts logging to the specified file
+# set up the console. Also starts logging to the specified file.
 output.setupConsole(properties)
 
-# if we are here, then properties and argv parsing succeeded
+# If we are here, then properties and argv parsing succeeded.
 
-localDistribTarball = properties.getProperty(DISTRIB_TARBALL_KEY)
-if localDistribTarball != None:
-  localDistribTarball = os.path.abspath(localDistribTarball)
-
-
-# Where are we? Switch into test program's base dir
+# Where are we? Switch into test program's base dir.
 binName = sys.argv[0]
 binDir = properties.getProperty(TEST_BINDIR_KEY, os.path.dirname(binName))
 os.chdir(binDir)
@@ -118,7 +113,7 @@ if platformName == None:
 logging.info("Launching tests on platform: " + platformName)
 
 existingInstanceNames = properties.getProperty(EXISTING_INSTANCES_KEY)
-userSuppliedInstances = False
+user_supplied_instances = False
 if existingInstanceNames != None:
   instances = existingInstanceNames.split(",")
   user_supplied_instances = True
@@ -292,7 +287,6 @@ try:
       + " " + AWS_ACCOUNT_ID_ARG + " '" + awsAccountId + "'" \
       + " " + PACKAGE_BUCKET_ARG + " " + packageBucket \
       + " " + SLAVES_FILE_ARG + " " + remoteSlavesName \
-      + " " + DISTRIB_TARBALL_ARG + " " + remoteDistribTarball \
       + " --log-filename " + REMOTE_LOG_FILENAME + " --log-level DEBUG" \
       + " --debug" + test_name_arg
   shell.ssh("root", masterHost, cmd, properties)
@@ -305,7 +299,7 @@ finally:
   # if we commissioned instances ourselves, shut them down only on a successful
   # test; otherwise leave them here for the user to inspect, reuse, etc.
   if properties.getBoolean(UNATTENDED_KEY) \
-      or (not userSuppliedInstances and successfulTest):
+      or (not user_supplied_instancs and successfulTest):
     logging.info("Shutting down instances...")
     ec2.terminateInstances(instances, properties)
 

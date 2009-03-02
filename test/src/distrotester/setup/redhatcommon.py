@@ -4,7 +4,7 @@
 #
 # Common setup procedures for FC and CentOS
 
-
+import logging
 import os
 
 import com.cloudera.tools.shell as shell
@@ -58,6 +58,8 @@ Host *
     """ Make a user account on the machine. if rootSshKeys is true,
         copy the authorized_keys and id_rsa files from /root/.ssh/ """
 
+    logging.debug("Creating user account: " + username)
+
     try:
       # if we can get the user's passwd entry, we don't need to make it
       shell.sh("getent passwd " + username)
@@ -88,14 +90,18 @@ Host *
 
 
   def removePackage(self, package):
+    logging.debug("Removing package: " + package)
     shell.sh("yum -y remove " + package)
 
   def installPackage(self, package):
+    logging.debug("Installing package: " + package)
     shell.sh("yum -y install " + package)
 
 
   def install_s3cmd(self):
     """ Install s3cmd """
+
+    logging.debug("Installing s3cmd")
 
     # We download java with s3cmd. We need that first.
     s3dest = os.path.join(PACKAGE_TARGET, S3CMD_PACKAGE_NAME)
@@ -122,10 +128,13 @@ aws_secret_access_key: %(secret)s
 
 
   def install_java(self):
+
     if self.arch == "x86_64":
       jdkPackage = "jdk-6u7-linux-" + self.arch + "-rpm.bin"
     elif self.arch == "i386":
       jdkPackage = "jdk-6u10-linux-" + self.arch + "-rpm.bin"
+
+    logging.debug("Installing Java JDK: " + jdkPackage)
 
     jdkPath = self.properties.getProperty(JAVA_HOME_KEY)
     jdkPackageDest = os.path.join(PACKAGE_TARGET, jdkPackage)
@@ -143,7 +152,8 @@ aws_secret_access_key: %(secret)s
     shell.sh("mv /bin/more /bin/no.more")
 
     # Actually install Java!
-    shell.sh("yes | " + jdkPackageDest + " -noregister")
+    jdk_package_dir = os.path.dirname(jdkPackageDest)
+    shell.sh("cd " + jdk_package_dir + " && yes | " + jdkPackageDest + " -noregister")
 
     handle = open("/etc/profile", "a")
     handle.write("\nexport JAVA_HOME=" + jdkPath + "\n")
@@ -156,6 +166,7 @@ aws_secret_access_key: %(secret)s
   def add_cloudera_yum_repo(self):
     """ Add our yum repository to the yum.repos.d """
 
+    logging.debug("Adding Cloudera yum repo...")
     handle = open("/etc/yum.repos.d/cloudera.repo", "w")
     handle.write("""
 [cloudera]
@@ -169,15 +180,19 @@ enabled=1
   def install_distro(self):
     """ Install distribution-wide config files """
 
-    installPackage("hadoop")
-    installPackage("hadoop-pig")
-    installPackage("hadoop-hive")
+    logging.debug("Installing Cloudera distribution")
+
+    self.installPackage("hadoop")
+    self.installPackage("hadoop-pig")
+    self.installPackage("hadoop-hive")
 
     # TODO(aaron): install other bundled apps (e.g., MRUnit)
 
 
   def redhat_common_setup(self):
     """ Setup instructions common to FC 8, CentOS, etc """
+
+    logging.debug("Performing redhat common setup")
 
     self.install_s3cmd()
     self.install_java()

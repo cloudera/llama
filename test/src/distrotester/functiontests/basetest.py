@@ -14,9 +14,6 @@ import distrotester.testproperties as testproperties
 
 class BaseTest(VerboseTestCase):
 
-  def getInstallRoot(self):
-    return INSTALL_PREFIX
-
   def getHadoopDir(self):
     return "/usr/lib/hadoop"
 

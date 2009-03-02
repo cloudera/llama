@@ -92,13 +92,13 @@ class StandaloneTest(installbase.InstallBaseTest):
 
     hadoopSuite   = unittest.makeSuite(HadoopTest, 'test')
 # TODO(aaron): Enable tests as they're available.
-#    hiveSuite     = unittest.makeSuite(HiveTest, 'test')
+    hiveSuite     = unittest.makeSuite(HiveTest, 'test')
     pigSuite      = unittest.makeSuite(PigTest, 'test')
 #    scribeSuite   = unittest.makeSuite(ScribeTest, 'test')
 #    logmoverSuite = unittest.makeSuite(LogMoverTest, 'test')
     functionalityTests = unittest.TestSuite([
         hadoopSuite,
-#        hiveSuite,
+        hiveSuite,
         pigSuite,
 #        scribeSuite,
 #        logmoverSuite

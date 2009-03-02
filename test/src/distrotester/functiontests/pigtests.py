@@ -50,9 +50,11 @@ class PigTest(basetest.BaseTest):
 
     # run the id.pig script
     # TODO(aaron): is the env script still relevant?
-    envScript = os.path.join(self.getInstallRoot(), "user_env")
+#    envScript = os.path.join(self.getInstallRoot(), "user_env")
     runPig = self.getPigCmd()
-    cmd = "source " + envScript + " && cd pig-tests && " \
+#    cmd = "source " + envScript + " && cd pig-tests && " \
+#        + self.getClientSudo() + runPig + " id.pig"
+    cmd = "cd pig-tests && " \
         + self.getClientSudo() + runPig + " id.pig"
     shell.sh(cmd)
 

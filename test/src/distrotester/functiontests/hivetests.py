@@ -58,14 +58,15 @@ class HiveTest(basetest.BaseTest):
 
     logging.info("Testing Hive Invites query...")
     # TODO(aaron): Is this still needed / relevant?
-    envScript = os.path.join(self.getInstallRoot(), "user_env")
+#    envScript = os.path.join(self.getInstallRoot(), "user_env")
 
     workDir = self.getHiveWorkDir()
 
     # Remove existing table if any.
     try:
       logging.debug("Removing existing invites table (if any)")
-      cmd = "source " + envScript + " && cd " + workDir + " && " \
+#      cmd = "source " + envScript + " && cd " + workDir + " && " \
+      cmd = "cd " + workDir + " && " \
           + self.getClientSudo() + self.getHiveCmd() + " -f drop-invites.q"
       shell.sh(cmd)
     except shell.CommandError, ce:
@@ -73,7 +74,8 @@ class HiveTest(basetest.BaseTest):
 
     # run the main test script.
     logging.debug("Running Hive query...")
-    cmd = "source " + envScript + " && cd " + workDir + " && " \
+#    cmd = "source " + envScript + " && cd " + workDir + " && " \
+    cmd = "cd " + workDir + " && " \
         + self.getClientSudo() + self.getHiveCmd() + " -f invites.q"
     shell.sh(cmd)
     logging.debug("The Hive query appears to have succeeded!")
