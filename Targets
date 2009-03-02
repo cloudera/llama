@@ -90,7 +90,7 @@ compile_distro =  CompileHadoopComponent(
   # in doc/hadoop_patches.txt.
   patchPlan     = [
     # Scribe appender
-    "projects/HadoopDist/patches/scribe-log4j/scribe_hadoop_trunk_v4.patch",
+    "projects/HadoopDist/patches/scribe-log4j/scribe_hadoop_trunk_v5.patch",
 
     # Cloudera branding
     "projects/HadoopDist/patches/nn+jt_jsp/nn+jt_cloudera_0.18.2_noheader.patch",
