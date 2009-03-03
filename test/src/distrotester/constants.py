@@ -89,9 +89,8 @@ BYPASS_SETUP_KEY = "bypass.setup"
 # Where are the clouderadev ec2 profiles stored, relative to the bindir?
 PROFILE_DIR = "profiles"
 
-# What's the base directory containing the test harness, relative
-# to the bindir?
-HARNESS_BASE_DIR = "."
+# What's the base directory containing the test harness on the EC2 instances?
+HARNESS_BASE_DIR = "/mnt/distrotest"
 
 
 # Where are our hadoop configuration files stored?

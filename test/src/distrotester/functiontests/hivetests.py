@@ -46,7 +46,42 @@ class HiveTest(basetest.BaseTest):
     cmd = "cp -r hive-tests/* " + hiveWorkDir
     shell.sh(cmd)
 
+    clientUser = self.getProperties().getProperty(CLIENT_USER_KEY)
     cmd = "chown -R " + clientUser + ":" + clientUser + " " + hiveWorkDir
+    shell.sh(cmd)
+
+    # Make Hive tmp dir in HDFS.
+    hadoop_user = self.getProperties().getProperty(HADOOP_USER_KEY)
+    try:
+      cmd = self.getDaemonSudo() + self.getHadoopCmd() + " fs -mkdir /tmp"
+      shell.sh(cmd)
+    except:
+      pass # ok for this to fail if dir already exists.
+
+    cmd = self.getDaemonSudo() + self.getHadoopCmd() + " fs -chmod +w /tmp"
+    shell.sh(cmd)
+
+    # Make Hive client user dir dir in HDFS.
+    hadoop_user = self.getProperties().getProperty(HADOOP_USER_KEY)
+    try:
+      cmd = self.getDaemonSudo() + self.getHadoopCmd() + " fs -mkdir /user/" + clientUser
+      shell.sh(cmd)
+    except:
+      pass # ok for this to fail if dir already exists.
+
+    cmd = self.getDaemonSudo() + self.getHadoopCmd() + " fs -chown " + clientUser \
+        + " /user/" + clientUser
+    shell.sh(cmd)
+
+    # Make Hive warehouse dir in HDFS.
+    hadoop_user = self.getProperties().getProperty(HADOOP_USER_KEY)
+    try:
+      cmd = self.getDaemonSudo() + self.getHadoopCmd() + " fs -mkdir /user/hive/warehouse"
+      shell.sh(cmd)
+    except:
+      pass # ok for this to fail if dir already exists.
+
+    cmd = self.getDaemonSudo() + self.getHadoopCmd() + " fs -chmod +w /user/hive/warehouse"
     shell.sh(cmd)
 
 

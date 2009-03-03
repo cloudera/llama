@@ -61,6 +61,7 @@ class InstallBaseTest(VerboseTestCase):
       full_dest_path = os.path.join(dest_path, config_name)
       hadoop_site_file = os.path.join(full_dest_path, "hadoop-site.xml")
       self.doSshAll("sed -i -e 's/MASTER_HOST/" + master_host+ "/' " + hadoop_site_file)
+      self.doSshAll("alternatives --install /etc/hadoop/conf hadoop " + full_dest_path + " 50")
       self.doSshAll("alternatives --set hadoop " + full_dest_path)
 
       self.getProperties().setProperty(CURRENT_CONFIG_KEY, config_name)
@@ -121,6 +122,7 @@ class InstallBaseTest(VerboseTestCase):
 
     return self.curHadoopSite
 
+
   def stop_hadoop(self):
     self.doSshAll("service hadoop-namenode stop")
     self.doSshAll("service hadoop-secondarynamenode stop")
@@ -129,8 +131,17 @@ class InstallBaseTest(VerboseTestCase):
     self.doSshAll("service hadoop-tasktracker stop")
 
 
+  def make_tmp_dir(self):
+    """ Create the tmp dir under which all the Hadoop data lives """
+    self.doSshAll("rm -rf /mnt/tmp")
+    self.doSshAll("mkdir -p /mnt/tmp")
+    self.doSshAll("chmod a+rwx /mnt/tmp")
+    self.doSshAll("chmod o+t /mnt/tmp")
+
+
   def setUp(self):
     VerboseTestCase.setUp(self)
+    self.make_tmp_dir()
 
 
   def tearDown(self):
@@ -138,7 +149,7 @@ class InstallBaseTest(VerboseTestCase):
       # remove this temp file we created
       os.remove(self.curHadoopSite)
 
-    # self.stopHadoop()
+    # self.stop_hadoop()
     VerboseTestCase.tearDown(self)
 
 

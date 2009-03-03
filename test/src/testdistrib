@@ -95,7 +95,7 @@ except IOError:
   # irrelevant
   pass
 
-harnessBaseDir = os.path.abspath(os.path.join(os.getcwd(), HARNESS_BASE_DIR))
+harnessBaseDir = os.path.abspath(os.getcwd())
 harnessParentDir = os.path.abspath(os.path.join(harnessBaseDir, ".."))
 baseName = os.path.basename(harnessBaseDir)
 
@@ -299,7 +299,7 @@ finally:
   # if we commissioned instances ourselves, shut them down only on a successful
   # test; otherwise leave them here for the user to inspect, reuse, etc.
   if properties.getBoolean(UNATTENDED_KEY) \
-      or (not user_supplied_instancs and successfulTest):
+      or (not user_supplied_instances and successfulTest):
     logging.info("Shutting down instances...")
     ec2.terminateInstances(instances, properties)
 

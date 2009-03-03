@@ -35,6 +35,15 @@ class Centos5Setup(redhatcommon.RedHatCommonSetup):
     ]
 
 
+  def install_python25(self):
+    """ Install python 2.5, since CentOS 5 comes with py 2.4 """
+    logging.debug("Installing python 2.5")
+    python_25_package = "python25-2.5.1-25.i386.rpm"
+    python_package_dest = os.path.join(PACKAGE_TARGET, python_25_package)
+    self.s3get(self.bucket, "packages/" + python_25_package, python_package_dest)
+    shell.sh("yum -y install \"" + python_package_dest + "\"")
+
+
   def setup(self):
     """ Install on CentOS 5.2. """
 
@@ -42,11 +51,7 @@ class Centos5Setup(redhatcommon.RedHatCommonSetup):
     self.redhat_common_setup()
 
     # install python 2.5 to run the rest of our code.
-    logging.debug("Installing python 2.5")
-    python_25_package = "python25-2.5.1-25.i386.rpm"
-    python_package_dest = os.path.join(PACKAGE_TARGET, python_25_package)
-    self.s3get(self.bucket, "packages/" + python_25_package, python_package_dest)
-    shell.sh("yum -y install \"" + python_package_dest + "\"")
+    # self.install_python25()
 
     # install other packages that make this a more sane system to use.
     logging.debug("Installing some more packages with yum...")

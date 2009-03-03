@@ -39,7 +39,9 @@ class SecondaryNameNodeTest(basetest.BaseTest):
     logging.debug("Wait complete.")
 
 
-  def testSecondaryViaScribe(self):
+
+  # TODO(aaron) ENABLE THIS WHEN SCRIBE IS READY.
+  def DoNot_testSecondaryViaScribe(self):
     """ Test that the secondarynamenode-specific log lines are being added
         to our scribe logs.
     """
@@ -68,7 +70,7 @@ class SecondaryNameNodeTest(basetest.BaseTest):
     global CHECKPOINT_INTERVAL
     global CHECKPOINT_DIR
 
-    self.start_dfs_daemons()
+    self.wait_for_dfs_daemons()
 
     secondary_server = self.getProperties().getProperty(SECONDARY_HOSTNAME_KEY)
     logging.debug("Secondary server addr is: " + secondary_server)
@@ -110,7 +112,7 @@ class SecondaryNameNodeTest(basetest.BaseTest):
     editsLines = shell.sshLines("root", secondary_server, "md5sum " + edits_file, \
         self.getProperties())
     if len(editsLines) > 0:
-      second_edit_md5 = editsLines[0]
+      second_edits_md5 = editsLines[0]
     else:
       self.fail("Couldn't read md5sum for edits file in round 2")
 

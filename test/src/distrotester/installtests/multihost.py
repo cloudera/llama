@@ -31,17 +31,17 @@ class MultiHostTest(installbase.InstallBaseTest):
     installbase.InstallBaseTest.__init__(self, methodName)
 
   def tearDown(self):
-    installbase.InstallBaseTest.tearDown()
+    installbase.InstallBaseTest.tearDown(self)
 
   def setUp(self):
     """ shutdown and remove existing hadoop distribution. """
 
-    installbase.InstallBaseTest.setUp(self)
-
     try:
-      self.stopHadoop()
+      self.stop_hadoop()
     except:
       pass
+
+    installbase.InstallBaseTest.setUp(self)
 
     logging.debug("Performing setup actions for next multihost test")
 
@@ -55,6 +55,10 @@ class MultiHostTest(installbase.InstallBaseTest):
 
     #  Delete things associated with logmover on master
     shell.sh("rm -rf " + LOGMOVER_OUT_DIR)
+
+    # Now recreate necessary directories
+    self.doSshAll("mkdir -p /var/log/hadoop")
+    self.doSshAll("chown hadoop:hadoop /var/log/hadoop")
 
 
   def start_hadoop(self, remote_secondary):
@@ -73,12 +77,16 @@ class MultiHostTest(installbase.InstallBaseTest):
       shell.sh("service hadoop-secondarynamenode start")
 
 
+  def format_namenode(self):
+    shell.sh("yes | sudo -u " + HADOOP_USER + " -H hadoop namenode -format")
+
   def test_all_apps(self):
     """ Install all components.
         Use a separate hadoop user account and a separate client account. """
 
     # Install configuration and enable via alternatives
     self.enable_configuration("fast-checkpoint", socket.getfqdn())
+    self.format_namenode()
     self.start_hadoop(None)
 
     self.getProperties().setProperty(HADOOP_USER_KEY, HADOOP_USER)
@@ -86,13 +94,13 @@ class MultiHostTest(installbase.InstallBaseTest):
 
     # TODO(aaron): Enable tests as they're available
     hadoopSuite   = unittest.makeSuite(HadoopTest, 'test')
-#    hiveSuite     = unittest.makeSuite(HiveTest, 'test')
+    hiveSuite     = unittest.makeSuite(HiveTest, 'test')
 #    logMoverSuite = unittest.makeSuite(LogMoverTest, 'test')
     pigSuite      = unittest.makeSuite(PigTest, 'test')
 #    scribeSuite   = unittest.makeSuite(ScribeTest, 'test')
     functionalityTests = unittest.TestSuite([
         hadoopSuite,
-#        hiveSuite,
+        hiveSuite,
 #        logMoverSuite,
         pigSuite,
 #        scribeSuite
@@ -119,6 +127,7 @@ class MultiHostTest(installbase.InstallBaseTest):
 
     # Install configuration and enable via alternatives
     self.enable_configuration("fast-checkpoint", socket.getfqdn())
+    self.format_namenode()
     self.start_hadoop(secondary_node_addr)
 
     properties = self.getProperties()

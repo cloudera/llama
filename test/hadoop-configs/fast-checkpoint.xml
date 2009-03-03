@@ -66,6 +66,11 @@
   <value>hdfs://MASTER_HOST:9000/</value>
 </property>
 <property>
+  <name>dfs.http.address</name>
+  <value>MASTER_HOST:50070</value>
+  <!-- this overrides 0.0.0.0:50070 to support off-machine 2nn -->
+</property>
+<property>
   <name>fs.trash.interval</name>
   <value>1440</value>
   <final>true</final>
@@ -172,12 +177,7 @@
 
 <property>
   <name>mapred.map.output.compression.codec</name>
-  <value>org.apache.hadoop.io.compress.LzoCodec</value>
-  <description>If the map outputs are compressed, how should they be
-               compressed? Cloudera Hadoop has detected native LZO compression
-               libraries on your system and has selected these for better
-               perofrmance.
-  </description>
+  <value>org.apache.hadoop.io.compress.DefaultCodec</value>
 </property>
 <property>
   <name>mapred.compress.map.output</name>
@@ -185,12 +185,12 @@
 </property>
 <property>
   <name>mapred.output.compression.codec</name>
-  <value>org.apache.hadoop.io.compress.LzoCodec</value>
+  <value>org.apache.hadoop.io.compress.DefaultCodec</value>
 </property>
 
 <property>
   <name>io.compression.codecs</name>
-  <value>org.apache.hadoop.io.compress.DefaultCodec,org.apache.hadoop.io.compress.GzipCodec,org.apache.hadoop.io.compress.LzoCodec,org.apache.hadoop.io.compress.BZip2Codec</value>
+  <value>org.apache.hadoop.io.compress.DefaultCodec,org.apache.hadoop.io.compress.GzipCodec,org.apache.hadoop.io.compress.BZip2Codec</value>
   <description>A list of the compression codec classes that can be used
                for compression/decompression.</description>
 </property>
