@@ -90,7 +90,7 @@ compile_distro =  CompileHadoopComponent(
   # in doc/hadoop_patches.txt.
   patchPlan     = [
     # Scribe appender
-    "projects/HadoopDist/patches/scribe-log4j/scribe_hadoop_trunk_v5.patch",
+#    "projects/HadoopDist/patches/scribe-log4j/scribe_hadoop_trunk_v5.patch",
 
     # Cloudera branding
     "projects/HadoopDist/patches/nn+jt_jsp/nn+jt_cloudera_0.18.2_noheader.patch",
@@ -151,7 +151,7 @@ supportedHadoopPackage = PackageTarget(
     compile_distro,
 
     # Enable these contrib libs
-    scribeLog4JComponent,
+    #scribeLog4JComponent,
     fairshareComponent,
 
     # Remove log4j.properties files since we now use log4j.xml
@@ -168,9 +168,12 @@ supportedHadoopPackage = PackageTarget(
       srcDir =  "pkg_scripts/rpm",
       destDir = "pkg_scripts/rpm"),
     # The release should follow the format <release>.cloudera.CH<ch version with _>
-    RpmComponent( specFile = "hadoop.spec", 
+    RpmComponent( specFile = "hadoop.spec",
                   rpmBuildCmd= "-bb --target noarch,i386,amd64",
-                  rpmRelease= "1.cloudera.CH0_3")
+                  rpmRelease= "1.cloudera.CH0_3"),
+    RpmComponent( specFile = "distribution.spec",
+                  rpmBuildCmd= "-bb --target noarch",
+                  rpmRelease= "1.cloudera.CH0_3"),
   ],
 
   # Define build-phase outputs that other programs compiled against our distro need.
