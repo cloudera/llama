@@ -25,19 +25,19 @@ version = VerStringTarget(
 # Scribe required libraries
 libfb303Component = FileComponent(
   srcFile = "patches/scribe-log4j/lib/libfb303.jar",
-  destDir = "build/" + hadoop_ver_string + "/src/contrib/scribe-log4j/lib",)
+  destDir = "$/build/" + hadoop_ver_string + "/src/contrib/scribe-log4j/lib",)
 
 libthriftComponent = FileComponent(
   srcFile = "patches/scribe-log4j/lib/libthrift.jar",
-  destDir = "build/" + hadoop_ver_string + "/src/contrib/scribe-log4j/lib",)
+  destDir = "$/build/" + hadoop_ver_string + "/src/contrib/scribe-log4j/lib",)
 
 libfb303Component2 = FileComponent(
   srcFile = "patches/scribe-log4j/lib/libfb303.jar",
-  destDir = "src/contrib/scribe-log4j/lib",)
+  destDir = "$/src/contrib/scribe-log4j/lib",)
 
 libthriftComponent2 = FileComponent(
   srcFile = "patches/scribe-log4j/lib/libthrift.jar",
-  destDir = "src/contrib/scribe-log4j/lib",)
+  destDir = "$/src/contrib/scribe-log4j/lib",)
 
 # remove log4j.properties
 log4jpropComponent = ExcludeComponent(
@@ -49,37 +49,37 @@ log4jpropComponent2 = ExcludeComponent(
 #nn and jt JSP change dependencies
 bluebarComponent = FileComponent(
   srcFile = "patches/nn+jt_jsp/static/images/bluebar.png",
-  destDir = "build/" + hadoop_ver_string + "/src/webapps/static/images/",)
+  destDir = "$/build/" + hadoop_ver_string + "/src/webapps/static/images/",)
 
 logoComponent = FileComponent(
   srcFile = "patches/nn+jt_jsp/static/images/logo.png",
-  destDir = "build/" + hadoop_ver_string + "/src/webapps/static/images/",)
+  destDir = "$/build/" + hadoop_ver_string + "/src/webapps/static/images/",)
 
 bluebarComponent2 = FileComponent(
   srcFile = "patches/nn+jt_jsp/static/images/bluebar.png",
-  destDir = "src/webapps/static/images/",)
+  destDir = "$/src/webapps/static/images/",)
 
 logoComponent2 = FileComponent(
   srcFile = "patches/nn+jt_jsp/static/images/logo.png",
-  destDir = "src/webapps/static/images/",)
+  destDir = "$/src/webapps/static/images/",)
 
 # Compile a Hadoop redist tarball to put in the distribution
 
 # include the pre-compiled native libs, since we don't build those ourselves
 hadoopNativeLibs = DirComponent(
   srcDir  = "native",
-  destDir = "build/" + hadoop_ver_string + "/lib/native")
+  destDir = "$/build/" + hadoop_ver_string + "/lib/native")
 
 # mapred jdbc component has extra lib dirs required
 mapredJdbcLibs = DirComponent(srcDir = "patches/mapred_jdbc/lib",
-                              destDir = "lib")
+                              destDir = "$/lib")
 mapredJdbcRedistLibs = DirComponent(srcDir = "patches/mapred_jdbc/lib",
-                              destDir = "build/" + hadoop_ver_string + "/lib")
+                              destDir = "$/build/" + hadoop_ver_string + "/lib")
 
 # include the portal source code
 portalComponent = DirComponent(
   srcDir  = "portal/src",
-  destDir = "src/webapps/portal")
+  destDir = "$/src/webapps/portal")
 
 
 # Define the action when we compile hadoop for the distribution.
@@ -90,31 +90,31 @@ compile_distro =  CompileHadoopComponent(
   # in doc/hadoop_patches.txt.
   patchPlan     = [
     # Scribe appender
-    "projects/HadoopDist/patches/scribe-log4j/scribe_hadoop_trunk_v5.patch",
+    "patches/scribe-log4j/scribe_hadoop_trunk_v5.patch",
 
     # Cloudera branding
-    "projects/HadoopDist/patches/nn+jt_jsp/nn+jt_cloudera_0.18.2_noheader.patch",
+    "patches/nn+jt_jsp/nn+jt_cloudera_0.18.2_noheader.patch",
 
     # JDBC Support (0.19 backport)
-    "projects/HadoopDist/patches/mapred_jdbc/HADOOP-2536-0.18.2.patch",
-    "projects/HadoopDist/patches/mapred_jdbc/HADOOP-4955.patch",
+    "patches/mapred_jdbc/HADOOP-2536-0.18.2.patch",
+    "patches/mapred_jdbc/HADOOP-4955.patch",
 
     # Fair Scheduler
-    "thirdparty/fairshare/fairscheduler-0.18.3.patch",
-    "thirdparty/fairshare/HADOOP-4873-1.patch",
-    "thirdparty/fairshare/HADOOP-5154-v4.patch",
+    "//thirdparty/fairshare/fairscheduler-0.18.3.patch",
+    "//thirdparty/fairshare/HADOOP-4873-1.patch",
+    "//thirdparty/fairshare/HADOOP-5154-v4.patch",
 
     # BZip2 support (0.19 backport)
-    "projects/HadoopDist/patches/bzip2/HADOOP-3646-0.18.3.patch",
-    "projects/HadoopDist/patches/bzip2/HADOOP-4918-0.18.3.patch",
+    "patches/bzip2/HADOOP-3646-0.18.3.patch",
+    "patches/bzip2/HADOOP-4918-0.18.3.patch",
 
     # Hadoop Bugfixes
-    "projects/HadoopDist/patches/HADOOP-3950.patch", # 0.19 backport
-    "projects/HadoopDist/patches/HADOOP-4346-0.18.3.patch", # 0.20 backport
+    "patches/HADOOP-3950.patch", # 0.19 backport
+    "patches/HADOOP-4346-0.18.3.patch", # 0.20 backport
 
     # Build system tweaks
-    "projects/HadoopDist/patches/HADOOP-5240-0.18.3.patch", # 0.21 backport
-    "projects/HadoopDist/patches/HADOOP-3655.patch", # 0.19 backport
+    "patches/HADOOP-5240-0.18.3.patch", # 0.21 backport
+    "patches/HADOOP-3655.patch", # 0.19 backport
   ])
 
 # Enable inclusion of scribe-log4j contrib jar that we build.
@@ -131,7 +131,7 @@ supportedHadoopPackage = PackageTarget(
   packageName   = "distrib-hadoop",
   components    = [
     DirComponent(
-      srcDir=("../../thirdparty/hadoop-" + base_hadoop_ver + "/"),
+      srcDir=("//thirdparty/hadoop-" + base_hadoop_ver + "/"),
       excludePatterns = [ "build/" ],
       forceRefresh = True),
     libfb303Component,
@@ -166,7 +166,7 @@ supportedHadoopPackage = PackageTarget(
     # Create hadoop RPMs
     DirComponent(
       srcDir =  "pkg_scripts/rpm",
-      destDir = "pkg_scripts/rpm"),
+      destDir = "$/pkg_scripts/rpm"),
     # The release should follow the format <release>.cloudera.CH<ch version with _>
     RpmComponent( specFile = "hadoop.spec", 
                   rpmBuildCmd= "-bb --target noarch,i386,amd64",
@@ -175,26 +175,26 @@ supportedHadoopPackage = PackageTarget(
 
   # Define build-phase outputs that other programs compiled against our distro need.
   outputs = [
-      "build/" + hadoop_ver_string + "-core.jar",
-      "build/" + hadoop_ver_string + "-test.jar",
-      "build/" + hadoop_ver_string + "-tools.jar",
-      "build/" + hadoop_ver_string + "-examples.jar",
-      "build/" + hadoop_ver_string + "/lib/commons-cli-2.0-SNAPSHOT.jar",
-      "build/" + hadoop_ver_string + "/lib/commons-codec-1.3.jar",
-      "build/" + hadoop_ver_string + "/lib/commons-httpclient-3.0.1.jar",
-      "build/" + hadoop_ver_string + "/lib/commons-logging-1.0.4.jar",
-      "build/" + hadoop_ver_string + "/lib/commons-logging-api-1.0.4.jar",
-      "build/" + hadoop_ver_string + "/lib/commons-net-1.4.1.jar",
-      "build/" + hadoop_ver_string + "/lib/jets3t-0.6.0.jar",
-      "build/" + hadoop_ver_string + "/lib/jetty-5.1.4.jar",
-      "build/" + hadoop_ver_string + "/lib/junit-3.8.1.jar",
-      "build/" + hadoop_ver_string + "/lib/kfs-0.1.3.jar",
-      "build/" + hadoop_ver_string + "/lib/log4j-1.2.15.jar",
-      "build/" + hadoop_ver_string + "/lib/oro-2.0.8.jar",
-      "build/" + hadoop_ver_string + "/lib/servlet-api.jar",
-      "build/" + hadoop_ver_string + "/lib/slf4j-api-1.4.3.jar",
-      "build/" + hadoop_ver_string + "/lib/slf4j-log4j12-1.4.3.jar",
-      "build/" + hadoop_ver_string + "/lib/xmlenc-0.52.jar",
+      "$/build/" + hadoop_ver_string + "-core.jar",
+      "$/build/" + hadoop_ver_string + "-test.jar",
+      "$/build/" + hadoop_ver_string + "-tools.jar",
+      "$/build/" + hadoop_ver_string + "-examples.jar",
+      "$/build/" + hadoop_ver_string + "/lib/commons-cli-2.0-SNAPSHOT.jar",
+      "$/build/" + hadoop_ver_string + "/lib/commons-codec-1.3.jar",
+      "$/build/" + hadoop_ver_string + "/lib/commons-httpclient-3.0.1.jar",
+      "$/build/" + hadoop_ver_string + "/lib/commons-logging-1.0.4.jar",
+      "$/build/" + hadoop_ver_string + "/lib/commons-logging-api-1.0.4.jar",
+      "$/build/" + hadoop_ver_string + "/lib/commons-net-1.4.1.jar",
+      "$/build/" + hadoop_ver_string + "/lib/jets3t-0.6.0.jar",
+      "$/build/" + hadoop_ver_string + "/lib/jetty-5.1.4.jar",
+      "$/build/" + hadoop_ver_string + "/lib/junit-3.8.1.jar",
+      "$/build/" + hadoop_ver_string + "/lib/kfs-0.1.3.jar",
+      "$/build/" + hadoop_ver_string + "/lib/log4j-1.2.15.jar",
+      "$/build/" + hadoop_ver_string + "/lib/oro-2.0.8.jar",
+      "$/build/" + hadoop_ver_string + "/lib/servlet-api.jar",
+      "$/build/" + hadoop_ver_string + "/lib/slf4j-api-1.4.3.jar",
+      "$/build/" + hadoop_ver_string + "/lib/slf4j-log4j12-1.4.3.jar",
+      "$/build/" + hadoop_ver_string + "/lib/xmlenc-0.52.jar",
     ])
 
 # components for packaging
@@ -237,7 +237,7 @@ hivePackageComponent = PackageComponent(
 # copy all the doc/ directory in
 docsComponent = DirComponent(
   srcDir  = "doc",
-  destDir = "doc")
+  destDir = "$/doc")
 
 # and put a redundant copy of the README in the top level, so the
 # user sees it straight away.
@@ -246,7 +246,7 @@ readmeComponent = FileComponent(srcFile = "doc/README")
 # dependencies such as scribe libraries, configuration files, etc
 depsComponent = DirComponent(
   srcDir  = "deps",
-  destDir = "deps")
+  destDir = "$/deps")
 
 # There may be several versions of how we package the distribution.
 # supportedDistro is the one released to support clients
