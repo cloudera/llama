@@ -39,13 +39,6 @@ libthriftComponent2 = FileComponent(
   srcFile = "patches/scribe-log4j/lib/libthrift.jar",
   destDir = "$/src/contrib/scribe-log4j/lib",)
 
-# remove log4j.properties
-log4jpropComponent = ExcludeComponent(
-  name = "conf/log4j.properties",)
-
-log4jpropComponent2 = ExcludeComponent(
-  name = "build/" + hadoop_ver_string + "/conf/log4j.properties",)
-
 #nn and jt JSP change dependencies
 bluebarComponent = FileComponent(
   srcFile = "patches/nn+jt_jsp/static/images/bluebar.png",
@@ -103,6 +96,7 @@ compile_distro =  CompileHadoopComponent(
     "//thirdparty/fairshare/fairscheduler-0.18.3.patch",
     "//thirdparty/fairshare/HADOOP-4873-1.patch",
     "//thirdparty/fairshare/HADOOP-5154-v4.patch",
+    "//thirdparty/fairshare/FairSchedulerStyled.patch",
 
     # BZip2 support (0.19 backport)
     "patches/bzip2/HADOOP-3646-0.18.3.patch",
@@ -153,10 +147,6 @@ supportedHadoopPackage = PackageTarget(
     # Enable these contrib libs
     scribeLog4JComponent,
     fairshareComponent,
-
-    # Remove log4j.properties files since we now use log4j.xml
-    log4jpropComponent,
-    log4jpropComponent2,
 
     # Create hadoop tarball.
     TarComponent(

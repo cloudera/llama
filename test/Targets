@@ -14,7 +14,6 @@ tester = PythonTarget(
                     "../installer",
                     "..:versionStamps" ],
   dataPaths = [ "profiles",
-                "hadoop-configs",
                 "pig-tests",
                 "hive-tests" ])
 
@@ -32,25 +31,28 @@ testsJar = JarTarget(
 
 
 # Now we bundle all of the above together
-
-pythonComponent = PackageComponent(
-  targetName = ":pyRelease",
-  includeZip = False) # copy files straight in
-
-mapreduceTestsComponent = OutputComponent(
-  targetName = ":testsJar",
-  destDir = "testjar")
-
-# Don't want the top-level install script included in our bin dir.
-removeInstallerComponent = ExcludeComponent(
-  name = "install")
-
 release = PackageTarget(
   packageName = "distrotest",
   components = [
-      pythonComponent,
-      mapreduceTestsComponent,
-      removeInstallerComponent ])
+    PackageComponent(
+      targetName = ":pyRelease",
+      includeZip = False),
+    OutputComponent(
+      targetName = ":testsJar",
+      destDir = "testjar"),
+
+    # fast-checkpoint hadoop-site.xml configuration
+    DirComponent(
+      srcDir = "hadoop-configs/base",
+      destDir = "hadoop-configs/fast-checkpoint"),
+    FileComponent(
+      srcFile  = "hadoop-configs/fast-checkpoint.xml",
+      destFile = "hadoop-configs/fast-checkpoint/hadoop-site.xml"),
+
+    # Don't want the top-level install script included in our bin dir.
+    ExcludeComponent(
+      name = "install"),
+    ])
 
 defaultTarget(release)
 

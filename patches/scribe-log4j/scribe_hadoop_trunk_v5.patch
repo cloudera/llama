@@ -640,7 +640,7 @@ Index: src/contrib/scribe-log4j/src/java/org/apache/hadoop/scribe_log4j/ScribeAp
 ===================================================================
 --- src/contrib/scribe-log4j/src/java/org/apache/hadoop/scribe_log4j/ScribeAppender.java  (revision 0)
 +++ src/contrib/scribe-log4j/src/java/org/apache/hadoop/scribe_log4j/ScribeAppender.java  (revision 0)
-@@ -0,0 +1,156 @@
+@@ -0,0 +1,154 @@
 +package org.apache.hadoop.scribe_log4j;
 +
 +import com.facebook.thrift.protocol.TBinaryProtocol;
@@ -756,8 +756,6 @@ Index: src/contrib/scribe-log4j/src/java/org/apache/hadoop/scribe_log4j/ScribeAp
 +      System.err.println(StringUtils.stringifyException(e));
 +    } catch (UnknownHostException e) {
 +      System.err.println(StringUtils.stringifyException(e));
-+    } catch (ConnectException e) {
-+      System.err.println(StringUtils.stringifyException(e));
 +    } catch (IOException e) {
 +      System.err.println(StringUtils.stringifyException(e));
 +    } catch (Exception e) {
@@ -775,10 +773,10 @@ Index: src/contrib/scribe-log4j/src/java/org/apache/hadoop/scribe_log4j/ScribeAp
 +      LogEntry entry = new LogEntry(scribeCategory, message);
 +
 +      logEntries.clear();
-+      list.add(entry);
++      logEntries.add(entry);
 +
 +      try {
-+        client.Log(list);
++        client.Log(logEntries);
 +      } catch (Exception e) {
 +  System.err.println(StringUtils.stringifyException(e));
 +      }

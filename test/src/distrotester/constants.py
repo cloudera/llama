@@ -30,19 +30,6 @@ DEFAULT_LOG_FILENAME = "testdistrib.log"
 # way up to DEBUG. This is a testing tool, after all.
 DEFAULT_LOG_VERBOSITY = output.DEBUG
 
-# Where is the distribution to install and test stored?
-DISTRIB_TARBALL_ARG = "--distribution"
-DISTRIB_TARBALL_KEY = "distribution.tar.file"
-
-# Alternate means of acquiring the distribution is to retrieve it from S3
-# What is the bucket:key for this?
-DISTRIB_S3_ARG = "--s3distribution"
-DISTRIB_S3_KEY = "distribution.s3.location"
-
-# If we want to refresh only the installer, where is this tarball?
-INSTALLER_TARBALL_ARG = "--installer"
-INSTALLER_TARBALL_KEY = "installer.tar.file"
-
 # if we're in a multi-host situation, where did the test controller put the
 # slaves file?
 SLAVES_FILE_ARG = "--slaves-file"
@@ -95,20 +82,22 @@ UNATTENDED_KEY = "unattended.test"
 SINGLE_TEST_NAME_ARG = "--test-name"
 SINGLE_TEST_NAME_KEY = "test.name"
 
-# If we know that the distribution has already been uploaded, don't
-# need to wait for it to happen a second time.
-BYPASS_UPLOAD_ARG = "--bypass-upload"
-BYPASS_UPLOAD_KEY = "bypass.upload"
-
+# This doesn't need to be run a 2nd time, if the user has run this already.
 BYPASS_SETUP_ARG = "--bypass-setup"
 BYPASS_SETUP_KEY = "bypass.setup"
 
 # Where are the clouderadev ec2 profiles stored, relative to the bindir?
 PROFILE_DIR = "profiles"
 
-# What's the base directory containing the test harness, relative
-# to the bindir?
-HARNESS_BASE_DIR = "."
+# What's the base directory containing the test harness on the EC2 instances?
+HARNESS_BASE_DIR = "/mnt/distrotest"
+
+
+# Where are our hadoop configuration files stored?
+HADOOP_CONFIG_SRCDIR = os.path.join(HARNESS_BASE_DIR, "hadoop-configs")
+
+# Where do they need to go to be used with /etc/alternatives?
+HADOOP_CONFIG_DESTDIR = "/etc/hadoop"
 
 # default instance count is 1.
 DEFAULT_INSTANCES = 1
@@ -132,17 +121,6 @@ REMOTE_TEST_COMMAND = "python /mnt/distrotest/remotetest " + RUN_TESTS_ARG
 #  the remote program will record its output to this log file remotely
 # (in addition to printing to its stdout for inclusion in our own log)
 REMOTE_LOG_FILENAME = "/mnt/cloudera-tester.log"
-
-# How do we invoke the distribution installer
-DISTRIB_VERSION = installer.version.get_version()
-DISTRIB_DEST_DIR = "/mnt/cloudera-hadoop-" + DISTRIB_VERSION + "/"
-INSTALLER_COMMAND = os.path.join(DISTRIB_DEST_DIR, "bin/install")
-
-INSTALL_PREFIX = "/mnt/installed-distro"
-CONFIG_PREFIX = "/mnt/etc/cloudera"
-
-# where should the installer output its logs to
-INSTALLER_LOG_FILE = "/mnt/cloudera-installer.log"
 
 BASE_TMP_DIR = "/mnt/tmp"
 
@@ -180,6 +158,13 @@ HIVE_TEST_DIR = "hive-tests"
 # Where are the scribe test files
 TEST_JAR_DIR = "testjar"
 DISTRIB_TEST_JAR = os.path.join(TEST_JAR_DIR, "DistribTest.jar")
+
+# The user's home dir needs to be created before tests are run,
+# but we don't want to run this every time. Set this flag after it's done.
+IS_HOME_DIR_SETUP_KEY = "home.dir.setup"
+
+# The name of the Hadoop configuration installed via alternatives
+CURRENT_CONFIG_KEY = "current.hadoop.conf"
 
 ############################################################
 # constants pertaining to making bootstrap installations

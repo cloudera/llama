@@ -56,9 +56,6 @@ class TestProperties(Properties):
     AWS_ACCOUNT_ID_ARG  : AWS_ACCOUNT_ID_KEY,
 
     SLAVES_FILE_ARG       : SLAVES_FILE_KEY,
-    DISTRIB_TARBALL_ARG   : DISTRIB_TARBALL_KEY,
-    DISTRIB_S3_ARG        : DISTRIB_S3_KEY,
-    INSTALLER_TARBALL_ARG : INSTALLER_TARBALL_KEY,
 
     UNATTENDED_ARG      : UNATTENDED_KEY,
 
@@ -66,7 +63,6 @@ class TestProperties(Properties):
 
     # Options related to restarting the test harness and debugging
     EXISTING_INSTANCES_ARG : EXISTING_INSTANCES_KEY,
-    BYPASS_UPLOAD_ARG      : BYPASS_UPLOAD_KEY,
     BYPASS_SETUP_ARG       : BYPASS_SETUP_KEY,
 
     # args specific to remotetest
@@ -81,7 +77,6 @@ class TestProperties(Properties):
     LIST_PLATFORMS_ARG,
     RUN_TESTS_ARG,
     SETUP_ARG,
-    BYPASS_UPLOAD_ARG,
     BYPASS_SETUP_ARG,
     UNATTENDED_ARG
   ]
