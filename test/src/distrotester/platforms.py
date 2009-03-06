@@ -62,6 +62,8 @@ def setupForPlatform(platformName, properties):
     return Fedora8Setup("x86_64", properties)
   elif platformName == "centos5.i386":
     return Centos5Setup("i386", properties)
+  elif platformName == "centos5.multi.i386":
+    return Centos5Setup("i386", properties)
   else:
     raise TestError("No Setup object available for platform: " + platformName)
 
@@ -85,28 +87,23 @@ def testSuiteForPlatform(platformName, properties):
     return unittest.makeSuite(MultiHostTest, testNamePrefix)
   elif platformName == "centos5.i386":
     return unittest.makeSuite(StandaloneTest, testNamePrefix)
+  elif platformName == "centos5.multi.i386":
+    return unittest.makeSuite(MultiHostTest, testNamePrefix)
   else:
     raise TestError("No test suite available for platform: " + platformName)
 
 
-def launchInstances(platformName, properties, configOnly=False):
-  """ Launch one or more EC2 instances and return a list of instance ids.
+
+def configure_instances(platform_name, properties):
+  """ Load the configuration for the EC2 instances.
       The instance launch process is governed by loading in the dev.properties
-      file associated with platformName. This is loaded "underneath" the
+      file associated with platform_name. This is loaded "underneath" the
       primary properties object -- anything that the user set via an external
       properties file, command line switches, etc, are preserved, but this
       sets new properties that the user left unset.
-
-      If configOnly is true, loads all the config for the platform,
-      but doesn't actually launch the instances. Just set up params as if
-      we did.
   """
 
-  # This method both sets the config properties, and then
-  # also creates the instances (if configOnly is False).
-  # TODO(aaron): Refactor into two different methods. (CH-77)
-
-  profileFilename = profileForPlatform(platformName)
+  profileFilename = profileForPlatform(platform_name)
   profileProps = Properties()
 
   # load the properties in for the instance
@@ -125,57 +122,60 @@ def launchInstances(platformName, properties, configOnly=False):
   for key in allKeys:
     properties.setProperty(key, profileProps.getProperty(key))
 
-  # now determine the args to use when creating the instances
-
-  ami = profileProps.getProperty(ec2.EC2_AMI_PROP)
-  instanceType = profileProps.getProperty(ec2.EC2_INSTANCE_TYPE_PROP)
-  arch = ec2.getArchForInstanceType(instanceType)
-  instanceCount = properties.getInt(ec2.EC2_INSTANCES_PROP, DEFAULT_INSTANCES)
-  group = ec2.getEc2SecurityGroup(profileProps)
-  keyPair = profileProps.getProperty(ec2.EC2_KEYPAIR_PROP)
-  userData = None
-  zone = None
-
-  if instanceType == None:
-    raise TestError("No instance type set for " + platformName)
-  if arch == None:
-    raise TestError("No arch for instance type in " + platformName)
-  if ami == None:
-    raise TestError("AMI not set in " + platformName)
-  if group == None:
-    raise TestError("No group set for " + platformName)
-  if keyPair == None:
-    raise TestError("No keypair set for " + platformName)
-
-  if profileProps.getBoolean(ec2.EC2_CREATE_GROUP_PROP):
-    createdGroup = ec2.ensureGroup(group, profileProps)
-    if createdGroup:
-      # Authorize Hadoop ports too
-      # aaron: I'm honestly not sure what ports Hadoop really needs here.
-      # It might actually be more than this. I gave up and authorized all
-      # traffic within the chdtest group manually; I don't know if this
-      # will recreate everything necessary.
-      ec2.authorizeGroup(group, 9000, TCP, profileProps)
-      ec2.authorizeGroup(group, 9001, TCP, profileProps)
-      ec2.authorizeGroup(group, 50010, TCP, profileProps)
-
   # The chdtest identity file may not be chmod'd to 0600 (git does not
   # track permissions except a+x/a-x). We need to do that here.
   identityFile = profileProps.getProperty("ssh.identity")
   if identityFile != None:
     shell.sh("chmod 0600 " + identityFile)
 
-  if configOnly:
-    # That's as far as we go!
-    return []
+
+def launch_instances(platform_name, properties):
+  """
+      Launch one or more EC2 instances and return a list of instance ids.
+      Assumes configure_instances() was called first, which validates
+      parameters.
+  """
+
+  # determine the args to use when creating the instances
+  ami = properties.getProperty(ec2.EC2_AMI_PROP)
+  instanceType = properties.getProperty(ec2.EC2_INSTANCE_TYPE_PROP)
+  arch = ec2.getArchForInstanceType(instanceType)
+  instanceCount = properties.getInt(ec2.EC2_INSTANCES_PROP, DEFAULT_INSTANCES)
+  group = ec2.getEc2SecurityGroup(properties)
+  keyPair = properties.getProperty(ec2.EC2_KEYPAIR_PROP)
+  userData = None
+  zone = None
+
+  if instanceType == None:
+    raise TestError("No instance type set for " + platform_name)
+  if arch == None:
+    raise TestError("No arch for instance type in " + platform_name)
+  if ami == None:
+    raise TestError("AMI not set in " + platform_name)
+  if group == None:
+    raise TestError("No group set for " + platform_name)
+  if keyPair == None:
+    raise TestError("No keypair set for " + platform_name)
+
+  if properties.getBoolean(ec2.EC2_CREATE_GROUP_PROP):
+    createdGroup = ec2.ensureGroup(group, properties)
+    if createdGroup:
+      # Authorize Hadoop ports too
+      # aaron: I'm honestly not sure what ports Hadoop really needs here.
+      # It might actually be more than this. I gave up and authorized all
+      # traffic within the chdtest group manually; I don't know if this
+      # will recreate everything necessary.
+      ec2.authorizeGroup(group, 9000, TCP, properties)
+      ec2.authorizeGroup(group, 9001, TCP, properties)
+      ec2.authorizeGroup(group, 50010, TCP, properties)
 
   # throws shell.CommandError on failure.
   instances = ec2.runInstances(ami, instanceCount, group, keyPair, userData, \
-      instanceType, zone, profileProps)
+      instanceType, zone, properties)
 
   # throws ec2.TimeoutError
   bootTimeout = DEFAULT_BOOT_TIMEOUT
-  ec2.waitForInstances(instances, bootTimeout, profileProps)
+  ec2.waitForInstances(instances, bootTimeout, properties)
 
   return instances
 

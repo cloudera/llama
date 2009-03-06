@@ -7,10 +7,10 @@ import logging
 import os
 import time
 
-from   com.cloudera.testutil.verbosetest import VerboseTestCase
 import com.cloudera.tools.shell as shell
 
 from   distrotester.constants import *
+import distrotester.functiontests.basetest as basetest
 import distrotester.testproperties as testproperties
 
 
@@ -18,44 +18,14 @@ import distrotester.testproperties as testproperties
 CHECKPOINT_INTERVAL = 10
 
 
-class SecondaryNameNodeTest(VerboseTestCase):
+class SecondaryNameNodeTest(basetest.BaseTest):
 
-  def getHadoopDir(self):
-    return os.path.join(INSTALL_PREFIX, "hadoop")
-
-  def getProperties(self):
-    return testproperties.getProperties()
-
-  def getHadoopCmd(self):
-    return os.path.join(self.getHadoopDir(), "bin/hadoop")
-
-  def getClientSudo(self):
-    """ Return the shell cmd prefix to access a client hadoop program """
-    clientUser = self.getProperties().getProperty(CLIENT_USER_KEY)
-    if clientUser != ROOT_USER:
-      return "sudo -H -u " + clientUser + " "
-    else:
-      return ""
-
-
-  def getDaemonSudo(self):
-    """ Return the shell cmd prefix to run a superuser hadoop program """
-    superUser = self.getProperties().getProperty(HADOOP_USER_KEY)
-    if superUser != ROOT_USER:
-      return "sudo -H -u " + superUser + " "
-    else:
-      return ""
-
-  def start_dfs_daemons(self):
-    """ Start HDFS and wait for safemode to exit and at least one checkpoint
-        interval
+  def wait_for_dfs_daemons(self):
     """
-
-    # Ensure that all HDFS services are started.
-    logging.debug("Ensuring all HDFS services are started...")
-    start_daemon_cmd = os.path.join(self.getHadoopDir(), "bin/start-dfs.sh")
-    cmd = self.getDaemonSudo() + start_daemon_cmd
-    shell.sh(cmd)
+        This test will have been run in the context of one of the install
+        tests, which also should have started all the appropriate hadoop
+        daemons. Wait for safemode to exit and at least one checkpoint interval.
+    """
 
     # Wait for safemode off
     logging.debug("Waiting for safemode to exit...")
@@ -69,12 +39,14 @@ class SecondaryNameNodeTest(VerboseTestCase):
     logging.debug("Wait complete.")
 
 
-  def testSecondaryViaScribe(self):
+
+  # TODO(aaron) ENABLE THIS WHEN SCRIBE IS READY.
+  def DoNot_testSecondaryViaScribe(self):
     """ Test that the secondarynamenode-specific log lines are being added
         to our scribe logs.
     """
 
-    self.start_dfs_daemons()
+    self.wait_for_dfs_daemons()
 
     # The 2NN should have snapshotted by now. See if it is in the scribe log.
     magic_string = "NameNode.Secondary: Downloaded file fsimage"
@@ -98,7 +70,7 @@ class SecondaryNameNodeTest(VerboseTestCase):
     global CHECKPOINT_INTERVAL
     global CHECKPOINT_DIR
 
-    self.start_dfs_daemons()
+    self.wait_for_dfs_daemons()
 
     secondary_server = self.getProperties().getProperty(SECONDARY_HOSTNAME_KEY)
     logging.debug("Secondary server addr is: " + secondary_server)
@@ -140,7 +112,7 @@ class SecondaryNameNodeTest(VerboseTestCase):
     editsLines = shell.sshLines("root", secondary_server, "md5sum " + edits_file, \
         self.getProperties())
     if len(editsLines) > 0:
-      second_edit_md5 = editsLines[0]
+      second_edits_md5 = editsLines[0]
     else:
       self.fail("Couldn't read md5sum for edits file in round 2")
 

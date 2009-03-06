@@ -16,40 +16,18 @@ import com.cloudera.tools.shell as shell
 
 from   distrotester.constants import *
 import distrotester.testproperties as testproperties
+import distrotester.installtests.installbase as installbase
 from   distrotester.functiontests.hadooptests import HadoopTest
 from   distrotester.functiontests.hivetests import HiveTest
 from   distrotester.functiontests.logmovertests import LogMoverTest
 from   distrotester.functiontests.pigtests import PigTest
 from   distrotester.functiontests.scribetests import ScribeTest
 
-class StandaloneTest(VerboseTestCase):
+class StandaloneTest(installbase.InstallBaseTest):
 
   def __init__(self, methodName='runTest'):
-    VerboseTestCase.__init__(self, methodName)
-    self.curHadoopSite = None
+    installbase.InstallBaseTest.__init__(self, methodName)
     self.curSlavesFile = None
-
-    # Get our hostname and memoize it
-    self.hostname = socket.getfqdn()
-
-
-  def getPlatformSetup(self):
-    """ Get the PlatformSetup object used to initialize the node """
-
-    # delaying this import til this thunk is used to avoid
-    # circular dependency
-    import distrotester.platforms as platforms
-
-    properties = self.getProperties()
-    platformName = properties.getProperty(TEST_PLATFORM_KEY)
-    return platforms.setupForPlatform(platformName, properties)
-
-
-  def getHadoopDir(self):
-    return os.path.join(INSTALL_PREFIX, "hadoop")
-
-  def getHadoopCmd(self):
-    return os.path.join(self.getHadoopDir(), "bin/hadoop")
 
   def getSlavesFile(self):
     """ Write out a slaves file containing only 'localhost' """
@@ -63,49 +41,6 @@ class StandaloneTest(VerboseTestCase):
 
     return tmpFilename
 
-  def getProperties(self):
-    return testproperties.getProperties()
-
-  def prepHadoopSite(self, inputHadoopSite):
-    """ given an input hadoop-site.xml file we want to use, we must
-        first replace the 'MASTER_HOST' string with the current
-        hostname.
-    """
-
-    # Get a temporary filename to use as the hadoop-site.xml file.
-    (oshandle, tmpFilename) = tempfile.mkstemp()
-    self.curHadoopSite = tmpFilename
-    try:
-      handle = os.fdopen(oshandle, "w")
-      handle.close()
-    except OSError:
-      # irrelevant
-      pass
-    except IOError:
-      # irrelevant
-      pass
-
-    # put the hadoop site file through a sed script.
-    script = 'sed -e "s/MASTER_HOST/' + self.hostname + '/" ' \
-        + inputHadoopSite + " > " + self.curHadoopSite
-    shell.sh(script)
-
-    return self.curHadoopSite
-
-  def stopHadoopForUser(self, user):
-    """ Stop the hadoop daemons run by a given hadoop username """
-    try:
-      # stop any hadoop run as hadoop user.
-      hadoopDir = self.getHadoopDir()
-      stopCmd = os.path.join(hadoopDir, "bin/stop-all.sh")
-      shell.sh("sudo -H -u " + user + " " + stopCmd)
-    except shell.CommandError, ce:
-      pass # nothing to shut down? ok
-
-  def stopHadoop(self):
-    self.stopHadoopForUser(ROOT_USER)
-    self.stopHadoopForUser(HADOOP_USER)
-
 
   def stopScribe(self):
     try:
@@ -115,234 +50,62 @@ class StandaloneTest(VerboseTestCase):
 
 
   def tearDown(self):
-    if self.curHadoopSite != None:
-      # remove this temp file we created
-      os.remove(self.curHadoopSite)
-
     if self.curSlavesFile != None:
       # remove this temp file we created
       os.remove(self.curSlavesFile)
 
-    # self.stopHadoop()
-
-    VerboseTestCase.tearDown(self)
+    installbase.InstallBaseTest.tearDown(self)
 
 
   def setUp(self):
     """ shutdown and remove existing hadoop distribution. """
 
-    VerboseTestCase.setUp(self)
+    installbase.InstallBaseTest.setUp(self)
 
     try:
-      self.stopHadoop()
+      self.stop_hadoop()
       self.stopScribe()
     except:
       pass
 
-    # Delete everything associated with Hadoop.
-    shell.sh("rm -rf " + BASE_TMP_DIR)
-    shell.sh("rm -rf " + INSTALL_PREFIX)
-    shell.sh("rm -rf " + CONFIG_PREFIX)
-    shell.sh("mkdir -p " + BASE_TMP_DIR)
-    shell.sh("chmod a+w " + BASE_TMP_DIR)
-    shell.sh("chmod o+t " + BASE_TMP_DIR)
 
-    # Delete things associated with logmover / scribe
-    shell.sh("rm -rf " + LOGMOVER_OUT_DIR)
-    shell.sh("rm -rf " + SCRIBE_OUT_DIR)
+  def start_hadoop(self):
+    shell.sh("service hadoop-namenode start")
+    shell.sh("service hadoop-secondarynamenode start")
+    shell.sh("service hadoop-datanode start")
+    shell.sh("service hadoop-jobtracker start")
+    shell.sh("service hadoop-tasktracker start")
 
 
-  def testHadoopOnly(self):
-    """ Install *only* the hadoop component.
-        Install, run, and use hadoop as root
-    """
-
-    javaHome = self.getProperties().getProperty(JAVA_HOME_KEY)
-
-    cmd = INSTALLER_COMMAND + " --unattend --prefix " + INSTALL_PREFIX \
-        + " --role jobtracker,namenode,secondary_namenode,datanode,tasktracker,hadoop_developer" \
-        + " --config-prefix " + CONFIG_PREFIX \
-        + " --log-filename " + INSTALLER_LOG_FILE \
-        + " --format-hdfs --hadoop-user root " \
-        + " --java-home " + javaHome \
-        + " --hadoop-slaves " + self.getSlavesFile() \
-        + " --identity /root/.ssh/id_rsa" \
-        + " --hadoop-site " \
-        + self.prepHadoopSite("hadoop-configs/basic-config.xml") \
-        + " --debug"
-    logging.debug("Installing with command: " + cmd)
-    shell.sh(cmd)
-
-    self.getProperties().setProperty(HADOOP_USER_KEY, ROOT_USER)
-    self.getProperties().setProperty(CLIENT_USER_KEY, ROOT_USER)
-
-    hadoopSuite = unittest.makeSuite(HadoopTest, 'test')
-    functionalityTests = unittest.TestSuite([
-        hadoopSuite
-        ])
-
-    print "Running Hadoop functionality tests"
-    runner = unittest.TextTestRunner()
-    if not runner.run(functionalityTests).wasSuccessful():
-      self.fail()
-
-
-  def testAllApps(self):
+  def test_all_apps(self):
     """ Install all components.
         Use a separate hadoop user account and a separate client account. """
 
-    javaHome = self.getProperties().getProperty(JAVA_HOME_KEY)
+    # install basic configuration
+    platform_setup = self.get_platform_setup()
+    platform_setup.installPackage("hadoop-conf-pseudo")
 
-    cmd = INSTALLER_COMMAND + " --unattend --prefix " + INSTALL_PREFIX \
-        + " --role master,slave,developer" \
-        + " --config-prefix " + CONFIG_PREFIX \
-        + " --log-filename " + INSTALLER_LOG_FILE \
-        + " --format-hdfs --hadoop-user " + HADOOP_USER \
-        + " --java-home " + javaHome \
-        + " --hadoop-slaves " + self.getSlavesFile() \
-        + " --identity /root/.ssh/id_rsa" \
-        + " --hadoop-site " \
-        + self.prepHadoopSite("hadoop-configs/basic-config.xml") \
-        + ' --namenode "' + self.hostname + ':9000" ' \
-        + ' --jobtracker "' + self.hostname + ':9001"' \
-        + ' --secondary ' + self.hostname \
-        + " --overwrite-htdocs" \
-        + " --debug"
-
-    logging.debug("Installing with command: " + cmd)
-    shell.sh(cmd)
+    self.start_hadoop()
 
     self.getProperties().setProperty(HADOOP_USER_KEY, HADOOP_USER)
     self.getProperties().setProperty(CLIENT_USER_KEY, CLIENT_USER)
 
     hadoopSuite   = unittest.makeSuite(HadoopTest, 'test')
+# TODO(aaron): Enable tests as they're available.
     hiveSuite     = unittest.makeSuite(HiveTest, 'test')
     pigSuite      = unittest.makeSuite(PigTest, 'test')
-    scribeSuite   = unittest.makeSuite(ScribeTest, 'test')
-    logmoverSuite = unittest.makeSuite(LogMoverTest, 'test')
+#    scribeSuite   = unittest.makeSuite(ScribeTest, 'test')
+#    logmoverSuite = unittest.makeSuite(LogMoverTest, 'test')
     functionalityTests = unittest.TestSuite([
         hadoopSuite,
         hiveSuite,
         pigSuite,
-        scribeSuite
+#        scribeSuite,
+#        logmoverSuite
         ])
 
     print "Running Hadoop functionality tests"
     runner = unittest.TextTestRunner()
     if not runner.run(functionalityTests).wasSuccessful():
       self.fail()
-
-  def testWithHostsFiles(self):
-    """ All apps, separate accounts, with dfs.hosts and dfs.hosts.exclude
-        files set in place.
-    """
-
-    javaHome = self.getProperties().getProperty(JAVA_HOME_KEY)
-
-    cmd = INSTALLER_COMMAND + " --unattend --prefix " + INSTALL_PREFIX \
-        + " --role standalone" \
-        + " --config-prefix " + CONFIG_PREFIX \
-        + " --log-filename " + INSTALLER_LOG_FILE \
-        + " --format-hdfs --hadoop-user " + HADOOP_USER \
-        + " --java-home " + javaHome \
-        + " --hadoop-slaves " + self.getSlavesFile() \
-        + " --identity /root/.ssh/id_rsa" \
-        + " --make-dfs-hosts dfs.hosts" \
-        + " --make-dfs-excludes dfs.hosts.exclude" \
-        + " --hadoop-site " \
-        + self.prepHadoopSite("hadoop-configs/hosts-config.xml") \
-        + ' --namenode ' + self.hostname + ':9000' \
-        + ' --jobtracker "' + self.hostname + ':9001"' \
-        + ' --secondary ' + self.hostname \
-        + " --overwrite-htdocs" \
-        + " --debug"
-
-    shell.sh(cmd)
-
-    self.getProperties().setProperty(HADOOP_USER_KEY, HADOOP_USER)
-    self.getProperties().setProperty(CLIENT_USER_KEY, CLIENT_USER)
-
-    hadoopSuite = unittest.makeSuite(HadoopTest, 'test')
-    hiveSuite   = unittest.makeSuite(HiveTest, 'test')
-    pigSuite    = unittest.makeSuite(PigTest, 'test')
-    scribeSuite = unittest.makeSuite(ScribeTest, 'test')
-    functionalityTests = unittest.TestSuite([
-        hadoopSuite,
-        hiveSuite,
-        pigSuite,
-        scribeSuite
-        ])
-
-    print "Running Hadoop functionality tests"
-    runner = unittest.TextTestRunner()
-    if not runner.run(functionalityTests).wasSuccessful():
-      self.fail()
-    pass
-
-  def testGuidedInstall(self):
-    """ Use stdin to handle guided installation. """
-    # TODO: This (CH-79)
-    # TODO: set the editor to /bin/true, provide a slaves file.
-    pass
-
-  def testWithoutLzo(self):
-    """ Remove the LZO libs, use a non-lzo configuration """
-
-    javaHome = self.getProperties().getProperty(JAVA_HOME_KEY)
-
-    # remove the lzo package; use a finally block to ensure we always
-    # restore it after this test runs.
-    platformSetup = self.getPlatformSetup()
-    platformSetup.removePackage("lzo")
-    try:
-      cmd = INSTALLER_COMMAND + " --unattend --prefix " + INSTALL_PREFIX \
-          + " --role standalone" \
-          + " --config-prefix " + CONFIG_PREFIX \
-          + " --log-filename " + INSTALLER_LOG_FILE \
-          + " --format-hdfs --hadoop-user " + HADOOP_USER \
-          + " --java-home " + javaHome \
-          + " --hadoop-slaves " + self.getSlavesFile() \
-          + " --identity /root/.ssh/id_rsa" \
-          + " --hadoop-site " \
-          + self.prepHadoopSite("hadoop-configs/no-compress-config.xml") \
-          + ' --namenode ' + self.hostname + ':9000 ' \
-          + ' --jobtracker "' + self.hostname + ':9001"' \
-          + " --overwrite-htdocs" \
-          + " --debug"
-
-      logging.debug("Installing with command: " + cmd)
-      shell.sh(cmd)
-
-      self.getProperties().setProperty(HADOOP_USER_KEY, HADOOP_USER)
-      self.getProperties().setProperty(CLIENT_USER_KEY, CLIENT_USER)
-
-      hadoopSuite = unittest.makeSuite(HadoopTest, 'test')
-      hiveSuite   = unittest.makeSuite(HiveTest, 'test')
-      pigSuite    = unittest.makeSuite(PigTest, 'test')
-      scribeSuite = unittest.makeSuite(ScribeTest, 'test')
-      functionalityTests = unittest.TestSuite([
-          hadoopSuite,
-          hiveSuite,
-          pigSuite,
-          scribeSuite
-          ])
-
-      print "Running Hadoop functionality tests"
-      runner = unittest.TextTestRunner()
-      if not runner.run(functionalityTests).wasSuccessful():
-        self.fail()
-    finally:
-      platformSetup.installPackage("lzo")
-
-  def testDoubleInstall(self):
-    """ Run the installer 2x in a row then test """
-
-    logging.info("Performing first install/test in repeated batch.")
-    self.testAllApps()
-    # the second installation will reformat the hdfs instance, but
-    # we need to manually destroy the hdfs data dir first or else
-    # it will fail to boot (bad namespace).
-    shell.sh("rm -rf /mnt/tmp/data")
-    logging.info("Performing second install/test in repeated batch.")
-    self.testAllApps()
 
