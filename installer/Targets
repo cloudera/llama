@@ -9,14 +9,14 @@ installer = PythonTarget(
   sources=[ "src/install",
             "src/installer",
             "src/com"],
-  requiredTargets=[ "python/Common",
-                    "projects/HadoopDist:versionStamps" ])
+  requiredTargets=[ "//python/Common",
+                    "..:versionStamps" ])
 
 installerTest = PythonTestTarget(
   sources = ["test/com/"],
   mainModule = "com.cloudera.distribution.alltests",
   requiredTargets = [":installer",
-                     "python/Common"])
+                     "//python/Common"])
 
 # packaging the installer up for use in the tarball
 release = PythonRedistTarget(

@@ -10,9 +10,9 @@ tester = PythonTarget(
   sources=[ "src/distrotester",
             "src/remotetest",
             "src/testdistrib"],
-  requiredTargets=[ "python/Common",
-                    "projects/HadoopDist/installer",
-                    "projects/HadoopDist:versionStamps" ],
+  requiredTargets=[ "//python/Common",
+                    "../installer",
+                    "..:versionStamps" ],
   dataPaths = [ "profiles",
                 "hadoop-configs",
                 "pig-tests",
@@ -28,7 +28,7 @@ pyRelease = PythonRedistTarget(
 testsJar = JarTarget(
   jarName = "DistribTest.jar",
   sources = [ "mapreduce-tests" ],
-  requiredTargets = [ "projects/HadoopDist:supportedHadoopPackage" ])
+  requiredTargets = [ "..:supportedHadoopPackage" ])
 
 
 # Now we bundle all of the above together
