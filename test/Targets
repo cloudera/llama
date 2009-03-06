@@ -39,15 +39,15 @@ release = PackageTarget(
       includeZip = False),
     OutputComponent(
       targetName = ":testsJar",
-      destDir = "testjar"),
+      destDir = "$/testjar"),
 
     # fast-checkpoint hadoop-site.xml configuration
     DirComponent(
       srcDir = "hadoop-configs/base",
-      destDir = "hadoop-configs/fast-checkpoint"),
+      destDir = "$/hadoop-configs/fast-checkpoint"),
     FileComponent(
       srcFile  = "hadoop-configs/fast-checkpoint.xml",
-      destFile = "hadoop-configs/fast-checkpoint/hadoop-site.xml"),
+      destFile = "$/hadoop-configs/fast-checkpoint/hadoop-site.xml"),
 
     # Don't want the top-level install script included in our bin dir.
     ExcludeComponent(

@@ -193,19 +193,19 @@ supportedHadoopPackage = PackageTarget(
 hadoopComponent = PackageComponent(
   targetName = ":supportedHadoopPackage",
   includeZip = True,
-  destDir    = "packages")
+  destDir    = "$/packages")
 
 # the installation system
 installerComponent = PackageComponent(
   targetName = "installer:release",
   includeZip = False, # we need this unpackacked
-  destDir    = "bin")
+  destDir    = "$/bin")
 
 # the log mover system
 logMoverComponent = PackageComponent(
   targetName = "log_mover:release",
   includeZip = False, # we need this unpackacked
-  destDir    = "bin/logmover")
+  destDir    = "$/bin/logmover")
 
 # Take the pig tgz package we assembled in thirdparty/pig/ and include that
 # in our distribution package.
@@ -213,7 +213,7 @@ logMoverComponent = PackageComponent(
 pigPackageComponent = PackageComponent(
   targetName = "//thirdparty/pig-0.1.1:pigPackage",
   includeZip = True,
-  destDir    = "packages")
+  destDir    = "$/packages")
 
 # Take the hive tgz package we assembled in thirdparty/hive/ and include
 # this in our distribution package.
@@ -221,7 +221,7 @@ pigPackageComponent = PackageComponent(
 hivePackageComponent = PackageComponent(
   targetName = "//thirdparty/hive-chd-0.3.0:hivePackage",
   includeZip = True,
-  destDir    = "packages")
+  destDir    = "$/packages")
 
 
 # copy all the doc/ directory in
