@@ -158,9 +158,9 @@ supportedHadoopPackage = PackageTarget(
       srcDir =  "pkg_scripts/rpm",
       destDir = "$/pkg_scripts/rpm"),
     # The release should follow the format <release>.cloudera.CH<ch version with _>
-    RpmComponent( specFile = "hadoop.spec", 
-                  rpmBuildCmd= "-bb --target noarch,i386,amd64",
-                  rpmRelease= "1.cloudera.CH0_3")
+#    RpmComponent( specFile = "hadoop.spec",
+#                  rpmBuildCmd= "-bb --target noarch,i386,amd64",
+#                  rpmRelease= "1.cloudera.CH0_3")
   ],
 
   # Define build-phase outputs that other programs compiled against our distro need.
