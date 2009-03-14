@@ -35,8 +35,6 @@ as several related tools:
 
 * Pig - a dataflow language that operates on top of MapReduce.
 
-* Scribe - a log aggregation framework to facilitate system debugging.
-
 * MRUnit - a unit test framework for MapReduce programs.
 
 %install

@@ -18,7 +18,18 @@ rpm_release="6.cloudera.CH0_3"
 
 # This is the default target.
 # This is the distribution target that builds all RPMs for the Cloudera Distribution for Hadoop.
-distribution = EmptyPackageTarget(
+# It generates an RPM with dependencies on all shipped RPMs for a single-source download.
+distribution = PackageTarget(
+  packageName = "cloudera_distribution",
+  components = [
+    # Build the "distribution" RPM with /etc/cloudera-version and deps.
+    RpmComponent(
+      specFile   ="distribution.spec",
+      rpmBuildCmd="-bb --target noarch",
+      rpmRelease =rpm_release)
+  ],
+
+  # Build all dependency RPMs
   requiredTargets = [
     ":supportedHadoopPackage",
     ":pig_rpm",
