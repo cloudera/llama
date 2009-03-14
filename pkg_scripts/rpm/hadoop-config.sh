@@ -20,9 +20,9 @@
 # Honor the JAVA_HOME variable if set, otherwise try to find Java
 if [ -z $JAVA_HOME ]; then
   if [ -h /usr/java/default ]; then
-	export JAVA_HOME="/usr/java/default"
+  export JAVA_HOME="/usr/java/default"
   else
-	cat <<MSG
+  cat <<MSG
 +======================================================================+
 |      Error: JAVA_HOME is not set and Java could not be found         |
 +----------------------------------------------------------------------+
@@ -33,7 +33,7 @@ if [ -z $JAVA_HOME ]; then
 |       binary or the RPM based installer.                             |
 +======================================================================+
 MSG
-	exit 1
+  exit 1
   fi
 fi
 
@@ -44,14 +44,14 @@ export HADOOP_HOME="@HADOOP_HOME@"
 if [ $# -gt 1 ]
 then
     if [ "--config" = "$1" ]
-	  then
-	      shift
-	      confdir=$1
-	      shift
-	      HADOOP_CONF_DIR=$confdir
+    then
+        shift
+        confdir=$1
+        shift
+        HADOOP_CONF_DIR=$confdir
     fi
 fi
- 
+
 # Allow alternate conf dir location.
 HADOOP_CONF_DIR="${HADOOP_CONF_DIR:-@HADOOP_CONF_DIR@}"
 HADOOP_LOG_DIR="${HADOOP_LOG_DIR:-@HADOOP_LOG_DIR@}"
