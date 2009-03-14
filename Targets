@@ -70,6 +70,14 @@ supportedHadoopPackage = PackageTarget(
     TarComponent(
       filename= hadoop_ver_string + ".tar.gz",
       subdir="topdir/BUILD/" + hadoop_ver_string + "/build/" + hadoop_ver_string),
+
+    # Copy output RPMs / SRPMs to toplevel rpm dir
+    DirComponent(
+      srcDir ="$/topdir/RPMS/",
+      destDir="${rpmdir}/RPMS/"),
+    DirComponent(
+      srcDir ="$/topdir/SRPMS/",
+      destDir="${rpmdir}/SRPMS/"),
   ],
 
   # Define build-phase outputs that other programs compiled against our distro need.
@@ -129,7 +137,15 @@ pig_rpm = PackageTarget(
         "%(assemblydir)/topdir",
         rpm_release,
         base_hadoop_ver ], # NOTE(aaron): This is the hadoop version; not the pig ver. (hardcoded)
-      dir="%(assemblydir)/topdir")
+      dir="%(assemblydir)/topdir"),
+
+    # Copy output RPMs / SRPMs to toplevel rpm dir
+    DirComponent(
+      srcDir ="$/topdir/RPMS/",
+      destDir="${rpmdir}/RPMS/"),
+    DirComponent(
+      srcDir ="$/topdir/SRPMS/",
+      destDir="${rpmdir}/SRPMS/"),
   ])
 
 hive_rpm = PackageTarget(
@@ -149,7 +165,15 @@ hive_rpm = PackageTarget(
         "%(assemblydir)/topdir",
         rpm_release,
         base_hadoop_ver ], # NOTE(aaron): This is the hadoop version; not the hive ver. (hardcoded)
-      dir="%(assemblydir)/topdir")
+      dir="%(assemblydir)/topdir"),
+
+    # Copy output RPMs / SRPMs to toplevel rpm dir
+    DirComponent(
+      srcDir ="$/topdir/RPMS/",
+      destDir="${rpmdir}/RPMS/"),
+    DirComponent(
+      srcDir ="$/topdir/SRPMS/",
+      destDir="${rpmdir}/SRPMS/"),
   ])
 
 
