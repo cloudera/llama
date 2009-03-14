@@ -16,10 +16,15 @@ base_ch_ver = "0.3.0"
 # RPM release number
 rpm_release="5.cloudera.CH0_3"
 
-# List of all distribution editions we compile from this tree.
 # This is the default target.
-allDistributions = EmptyPackageTarget(
-  requiredTargets = [ ":supportedDistro" ])
+# This is the distribution target that builds all RPMs for the Cloudera Distribution for Hadoop.
+distribution = EmptyPackageTarget(
+  requiredTargets = [
+    ":supportedHadoopPackage",
+    ":pig_rpm",
+    ":hive_rpm",
+    "//projects/mrunit:package",
+  ])
 
 version = VerStringTarget(
   version      = base_ch_ver,
@@ -82,71 +87,63 @@ supportedHadoopPackage = PackageTarget(
 
 # components for packaging
 
-# Hadoop itself!
-hadoopComponent = PackageComponent(
-  targetName = ":supportedHadoopPackage",
-  includeZip = True,
-  destDir    = "$/packages")
-
 # the installation system
-installerComponent = PackageComponent(
-  targetName = "installer:release",
-  includeZip = False, # we need this unpackacked
-  destDir    = "$/bin")
+# NOTE(aaron): This is disabled for now
+#installerComponent = PackageComponent(
+#  targetName = "installer:release",
+#  includeZip = False, # we need this unpackacked
+#  destDir    = "$/bin")
 
 # the log mover system
-logMoverComponent = PackageComponent(
-  targetName = "log_mover:release",
-  includeZip = False, # we need this unpackacked
-  destDir    = "$/bin/logmover")
+# NOTE(aaron): This is disabled for now
+#logMoverComponent = PackageComponent(
+#  targetName = "log_mover:release",
+#  includeZip = False, # we need this unpackacked
+#  destDir    = "$/bin/logmover")
 
-# Take the pig tgz package we assembled in thirdparty/pig/ and include that
-# in our distribution package.
-# NOTE(aaron): If you change this, change the version stamp below.
-pigPackageComponent = PackageComponent(
-  targetName = "//thirdparty/pig-0.1.1:pigPackage",
-  includeZip = True,
-  destDir    = "$/packages")
+pig_rpm = PackageTarget(
+  packageName   = "pig-rpm",
+  components    = [
+    # Relocate the topdir into the assembly dir
+    DirComponent(
+      srcDir = "rpm/topdir",
+      destDir = "$/topdir"),
 
-# Take the hive tgz package we assembled in thirdparty/hive/ and include
-# this in our distribution package.
-# NOTE(aaron): If you change this, change the version stamp below.
-hivePackageComponent = PackageComponent(
-  targetName = "//thirdparty/hive-chd-0.3.0:hivePackage",
-  includeZip = True,
-  destDir    = "$/packages")
+    # Run the rpm build script
+    ExecComponent(
+      executable="%(srcdir)/rpm/create_rpms",
+      arguments=[
+        "pig",
+        "%(assemblydir)/buildroot",
+        "%(assemblydir)/topdir",
+        rpm_release,
+        base_hadoop_ver ], # NOTE(aaron): This is the hadoop version; not the pig ver. (hardcoded)
+      dir="%(assemblydir)/topdir")
+  ])
+
+hive_rpm = PackageTarget(
+  packageName   = "pig-rpm",
+  components    = [
+    # Relocate the topdir into the assembly dir
+    DirComponent(
+      srcDir = "rpm/topdir",
+      destDir = "$/topdir"),
+
+    # Run the rpm build script
+    ExecComponent(
+      executable="%(srcdir)/rpm/create_rpms",
+      arguments=[
+        "hive",
+        "%(assemblydir)/buildroot",
+        "%(assemblydir)/topdir",
+        rpm_release,
+        base_hadoop_ver ], # NOTE(aaron): This is the hadoop version; not the hive ver. (hardcoded)
+      dir="%(assemblydir)/topdir")
+  ])
 
 
-# copy all the doc/ directory in
-docsComponent = DirComponent(
-  srcDir  = "doc",
-  destDir = "$/doc")
+# NOTE(aaron): Contents of doc and deps directories are not currently used/built
 
-# and put a redundant copy of the README in the top level, so the
-# user sees it straight away.
-readmeComponent = FileComponent(srcFile = "doc/README")
-
-# dependencies such as scribe libraries, configuration files, etc
-depsComponent = DirComponent(
-  srcDir  = "deps",
-  destDir = "$/deps")
-
-# There may be several versions of how we package the distribution.
-# supportedDistro is the one released to support clients
-supportedDistro = PackageTarget(
-  packageName = "cloudera-hadoop",
-  version     = ":version",
-  components  = [
-    hadoopComponent,
-    installerComponent,
-    logMoverComponent,
-    pigPackageComponent,
-    hivePackageComponent,
-    depsComponent,
-    docsComponent,
-    readmeComponent
-  ],
-  manifestFile = "manifest")
 
 # Version stamps: make a single indirection point where all the
 # version stamps are listed, so that the installer and test programs
@@ -168,5 +165,5 @@ ProjectList(requiredTargets=[
   ])
 
 
-defaultTarget(allDistributions)
+defaultTarget(distribution)
 
