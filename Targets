@@ -8,7 +8,7 @@
 
 # Version of Hadoop our system is based on:
 base_hadoop_ver = "0.18.3"
-hadoop_ver_string = "hadoop-" + base_hadoop_ver + "-patched"
+hadoop_ver_string = "hadoop-" + base_hadoop_ver
 
 # Cloudera Hadoop dist version.
 base_ch_ver = "0.3.0"
