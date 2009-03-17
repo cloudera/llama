@@ -21,12 +21,20 @@ rpm_release="6.cloudera.CH0_3"
 # It generates an RPM with dependencies on all shipped RPMs for a single-source download.
 distribution = PackageTarget(
   packageName = "cloudera_distribution",
+  version = ":version",
   components = [
     # Build the "distribution" RPM with /etc/cloudera-version and deps.
     RpmComponent(
       specFile   ="distribution.spec",
       rpmBuildCmd="-bb --target noarch",
-      rpmRelease =rpm_release)
+      rpmRelease =rpm_release),
+
+    # Mark the git version for the RPM releases
+    ExecComponent(
+      executable="%(srcdir)/rpm/rpm_build_info",
+      arguments =[
+        "${rpmdir}",
+        rpm_release ])
   ],
 
   # Build all dependency RPMs
@@ -149,7 +157,7 @@ pig_rpm = PackageTarget(
   ])
 
 hive_rpm = PackageTarget(
-  packageName   = "pig-rpm",
+  packageName   = "hive-rpm",
   components    = [
     # Relocate the topdir into the assembly dir
     DirComponent(
