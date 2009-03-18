@@ -90,10 +90,10 @@ supportedHadoopPackage = PackageTarget(
 
   # Define build-phase outputs that other programs compiled against our distro need.
   outputs = [
-      "$/topdir/BUILD/" + hadoop_ver_string + "-core.jar",
-      "$/topdir/BUILD/" + hadoop_ver_string + "-test.jar",
-      "$/topdir/BUILD/" + hadoop_ver_string + "-tools.jar",
-      "$/topdir/BUILD/" + hadoop_ver_string + "-examples.jar",
+      "$/topdir/BUILD/" + hadoop_ver_string + "/build/" + hadoop_ver_string + "-core.jar",
+      "$/topdir/BUILD/" + hadoop_ver_string + "/build/" + hadoop_ver_string + "-test.jar",
+      "$/topdir/BUILD/" + hadoop_ver_string + "/build/" + hadoop_ver_string + "-tools.jar",
+      "$/topdir/BUILD/" + hadoop_ver_string + "/build/" + hadoop_ver_string + "-examples.jar",
       "$/topdir/BUILD/" + hadoop_ver_string + "/lib/commons-cli-2.0-SNAPSHOT.jar",
       "$/topdir/BUILD/" + hadoop_ver_string + "/lib/commons-codec-1.3.jar",
       "$/topdir/BUILD/" + hadoop_ver_string + "/lib/commons-httpclient-3.0.1.jar",
