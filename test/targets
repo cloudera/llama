@@ -33,24 +33,24 @@ testsJar = JarTarget(
 # Now we bundle all of the above together
 release = PackageTarget(
   package_name = "distrotest",
-  components = [
-    PackageComponent(
+  steps = [
+    IncludePackage(
       target_name = ":pyRelease",
       include_zip = False),
-    OutputComponent(
+    IncludeOutput(
       target_name = ":testsJar",
       dest_dir = "$/testjar"),
 
     # fast-checkpoint hadoop-site.xml configuration
-    DirComponent(
+    CopyDir(
       src_dir = "hadoop-configs/base",
       dest_dir = "$/hadoop-configs/fast-checkpoint"),
-    FileComponent(
+    CopyFile(
       src_file  = "hadoop-configs/fast-checkpoint.xml",
       dest_file = "$/hadoop-configs/fast-checkpoint/hadoop-site.xml"),
 
     # Don't want the top-level install script included in our bin dir.
-    ExcludeComponent(
+    Remove(
       name = "install"),
     ])
 

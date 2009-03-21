@@ -22,15 +22,15 @@ rpm_release="7.cloudera.CH0_3"
 distribution = PackageTarget(
   package_name = "cloudera_distribution",
   version = ":version",
-  components = [
+  steps = [
     # Build the "distribution" RPM with /etc/cloudera-version and deps.
-    RpmComponent(
+    RpmBuild(
       spec_file   ="distribution.spec",
       rpm_build_cmd="-bb --target noarch",
       rpm_release =rpm_release),
 
     # Mark the git version for the RPM releases
-    ExecComponent(
+    Exec(
       executable="%(srcdir)/rpm/rpm_build_info",
       arguments =[
         "${rpmdir}",
@@ -51,20 +51,20 @@ version = VerStringTarget(
 
 # NOTE(aaron): This is not currently enabled in any way in our distribution.
 # include the portal source code
-# portalComponent = DirComponent(
+# portalStep = CopyDir(
 #  src_dir  = "portal/src",
 #  dest_dir = "$/src/webapps/portal")
 
 supportedHadoopPackage = PackageTarget(
   package_name   = "distrib-hadoop",
-  components    = [
+  steps    = [
     # Relocate the topdir into the assembly dir
-    DirComponent(
+    CopyDir(
       src_dir = "rpm/topdir",
       dest_dir = "$/topdir"),
 
     # Run the rpm build script
-    ExecComponent(
+    Exec(
       executable="%(srcdir)/rpm/create_rpms",
       arguments=[
         "hadoop",
@@ -75,15 +75,15 @@ supportedHadoopPackage = PackageTarget(
       dir="%(assemblydir)/topdir"),
 
     # Create hadoop tarball.
-    TarComponent(
+    Tar(
       filename= hadoop_ver_string + ".tar.gz",
       subdir="topdir/BUILD/" + hadoop_ver_string + "/build/" + hadoop_ver_string),
 
     # Copy output RPMs / SRPMs to toplevel rpm dir
-    DirComponent(
+    CopyDir(
       src_dir ="$/topdir/RPMS/",
       dest_dir="${rpmdir}/RPMS/"),
-    DirComponent(
+    CopyDir(
       src_dir ="$/topdir/SRPMS/",
       dest_dir="${rpmdir}/SRPMS/"),
   ],
@@ -112,32 +112,32 @@ supportedHadoopPackage = PackageTarget(
       "$/topdir/BUILD/" + hadoop_ver_string + "/lib/xmlenc-0.52.jar",
     ])
 
-# components for packaging
+# steps for packaging
 
 # the installation system
 # NOTE(aaron): This is disabled for now
-#installerComponent = PackageComponent(
+#installerStep = IncludePackage(
 #  target_name = "installer:release",
 #  include_zip = False, # we need this unpackacked
 #  dest_dir    = "$/bin")
 
 # the log mover system
 # NOTE(aaron): This is disabled for now
-#logMoverComponent = PackageComponent(
+#logMoverStep = IncludePackage(
 #  target_name = "log_mover:release",
 #  include_zip = False, # we need this unpackacked
 #  dest_dir    = "$/bin/logmover")
 
 pig_rpm = PackageTarget(
   package_name   = "pig-rpm",
-  components    = [
+  steps    = [
     # Relocate the topdir into the assembly dir
-    DirComponent(
+    CopyDir(
       src_dir = "rpm/topdir",
       dest_dir = "$/topdir"),
 
     # Run the rpm build script
-    ExecComponent(
+    Exec(
       executable="%(srcdir)/rpm/create_rpms",
       arguments=[
         "pig",
@@ -148,24 +148,24 @@ pig_rpm = PackageTarget(
       dir="%(assemblydir)/topdir"),
 
     # Copy output RPMs / SRPMs to toplevel rpm dir
-    DirComponent(
+    CopyDir(
       src_dir ="$/topdir/RPMS/",
       dest_dir="${rpmdir}/RPMS/"),
-    DirComponent(
+    CopyDir(
       src_dir ="$/topdir/SRPMS/",
       dest_dir="${rpmdir}/SRPMS/"),
   ])
 
 hive_rpm = PackageTarget(
   package_name   = "hive-rpm",
-  components    = [
+  steps    = [
     # Relocate the topdir into the assembly dir
-    DirComponent(
+    CopyDir(
       src_dir = "rpm/topdir",
       dest_dir = "$/topdir"),
 
     # Run the rpm build script
-    ExecComponent(
+    Exec(
       executable="%(srcdir)/rpm/create_rpms",
       arguments=[
         "hive",
@@ -176,10 +176,10 @@ hive_rpm = PackageTarget(
       dir="%(assemblydir)/topdir"),
 
     # Copy output RPMs / SRPMs to toplevel rpm dir
-    DirComponent(
+    CopyDir(
       src_dir ="$/topdir/RPMS/",
       dest_dir="${rpmdir}/RPMS/"),
-    DirComponent(
+    CopyDir(
       src_dir ="$/topdir/SRPMS/",
       dest_dir="${rpmdir}/SRPMS/"),
   ])
