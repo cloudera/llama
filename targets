@@ -68,11 +68,11 @@ supportedHadoopPackage = PackageTarget(
       executable="%(srcdir)/rpm/create_rpms",
       arguments=[
         "hadoop",
-        "%(assemblydir)/buildroot",
-        "%(assemblydir)/topdir",
+        "$/buildroot",
+        "$/topdir",
         rpm_release,
         base_hadoop_ver ],
-      dir="%(assemblydir)/topdir"),
+      dir="$/topdir"),
 
     # Create hadoop tarball.
     Tar(
