@@ -20,14 +20,14 @@ rpm_release="7.cloudera.CH0_3"
 # This is the distribution target that builds all RPMs for the Cloudera Distribution for Hadoop.
 # It generates an RPM with dependencies on all shipped RPMs for a single-source download.
 distribution = PackageTarget(
-  packageName = "cloudera_distribution",
+  package_name = "cloudera_distribution",
   version = ":version",
   components = [
     # Build the "distribution" RPM with /etc/cloudera-version and deps.
     RpmComponent(
-      specFile   ="distribution.spec",
-      rpmBuildCmd="-bb --target noarch",
-      rpmRelease =rpm_release),
+      spec_file   ="distribution.spec",
+      rpm_build_cmd="-bb --target noarch",
+      rpm_release =rpm_release),
 
     # Mark the git version for the RPM releases
     ExecComponent(
@@ -38,7 +38,7 @@ distribution = PackageTarget(
   ],
 
   # Build all dependency RPMs
-  requiredTargets = [
+  required_targets = [
     ":supportedHadoopPackage",
     ":pig_rpm",
     ":hive_rpm",
@@ -47,21 +47,21 @@ distribution = PackageTarget(
 
 version = VerStringTarget(
   version      = base_ch_ver,
-  pythonModule = "installer.version")
+  python_module = "installer.version")
 
 # NOTE(aaron): This is not currently enabled in any way in our distribution.
 # include the portal source code
 # portalComponent = DirComponent(
-#  srcDir  = "portal/src",
-#  destDir = "$/src/webapps/portal")
+#  src_dir  = "portal/src",
+#  dest_dir = "$/src/webapps/portal")
 
 supportedHadoopPackage = PackageTarget(
-  packageName   = "distrib-hadoop",
+  package_name   = "distrib-hadoop",
   components    = [
     # Relocate the topdir into the assembly dir
     DirComponent(
-      srcDir = "rpm/topdir",
-      destDir = "$/topdir"),
+      src_dir = "rpm/topdir",
+      dest_dir = "$/topdir"),
 
     # Run the rpm build script
     ExecComponent(
@@ -81,11 +81,11 @@ supportedHadoopPackage = PackageTarget(
 
     # Copy output RPMs / SRPMs to toplevel rpm dir
     DirComponent(
-      srcDir ="$/topdir/RPMS/",
-      destDir="${rpmdir}/RPMS/"),
+      src_dir ="$/topdir/RPMS/",
+      dest_dir="${rpmdir}/RPMS/"),
     DirComponent(
-      srcDir ="$/topdir/SRPMS/",
-      destDir="${rpmdir}/SRPMS/"),
+      src_dir ="$/topdir/SRPMS/",
+      dest_dir="${rpmdir}/SRPMS/"),
   ],
 
   # Define build-phase outputs that other programs compiled against our distro need.
@@ -117,24 +117,24 @@ supportedHadoopPackage = PackageTarget(
 # the installation system
 # NOTE(aaron): This is disabled for now
 #installerComponent = PackageComponent(
-#  targetName = "installer:release",
-#  includeZip = False, # we need this unpackacked
-#  destDir    = "$/bin")
+#  target_name = "installer:release",
+#  include_zip = False, # we need this unpackacked
+#  dest_dir    = "$/bin")
 
 # the log mover system
 # NOTE(aaron): This is disabled for now
 #logMoverComponent = PackageComponent(
-#  targetName = "log_mover:release",
-#  includeZip = False, # we need this unpackacked
-#  destDir    = "$/bin/logmover")
+#  target_name = "log_mover:release",
+#  include_zip = False, # we need this unpackacked
+#  dest_dir    = "$/bin/logmover")
 
 pig_rpm = PackageTarget(
-  packageName   = "pig-rpm",
+  package_name   = "pig-rpm",
   components    = [
     # Relocate the topdir into the assembly dir
     DirComponent(
-      srcDir = "rpm/topdir",
-      destDir = "$/topdir"),
+      src_dir = "rpm/topdir",
+      dest_dir = "$/topdir"),
 
     # Run the rpm build script
     ExecComponent(
@@ -149,20 +149,20 @@ pig_rpm = PackageTarget(
 
     # Copy output RPMs / SRPMs to toplevel rpm dir
     DirComponent(
-      srcDir ="$/topdir/RPMS/",
-      destDir="${rpmdir}/RPMS/"),
+      src_dir ="$/topdir/RPMS/",
+      dest_dir="${rpmdir}/RPMS/"),
     DirComponent(
-      srcDir ="$/topdir/SRPMS/",
-      destDir="${rpmdir}/SRPMS/"),
+      src_dir ="$/topdir/SRPMS/",
+      dest_dir="${rpmdir}/SRPMS/"),
   ])
 
 hive_rpm = PackageTarget(
-  packageName   = "hive-rpm",
+  package_name   = "hive-rpm",
   components    = [
     # Relocate the topdir into the assembly dir
     DirComponent(
-      srcDir = "rpm/topdir",
-      destDir = "$/topdir"),
+      src_dir = "rpm/topdir",
+      dest_dir = "$/topdir"),
 
     # Run the rpm build script
     ExecComponent(
@@ -177,11 +177,11 @@ hive_rpm = PackageTarget(
 
     # Copy output RPMs / SRPMs to toplevel rpm dir
     DirComponent(
-      srcDir ="$/topdir/RPMS/",
-      destDir="${rpmdir}/RPMS/"),
+      src_dir ="$/topdir/RPMS/",
+      dest_dir="${rpmdir}/RPMS/"),
     DirComponent(
-      srcDir ="$/topdir/SRPMS/",
-      destDir="${rpmdir}/SRPMS/"),
+      src_dir ="$/topdir/SRPMS/",
+      dest_dir="${rpmdir}/SRPMS/"),
   ])
 
 
@@ -193,7 +193,7 @@ hive_rpm = PackageTarget(
 # can depend on only a single place. We only need to update the current
 # package version numbers in this single Targets file.
 versionStamps = EmptyTarget(
-  requiredTargets = [
+  required_targets = [
     "//thirdparty/hive-chd-0.3.0:version",
     "//thirdparty/pig-0.1.1:version",
     ":version" ])
@@ -201,7 +201,7 @@ versionStamps = EmptyTarget(
 # subdirectory targets:
 #   installer -- guided and noattend python installation system
 #   test      -- Cluster Test tool (not included in distro itself)
-ProjectList(requiredTargets=[
+ProjectList(required_targets=[
   "installer",
   "log_mover",
   "test"

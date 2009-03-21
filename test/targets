@@ -10,44 +10,44 @@ tester = PythonTarget(
   sources=[ "src/distrotester",
             "src/remotetest",
             "src/testdistrib"],
-  requiredTargets=[ "//python/Common",
+  required_targets=[ "//python/Common",
                     "../installer",
                     "..:versionStamps" ],
-  dataPaths = [ "profiles",
+  data_paths = [ "profiles",
                 "pig-tests",
                 "hive-tests" ])
 
 
 # package containing all the above python sources
 pyRelease = PythonRedistTarget(
-  packageName     = "distroTestPython",
-  requiredTargets = [ ":tester" ])
+  package_name     = "distroTestPython",
+  required_targets = [ ":tester" ])
 
 # Jar containing Java code to run to for MapReduce tests
 testsJar = JarTarget(
-  jarName = "DistribTest.jar",
+  jar_name = "DistribTest.jar",
   sources = [ "mapreduce-tests" ],
-  requiredTargets = [ "..:supportedHadoopPackage" ])
+  required_targets = [ "..:supportedHadoopPackage" ])
 
 
 # Now we bundle all of the above together
 release = PackageTarget(
-  packageName = "distrotest",
+  package_name = "distrotest",
   components = [
     PackageComponent(
-      targetName = ":pyRelease",
-      includeZip = False),
+      target_name = ":pyRelease",
+      include_zip = False),
     OutputComponent(
-      targetName = ":testsJar",
-      destDir = "$/testjar"),
+      target_name = ":testsJar",
+      dest_dir = "$/testjar"),
 
     # fast-checkpoint hadoop-site.xml configuration
     DirComponent(
-      srcDir = "hadoop-configs/base",
-      destDir = "$/hadoop-configs/fast-checkpoint"),
+      src_dir = "hadoop-configs/base",
+      dest_dir = "$/hadoop-configs/fast-checkpoint"),
     FileComponent(
-      srcFile  = "hadoop-configs/fast-checkpoint.xml",
-      destFile = "$/hadoop-configs/fast-checkpoint/hadoop-site.xml"),
+      src_file  = "hadoop-configs/fast-checkpoint.xml",
+      dest_file = "$/hadoop-configs/fast-checkpoint/hadoop-site.xml"),
 
     # Don't want the top-level install script included in our bin dir.
     ExcludeComponent(
