@@ -16,34 +16,10 @@ base_ch_ver = "0.3.0"
 # RPM release number
 rpm_release="8.cloudera.CH0_3"
 
-# This is the default target.
-# This is the distribution target that builds all RPMs for the Cloudera Distribution for Hadoop.
-# It generates an RPM with dependencies on all shipped RPMs for a single-source download.
-distribution = PackageTarget(
-  package_name = "cloudera_distribution",
-  version = ":version",
-  steps = [
-    # Build the "distribution" RPM with /etc/cloudera-version and deps.
-    RpmBuild(
-      spec_file   ="distribution.spec",
-      rpm_build_cmd="-bb --target noarch",
-      rpm_release =rpm_release),
+RegisterProperty('projects.HadoopDist.release', rpm_release)
+RegisterProperty('projects.HadoopDist.base_hadoop_ver', base_hadoop_ver)
 
-    # Mark the git version for the RPM releases
-    Exec(
-      executable="%(srcdir)/rpm/rpm_build_info",
-      arguments =[
-        "${rpmdir}",
-        rpm_release ])
-  ],
-
-  # Build all dependency RPMs
-  required_targets = [
-    ":supportedHadoopPackage",
-    ":pig_rpm",
-    ":hive_rpm",
-    "//projects/mrunit:package",
-  ])
+hadoop_cloudera_ver_string = "hadoop-%s-%s" % (base_hadoop_ver, rpm_release)
 
 version = VerStringTarget(
   version      = base_ch_ver,
@@ -55,62 +31,68 @@ version = VerStringTarget(
 #  src_dir  = "portal/src",
 #  dest_dir = "$/src/webapps/portal")
 
+
+
 supportedHadoopPackage = PackageTarget(
-  package_name   = "distrib-hadoop",
-  steps    = [
-    # Relocate the topdir into the assembly dir
-    CopyDir(
-      src_dir = "rpm/topdir",
-      dest_dir = "$/topdir"),
-
-    # Run the rpm build script
-    Exec(
-      executable="%(srcdir)/rpm/create_rpms",
+  packageName = hadoop_cloudera_ver_string,
+  components    = [
+    ExecComponent(
+      executable="/bin/rm",
+      arguments=["-rf", "%(assemblydir)/*"],
+      ),
+    # unpack pristine hadoop
+    ExecComponent(
+      executable="tar",
+      arguments=["--strip-components=1",
+                 "-xzf",
+                 "%%(srcdir)/pristine/%s.tar.gz" % hadoop_ver_string],
+      inputs=["%%(srcdir)/pristine/%s.tar.gz" % hadoop_ver_string]),
+    # copy cloudera dir inside
+    DirComponent(
+      srcDir="hadoop",
+      destDir="$/cloudera"),
+    ExecComponent(
+      executable="%(assemblydir)/cloudera/clouderify_hadoop.py",
+      arguments=["%(assemblydir)/",
+                 base_hadoop_ver,
+                 rpm_release
+                 ]),
+    ExecComponent( #TODO(todd) right now AntComponent invalidates uptodate checks, and we don't like that
+      executable="ant",
       arguments=[
-        "hadoop",
-        "$/buildroot",
-        "$/topdir",
-        rpm_release,
-        base_hadoop_ver ],
-      dir="$/topdir"),
-
-    # Create hadoop tarball.
-    Tar(
-      filename= hadoop_ver_string + ".tar.gz",
-      subdir="topdir/BUILD/" + hadoop_ver_string + "/build/" + hadoop_ver_string),
-
-    # Copy output RPMs / SRPMs to toplevel rpm dir
-    CopyDir(
-      src_dir ="$/topdir/RPMS/",
-      dest_dir="${rpmdir}/RPMS/"),
-    CopyDir(
-      src_dir ="$/topdir/SRPMS/",
-      dest_dir="${rpmdir}/SRPMS/"),
+        "-Dversion=%s-%s" % (base_hadoop_ver, rpm_release),
+        "-f",
+        "cloudera/build.xml",
+        "package"
+        ]),
+    TarComponent(
+      filename= hadoop_cloudera_ver_string + ".tar.gz",
+      subdir="build/%s" % (hadoop_cloudera_ver_string)
+      ),
   ],
-
   # Define build-phase outputs that other programs compiled against our distro need.
-  outputs = [
-      "$/topdir/BUILD/" + hadoop_ver_string + "/build/" + hadoop_ver_string + "-core.jar",
-      "$/topdir/BUILD/" + hadoop_ver_string + "/build/" + hadoop_ver_string + "-test.jar",
-      "$/topdir/BUILD/" + hadoop_ver_string + "/build/" + hadoop_ver_string + "-tools.jar",
-      "$/topdir/BUILD/" + hadoop_ver_string + "/build/" + hadoop_ver_string + "-examples.jar",
-      "$/topdir/BUILD/" + hadoop_ver_string + "/lib/commons-cli-2.0-SNAPSHOT.jar",
-      "$/topdir/BUILD/" + hadoop_ver_string + "/lib/commons-codec-1.3.jar",
-      "$/topdir/BUILD/" + hadoop_ver_string + "/lib/commons-httpclient-3.0.1.jar",
-      "$/topdir/BUILD/" + hadoop_ver_string + "/lib/commons-logging-1.0.4.jar",
-      "$/topdir/BUILD/" + hadoop_ver_string + "/lib/commons-logging-api-1.0.4.jar",
-      "$/topdir/BUILD/" + hadoop_ver_string + "/lib/commons-net-1.4.1.jar",
-      "$/topdir/BUILD/" + hadoop_ver_string + "/lib/jets3t-0.6.0.jar",
-      "$/topdir/BUILD/" + hadoop_ver_string + "/lib/jetty-5.1.4.jar",
-      "$/topdir/BUILD/" + hadoop_ver_string + "/lib/junit-3.8.1.jar",
-      "$/topdir/BUILD/" + hadoop_ver_string + "/lib/kfs-0.1.3.jar",
-      "$/topdir/BUILD/" + hadoop_ver_string + "/lib/log4j-1.2.15.jar",
-      "$/topdir/BUILD/" + hadoop_ver_string + "/lib/oro-2.0.8.jar",
-      "$/topdir/BUILD/" + hadoop_ver_string + "/lib/servlet-api.jar",
-      "$/topdir/BUILD/" + hadoop_ver_string + "/lib/slf4j-api-1.4.3.jar",
-      "$/topdir/BUILD/" + hadoop_ver_string + "/lib/slf4j-log4j12-1.4.3.jar",
-      "$/topdir/BUILD/" + hadoop_ver_string + "/lib/xmlenc-0.52.jar",
-    ])
+  outputs = ["$/build/" + hadoop_cloudera_ver_string + "/" + path for path in
+             [hadoop_cloudera_ver_string + "-core.jar",
+              hadoop_cloudera_ver_string + "-test.jar",
+              hadoop_cloudera_ver_string + "-tools.jar",
+              "/build/" + hadoop_cloudera_ver_string + "-examples.jar",
+              "/lib/commons-cli-2.0-SNAPSHOT.jar",
+              "/lib/commons-codec-1.3.jar",
+              "/lib/commons-httpclient-3.0.1.jar",
+              "/lib/commons-logging-1.0.4.jar",
+              "/lib/commons-logging-api-1.0.4.jar",
+              "/lib/commons-net-1.4.1.jar",
+              "/lib/jets3t-0.6.0.jar",
+              "/lib/jetty-5.1.4.jar",
+              "/lib/junit-3.8.1.jar",
+              "/lib/kfs-0.1.3.jar",
+              "/lib/log4j-1.2.15.jar",
+              "/lib/oro-2.0.8.jar",
+              "/lib/servlet-api.jar",
+              "/lib/slf4j-api-1.4.3.jar",
+              "/lib/slf4j-log4j12-1.4.3.jar",
+              "/lib/xmlenc-0.52.jar",
+              ]])
 
 # steps for packaging
 
@@ -127,62 +109,6 @@ supportedHadoopPackage = PackageTarget(
 #  target_name = "log_mover:release",
 #  include_zip = False, # we need this unpackacked
 #  dest_dir    = "$/bin/logmover")
-
-pig_rpm = PackageTarget(
-  package_name   = "pig-rpm",
-  steps    = [
-    # Relocate the topdir into the assembly dir
-    CopyDir(
-      src_dir = "rpm/topdir",
-      dest_dir = "$/topdir"),
-
-    # Run the rpm build script
-    Exec(
-      executable="%(srcdir)/rpm/create_rpms",
-      arguments=[
-        "pig",
-        "%(assemblydir)/buildroot",
-        "%(assemblydir)/topdir",
-        rpm_release,
-        base_hadoop_ver ], # NOTE(aaron): This is the hadoop version; not the pig ver. (hardcoded)
-      dir="%(assemblydir)/topdir"),
-
-    # Copy output RPMs / SRPMs to toplevel rpm dir
-    CopyDir(
-      src_dir ="$/topdir/RPMS/",
-      dest_dir="${rpmdir}/RPMS/"),
-    CopyDir(
-      src_dir ="$/topdir/SRPMS/",
-      dest_dir="${rpmdir}/SRPMS/"),
-  ])
-
-hive_rpm = PackageTarget(
-  package_name   = "hive-rpm",
-  steps    = [
-    # Relocate the topdir into the assembly dir
-    CopyDir(
-      src_dir = "rpm/topdir",
-      dest_dir = "$/topdir"),
-
-    # Run the rpm build script
-    Exec(
-      executable="%(srcdir)/rpm/create_rpms",
-      arguments=[
-        "hive",
-        "%(assemblydir)/buildroot",
-        "%(assemblydir)/topdir",
-        rpm_release,
-        base_hadoop_ver ], # NOTE(aaron): This is the hadoop version; not the hive ver. (hardcoded)
-      dir="%(assemblydir)/topdir"),
-
-    # Copy output RPMs / SRPMs to toplevel rpm dir
-    CopyDir(
-      src_dir ="$/topdir/RPMS/",
-      dest_dir="${rpmdir}/RPMS/"),
-    CopyDir(
-      src_dir ="$/topdir/SRPMS/",
-      dest_dir="${rpmdir}/SRPMS/"),
-  ])
 
 
 # NOTE(aaron): Contents of doc and deps directories are not currently used/built
@@ -204,9 +130,6 @@ versionStamps = EmptyTarget(
 ProjectList(required_targets=[
   "installer",
   "log_mover",
-  "test"
+  "test",
+  "rpm"
   ])
-
-
-defaultTarget(distribution)
-

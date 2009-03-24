@@ -1,0 +1,78 @@
+Index: src/mapred/org/apache/hadoop/mapred/lib/db/DBOutputFormat.java
+===================================================================
+--- src/mapred/org/apache/hadoop/mapred/lib/db/DBOutputFormat.java	(revision 737447)
++++ src/mapred/org/apache/hadoop/mapred/lib/db/DBOutputFormat.java	(working copy)
+@@ -99,10 +99,31 @@
+ 
+   /**
+    * Constructs the query used as the prepared statement to insert data.
++   * 
++   * @param table
++   *          the table to insert into
++   * @param fieldNames
++   *          the fields to insert into. If field names are unknown, supply an
++   *          array of nulls.
+    */
+   protected String constructQuery(String table, String[] fieldNames) {
++    if(fieldNames == null) {
++      throw new IllegalArgumentException("Field names may not be null");
++    }
++
+     StringBuilder query = new StringBuilder();
+-    query.append("INSERT INTO ").append(table);      
++    query.append("INSERT INTO ").append(table);
++
++    if (fieldNames.length > 0 && fieldNames[0] != null) {
++      query.append(" (");
++      for (int i = 0; i < fieldNames.length; i++) {
++        query.append(fieldNames[i]);
++        if (i != fieldNames.length - 1) {
++          query.append(",");
++        }
++      }
++      query.append(")");
++    }
+     query.append(" VALUES (");
+ 
+     for (int i = 0; i < fieldNames.length; i++) {
+@@ -145,9 +166,13 @@
+   /**
+    * Initializes the reduce-part of the job with the appropriate output settings
+    * 
+-   * @param job The job
+-   * @param tableName The table to insert data into
+-   * @param fieldNames The field names in the table
++   * @param job
++   *          The job
++   * @param tableName
++   *          The table to insert data into
++   * @param fieldNames
++   *          The field names in the table. If unknown, supply the appropriate
++   *          number of nulls.
+    */
+   public static void setOutput(JobConf job, String tableName, String... fieldNames) {
+     job.setOutputFormat(DBOutputFormat.class);
+Index: src/test/org/apache/hadoop/mapred/lib/db/TestConstructQuery.java
+===================================================================
+--- src/test/org/apache/hadoop/mapred/lib/db/TestConstructQuery.java	(revision 0)
++++ src/test/org/apache/hadoop/mapred/lib/db/TestConstructQuery.java	(revision 0)
+@@ -0,0 +1,19 @@
++package org.apache.hadoop.mapred.lib.db;
++
++import org.apache.hadoop.io.NullWritable;
++
++import junit.framework.TestCase;
++
++public class TestConstructQuery extends TestCase {
++  public void testConstructQuery() {
++    DBOutputFormat<DBWritable, NullWritable> format = new DBOutputFormat<DBWritable, NullWritable>();
++    String expected = "INSERT INTO hadoop_output (id,name,value) VALUES (?,?,?);";
++    String[] fieldNames = new String[] { "id", "name", "value" };
++    String actual = format.constructQuery("hadoop_output", fieldNames);
++    assertEquals(expected, actual);
++    expected = "INSERT INTO hadoop_output VALUES (?,?,?);";
++    fieldNames = new String[] { null, null, null };
++    actual = format.constructQuery("hadoop_output", fieldNames);
++    assertEquals(expected, actual);
++  }
++}
