@@ -2,6 +2,7 @@
 #
 # (c) Copyright 2009 Cloudera, Inc.
 
+from getopt import getopt
 import os
 import re
 import shutil
@@ -17,19 +18,31 @@ VERBOSE = True
 HADOOP_VERSION = None
 RELEASE_VERSION = None
 
+REVERSE = False
+
 def parse_args(argv):
   """Parse command line arguments and set globals."""
-  global DST_DIR, HADOOP_VERSION, RELEASE_VERSION
+  global DST_DIR, HADOOP_VERSION, RELEASE_VERSION, REVERSE
 
-  if len(argv) != 4:
-    raise "usage: %s <hadoop dir to clouderify> <hadoop-version> <cloudera-version>" % argv[0]
+  opts, args = getopt(argv[1:], "Rnv")
 
-  DST_DIR = argv[1]
+  if len(args) != 3:
+    raise "usage: %s [-R] [-n] [-v] <hadoop dir to clouderify> <hadoop-version> <cloudera-version>" % argv[0]
+
+  DST_DIR = args[0]
   if not os.path.exists(DST_DIR):
     raise "destination hadoop directory at %s does not exist" % DST_DIR
 
-  HADOOP_VERSION = argv[2]
-  RELEASE_VERSION = argv[3]
+  HADOOP_VERSION = args[1]
+  RELEASE_VERSION = args[2]
+
+  for (opt, val) in opts:
+    if opt == '-R':
+      REVERSE = True
+    elif opt == '-n':
+      DRY_RUN = True
+    elif opt == '-v':
+      VERBOSE = True
 
 def patch_file(path):
   """Return absolute path to a given patch file."""
@@ -74,10 +87,25 @@ def apply_patch(patch_file):
   if DRY_RUN or VERBOSE:
     print >>sys.stderr, "[patch] ", patch_file
   if not DRY_RUN:
-    subprocess.check_call(['patch', '-p0', '-d', DST_DIR],
+    subprocess.check_call(['patch', '-N', '-p0', '-d', DST_DIR],
                           stdin=file(patch_file))
   else:
     subprocess.check_call(['patch', '--dry-run', '-p0', '-d', DST_DIR],
+                          stdin=file(patch_file))
+
+def unapply_patch(patch_file):
+  """Unapply the patch at the given path to DST_DIR, unless
+  dry run is enabled.
+
+  Throws an exception on patch failure.
+  """
+  if DRY_RUN or VERBOSE:
+    print >>sys.stderr, "[unpatch] ", patch_file
+  if not DRY_RUN:
+    subprocess.check_call(['patch', '-R', '-p0', '-d', DST_DIR],
+                          stdin=file(patch_file))
+  else:
+    subprocess.check_call(['patch', '--dry-run', '-R', '-p0', '-d', DST_DIR],
                           stdin=file(patch_file))
 
 def do_copy(src, dst):
@@ -87,13 +115,31 @@ def do_copy(src, dst):
   if not DRY_RUN:
     shutil.copy2(src, dst)
 
+def do_move(src, dst):
+  """Move file from src to dst, overwriting existing file if it exists."""
+  if VERBOSE or DRY_RUN:
+    print >>sys.stderr, "[move] %s => %s" % (src, dst)
+  if not DRY_RUN:
+    shutil.move(src, dst)
+
+def do_rm(path):
+  """Remove given file unless in dry run mode."""
+  if VERBOSE or DRY_RUN:
+    print >>sys.stderr, "[rm] %s" % path
+  if not DRY_RUN:
+    os.remove(path)
+
 def apply_patches():
-  """Apply all of the patches listed in the PATCHES configuration, additionally
-  copying them into a cloudera/patches dir in the distro.
-  """
-  ensure_dir(dst_path("cloudera/patches/"))
-  for idx, patch_filename in enumerate(dist_options.PATCHES):
+  """Apply all of the patches listed in the PATCHES configuration."""
+  for patch_filename in dist_options.PATCHES:
     apply_patch(patch_file(patch_filename))
+
+def unapply_patches():
+  """Unapply all of the patches listed in PATCHES."""
+  rev_patches = list(dist_options.PATCHES)
+  rev_patches.reverse() # reverse is in-place!
+  for patch_filename in rev_patches:
+    unapply_patch(patch_file(patch_filename))
 
 def copy_files():
   """Copy files as specified in dist_options.COPY_FILES."""
@@ -104,7 +150,20 @@ def copy_files():
     if type(srcs) == str:
       srcs = [srcs]
     for src in srcs:
+      if os.path.isfile(dst_path(dst)):
+        do_copy(dst_path(dst), dst_path(dst + ".orig"))
       do_copy(source_path(src), dst_path(dst))
+
+def uncopy_files():
+  """Remove files copied from the cloudera directory."""
+  for srcs, dst in dist_options.COPY_FILES:
+    if type(srcs) == str:
+      srcs = [srcs]
+    for src in srcs:
+      if os.path.exists(dst_path(dst + ".orig")):
+        do_move(dst_path(dst + ".orig"), dst_path(dst))
+      else:
+        do_rm(dst_path(dst))
 
 def hook_build_xml():
   """Modify the hadoop build.xml to rename the package target to package.orig.
@@ -126,16 +185,21 @@ def hook_build_xml():
     out.write(new_xml)
     out.close()
 
+def unhook_build_xml():
+  """Restore the original build.xml file."""
+  do_move(dst_path("build.xml.orig"), dst_path("build.xml"))
+
 def main(argv):
   parse_args(argv)
 
-  if os.path.exists(dst_path("README.Cloudera")):
-    raise Exception("destination already Clouderified")
-
-  copy_files()
-  apply_patches()
-  hook_build_xml()
-
+  if not REVERSE:
+    copy_files()
+    apply_patches()
+    hook_build_xml()
+  else:
+    unhook_build_xml()
+    unapply_patches()
+    uncopy_files()
 
 if __name__ == "__main__":
   main(sys.argv)
