@@ -51,7 +51,7 @@ release = PackageTarget(
 
     # Don't want the top-level install script included in our bin dir.
     Remove(
-      name = "install"),
+      name = "$/install"),
     ])
 
 defaultTarget(release)
