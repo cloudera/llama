@@ -57,14 +57,10 @@ supportedHadoopPackage = PackageTarget(
                  base_hadoop_ver,
                  rpm_release
                  ]),
-    ExecComponent( #TODO(todd) right now AntComponent invalidates uptodate checks, and we don't like that
-      executable="ant",
-      arguments=[
-        "-Dversion=%s-%s" % (base_hadoop_ver, rpm_release),
-        "-f",
-        "cloudera/build.xml",
-        "package"
-        ]),
+    AntComponent(
+      buildFile = "cloudera/build.xml",
+      properties = {'version': '%s-%s' % (base_hadoop_ver, rpm_release)},
+      antTarget = "package"),
     TarComponent(
       filename= hadoop_cloudera_ver_string + ".tar.gz",
       subdir="build/%s" % (hadoop_cloudera_ver_string)
