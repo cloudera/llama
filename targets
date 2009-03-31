@@ -34,34 +34,34 @@ version = VerStringTarget(
 
 
 supportedHadoopPackage = PackageTarget(
-  packageName = hadoop_cloudera_ver_string,
-  components    = [
-    ExecComponent(
+  package_name = hadoop_cloudera_ver_string,
+  steps = [
+    Exec(
       executable="/bin/rm",
       arguments=["-rf", "%(assemblydir)/*"],
       ),
     # unpack pristine hadoop
-    ExecComponent(
+    Exec(
       executable="tar",
       arguments=["--strip-components=1",
                  "-xzf",
                  "%%(srcdir)/pristine/%s.tar.gz" % hadoop_ver_string],
       inputs=["%%(srcdir)/pristine/%s.tar.gz" % hadoop_ver_string]),
     # copy cloudera dir inside
-    DirComponent(
-      srcDir="hadoop",
-      destDir="$/cloudera"),
-    ExecComponent(
+    CopyDir(
+      src_dir="hadoop",
+      dest_dir="$/cloudera"),
+    Exec(
       executable="%(assemblydir)/cloudera/clouderify_hadoop.py",
       arguments=["%(assemblydir)/",
                  base_hadoop_ver,
                  rpm_release
                  ]),
-    AntComponent(
-      buildFile = "cloudera/build.xml",
+    AntCall(
+      build_file = "cloudera/build.xml",
       properties = {'version': '%s-%s' % (base_hadoop_ver, rpm_release)},
-      antTarget = "package"),
-    TarComponent(
+      ant_target = "package"),
+    Tar(
       filename= hadoop_cloudera_ver_string + ".tar.gz",
       subdir="build/%s" % (hadoop_cloudera_ver_string)
       ),
