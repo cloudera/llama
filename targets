@@ -36,11 +36,8 @@ version = VerStringTarget(
 
 supportedHadoopPackage = PackageTarget(
   package_name = hadoop_cloudera_ver_string,
+  clean_first=True,
   steps = [
-    Exec(
-      executable="/bin/rm",
-      arguments=["-rf", "%(assemblydir)/*"],
-      ),
     # unpack pristine hadoop
     Exec(
       executable="tar",
@@ -60,7 +57,9 @@ supportedHadoopPackage = PackageTarget(
                  ]),
     AntCall(
       build_file = "$/cloudera/build.xml",
-      properties = {'version': '%s-%s' % (base_hadoop_ver, rpm_release)},
+      properties = {'version': '%s-%s' % (base_hadoop_ver, rpm_release),
+                    'libhdfs': 'true',
+                    'compile.c++': 'true'},
       ant_target = "package"),
     Tar(
       filename= hadoop_cloudera_ver_string + ".tar.gz",

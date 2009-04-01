@@ -21,6 +21,9 @@ PATCHES = [
   'HADOOP-3655.patch',
   'HADOOP-5465-0.18.3.patch',
   'HADOOP-3327.patch',
+  'HADOOP-3344.-Fix-libhdfs-build-to-use-autoconf-and-b.patch',
+  'HADOOP-5611-Add-some-missing-includes-to-c-code-t.patch',
+  'HADOOP-5612-Add-chmod-rules-to-build.xml-to-make.patch',
   ]
 
 scribe_directory = "src/contrib/scribe-log4j/lib/"
