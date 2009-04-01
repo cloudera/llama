@@ -20,7 +20,7 @@ PATCHES = [
   'HADOOP-5240-0.18.3.patch',
   'HADOOP-3655.patch',
   'HADOOP-5465-0.18.3.patch',
-  'HADOOP-3327.patch'
+  'HADOOP-3327.patch',
   ]
 
 scribe_directory = "src/contrib/scribe-log4j/lib/"
@@ -33,5 +33,6 @@ COPY_FILES = [
   ('libfb303.jar', scribe_directory),
   ('libthrift.jar', scribe_directory),
   ('hsqldb.jar', 'lib/'),
-  (['bluebar.png', 'logo.png'], static_images_dir)
+  (['bluebar.png', 'logo.png'], static_images_dir),
+  ('hadoop-config.sh', 'bin/'),
   ]

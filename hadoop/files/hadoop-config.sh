@@ -19,8 +19,8 @@
 
 # Honor the JAVA_HOME variable if set, otherwise try to find Java
 if [ -z $JAVA_HOME ]; then
-  if [ -h /usr/java/default ]; then
-	export JAVA_HOME="/usr/java/default"
+  if [ -e @JAVA_HOME@ ]; then
+	export JAVA_HOME="@JAVA_HOME@"
   else
 	cat <<MSG
 +======================================================================+

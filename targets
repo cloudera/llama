@@ -16,6 +16,7 @@ base_ch_ver = "0.3.0"
 # RPM release number
 rpm_release="8.cloudera.CH0_3"
 
+RegisterProperty('projects.HadoopDist.base_ch_ver', base_ch_ver)
 RegisterProperty('projects.HadoopDist.release', rpm_release)
 RegisterProperty('projects.HadoopDist.base_hadoop_ver', base_hadoop_ver)
 
@@ -58,7 +59,7 @@ supportedHadoopPackage = PackageTarget(
                  rpm_release
                  ]),
     AntCall(
-      build_file = "cloudera/build.xml",
+      build_file = "$/cloudera/build.xml",
       properties = {'version': '%s-%s' % (base_hadoop_ver, rpm_release)},
       ant_target = "package"),
     Tar(
