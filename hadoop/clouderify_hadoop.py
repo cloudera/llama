@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.5
+#!/usr/bin/env python
 #
 # (c) Copyright 2009 Cloudera, Inc.
 
@@ -19,6 +19,20 @@ HADOOP_VERSION = None
 RELEASE_VERSION = None
 
 REVERSE = False
+
+def check_call(*popenargs, **kwargs):
+  """
+  Backported subprocess.check_call from python2.5 - we need
+  to build on some systems that don't have python2.5 available.
+  """
+  retcode = subprocess.call(*popenargs, **kwargs)
+  cmd = kwargs.get("args")
+  if cmd is None:
+    cmd = popenargs[0]
+  if retcode:
+    raise Exception("%s returned code %d" % (cmd, retcode))
+  return retcode
+
 
 def parse_args(argv):
   """Parse command line arguments and set globals."""
@@ -64,7 +78,7 @@ def docmd(argv):
   if DRY_RUN or VERBOSE:
     print >>sys.stderr, "[exec] ", " ".join(argv)
   if not DRY_RUN:
-    subprocess.check_call(argv)
+    check_call(argv)
 
 def ensure_dir(dir):
   """Ensure that a dir exists (equivalent to mkdir -p)."""
@@ -87,10 +101,10 @@ def apply_patch(patch_file):
   if DRY_RUN or VERBOSE:
     print >>sys.stderr, "[patch] ", patch_file
   if not DRY_RUN:
-    subprocess.check_call(['patch', '-N', '-p0', '-d', DST_DIR],
+    check_call(['patch', '-N', '-p0', '-d', DST_DIR],
                           stdin=file(patch_file))
   else:
-    subprocess.check_call(['patch', '--dry-run', '-p0', '-d', DST_DIR],
+    check_call(['patch', '--dry-run', '-p0', '-d', DST_DIR],
                           stdin=file(patch_file))
 
 def unapply_patch(patch_file):
@@ -102,10 +116,10 @@ def unapply_patch(patch_file):
   if DRY_RUN or VERBOSE:
     print >>sys.stderr, "[unpatch] ", patch_file
   if not DRY_RUN:
-    subprocess.check_call(['patch', '-R', '-p0', '-d', DST_DIR],
+    check_call(['patch', '-R', '-p0', '-d', DST_DIR],
                           stdin=file(patch_file))
   else:
-    subprocess.check_call(['patch', '--dry-run', '-R', '-p0', '-d', DST_DIR],
+    check_call(['patch', '--dry-run', '-R', '-p0', '-d', DST_DIR],
                           stdin=file(patch_file))
 
 def do_copy(src, dst):
