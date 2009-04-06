@@ -30,6 +30,7 @@ OPTS=$(getopt \
   -l 'hadoop-config-location:' \
   -l 'doc-dir:' \
   -l 'java-home:' \
+  -l 'man-dir:' \
   -- "$@")
 
 if [ $? != 0 ] ; then
@@ -60,6 +61,9 @@ while true ; do
         --java-home)
         JAVA_HOME=$2 ; shift 2
         ;;
+        --man-dir)
+        MAN_DIR=$2 ; shift 2
+        ;;
         --)
         shift ; break
         ;;
@@ -81,6 +85,7 @@ done
 LIB_DIR=${LIB_DIR:-$PREFIX/usr/lib/hadoop}
 BIN_DIR=${BIN_DIR:-$PREFIX/usr/bin}
 DOC_DIR=${DOC_DIR:-$PREFIX/usr/share/doc/hadoop}
+MAN_DIR=${MAN_DIR:-$PREFIX/usr/man}
 EXAMPLE_DIR=${EXAMPLE_DIR:-$DOC_DIR/examples}
 HADOOP_CONFIG_INSTALL_LOCATION=${HADOOP_CONFIG_INSTALL_LOCATION:-/etc/default/hadoop}
 JAVA_HOME=${JAVA_HOME:-/usr/lib/jvm/java-6-sun/}
@@ -132,8 +137,8 @@ mv $LIB_DIR/bin/hadoop-config.sh $PREFIX$HADOOP_CONFIG_INSTALL_LOCATION
 sed -i -e "s|@JAVA_HOME@|$JAVA_HOME|" $PREFIX$HADOOP_CONFIG_INSTALL_LOCATION
 
 # man page
-mkdir -p $PREFIX/usr/man/man1
-cp ${CLOUDERA_SOURCE_DIR}/hadoop.1.gz $PREFIX/usr/man/man1
+mkdir -p $MAN_DIR/man1
+cp ${CLOUDERA_SOURCE_DIR}/hadoop.1.gz $MAN_DIR/man1/
 
 ############################################################
 # ARCH DEPENDENT STUFF
