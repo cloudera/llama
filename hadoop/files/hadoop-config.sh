@@ -38,7 +38,7 @@ MSG
 fi
 
 # the root of the Hadoop installation
-export HADOOP_HOME="/usr/lib/hadoop"
+export HADOOP_HOME="${HADOOP_HOME:-/usr/lib/hadoop}"
 
 #check to see if the conf dir is given as an optional argument
 if [ $# -gt 1 ]
