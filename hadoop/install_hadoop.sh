@@ -107,7 +107,7 @@ done
 
 # Mv bin elsewhere
 mkdir -p $BIN_DIR
-mv $LIB_DIR/bin/hadoop $BIN_DIR
+ln -s $LIB_DIR/bin/hadoop $BIN_DIR
 
 # Fix some bad permissions in HOD
 chmod 755 $LIB_DIR/contrib/hod/support/checklimits.sh

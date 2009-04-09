@@ -9,7 +9,7 @@
   </property>
   <property>
     <name>mapred.job.tracker</name>
-    <value>localhost:9001</value>
+    <value>localhost:8021</value>
   </property>
   <property>
     <name>dfs.replication</name>
