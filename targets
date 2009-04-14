@@ -44,7 +44,7 @@ supportedHadoopPackage = PackageTarget(
   steps = [
     # unpack pristine hadoop
     Exec(
-      executable="{tar-exec}",
+      executable="${tar-exec}",
       arguments=["--strip-components=1",
                  "-xzf",
                  "%%(srcdir)/pristine/%s.tar.gz" % hadoop_ver_string],
