@@ -31,6 +31,7 @@ OPTS=$(getopt \
   -l 'doc-dir:' \
   -l 'java-home:' \
   -l 'man-dir:' \
+  -l 'example-dir:' \
   -- "$@")
 
 if [ $? != 0 ] ; then
@@ -64,6 +65,9 @@ while true ; do
         --man-dir)
         MAN_DIR=$2 ; shift 2
         ;;
+        --example-dir)
+        EXAMPLE_DIR=$2 ; shift 2
+        ;;
         --)
         shift ; break
         ;;
@@ -90,6 +94,8 @@ EXAMPLE_DIR=${EXAMPLE_DIR:-$DOC_DIR/examples}
 HADOOP_CONFIG_INSTALL_LOCATION=${HADOOP_CONFIG_INSTALL_LOCATION:-/etc/default/hadoop}
 JAVA_HOME=${JAVA_HOME:-/usr/lib/jvm/java-6-sun/}
 
+INSTALLED_LIB_DIR=/usr/lib/hadoop
+
 mkdir -p $LIB_DIR
 (cd ${BUILD_DIR} && tar cf - .) | (cd $LIB_DIR && tar xf - )
 # Take out things we've installed elsewhere
@@ -107,16 +113,20 @@ done
 
 # Mv bin elsewhere
 mkdir -p $BIN_DIR
-ln -s /usr/lib/hadoop/bin/hadoop $BIN_DIR
+ln -s $INSTALLED_LIB_DIR/bin/hadoop $BIN_DIR
 
 # Fix some bad permissions in HOD
 chmod 755 $LIB_DIR/contrib/hod/support/checklimits.sh
 chmod 644 $LIB_DIR/contrib/hod/bin/VERSION
 
-# Move examples to /usr/share
+# Link examples to /usr/share
 mkdir -p $EXAMPLE_DIR
-mv $LIB_DIR/*examples*jar $EXAMPLE_DIR
-cp -a $BUILD_DIR/src/examples/* $EXAMPLE_DIR
+for x in $INSTALLED_LIB_DIR/*examples*jar ; do
+  ln -s $x $EXAMPLE_DIR/
+done
+# And copy the source
+mkdir -p $EXAMPLE_DIR/src
+cp -a $BUILD_DIR/src/examples/* $EXAMPLE_DIR/src
 
 # Install docs
 mkdir -p $DOC_DIR
