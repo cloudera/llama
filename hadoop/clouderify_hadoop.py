@@ -155,6 +155,14 @@ def unapply_patches():
   for patch_filename in rev_patches:
     unapply_patch(patch_file(patch_filename))
 
+def apply_chmods():
+  """Make files executable as specified in the CHMOD_EXECUTABLE"""
+  for path in dist_options.CHMOD_EXECUTABLE:
+    if DRY_RUN or VERBOSE:
+      print "[chmod] %s" % path
+    if not DRY_RUN:
+      os.chmod(path, 0755)
+
 def copy_files():
   """Copy files as specified in dist_options.COPY_FILES."""
   for srcs, dst in dist_options.COPY_FILES:
@@ -209,6 +217,7 @@ def main(argv):
   if not REVERSE:
     copy_files()
     apply_patches()
+    apply_chmods()
     hook_build_xml()
   else:
     unhook_build_xml()

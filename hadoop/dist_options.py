@@ -22,8 +22,16 @@ PATCHES = [
   'HADOOP-5465-0.18.3.patch',
   'HADOOP-3327.patch',
   'HADOOP-3344.-Fix-libhdfs-build-to-use-autoconf-and-b.patch',
+  'rerun_automake_aclocal_after_HADOOP-3344.patch',
   'HADOOP-5611-Add-some-missing-includes-to-c-code-t.patch',
   'HADOOP-5612-Add-chmod-rules-to-build.xml-to-make.patch',
+  'include_pthread_in_pipes_examples.patch',
+  ]
+
+# Things to make executable after applying the patches, since
+# 'patch' can't track permissions
+CHMOD_EXECUTABLE = [
+  'src/native/config/config.sub',
   ]
 
 scribe_directory = "src/contrib/scribe-log4j/lib/"
