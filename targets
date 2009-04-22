@@ -70,8 +70,8 @@ supportedHadoopPackage = PackageTarget(
                     'compile.c++': 'true'},
       ant_target = "package"),
     Tar(
-      filename= hadoop_cloudera_ver_string + ".tar.gz",
-      subdir="build/%s" % (hadoop_cloudera_ver_string)
+      filename = hadoop_cloudera_ver_string + ".tar.gz",
+      dir = "build/%s" % (hadoop_cloudera_ver_string)
       ),
   ],
   # Define build-phase outputs that other programs compiled against our distro need.
