@@ -122,7 +122,7 @@ chmod 644 $LIB_DIR/contrib/hod/bin/VERSION
 # Link examples to /usr/share
 mkdir -p $EXAMPLE_DIR
 for x in $LIB_DIR/*examples*jar ; do
-  INSTALL_LOC=`echo $x | sed -e 's,$LIB_DIR,$INSTALLED_LIB_DIR,'`
+  INSTALL_LOC=`echo $x | sed -e "s,$LIB_DIR,$INSTALLED_LIB_DIR,"`
   ln -s $INSTALL_LOC $EXAMPLE_DIR/
 done
 # And copy the source
