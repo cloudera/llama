@@ -1,0 +1,106 @@
+<html><head><title>Cloudera APT repository</title>
+  <link rel="shortcut icon" href="http://cloudera.com/sites/all/themes/cloudera/static/img/favicon.ico" type="image/x-icon" />
+  <link rel="icon" href="http://cloudera.com/sites/all/themes/cloudera/static/img/favicon.ico" type="image/x-icon" />
+
+<style>
+ol  li { margin-bottom: 1.5em; }
+.codeblock {
+  background: #bbd;
+  border:1px dashed #666;
+  padding: 5px 10px;
+  margin: 10px 5px;
+}
+</style>
+
+</head>
+<body>
+
+<div>
+<h1 style="float: left;">Cloudera APT Repository</h1>
+<div style="float: right;"><img src="http://www.cloudera.com/sites/all/themes/cloudera/static/img/logo.png"/></a>
+</div>
+<div style="clear:both;" />
+
+<h2>Contents</h2>
+The Cloudera APT Repository provides a simple way to download and install
+<a href="http://cloudera.com/distribution">Cloudera's distribution for Hadoop</a> on Debian-based systems.
+
+The repository currently includes the Cloudera distribution for the following packages:
+
+<ul>
+<li><b>Hadoop</b></li>
+<li><b>Pig</b></li>
+<li><b>Hive</b></li>
+</ul>
+
+<a href="debian/">Browse the repository</a>
+
+<h2>Platform Support</h2>
+We currently build and test our packages on the following Debian-based platforms:
+<ul>
+<li><b>Ubuntu 8.10 (intrepid)</b> (x86 and amd64)</li>
+<li><b>Ubuntu 8.04 (hardy)</b> (x86 and amd64)</li>
+<li><b>Debian 5.0 (lenny)</b> (x86 and amd64)</li>
+<li><b>Debian 4.0 (etch)</b> (x86 and amd64)</li>
+</ul>
+<p>
+If you are running on another architecture, you can still use the Cloudera Distribution for Hadoop - you will simply miss out on some performance enhancements and C libraries.
+</p>
+<p>
+If you would like to see Debian packages built for other architectures or distributions, please <a href="http://getsatisfaction.com/cloudera/products/cloudera_cloudera_s_distribution_for_hadoop">let us know</a>.
+</p>
+
+<h2>Instructions</h2>
+
+Using Cloudera's APT Repository is very simple:
+
+<ol>
+  <li><b>Add repository.</b> Create a new file <code>/etc/apt/sources.list.d/cloudera.list</code>
+  with the following contents, taking care to replace <code>DISTRO</code>
+  with the name of your distribution (find out by running <code>lsb_release -c</code>)
+
+  <div class="codeblock">
+  <code>
+<pre>deb http://archive.cloudera.com/debian DISTRO contrib
+deb-src http://archive.cloudera.com/debian DISTRO contrib</pre>
+</code>
+  </div>
+  </li>
+
+  <li><b>Add repository key.</b>
+    <em>(optional)</em>
+    Add the Cloudera Public GPG Key to your repository by executing the
+    following command:
+  <div class="codeblock">
+<code><pre>
+curl -s http://archive.cloudera.com/debian/archive.key | sudo apt-key add -
+</pre></code>
+  </div>
+    This allows you to verify that you are downloading genuine packages.
+  </li>
+
+  <li><b>Update APT package index.</b> Simply run:
+  <div class="codeblock">
+<code><pre>
+sudo apt-get update
+</pre></code>
+  </div>
+  </li>
+
+  <li><b>Find and install packages.</b> You may now find and install packages from the Cloudera repository using your favorite APT package manager (e.g <code>apt-get</code>, <code>aptitude</code>, or <code>dselect</code>). For example:
+
+  <div class="codeblock">
+<code><pre>
+apt-cache search hadoop
+sudo apt-get install hadoop
+</pre></code>
+  </div>
+
+  </li>
+
+  <li><b>For more detailed instructions and next steps</b>, check out the <a href="http://cloudera.com/hadoop-deb">tutorial</a>.</li>
+</ol>
+
+<a href="/debian">Browse the repository</a>
+</body>
+</html>

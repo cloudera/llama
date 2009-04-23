@@ -1,0 +1,7 @@
+<div>
+  <h1 style="float: left;">Index of <!--#echo var="REQUEST_URI" --></h1>
+  <div style="float: right;">
+    <img src="http://www.cloudera.com/sites/all/themes/cloudera/static/img/logo.png" alt="Cloudera"/>
+  </div>
+</div>
+<div style="clear:both;"/>

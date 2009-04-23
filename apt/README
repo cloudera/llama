@@ -1,0 +1,84 @@
+This directory contains scripts for managing the Cloudera APT repository.
+
+The authoritative repository currently lives on S3 in the cloudera-apt bucket.
+We actually serve it out of apache on community.cloudera.com. The reason for this
+is that people expect to be able to navigate apt repository directory indexes, and
+that's a lot easier to accomplish through Apache.
+
+== How to initialize an entirely fresh repository ==
+
+mkdir -p repo/conf
+./gen_distributions.py > repo/conf/distributions
+cp header.shtml repo/conf/header.shtml
+cp htaccess repo/.htaccess
+cp archive.key repo/
+
+reprepro -b repo export
+
+== How to update the repository ==
+
+1. Start up a Debian Lenny EC2 instance
+
+  ec2-run-instances -k $USER -g cloudera -g $USER ami-e348af8a
+
+we refer to the public hostname of this instance as $EC2_HOST from now on
+
+2. Bootstrap the machine (creates 'apt' user, copies scripts, etc)
+
+  ./apt/remote_machine_setup.sh $EC2_HOST
+
+3. Login as the newly created 'apt' user (your key is already installed in
+   authorized_keys)
+
+  ssh apt@$EC2_HOST
+
+4. Sync the current repository off S3
+
+  s3cmd sync s3://cloudera-apt/debian/ repo/
+
+5. Update the repository from a build you've done using ec2_build.py. The build
+   id is printed on ec2_build.py exit. Make sure you watch in ElasticFox to make sure
+   all of your build slaves have shut themselves down. This indicates success. If
+   one is still up, the build must of failed. ssh into the bad build slave and
+   check out /var/log/message
+
+  ./update_repo.sh ec2-build <your build id>
+
+   This script will ask for a GPG key passphrase. Owing to new Cloudera policies not
+   to put passwords in the wiki, ask Todd for this one.
+
+6. Sync repository back up into S3 (your AWS credentials are already installed on that machine)
+
+  s3cmd sync -P repo/ s3://cloudera-apt/debian/
+
+7. This has updated the repository in s3, but *not* the actual archive.cloudera.com
+   repository, which is hosted by Apache. To do that:
+
+  ssh community.cloudera.com
+  sudo -s
+  [set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY variables]
+  cd /ebs/apt
+  s3sync.rb --make-dirs -r cloudera-apt:debian/ debian.new/
+  chmod 644 `find debian.new -type f`
+  chmod 755 `find debian.new -type d`
+  rsync -avn debian.new/ debian/
+
+  # make sure the dry run looked reasonable
+  rsync -av debian.new/ debian/
+
+   The reason for the wacky s3sync-then-chmod-then-rsync is that the version of s3sync.rb on
+   community is totally whack and sets file permissions completely crazily.
+
+  *NOTE*: Don't update the production repository on a whim. After you've released some version,
+  we have to assume that some users migth have installed it. Re-releasing that version with a
+  different hash is practically impossible (it will scream loudly at all points in the process)
+
+
+== Hosting the repository ==
+
+The repository is currently a vhost on community.cloudera.com.
+The requirements are:
+  - Deploy apt.httpd.conf in /etc/httpd/conf.d/
+  - Make sure mod_include is enabled by running a2enmod include
+  - The repository should be deployed in /ebs/apt
+  - index.html from this directory should be copied to /ebs/apt/index.html
