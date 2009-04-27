@@ -7,7 +7,7 @@ __usage = """
    --key | -k  <key>      SSH key to allow connection to build slave instances
                           (default: current user name)
 
-   --group | -g <group>   EC2 Access Groups, comma-separated, to use on build
+   --groups | -g <group>  EC2 Access Groups, comma-separated, to use on build
                           slaves
                           (default: cloudera, <username>)
 
@@ -30,21 +30,26 @@ import datetime
 import md5
 from optparse import OptionParser
 import os
-import pwd
 import re
 import sys
 import time
 
+class Options:
+  def __init__(self):
+    # Bucket to store source RPMs/debs in
+    self.S3_BUCKET = 'ec2-build'
+    self.EC2_KEY_NAME = os.getlogin()
+    self.EC2_GROUPS=['cloudera', os.getlogin()]
+    self.BUILD_MACHINES = DEFAULT_BUILD_MACHINES
+    self.DRY_RUN = False
+    # Default to building hadoop
+    self.PACKAGE = 'hadoop'
+  pass
+
 SCRIPT_DIR = os.path.realpath(os.path.dirname(sys.argv[0]))
 
-# Bucket to store source RPMs/debs in
-S3_BUCKET = 'ec2-build'
-
 # User running the script
-USERNAME = pwd.getpwuid(os.getuid())[0]
-
-EC2_KEY_NAME=USERNAME
-EC2_GROUPS=['cloudera', USERNAME]
+USERNAME = os.getlogin()
 
 # Build ID
 BUILD_ID = "%s-%s" % (USERNAME, datetime.datetime.now().strftime("%Y%m%d_%H%M%S"))
@@ -65,9 +70,9 @@ HIVE_RPM_ROOT = REDIST_DIR + "/projects/HadoopDist/rpm_hive_srpm/hive-srpm/topdi
 PACKAGE_FILES = {
   'hadoop': {
     'deb': [os.path.join(HD_DEB_ROOT, x) for x in
-            ["hadoop_0.18.3-0cloudera0.3.0_source.changes",
-             "hadoop_0.18.3-0cloudera0.3.0.diff.gz",
-             "hadoop_0.18.3-0cloudera0.3.0.dsc",
+            ["hadoop_0.18.3-2cloudera0.3.0_source.changes",
+             "hadoop_0.18.3-2cloudera0.3.0.diff.gz",
+             "hadoop_0.18.3-2cloudera0.3.0.dsc",
              "hadoop_0.18.3.orig.tar.gz"]],
     'rpm': [os.path.join(HD_RPM_ROOT, x) for x in
           ["hadoop-0.18.3-9.cloudera.CH0_3.src.rpm"]],
@@ -91,9 +96,6 @@ PACKAGE_FILES = {
             ["hadoop-hive-r759018_branch0.3-9.cloudera.CH0_3.src.rpm"]],
     },
   }
-
-# Default to building hadoop
-PACKAGE = 'hadoop'
 
 # Directory in S3_BUCKET to put files
 FILECACHE_S3="file-cache"
@@ -138,7 +140,7 @@ BUILD_SCRIPTS = {
 
 # What we actually want to build
 # tuples of (build type, distro, arch)
-BUILD_MACHINES = [
+DEFAULT_BUILD_MACHINES = [
   ('deb', 'intrepid', 'x86'),
   ('deb', 'intrepid', 'amd64'),
   ('deb', 'hardy',    'x86'),
@@ -151,21 +153,18 @@ BUILD_MACHINES = [
   ('rpm', 'centos5',  'amd64'),
   ]
 
-DRY_RUN=False
-
 def parse_args():
   """ Parse command line arguments into globals. """
-  global __usage, S3_BUCKET, EC2_KEY_NAME, EC2_GROUPS, \
-         DRY_RUN, BUILD_MACHINES, PACKAGE
+
+  ret_opts = Options()
 
   op = OptionParser(usage = __usage)
-  op.add_option('-b', '--bucket', action='store', type='string')
-  op.add_option('-k', '--key', action='store', type='string')
-  op.add_option('-g', '--group', dest='groups', type='string')
-  op.add_option('--only', action='append', dest='only')
+  op.add_option('-b', '--bucket')
+  op.add_option('-k', '--key')
+  op.add_option('-g', '--groups')
+  op.add_option('--only', action='append')
   op.add_option('-n', '--dry-run', action='store_true')
-  op.add_option('-p', '--package', action='store', type='choice',
-                choices=PACKAGE_FILES.keys())
+  op.add_option('-p', '--package', action='store', choices=PACKAGE_FILES.keys())
 
   opts, args = op.parse_args()
   if len(args):
@@ -173,24 +172,28 @@ def parse_args():
     raise Exception("Unhandled args: %s" % repr(args))
 
   if opts.groups:
-    EC2_GROUPS = groups.split(',')
+    ret_opts.EC2_GROUPS = groups.split(',')
 
   if opts.only:
-    BUILD_MACHINES = [(type, distro, arch) for
-                      (type, distro, arch) in BUILD_MACHINES
-                      if (type in opts.only or
-                          distro in opts.only or
-                          arch in opts.only or
-                          "%s-%s"%(distro, arch) in opts.only)]
-  DRY_RUN = opts.dry_run
+    ret_opts.BUILD_MACHINES = (
+      [(type, distro, arch) for
+       (type, distro, arch) in ret_opts.BUILD_MACHINES
+       if (type in opts.only or
+           distro in opts.only or
+           arch in opts.only or
+           "%s-%s"%(distro, arch) in opts.only)])
+
+  ret_opts.DRY_RUN = opts.dry_run
   if opts.bucket:
-    S3_BUCKET = opts.bucket
+    ret_opts.S3_BUCKET = opts.bucket
 
   if opts.key:
-    EC2_KEY_NAME = opts.key
+    ret_opts.EC2_KEY_NAME = opts.key
 
   if opts.package:
-    PACKAGE = opts.package
+    ret_opts.PACKAGE = opts.package
+
+  return ret_opts
 
 def md5file(filename):
   """ Return the hex digest of a file without loading it all into memory. """
@@ -237,19 +240,19 @@ def satisfy_in_cache(bucket, path):
 
   return (checksum, k.generate_url(EXPIRATION))
 
-def upload_files_and_manifest():
+def upload_files_and_manifest(options):
   """
   Upload all of the required files as well as a manifest.txt file into
   the BUILD_ID dir on S3.
   """
   s3 = boto.connect_s3()
-  bucket = s3.lookup(S3_BUCKET)
+  bucket = s3.lookup(options.S3_BUCKET)
 
   build_dir = os.path.join("build", BUILD_ID)
 
   manifest_list = []
 
-  files = PACKAGE_FILES[PACKAGE]
+  files = PACKAGE_FILES[options.PACKAGE]
   for tag, paths in files.iteritems():
     for path in paths:
       dest = os.path.join(build_dir, os.path.basename(path))
@@ -259,7 +262,7 @@ def upload_files_and_manifest():
   manifest = "\n".join(
     ["\t".join(el) for el in manifest_list])
 
-  if not DRY_RUN:
+  if not options.DRY_RUN:
     man_key = bucket.new_key('%s/manifest.txt' % build_dir)
     man_key.set_contents_from_string(
       manifest,
@@ -269,14 +272,14 @@ def upload_files_and_manifest():
     return "<manifest not uploaded - dry run>"
 
 def main():
-  parse_args()
-  manifest_url = upload_files_and_manifest()
+  options = parse_args()
+  manifest_url = upload_files_and_manifest(options)
   print manifest_url
 
   ec2 = boto.connect_ec2()
 
   instances = []
-  for build_type, distro, arch in BUILD_MACHINES:
+  for build_type, distro, arch in options.BUILD_MACHINES:
     ami = AMIS[(distro, arch)]
     image = ec2.get_image(ami)
     instance_type = BUILD_INSTANCE_TYPES[arch]
@@ -287,7 +290,7 @@ def main():
       'username': USERNAME,
       'distro': distro,
       'manifest_url': manifest_url,
-      's3_bucket': S3_BUCKET,
+      's3_bucket': options.S3_BUCKET,
       'aws_access_key_id': ec2.aws_access_key_id,
       'aws_secret_access_key': ec2.aws_secret_access_key,
       }
@@ -305,10 +308,10 @@ def main():
       """ % subs)
 
     print "Starting %s-%s build slave (%s)..." % (distro, arch, ami)
-    if not DRY_RUN:
+    if not options.DRY_RUN:
       reservation = image.run(
-        key_name=EC2_KEY_NAME,
-        security_groups=EC2_GROUPS,
+        key_name=options.EC2_KEY_NAME,
+        security_groups=options.EC2_GROUPS,
         user_data=subbed_script,
         instance_type=instance_type)
       instances.append(reservation.instances[0])
@@ -329,9 +332,9 @@ def main():
   print "To killall: "
   print "  ec2-terminate-instances %s" % (" ".join([i.id for i in instances]))
   print
-  print "Expect results at s3://%s/build/%s/" % (S3_BUCKET, BUILD_ID)
+  print "Expect results at s3://%s/build/%s/" % (options.S3_BUCKET, BUILD_ID)
   print "To update apt repo after build is finished:"
-  print "  update_repo.sh %s %s" % (S3_BUCKET, BUILD_ID)
+  print "  update_repo.sh %s %s" % (options.S3_BUCKET, BUILD_ID)
 
 
 if __name__ == "__main__":
