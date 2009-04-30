@@ -11,7 +11,7 @@ base_hadoop_ver = "0.18.3"
 hadoop_ver_string = "hadoop-" + base_hadoop_ver
 
 # Cloudera Hadoop dist version.
-base_ch_ver = "20090430"
+base_ch_ver = "0.3.0"
 
 # RPM release number
 rpm_release="9.cloudera.CH0_3"
