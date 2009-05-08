@@ -5,7 +5,7 @@
 # Patches to apply
 PATCH_DIR = "patches"
 PATCHES = [
-  'scribe_hadoop_trunk_v6.patch',
+  'scribe_hadoop_trunk.patch',
   'nn+jt_cloudera_0.18.2_noheader.patch',
   'HADOOP-2536-0.18.2.patch',
   'HADOOP-4955.patch',
