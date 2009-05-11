@@ -187,6 +187,21 @@ def uncopy_files():
       else:
         do_rm(dst_path(dst))
 
+
+def delete_files():
+  """ Renames away files to .orig files as specified in dist_options.DELETE_FILES."""
+  for filename in dist_options.DELETE_FILES:
+    os.rename(filename, filename + '.orig')
+
+
+def undelete_files():
+  """ Renames .orig-versions of files specified in dist_options.DELETE_FILES to
+      their original filenames.
+  """
+  for filename in dist_options.DELETE_FILES:
+    os.rename(filename + '.orig', filename)
+
+
 def hook_build_xml():
   """Modify the hadoop build.xml to rename the package target to package.orig.
 
@@ -218,9 +233,11 @@ def main(argv):
     copy_files()
     apply_patches()
     apply_chmods()
+    delete_files()
     hook_build_xml()
   else:
     unhook_build_xml()
+    undelete_files()
     unapply_patches()
     uncopy_files()
 

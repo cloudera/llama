@@ -26,6 +26,7 @@ PATCHES = [
   'HADOOP-5611-Add-some-missing-includes-to-c-code-t.patch',
   'HADOOP-5612-Add-chmod-rules-to-build.xml-to-make.patch',
   'include_pthread_in_pipes_examples.patch',
+  'HADOOP-5518-branch18.patch',
   ]
 
 # Things to make executable after applying the patches, since
@@ -46,4 +47,13 @@ COPY_FILES = [
   ('hsqldb.jar', 'lib/'),
   (['bluebar.png', 'logo.png'], static_images_dir),
   ('hadoop-config.sh', 'bin/'),
+  ('junit-4.5.jar', 'lib/'),
   ]
+
+# Original files that should be removed from the final version because
+# they were obsoleted by something added by COPY_FILES, with a different
+# filename. Doesn't actually remove them; just renames them to '*.orig'
+DELETE_FILES = [
+  'lib/junit-3.8.1.jar',
+  ]
+
