@@ -28,6 +28,8 @@ PATCHES = [
   'include_pthread_in_pipes_examples.patch',
   'HADOOP-5518-branch18.patch',
   'HADOOP-5815-branch18.patch',
+  'HADOOP-1722-branch-0.18.patch',
+  'HADOOP-5450.patch',
   ]
 
 # Things to make executable after applying the patches, since
