@@ -27,6 +27,7 @@ PATCHES = [
   'HADOOP-5612-Add-chmod-rules-to-build.xml-to-make.patch',
   'include_pthread_in_pipes_examples.patch',
   'HADOOP-5518-branch18.patch',
+  'HADOOP-5815-branch18.patch',
   ]
 
 # Things to make executable after applying the patches, since
@@ -45,6 +46,7 @@ COPY_FILES = [
   ('libfb303.jar', scribe_directory),
   ('libthrift.jar', scribe_directory),
   ('hsqldb.jar', 'lib/'),
+  ('mysql-connector-java-5.0.8-bin.jar', 'lib/'),
   (['bluebar.png', 'logo.png'], static_images_dir),
   ('hadoop-config.sh', 'bin/'),
   ('junit-4.5.jar', 'lib/'),
