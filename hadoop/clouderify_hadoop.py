@@ -191,7 +191,10 @@ def uncopy_files():
 def delete_files():
   """ Renames away files to .orig files as specified in dist_options.DELETE_FILES."""
   for filename in dist_options.DELETE_FILES:
-    os.rename(filename, filename + '.orig')
+    if DRY_RUN or VERBOSE:
+      print >>sys.stderr, "[mv]", filename, "-->", filename + ".orig"
+    if not DRY_RUN:
+      os.rename(filename, filename + '.orig')
 
 
 def undelete_files():
@@ -199,7 +202,10 @@ def undelete_files():
       their original filenames.
   """
   for filename in dist_options.DELETE_FILES:
-    os.rename(filename + '.orig', filename)
+    if DRY_RUN or VERBOSE:
+      print >>sys.stderr, "[mv]", filename + ".orig", "-->", filename
+    if not DRY_RUN:
+      os.rename(filename + '.orig', filename)
 
 
 def hook_build_xml():
