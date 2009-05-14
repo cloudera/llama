@@ -1,0 +1,396 @@
+Index: src/test/org/apache/hadoop/fs/TestHarFileSystem.java
+===================================================================
+--- src/test/org/apache/hadoop/fs/TestHarFileSystem.java	(revision 696441)
++++ src/test/org/apache/hadoop/fs/TestHarFileSystem.java	(working copy)
+@@ -20,6 +20,7 @@
+ 
+ 
+ import java.io.IOException;
++import java.net.URI;
+ import java.util.Iterator;
+ 
+ import org.apache.hadoop.conf.Configuration;
+@@ -62,7 +63,7 @@
+   
+   protected void setUp() throws Exception {
+     super.setUp();
+-    dfscluster = new MiniDFSCluster(new JobConf(), 2, true, null);
++    dfscluster = new MiniDFSCluster(new Configuration(), 2, true, null);
+     fs = dfscluster.getFileSystem();
+     mapred = new MiniMRCluster(2, fs.getUri().toString(), 1);
+     inputPath = new Path(fs.getHomeDirectory(), "test"); 
+@@ -70,6 +71,16 @@
+     fileb = new Path(inputPath,"b");
+     filec = new Path(inputPath,"c");
+     archivePath = new Path(fs.getHomeDirectory(), "tmp");
++    fs.mkdirs(inputPath);
++    FSDataOutputStream out = fs.create(filea); 
++    out.write("a".getBytes());
++    out.close();
++    out = fs.create(fileb);
++    out.write("b".getBytes());
++    out.close();
++    out = fs.create(filec);
++    out.write("c".getBytes());
++    out.close();
+   }
+   
+   protected void tearDown() throws Exception {
+@@ -109,18 +120,57 @@
+     }
+   }
+   
++  // test archives with a -p option
++  public void testRelativeArchives() throws Exception {
++    fs.delete(archivePath,true);
++    Configuration conf = mapred.createJobConf();
++    HadoopArchives har = new HadoopArchives(conf);
++    String[] args = new String[6];
++    args[0] = "-archiveName";
++    args[1] = "foo.har";
++    args[2] = "-p";
++    args[3] =  fs.getHomeDirectory().toString();
++    args[4] = "test";
++    args[5] = archivePath.toString();
++    int ret = ToolRunner.run(har, args);
++    assertTrue("failed test", ret == 0);
++    Path finalPath = new Path(archivePath, "foo.har");
++    Path fsPath = new Path(inputPath.toUri().getPath());
++    Path filePath = new Path(finalPath, "test");
++    //make it a har path 
++    Path harPath = new Path("har://" + filePath.toUri().getPath());
++    assertTrue(fs.exists(new Path(finalPath, "_index")));
++    assertTrue(fs.exists(new Path(finalPath, "_masterindex")));
++    assertTrue(!fs.exists(new Path(finalPath, "_logs")));
++    args = new String[2];
++    args[0] = "-ls";
++    args[1] = harPath.toString();
++    FsShell shell = new FsShell(conf);
++    ret = ToolRunner.run(shell, args);
++    // fileb and filec
++    assertTrue(ret == 0);
++    Path harFilea = new Path(harPath, "a");
++    Path harFileb = new Path(harPath, "b");
++    Path harFilec = new Path(harPath, "c");
++    FileSystem harFs = harFilea.getFileSystem(conf);
++    FSDataInputStream fin = harFs.open(harFilea);
++    byte[] b = new byte[4];
++    int readBytes = fin.read(b);
++    fin.close();
++    assertTrue("strings are equal ", (b[0] == "a".getBytes()[0]));
++    fin = harFs.open(harFileb);
++    fin.read(b);
++    fin.close();
++    assertTrue("strings are equal ", (b[0] == "b".getBytes()[0]));
++    fin = harFs.open(harFilec);
++    fin.read(b);
++    fin.close();
++    assertTrue("strings are equal ", (b[0] == "c".getBytes()[0]));
++  }
++  
++ 
+   public void testArchives() throws Exception {
+-    fs.mkdirs(inputPath);
+-    
+-    FSDataOutputStream out = fs.create(filea); 
+-    out.write("a".getBytes());
+-    out.close();
+-    out = fs.create(fileb);
+-    out.write("b".getBytes());
+-    out.close();
+-    out = fs.create(filec);
+-    out.write("c".getBytes());
+-    out.close();
++    fs.delete(archivePath, true);
+     Configuration conf = mapred.createJobConf();
+     HadoopArchives har = new HadoopArchives(conf);
+     String[] args = new String[3];
+@@ -138,7 +188,7 @@
+     args[3] = archivePath.toString();
+     ret = ToolRunner.run(har, args);
+     assertTrue(ret != 0);
+-//  se if dest is a file 
++    //  se if dest is a file 
+     args[1] = "foo.har";
+     args[3] = filec.toString();
+     ret = ToolRunner.run(har, args);
+@@ -160,7 +210,9 @@
+     String relative = fsPath.toString().substring(1);
+     Path filePath = new Path(finalPath, relative);
+     //make it a har path 
+-    Path harPath = new Path("har://" + filePath.toUri().getPath());
++    URI uri = fs.getUri(); 
++    Path harPath = new Path("har://" + "hdfs-" + uri.getHost() +":" +
++        uri.getPort() + filePath.toUri().getPath());
+     assertTrue(fs.exists(new Path(finalPath, "_index")));
+     assertTrue(fs.exists(new Path(finalPath, "_masterindex")));
+     assertTrue(!fs.exists(new Path(finalPath, "_logs")));
+Index: src/tools/org/apache/hadoop/tools/HadoopArchives.java
+===================================================================
+--- src/tools/org/apache/hadoop/tools/HadoopArchives.java	(revision 696441)
++++ src/tools/org/apache/hadoop/tools/HadoopArchives.java	(working copy)
+@@ -57,7 +57,6 @@
+ import org.apache.hadoop.mapred.Reporter;
+ import org.apache.hadoop.mapred.lib.NullOutputFormat;
+ import org.apache.hadoop.util.Tool;
+-import org.apache.hadoop.util.ToolRunner;
+ 
+ 
+ /**
+@@ -77,12 +76,12 @@
+   static final String SRC_COUNT_LABEL = NAME + ".src.count";
+   static final String TOTAL_SIZE_LABEL = NAME + ".total.size";
+   static final String DST_HAR_LABEL = NAME + ".archive.name";
++  static final String SRC_PARENT_LABEL = NAME + ".parent.path";
+   // size of each part file
+   // its fixed for now.
+   static final long partSize = 2 * 1024 * 1024 * 1024l;
+-
+   private static final String usage = "archive"
+-  + " -archiveName NAME <src>* <dest>" +
++  + " -archiveName NAME [-p <path>] <src>* <dest>" +
+   "\n";
+   
+  
+@@ -302,8 +301,8 @@
+    * @param srcPaths the src paths to be archived
+    * @param dest the dest dir that will contain the archive
+    */
+-  public void archive(List<Path> srcPaths, String archiveName, Path dest) 
+-  throws IOException {
++  public void archive(Path parentPath, List<Path> srcPaths, 
++      String archiveName, Path dest) throws IOException {
+     checkPaths(conf, srcPaths);
+     int numFiles = 0;
+     long totalSize = 0;
+@@ -323,6 +322,9 @@
+     FileSystem jobfs = jobDirectory.getFileSystem(conf);
+     jobfs.mkdirs(jobDirectory);
+     Path srcFiles = new Path(jobDirectory, "_har_src_files");
++    if (parentPath != null) {
++      conf.set(SRC_PARENT_LABEL, parentPath.toString());
++    }
+     conf.set(SRC_LIST_LABEL, srcFiles.toString());
+     SequenceFile.Writer srcWriter = SequenceFile.createWriter(jobfs, conf,
+         srcFiles, LongWritable.class, Text.class, 
+@@ -403,6 +405,8 @@
+     Path tmpOutputDir = null;
+     Path tmpOutput = null;
+     String partname = null;
++    // if this archive is realtive to some root
++    Path rootPath = null; 
+     FSDataOutputStream partStream = null;
+     FileSystem destFs = null;
+     byte[] buffer;
+@@ -425,6 +429,8 @@
+       // directory 
+       partname = "part-" + partId;
+       tmpOutput = new Path(tmpOutputDir, partname);
++      rootPath = (conf.get(SRC_PARENT_LABEL, null) == null)? null: 
++                new Path(conf.get(SRC_PARENT_LABEL));
+       try {
+         destFs = tmpOutput.getFileSystem(conf);
+         //this was a stale copy
+@@ -481,6 +487,25 @@
+         }
+       }
+     }
++    
++    // truncate the prefix root from the fullpath 
++    private Path relPathToRoot(Path fullPath, Path root) {
++      Path justRoot = new Path(Path.SEPARATOR);
++      if (fullPath.depth() == root.depth()) {
++        return justRoot;
++      }
++      else if (fullPath.depth() > root.depth()) {
++        Path retPath = new Path(fullPath.getName());
++        Path parent = fullPath.getParent();
++        for (int i =0; i < (fullPath.depth() - root.depth() -1); i++) {
++          retPath = new Path(parent.getName(), retPath);
++          parent = parent.getParent();
++        }
++        return new Path(justRoot, retPath);
++      }
++      return null;
++    }
++    
+     // read files from the split input 
+     // and write it onto the part files.
+     // also output hash(name) and string 
+@@ -494,9 +519,16 @@
+       Path srcPath = new Path(mstat.pathname);
+       String towrite = null;
+       Path relPath = makeRelative(srcPath);
+-      int hash = HarFileSystem.getHarHash(relPath);
++      int hash = 0; 
+       long startPos = partStream.getPos();
+       if (mstat.isDir) { 
++        // this is for relative paths
++        if (rootPath != null) {
++          if (relPath.depth() < rootPath.depth()) {
++            return;
++          }
++          relPath = relPathToRoot(relPath, rootPath);
++        }
+         towrite = relPath.toString() + " " + "dir none " + 0 + " " + 0 + " ";
+         StringBuffer sbuff = new StringBuffer();
+         sbuff.append(towrite);
+@@ -514,9 +546,15 @@
+         reporter.setStatus("Copying file " + srcStatus.getPath() + 
+             " to archive.");
+         copyData(srcStatus.getPath(), input, partStream, reporter);
++        // the file paths will never be less than the depth of 
++        // rootPath
++        if (rootPath != null) {
++            relPath = relPathToRoot(relPath, rootPath);
++        }
+         towrite = relPath.toString() + " file " + partname + " " + startPos
+         + " " + srcStatus.getLen() + " ";
+       }
++      hash = HarFileSystem.getHarHash(relPath);
+       out.collect(new IntWritable(hash), new Text(towrite));
+     }
+     
+@@ -624,6 +662,7 @@
+ 
+   public int run(String[] args) throws Exception {
+     try {
++      Path parentPath = null;
+       List<Path> srcPaths = new ArrayList<Path>();
+       Path destPath = null;
+       // check we were supposed to archive or 
+@@ -642,14 +681,36 @@
+         System.out.println(usage);
+         throw new IOException("Invalid name for archives. " + archiveName);
+       }
+-      for (int i = 2; i < args.length; i++) {
++      int i =2;
++      //check to see if a relative parent is provided
++      if ("-p".equals(args[i])) {
++        parentPath = new Path(args[i+1]);
++        i+=2;
++      }
++      // read the rest of the paths
++      for  (;i < args.length; i++) {
+         if (i == (args.length - 1)) {
+           destPath = new Path(args[i]);
+         }
+         else {
+-          srcPaths.add(new Path(args[i]));
++          // check if -p is specified 
++          // then all the paths are relative
++          Path arg = new Path(args[i]);
++          Path srcPath = null;
++          if (parentPath != null) {
++            if (arg.isAbsolute()) {
++              throw new IOException("Only relative paths with -p " +
++              		"options are allowed");
++            }
++            srcPath = new Path(parentPath, arg);
++          }
++          else {
++            srcPath = arg;
++          } 
++          srcPaths.add(srcPath);
+         }
+       }
++      
+       if (srcPaths.size() == 0) {
+         System.out.println(usage);
+         throw new IOException("Invalid Usage: No input sources specified.");
+@@ -663,7 +724,7 @@
+           globPaths.add(fs.makeQualified(status.getPath()));
+         }
+       }
+-      archive(globPaths, archiveName, destPath);
++      archive(parentPath, globPaths, archiveName, destPath);
+     } catch(IOException ie) {
+       System.err.println(ie.getLocalizedMessage());
+       return -1;
+Index: src/docs/src/documentation/content/xdocs/hadoop_archives.xml
+===================================================================
+--- src/docs/src/documentation/content/xdocs/hadoop_archives.xml	(revision 696441)
++++ src/docs/src/documentation/content/xdocs/hadoop_archives.xml	(working copy)
+@@ -34,15 +34,27 @@
+         <section>
+         <title> How to create an archive? </title>
+         <p>
+-        <code>Usage: hadoop archive -archiveName name &lt;src&gt;* &lt;dest&gt;</code>
++        <code>Usage: hadoop archive -archiveName name [-p &lt;parent&gt;] &lt;src&gt;* &lt;dest&gt;</code>
+         </p>
+         <p>
+         -archiveName is the name of the archive you would like to create. 
+         An example would be foo.har. The name should have a *.har extension. 
+         The inputs are file system pathnames which work as usual with regular
+         expressions. The destination directory would contain the archive.
++        The -p option is for creating <strong>relative archives</strong>. The argument is the parent
++        path and the src's are relative child paths of parent. If not specified the hadoop
++        archives that are created are stored as relative to the root of the filesystem.
++        Please see the examples below to get more understanding of it.
++        Example would be :
++        </p><p><code> -p /foo/bar a/b/c e/f/g </code></p><p>
++        Here /foo/bar is the parent path and a/b/c, e/f/g are relative paths to parent. 
+         Note that this is a Map/Reduce job that creates the archives. You would
+         need a map reduce cluster to run this. The following is an example:</p>
++        </section>
++        <section> 
++        <title> Using Archives in Hadoop </title>
++        <section>
++        <title> Example without -p option </title>
+         <p>
+         <code>hadoop archive -archiveName foo.har /user/hadoop/dir1 /user/hadoop/dir2 /user/zoo/</code>
+         </p><p>
+@@ -50,7 +62,6 @@
+         archived in the following file system directory -- /user/zoo/foo.har.
+         The sources are not changed or removed when an archive is created.
+         </p>
+-        </section>
+         <section>
+         <title> How to look up files in archives? </title>
+         <p>
+@@ -75,5 +86,32 @@
+         <p>To cat filea in archive -
+         </p><p><code>hadoop dfs -cat har:///user/hadoop/foo.har/dir/filea</code></p>
+         </section>
++        </section>
++        <section>
++        <title> Example with -p option </title>
++        <p>
++        <code>hadoop archive -archiveName foo.har -p /user/hadoop dir1 dir2 /user/zoo </code>
++        </p><p>
++        This code example is similar to the previous one with the src's being relative to the 
++        parent /user/hadoop. In the above example /user/hadoop/dir1 and /user/hadoop/dir2 will be 
++        archives in the following file system directory -- /user/zoo/foo.har.
++        </p>
++        <section>
++        <title> How to look up files in relative archives? </title>
++        <p> 
++         The accessing of files with relative archives is much more intuitive than absolute archives.
++         Here is an example of relative archive. The input to the archives is /dir/a /dir/b where a and b 
++         are directories in /dir. The directory a contains filea, fileb and so does directory b.
++         To archive /dir/a, /dir/b for relative archiving with parent as /dir, the command is 
++         </p>
++         <p><code>hadoop archive -archiveName foo.har -p /dir a b /user/hadoop</code>
++         </p><p>
++         To get the listing of files in the created archived directory b
++         </p>
++         <p><code>hadoop dfs -lsr har:///user/hadoop/foo.har/b</code></p>
++         <p>Notice that you do not have to specify .../foo.har/dir/b as in absolute archives.</p>
++         </section>
++         </section>
++         </section>
+ 	</body>
+ </document>
+Index: bin/hadoop
+===================================================================
+--- bin/hadoop	(revision 696441)
++++ bin/hadoop	(working copy)
+@@ -70,7 +70,7 @@
+   echo "  version              print the version"
+   echo "  jar <jar>            run a jar file"
+   echo "  distcp <srcurl> <desturl> copy file or directories recursively"
+-  echo "  archive -archiveName NAME <src>* <dest> create a hadoop archive"
++  echo "  archive -archiveName NAME [-p <parent path>] <source>* <dest> create a hadoop archive"
+   echo "  daemonlog            get/set the log level for each daemon"
+   echo " or"
+   echo "  CLASSNAME            run the class named CLASSNAME"

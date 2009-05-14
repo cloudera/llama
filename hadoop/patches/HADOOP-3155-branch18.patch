@@ -1,0 +1,48 @@
+diff --git src/mapred/org/apache/hadoop/mapred/TaskTracker.java src/mapred/org/apache/hadoop/mapred/TaskTracker.java
+index 056ccc6..16540e3 100644
+--- src/mapred/org/apache/hadoop/mapred/TaskTracker.java
++++ src/mapred/org/apache/hadoop/mapred/TaskTracker.java
+@@ -97,7 +97,7 @@ public class TaskTracker
+   public static final Log LOG =
+     LogFactory.getLog("org.apache.hadoop.mapred.TaskTracker");
+ 
+-  private boolean running = true;
++  volatile boolean running = true;
+ 
+   private LocalDirAllocator localDirAllocator;
+   String taskTrackerName;
+@@ -509,7 +509,7 @@ public class TaskTracker
+     public void run() {
+       LOG.info("Starting thread: " + getName());
+         
+-      while (true) {
++      while (running) {
+         try {
+           List <FetchStatus> fList = null;
+           synchronized (runningJobs) {
+@@ -540,6 +540,9 @@ public class TaskTracker
+                        " events threw for " + f.jobId + " threw: " +
+                        StringUtils.stringifyException(e)); 
+             }
++            if (!running) {
++              break;
++            }
+           }
+           synchronized (waitingOn) {
+             try {
+@@ -780,6 +783,15 @@ public class TaskTracker
+     
+     // shutdown RPC connections
+     RPC.stopProxy(jobClient);
++ 
++    // wait for the fetcher thread to exit
++    for (boolean done = false; !done; ) {
++      try {
++        this.mapEventsFetcher.join();
++        done = true;
++      } catch (InterruptedException e) {
++      }
++    }
+     
+     if (taskReportServer != null) {
+       taskReportServer.stop();
