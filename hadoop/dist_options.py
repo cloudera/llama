@@ -33,6 +33,7 @@ PATCHES = [
   'HADOOP-5114-branch-18.patch',
   'HADOOP-3663.patch',
   'HADOOP-3155-branch18.patch',
+  'HADOOP-3361-0.18.3.patch',
   ]
 
 # Things to make executable after applying the patches, since
@@ -55,6 +56,7 @@ COPY_FILES = [
   (['bluebar.png', 'logo.png'], static_images_dir),
   ('hadoop-config.sh', 'bin/'),
   ('junit-4.5.jar', 'lib/'),
+  ('jets3t-0.6.1.jar', 'lib/'),
   ]
 
 # Original files that should be removed from the final version because
@@ -62,5 +64,6 @@ COPY_FILES = [
 # filename. Doesn't actually remove them; just renames them to '*.orig'
 DELETE_FILES = [
   'lib/junit-3.8.1.jar',
+  'lib/jets3t-0.6.0.jar',
   ]
 
