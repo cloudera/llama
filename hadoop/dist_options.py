@@ -34,6 +34,7 @@ PATCHES = [
   'HADOOP-3663.patch',
   'HADOOP-3155-branch18.patch',
   'HADOOP-3361-0.18.3.patch',
+  'HADOOP-4829-0.18.3.patch',
   ]
 
 # Things to make executable after applying the patches, since
