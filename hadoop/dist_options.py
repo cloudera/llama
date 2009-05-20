@@ -28,6 +28,7 @@ PATCHES = [
   'include_pthread_in_pipes_examples.patch',
   'HADOOP-5518-branch18.patch',
   'HADOOP-5815-branch18.patch',
+  'HADOOP-5844.patch',
   'HADOOP-1722-branch-0.18.patch',
   'HADOOP-5450.patch',
   'HADOOP-5114-branch-18.patch',
@@ -59,6 +60,7 @@ COPY_FILES = [
   ('hadoop-config.sh', 'bin/'),
   ('junit-4.5.jar', 'lib/'),
   ('jets3t-0.6.1.jar', 'lib/'),
+  ('sqoop', 'bin/'),
   ]
 
 # Original files that should be removed from the final version because

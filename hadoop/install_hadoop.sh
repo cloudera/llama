@@ -111,9 +111,13 @@ for file in $LIB_DIR/bin/* ; do
     sed -i -e 's|"$HADOOP_HOME"/bin/hadoop|/usr/bin/hadoop|' $file
 done
 
+# Point the sqoop script at the correct target for its jar.
+sed -i -e "s|SQOOP_PREFIX|$INSTALLED_LIB_DIR|" "$LIB_DIR/bin/sqoop"
+
 # Mv bin elsewhere
 mkdir -p $BIN_DIR
 ln -s $INSTALLED_LIB_DIR/bin/hadoop $BIN_DIR
+ln -s $INSTALLED_LIB_DIR/bin/sqoop $BIN_DIR
 
 # Fix some bad permissions in HOD
 chmod 755 $LIB_DIR/contrib/hod/support/checklimits.sh
