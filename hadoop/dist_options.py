@@ -53,8 +53,6 @@ SOURCE_DIR = "files"
 COPY_FILES = [
   ('libfb303.jar', scribe_directory),
   ('libthrift.jar', scribe_directory),
-  ('libfb303.jar', 'lib/'),
-  ('libthrift.jar', 'lib/'),
   ('hsqldb.jar', 'lib/'),
   ('mysql-connector-java-5.0.8-bin.jar', 'lib/'),
   (['bluebar.png', 'logo.png'], static_images_dir),
