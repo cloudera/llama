@@ -10,6 +10,7 @@ PATCHES = [
   'HADOOP-2536-0.18.2.patch',
   'HADOOP-4955.patch',
   'fairscheduler-0.18.3.patch',
+  'fairscheduler-0.18.3-fix.patch',
   'HADOOP-4873-1.patch',
   'HADOOP-5154-v4.patch',
   'FairSchedulerStyled.patch',
