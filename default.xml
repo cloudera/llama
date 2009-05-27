@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+
+  <remote  name="origin"
+           fetch="ssh://git@git.sf.cloudera.com/"/>
+
+  <default revision="master" remote="origin" />
+
+  <project name="cdh">
+     <copyfile src="targets" dest="targets" /> 
+  </project>
+
+  <project name="hadoop" revision="hadoop_distro" >
+  <remote name="apache" fetch="ssh://git@git.sf.cloudera.com/apache-hadoop.git" />
+  </project>
+
+  <project name="apache-pig" revision="tags/release-0.2.0" path="pig"/>
+
+  <project name="apache-hive" revision="tags/release-0.3.0" path="hive"/>
+
+</manifest>
