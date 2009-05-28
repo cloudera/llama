@@ -6,10 +6,6 @@
 
   <default revision="master" remote="origin" />
 
-  <project name="cdh">
-     <copyfile src="targets" dest="targets" /> 
-  </project>
-
   <project name="hadoop" revision="hadoop_distro" >
   <remote name="apache" fetch="ssh://git@git.sf.cloudera.com/apache-hadoop.git" />
   </project>
