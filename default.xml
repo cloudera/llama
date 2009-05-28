@@ -18,4 +18,10 @@
 
   <project name="apache-hive" revision="tags/release-0.3.0" path="hive"/>
 
+  <project name="hadoop-package" />
+
+  <project name="hive-package" />
+
+  <project name="pig-package" />
+
 </manifest>
