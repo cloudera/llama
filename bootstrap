@@ -1,5 +1,6 @@
-#!/bin/sh
+#!/bin/bash -x
 #
+set -e
 BRANCH=$(git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/')
 BUILDDIR="build_$BRANCH"
 CDH_GIT="git@git.sf.cloudera.com:cdh.git"
