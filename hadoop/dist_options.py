@@ -41,6 +41,7 @@ PATCHES = [
   'HADOOP-5170-tasklimits-v3-0.18.3.patch',
   'HADOOP-5175-dont-unpack-libjars-0.18.3.patch',
   'HADOOP-5613-s3exception-ioexception.patch',
+  'HADOOP-5656-s3n-bytes-counters.patch',
   ]
 
 # Things to make executable after applying the patches, since

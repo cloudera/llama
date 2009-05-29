@@ -1,0 +1,24 @@
+﻿Index: src/core/org/apache/hadoop/fs/s3native/NativeS3FileSystem.java
+===================================================================
+--- src/core/org/apache/hadoop/fs/s3native/NativeS3FileSystem.java	(revision 749877)
++++ src/core/org/apache/hadoop/fs/s3native/NativeS3FileSystem.java	(working copy)
+@@ -90,6 +90,9 @@
+       if (result != -1) {
+         pos++;
+       }
++      if (statistics != null && result != -1) {
++        statistics.incrementBytesRead(1);
++      }
+       return result;
+     }
+     public synchronized int read(byte[] b, int off, int len)
+@@ -99,6 +102,9 @@
+       if (result > 0) {
+         pos += result;
+       }
++      if (statistics != null && result > 0) {
++        statistics.incrementBytesRead(result);
++      }
+       return result;
+     }
+ 
