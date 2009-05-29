@@ -14,7 +14,7 @@ hadoop_ver_string = "hadoop-" + base_hadoop_ver
 base_ch_ver = "0.3.0"
 
 # RPM release number
-rpm_release="10.cloudera.CH0_3"
+rpm_release="12.cloudera.CH0_3"
 
 # pig version
 base_pig_ver="0.1.1"
@@ -112,5 +112,9 @@ supportedHadoopPackage = PackageTarget(
 ProjectList(required_targets=[
   "repos/hadoop-package/rpm",
   "repos/hadoop-package/deb",
+  "repos/hive-package/rpm",
+  "repos/hive-package/deb",
+  "repos/pig-package/rpm",
+  "repos/pig-package/deb",
   ":supportedHadoopPackage",
   ])
