@@ -27,9 +27,9 @@ PATCHES = [
   'HADOOP-5611-Add-some-missing-includes-to-c-code-t.patch',
   'HADOOP-5612-Add-chmod-rules-to-build.xml-to-make.patch',
   'include_pthread_in_pipes_examples.patch',
-  'HADOOP-5518-branch18.patch',
-  'HADOOP-5815-branch18.patch',
-  'HADOOP-5844.patch',
+  'HADOOP-5518-branch18.patch', # MRUnit
+  'HADOOP-5815-branch18.patch', # Sqoop
+  'sqoop-mysqldump-and-hive-branch18.patch', # Sqoop improvements
   'HADOOP-1722-branch-0.18.patch',
   'HADOOP-5450.patch',
   'HADOOP-5114-branch-18.patch',
