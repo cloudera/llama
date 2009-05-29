@@ -70,12 +70,12 @@ HIVE_RPM_ROOT = REDIST_DIR + "/repos/hadoop-package/rpm_hive_srpm/hive-srpm/topd
 PACKAGE_FILES = {
   'hadoop': {
     'deb': [os.path.join(HD_DEB_ROOT, x) for x in
-            ["hadoop_0.18.3-3cloudera0.3.0_source.changes",
-             "hadoop_0.18.3-3cloudera0.3.0.diff.gz",
-             "hadoop_0.18.3-3cloudera0.3.0.dsc",
+            ["hadoop_0.18.3-4cloudera0.3.0_source.changes",
+             "hadoop_0.18.3-4cloudera0.3.0.diff.gz",
+             "hadoop_0.18.3-4cloudera0.3.0.dsc",
              "hadoop_0.18.3.orig.tar.gz"]],
     'rpm': [os.path.join(HD_RPM_ROOT, x) for x in
-          ["hadoop-0.18.3-10.cloudera.CH0_3.src.rpm"]],
+          ["hadoop-0.18.3-12.cloudera.CH0_3.src.rpm"]],
     },
   'pig': {
     'deb': [os.path.join(PIG_DEB_ROOT, x) for x in
@@ -84,7 +84,7 @@ PACKAGE_FILES = {
              "pig_0.1.1-0cloudera0.3.0_source.changes",
              "pig_0.1.1.orig.tar.gz"]],
     'rpm': [os.path.join(PIG_RPM_ROOT, x) for x in
-            ["hadoop-pig-0.1.1-10.cloudera.CH0_3.src.rpm"]],
+            ["hadoop-pig-0.1.1-12.cloudera.CH0_3.src.rpm"]],
     },
   'hive': {
     'deb': [os.path.join(HIVE_DEB_ROOT, x) for x in
@@ -93,7 +93,7 @@ PACKAGE_FILES = {
              "hive_0.3~svn759018-0cloudera0.3.0.diff.gz",
              "hive_0.3~svn759018.orig.tar.gz"]],
     'rpm': [os.path.join(HIVE_RPM_ROOT, x) for x in
-            ["hadoop-hive-r759018_branch0.3-10.cloudera.CH0_3.src.rpm"]],
+            ["hadoop-hive-r759018_branch0.3-12.cloudera.CH0_3.src.rpm"]],
     },
   }
 
