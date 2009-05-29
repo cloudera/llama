@@ -26,14 +26,6 @@ RegisterProperty('projects.HadoopDist.base_pig_ver', base_pig_ver)
 
 hadoop_cloudera_ver_string = "hadoop-%s-%s" % (base_hadoop_ver, rpm_release)
 
-# NOTE(aaron): This is not currently enabled in any way in our distribution.
-# include the portal source code
-# portalStep = CopyDir(
-#  src_dir  = "portal/src",
-#  dest_dir = "$/src/webapps/portal")
-
-
-
 supportedHadoopPackage = PackageTarget(
   package_name = hadoop_cloudera_ver_string,
   clean_first=True,
@@ -119,5 +111,6 @@ supportedHadoopPackage = PackageTarget(
 #   test      -- Cluster Test tool (not included in distro itself)
 ProjectList(required_targets=[
   "repos/hadoop-package/rpm",
-  "repos/hadoop-package/deb"
+  "repos/hadoop-package/deb",
+  ":supportedHadoopPackage",
   ])

@@ -55,15 +55,15 @@ USERNAME = os.getlogin()
 BUILD_ID = "%s-%s" % (USERNAME, datetime.datetime.now().strftime("%Y%m%d_%H%M%S"))
 
 # TODO(todd) this is kind of gross - is there no nicer way of doing this?
-REDIST_DIR = os.path.join(SCRIPT_DIR, "../../../bin/redist")
+REDIST_DIR = os.path.join(SCRIPT_DIR, "../build/redist")
 
 # Where to find source packages TODO(todd) should be pulled from a VerStringTarget maybe?
-HD_DEB_ROOT = REDIST_DIR + "/projects/HadoopDist/deb_hadoop_deb/hadoop-deb-0.3.0-test"
-HD_RPM_ROOT = REDIST_DIR + "/projects/HadoopDist/rpm_hadoop_srpm/hadoop-srpm-0.3.0-test/topdir/SRPMS"
-PIG_DEB_ROOT = REDIST_DIR + "/projects/HadoopDist/deb_pig_deb/pig-deb"
-PIG_RPM_ROOT = REDIST_DIR + "/projects/HadoopDist/rpm_pig_srpm/pig-srpm/topdir/SRPMS"
-HIVE_DEB_ROOT = REDIST_DIR + "/projects/HadoopDist/deb_hive_deb/hive-deb"
-HIVE_RPM_ROOT = REDIST_DIR + "/projects/HadoopDist/rpm_hive_srpm/hive-srpm/topdir/SRPMS"
+HD_DEB_ROOT = REDIST_DIR + "/repos/hadoop-package/deb/hadoop-deb"
+HD_RPM_ROOT = REDIST_DIR + "/repos/hadoop-package/rpm/hadoop-srpm/topdir/SRPMS"
+PIG_DEB_ROOT = REDIST_DIR + "/repos/hadoop-package/deb_pig_deb/pig-deb"
+PIG_RPM_ROOT = REDIST_DIR + "/repos/hadoop-package/rpm_pig_srpm/pig-srpm/topdir/SRPMS"
+HIVE_DEB_ROOT = REDIST_DIR + "/repos/hadoop-package/deb_hive_deb/hive-deb"
+HIVE_RPM_ROOT = REDIST_DIR + "/repos/hadoop-package/rpm_hive_srpm/hive-srpm/topdir/SRPMS"
 
 # Files to upload
 # TODO(todd) this is kind of awful - maybe we should parse .changes files
