@@ -1,0 +1,19 @@
+commit 1884aed220ecfec37e9181b92b2aced5be9131f6
+Author: Todd Lipcon <todd@cloudera.com>
+Date:   Thu May 14 16:54:29 2009 -0700
+
+    HADOOP-5175: Don't unpack libjars when running a job
+
+diff --git src/mapred/org/apache/hadoop/mapred/JobClient.java src/mapred/org/apache/hadoop/mapred/JobClient.java
+index f4e1c65..2f9ba35 100644
+--- src/mapred/org/apache/hadoop/mapred/JobClient.java
++++ src/mapred/org/apache/hadoop/mapred/JobClient.java
+@@ -606,7 +606,7 @@ public class JobClient extends Configured implements MRConstants, Tool  {
+       for (String tmpjars: libjarsArr) {
+         Path tmp = new Path(tmpjars);
+         Path newPath = copyRemoteFiles(fs, libjarsDir, tmp, job, replication);
+-        DistributedCache.addArchiveToClassPath(newPath, job);
++        DistributedCache.addFileToClassPath(newPath, job);
+       }
+     }
+     
