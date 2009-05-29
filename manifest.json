@@ -1,0 +1,17 @@
+{
+  "default-remote": "origin",
+  "default-refspec": "master",
+  
+  "remotes":
+    {"origin": { "fetch": "ssh://git@git.sf.cloudera.com/%s.git" },
+     "apache": { "fetch": "ssh://git@git.sf.cloudera.com/apache-%s.git" }},
+ 
+  "projects":
+    {"hadoop": { "refspec": "hadoop_distro", "dir":"build/hadoop", "remotes": ["origin", "apache"] },
+     "pig": {"refspec": "tags/release-0.2.0", "dir": "build/pig", "remotes": ["apache"]},
+     "hive": {"refspec": "tags/release-0.3.0", "dir": "build/hive", "remotes": ["apache"]},
+     "hadoop-package": { "dir": "build/hadoop-package"},
+     "hive-package": { "dir": "build/hive-package"},
+     "pig-package": { "dir": "build/pig-package"}
+    }
+}
