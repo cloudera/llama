@@ -26,10 +26,6 @@ RegisterProperty('projects.HadoopDist.base_pig_ver', base_pig_ver)
 
 hadoop_cloudera_ver_string = "hadoop-%s-%s" % (base_hadoop_ver, rpm_release)
 
-version = VerStringTarget(
-  version      = base_ch_ver,
-  python_module = "installer.version")
-
 # NOTE(aaron): This is not currently enabled in any way in our distribution.
 # include the portal source code
 # portalStep = CopyDir(
@@ -47,8 +43,8 @@ supportedHadoopPackage = PackageTarget(
       executable="${tar-exec}",
       arguments=["--strip-components=1",
                  "-xzf",
-                 "%%(srcdir)/pristine/%s.tar.gz" % hadoop_ver_string],
-      inputs=["%%(srcdir)/pristine/%s.tar.gz" % hadoop_ver_string]),
+                 "%%(srcdir)/repos/pristine/%s.tar.gz" % hadoop_ver_string],
+      inputs=["%%(srcdir)/repos/pristine/%s.tar.gz" % hadoop_ver_string]),
     # copy cloudera dir inside
     CopyDir(
       src_dir="hadoop",
@@ -118,23 +114,10 @@ supportedHadoopPackage = PackageTarget(
 # NOTE(aaron): Contents of doc and deps directories are not currently used/built
 
 
-# Version stamps: make a single indirection point where all the
-# version stamps are listed, so that the installer and test programs
-# can depend on only a single place. We only need to update the current
-# package version numbers in this single Targets file.
-versionStamps = EmptyTarget(
-  required_targets = [
-    "//thirdparty/hive-chd-0.3.0:version",
-    "//thirdparty/pig-0.1.1:version",
-    ":version" ])
-
 # subdirectory targets:
 #   installer -- guided and noattend python installation system
 #   test      -- Cluster Test tool (not included in distro itself)
 ProjectList(required_targets=[
-  "installer",
-  "log_mover",
-  "test",
-  "rpm",
-  "deb"
+  "repos/hadoop-package/rpm",
+  "repos/hadoop-package/deb"
   ])
