@@ -1,0 +1,325 @@
+commit b91b66d554ce15f75932244a64a741c4678851ae
+Author: Todd Lipcon <todd@cloudera.com>
+Date:   Fri May 29 15:46:03 2009 -0700
+
+    Add favicon tags and more CSS to JSP pages
+
+diff --git src/webapps/datanode/browseBlock.jsp src/webapps/datanode/browseBlock.jsp
+index 813050a..a60838b 100644
+--- src/webapps/datanode/browseBlock.jsp
++++ src/webapps/datanode/browseBlock.jsp
+@@ -363,6 +363,8 @@
+ %>
+ <html>
+ <head>
++<link rel="stylesheet" type="text/css" href="/static/hadoop.css">
++<link rel="icon" type="image/vnd.microsoft.icon" href="/static/images/favicon.ico" />
+ <%JspHelper.createTitle(out, request, request.getParameter("filename")); %>
+ </head>
+ <body onload="document.goto.dir.focus()">
+diff --git src/webapps/datanode/browseDirectory.jsp src/webapps/datanode/browseDirectory.jsp
+index 29d4cc9..d5bc3e3 100644
+--- src/webapps/datanode/browseDirectory.jsp
++++ src/webapps/datanode/browseDirectory.jsp
+@@ -138,6 +138,9 @@
+ 
+ <html>
+ <head>
++<link rel="stylesheet" type="text/css" href="/static/hadoop.css">
++<link rel="icon" type="image/vnd.microsoft.icon" href="/static/images/favicon.ico" />
++
+ <style type=text/css>
+ <!--
+ body 
+diff --git src/webapps/datanode/tail.jsp src/webapps/datanode/tail.jsp
+index 03695a6..bf89781 100644
+--- src/webapps/datanode/tail.jsp
++++ src/webapps/datanode/tail.jsp
+@@ -106,6 +106,8 @@
+ 
+ <html>
+ <head>
++<link rel="stylesheet" type="text/css" href="/static/hadoop.css">
++<link rel="icon" type="image/vnd.microsoft.icon" href="/static/images/favicon.ico" />
+ <%JspHelper.createTitle(out, request, request.getParameter("filename")); %>
+ </head>
+ <body>
+diff --git src/webapps/dfs/dfshealth.jsp src/webapps/dfs/dfshealth.jsp
+index ad0e2cc..d75ea83 100644
+--- src/webapps/dfs/dfshealth.jsp
++++ src/webapps/dfs/dfshealth.jsp
+@@ -222,8 +222,8 @@
+ 
+ <html>
+ 
+-<link rel="stylesheet" type="text/css" href="/static/hadoop.css">
+ <link rel="stylesheet" type="text/css" href="/static/style.css">
++<link rel="icon" type="image/vnd.microsoft.icon" href="/static/images/favicon.ico" />
+ <title>Hadoop NameNode <%=namenodeLabel%></title>
+     
+ <body>
+diff --git src/webapps/dfs/nn_browsedfscontent.jsp src/webapps/dfs/nn_browsedfscontent.jsp
+index 722295c..3a56a48 100644
+--- src/webapps/dfs/nn_browsedfscontent.jsp
++++ src/webapps/dfs/nn_browsedfscontent.jsp
+@@ -37,6 +37,8 @@
+ <html>
+ 
+ <title></title>
++<link rel="stylesheet" type="text/css" href="/static/hadoop.css">
++<link rel="icon" type="image/vnd.microsoft.icon" href="/static/images/favicon.ico" />
+ 
+ <body>
+ <% 
+diff --git src/webapps/job/analysejobhistory.jsp src/webapps/job/analysejobhistory.jsp
+index 28cdf14..909ca98 100644
+--- src/webapps/job/analysejobhistory.jsp
++++ src/webapps/job/analysejobhistory.jsp
+@@ -15,7 +15,7 @@
+ <%!	private static SimpleDateFormat dateFormat 
+                               = new SimpleDateFormat("d/MM HH:mm:ss") ; 
+ %>
+-<html><body>
++<html>
+ <%
+   String jobid = request.getParameter("jobid");
+   String logFile = request.getParameter("logFile");
+@@ -27,6 +27,12 @@
+   }
+   JobInfo job = (JobInfo)request.getSession().getAttribute("job");
+ %>
++<head>
++<link rel="stylesheet" type="text/css" href="/static/hadoop.css">
++<link rel="icon" type="image/vnd.microsoft.icon" href="/static/images/favicon.ico" />
++<title>Hadoop Job <%=jobid%></title>
++</head>
++<body>
+ <h2>Hadoop Job <a href="jobdetailshistory.jsp?jobid=<%=jobid%>&&logFile=<%=encodedLogFileName%>"><%=jobid %> </a></h2>
+ <b>User : </b> <%=job.get(Keys.USER) %><br/> 
+ <b>JobName : </b> <%=job.get(Keys.JOBNAME) %><br/> 
+diff --git src/webapps/job/jobblacklistedtrackers.jsp src/webapps/job/jobblacklistedtrackers.jsp
+index ced6c96..7e99c1e 100644
+--- src/webapps/job/jobblacklistedtrackers.jsp
++++ src/webapps/job/jobblacklistedtrackers.jsp
+@@ -45,7 +45,11 @@
+ %>
+ 
+ <html>
++<head>
++<link rel="stylesheet" type="text/css" href="/static/hadoop.css">
++<link rel="icon" type="image/vnd.microsoft.icon" href="/static/images/favicon.ico" />
+ <title>Hadoop <%=jobId%>'s black-listed tasktrackers</title>
++</head>
+ <body>
+ <h1>Hadoop <a href="jobdetails.jsp?jobid=<%=jobId%>"><%=jobId%></a> - 
+ Black-listed task-trackers</h1>
+diff --git src/webapps/job/jobconf.jsp src/webapps/job/jobconf.jsp
+index d7e439d..f1e9afb 100644
+--- src/webapps/job/jobconf.jsp
++++ src/webapps/job/jobconf.jsp
+@@ -19,8 +19,11 @@
+ %>
+   
+ <html>
+-
++<head>
++<link rel="stylesheet" type="text/css" href="/static/hadoop.css">
++<link rel="icon" type="image/vnd.microsoft.icon" href="/static/images/favicon.ico" />
+ <title>Job Configuration: JobId - <%= jobId %></title>
++</head>
+ 
+ <body>
+ <h2>Job Configuration: JobId - <%= jobId %></h2><br>
+diff --git src/webapps/job/jobconf_history.jsp src/webapps/job/jobconf_history.jsp
+index 50eaf7a..8591290 100644
+--- src/webapps/job/jobconf_history.jsp
++++ src/webapps/job/jobconf_history.jsp
+@@ -20,8 +20,11 @@
+ %>
+   
+ <html>
+-
++<head>
++<link rel="stylesheet" type="text/css" href="/static/hadoop.css">
++<link rel="icon" type="image/vnd.microsoft.icon" href="/static/images/favicon.ico" />
+ <title>Job Configuration: JobId - <%= jobId %></title>
++</head>
+ 
+ <body>
+ <h2>Job Configuration: JobId - <%= jobId %></h2><br>
+diff --git src/webapps/job/jobdetails.jsp src/webapps/job/jobdetails.jsp
+index f6f6479..82b9c87 100644
+--- src/webapps/job/jobdetails.jsp
++++ src/webapps/job/jobdetails.jsp
+@@ -150,6 +150,7 @@
+   %>
+ <title>Hadoop <%=jobId%> on <%=trackerName%></title>
+ <link rel="stylesheet" type="text/css" href="/static/hadoop.css">
++<link rel="icon" type="image/vnd.microsoft.icon" href="/static/images/favicon.ico" />
+ </head>
+ <body>
+ <h1>Hadoop <%=jobId%> on <a href="jobtracker.jsp"><%=trackerName%></a></h1>
+diff --git src/webapps/job/jobdetailshistory.jsp src/webapps/job/jobdetailshistory.jsp
+index 78b8f37..e4c9e53 100644
+--- src/webapps/job/jobdetailshistory.jsp
++++ src/webapps/job/jobdetailshistory.jsp
+@@ -26,7 +26,13 @@
+     JobInfo job = (JobInfo)request.getSession().getAttribute("job");
+     FileSystem fs = (FileSystem)request.getSession().getAttribute("fs");
+ %>
+-<html><body>
++<html>
++<head>
++<title>Hadoop Job <%=jobid %></title>
++<link rel="stylesheet" type="text/css" href="/static/hadoop.css">
++<link rel="icon" type="image/vnd.microsoft.icon" href="/static/images/favicon.ico" />
++</head>
++<body>
+ <h2>Hadoop Job <%=jobid %> on <a href="jobhistory.jsp">History Viewer</a></h2>
+ 
+ <b>User: </b> <%=job.get(Keys.USER) %><br/> 
+diff --git src/webapps/job/jobfailures.jsp src/webapps/job/jobfailures.jsp
+index de31bdf..5519d0f 100644
+--- src/webapps/job/jobfailures.jsp
++++ src/webapps/job/jobfailures.jsp
+@@ -149,7 +149,11 @@
+ %>
+ 
+ <html>
++<head>
++<link rel="stylesheet" type="text/css" href="/static/hadoop.css">
++<link rel="icon" type="image/vnd.microsoft.icon" href="/static/images/favicon.ico" />
+ <title>Hadoop <%=jobId%> failures on <%=trackerName%></title>
++</head>
+ <body>
+ <h1>Hadoop <a href="jobdetails.jsp?jobid=<%=jobId%>"><%=jobId%></a>
+ failures on <a href="jobtracker.jsp"><%=trackerName%></a></h1>
+diff --git src/webapps/job/jobhistory.jsp src/webapps/job/jobhistory.jsp
+index 508ccf9..ff41708 100644
+--- src/webapps/job/jobhistory.jsp
++++ src/webapps/job/jobhistory.jsp
+@@ -18,6 +18,7 @@
+ <head>
+ <title>Hadoop Map/Reduce Administration</title>
+ <link rel="stylesheet" type="text/css" href="/static/hadoop.css">
++<link rel="icon" type="image/vnd.microsoft.icon" href="/static/images/favicon.ico" />
+ </head>
+ <body>
+ <h1>Hadoop Map/Reduce History Viewer</h1>
+diff --git src/webapps/job/jobtasks.jsp src/webapps/job/jobtasks.jsp
+index c20ec6a..ce31010 100644
+--- src/webapps/job/jobtasks.jsp
++++ src/webapps/job/jobtasks.jsp
+@@ -50,6 +50,7 @@
+   <head>
+     <title>Hadoop <%=type%> task list for <%=jobid%> on <%=trackerName%></title>
+     <link rel="stylesheet" type="text/css" href="/static/hadoop.css">
++    <link rel="icon" type="image/vnd.microsoft.icon" href="/static/images/favicon.ico" />
+   </head>
+ <body>
+ <h1>Hadoop <%=type%> task list for 
+diff --git src/webapps/job/jobtaskshistory.jsp src/webapps/job/jobtaskshistory.jsp
+index 3091db6..2d3926f 100644
+--- src/webapps/job/jobtaskshistory.jsp
++++ src/webapps/job/jobtaskshistory.jsp
+@@ -29,6 +29,10 @@
+   Map<String, JobHistory.Task> tasks = job.getAllTasks(); 
+ %>
+ <html>
++<head>
++<link rel="stylesheet" type="text/css" href="/static/hadoop.css">
++<link rel="icon" type="image/vnd.microsoft.icon" href="/static/images/favicon.ico" />
++</head>
+ <body>
+ <h2><%=taskStatus%> <%=taskType %> task list for <a href="jobdetailshistory.jsp?jobid=<%=jobid%>&&logFile=<%=encodedLogFileName%>"><%=jobid %> </a></h2>
+ <center>
+diff --git src/webapps/job/jobtracker.jsp src/webapps/job/jobtracker.jsp
+index 1ec2743..b0c76c8 100644
+--- src/webapps/job/jobtracker.jsp
++++ src/webapps/job/jobtracker.jsp
+@@ -94,6 +94,7 @@
+ <title><%= trackerName %> Hadoop Map/Reduce Administration</title>
+ <link rel="stylesheet" type="text/css" href="/static/hadoop.css">
+ <link rel="stylesheet" type="text/css" href="/static/style.css">
++<link rel="icon" type="image/vnd.microsoft.icon" href="/static/images/favicon.ico" />
+ </head>
+ <body>
+ <div id="wrapper">
+@@ -164,4 +165,4 @@ Job Tracker History</a>
+ 
+ <%
+ //out.println(ServletUtil.htmlFooter());
+-%>
+\ No newline at end of file
++%>
+diff --git src/webapps/job/machines.jsp src/webapps/job/machines.jsp
+index d2141b3..b261ebe 100644
+--- src/webapps/job/machines.jsp
++++ src/webapps/job/machines.jsp
+@@ -69,8 +69,11 @@
+ %>
+ 
+ <html>
+-
++<head>
++<link rel="stylesheet" type="text/css" href="/static/hadoop.css">
++<link rel="icon" type="image/vnd.microsoft.icon" href="/static/images/favicon.ico" />
+ <title><%=trackerName%> Hadoop Machine List</title>
++</head>
+ 
+ <body>
+ <h1><a href="jobtracker.jsp"><%=trackerName%></a> Hadoop Machine List</h1>
+diff --git src/webapps/job/taskdetails.jsp src/webapps/job/taskdetails.jsp
+index 8c44639..e8f5860 100644
+--- src/webapps/job/taskdetails.jsp
++++ src/webapps/job/taskdetails.jsp
+@@ -70,6 +70,7 @@
+ <html>
+ <head>
+   <link rel="stylesheet" type="text/css" href="/static/hadoop.css">
++  <link rel="icon" type="image/vnd.microsoft.icon" href="/static/images/favicon.ico" />
+   <title>Hadoop Task Details</title>
+ </head>
+ <body>
+diff --git src/webapps/job/taskdetailshistory.jsp src/webapps/job/taskdetailshistory.jsp
+index 44779ca..0b45a0a 100644
+--- src/webapps/job/taskdetailshistory.jsp
++++ src/webapps/job/taskdetailshistory.jsp
+@@ -25,6 +25,10 @@
+   String type = task.get(Keys.TASK_TYPE);
+ %>
+ <html>
++<head>
++<link rel="stylesheet" type="text/css" href="/static/hadoop.css">
++<link rel="icon" type="image/vnd.microsoft.icon" href="/static/images/favicon.ico" />
++</head>
+ <body>
+ <h2><%=taskid %> attempts for <a href="jobdetailshistory.jsp?jobid=<%=jobid%>&&logFile=<%=encodedLogFileName%>"> <%=jobid %> </a></h2>
+ <center>
+diff --git src/webapps/job/taskstats.jsp src/webapps/job/taskstats.jsp
+index dc7ccbc..9fd962d 100644
+--- src/webapps/job/taskstats.jsp
++++ src/webapps/job/taskstats.jsp
+@@ -37,6 +37,8 @@
+ 
+ <html>
+   <head>
++    <link rel="stylesheet" type="text/css" href="/static/hadoop.css">
++    <link rel="icon" type="image/vnd.microsoft.icon" href="/static/images/favicon.ico" />
+     <title>Counters for <%=taskid%></title>
+   </head>
+ <body>
+diff --git src/webapps/task/tasktracker.jsp src/webapps/task/tasktracker.jsp
+index 7f818d9..14fb035 100644
+--- src/webapps/task/tasktracker.jsp
++++ src/webapps/task/tasktracker.jsp
+@@ -14,7 +14,8 @@
+ %>
+ 
+ <html>
+-
++<link rel="stylesheet" type="text/css" href="/static/hadoop.css">
++<link rel="icon" type="image/vnd.microsoft.icon" href="/static/images/favicon.ico" />
+ <title><%= trackerName %> Task Tracker Status</title>
+ 
+ <body>
