@@ -43,6 +43,7 @@ PATCHES = [
   'HADOOP-5613-s3exception-ioexception.patch',
   'HADOOP-5656-s3n-bytes-counters.patch',
   'HADOOP-5805-s3n-toplevel-buckets-io.patch',
+  'HADOOP-5528-binary-partitioner-0.18.patch',
   ]
 
 # Things to make executable after applying the patches, since
