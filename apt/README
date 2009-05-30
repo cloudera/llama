@@ -32,9 +32,14 @@ we refer to the public hostname of this instance as $EC2_HOST from now on
 
   ssh apt@$EC2_HOST
 
+  Steps 4 through 6 assume you are logged in as apt@$EC2_HOST
+
 4. Sync the current repository off S3
 
   s3cmd sync s3://cloudera-apt/debian/ repo/
+
+  Because s3cmd kind of sucks, you should keep running this over and over
+  until it reports that it didn't do anything.
 
 5. Update the repository from a build you've done using ec2_build.py. The build
    id is printed on ec2_build.py exit. Make sure you watch in ElasticFox to make sure
@@ -47,6 +52,11 @@ we refer to the public hostname of this instance as $EC2_HOST from now on
    This script will ask for a GPG key passphrase. Owing to new Cloudera policies not
    to put passwords in the wiki, ask Todd for this one.
 
+   If you get an error at the end of the script, it's possible that s3cmd sync screwed up.
+   This is especially the case if you get an error that a file has length 0, but expected
+   length >0. Unfortunately, s3cmd kind of sucks so you may have to rm -rf repo and try again
+   from step 4.
+
 6. Sync repository back up into S3 (your AWS credentials are already installed on that machine)
 
   s3cmd sync -P repo/ s3://cloudera-apt/debian/
@@ -58,19 +68,21 @@ we refer to the public hostname of this instance as $EC2_HOST from now on
   sudo -s
   [set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY variables]
   cd /ebs/apt
-  s3sync.rb --make-dirs -r cloudera-apt:debian/ debian.new/
+  s3sync.rb --make-dirs -r cloudera-apt:debian/ debian.new/ # this takes a long time
   chmod 644 `find debian.new -type f`
   chmod 755 `find debian.new -type d`
   rsync -avn debian.new/ debian/
 
-  # make sure the dry run looked reasonable
-  rsync -av debian.new/ debian/
+  # make sure the dry run looked like reasonable diffs, then actually do the sync:
 
-   The reason for the wacky s3sync-then-chmod-then-rsync is that the version of s3sync.rb on
-   community is totally whack and sets file permissions completely crazily.
+  mv debian debian.`date +"%Y%m%d"` ; mv debian.new debian
+
+   The reason for the wacky s3sync-then-chmod-then-switch is that the version of s3sync.rb on
+   community is totally whack and sets file permissions completely crazily. It also allows
+   a near-atomic swap.
 
   *NOTE*: Don't update the production repository on a whim. After you've released some version,
-  we have to assume that some users migth have installed it. Re-releasing that version with a
+  we have to assume that some users might have installed it. Re-releasing that version with a
   different hash is practically impossible (it will scream loudly at all points in the process)
 
 
