@@ -96,6 +96,10 @@ JAVA_HOME=${JAVA_HOME:-/usr/lib/jvm/java-6-sun/}
 
 INSTALLED_LIB_DIR=/usr/lib/hadoop
 
+# TODO(todd) right now we're using bin-package, so we don't copy
+# src/ into the dist. otherwise this would be BUILD_DIR/src
+SRC_DIR=$BUILD_DIR/../../src
+
 mkdir -p $LIB_DIR
 (cd ${BUILD_DIR} && tar cf - .) | (cd $LIB_DIR && tar xf - )
 # Take out things we've installed elsewhere
@@ -116,8 +120,8 @@ sed -i -e "s|SQOOP_PREFIX|$INSTALLED_LIB_DIR|" "$LIB_DIR/bin/sqoop"
 
 # Mv bin elsewhere
 mkdir -p $BIN_DIR
-ln -s $INSTALLED_LIB_DIR/bin/hadoop $BIN_DIR
-ln -s $INSTALLED_LIB_DIR/bin/sqoop $BIN_DIR
+ln -sf $INSTALLED_LIB_DIR/bin/hadoop $BIN_DIR
+ln -sf $INSTALLED_LIB_DIR/bin/sqoop $BIN_DIR
 
 # Fix some bad permissions in HOD
 chmod 755 $LIB_DIR/contrib/hod/support/checklimits.sh
@@ -127,15 +131,15 @@ chmod 644 $LIB_DIR/contrib/hod/bin/VERSION
 mkdir -p $EXAMPLE_DIR
 for x in $LIB_DIR/*examples*jar ; do
   INSTALL_LOC=`echo $x | sed -e "s,$LIB_DIR,$INSTALLED_LIB_DIR,"`
-  ln -s $INSTALL_LOC $EXAMPLE_DIR/
+  ln -sf $INSTALL_LOC $EXAMPLE_DIR/
 done
 # And copy the source
 mkdir -p $EXAMPLE_DIR/src
-cp -a $BUILD_DIR/src/examples/* $EXAMPLE_DIR/src
+cp -a $SRC_DIR/examples/* $EXAMPLE_DIR/src
 
 # Install docs
 mkdir -p $DOC_DIR
-cp -r ${BUILD_DIR}/docs/* $DOC_DIR
+cp -r ${BUILD_DIR}/../../docs/* $DOC_DIR
 
 # Make the empty config
 install -d -m 0755 $PREFIX/etc/hadoop/conf.empty
@@ -173,16 +177,16 @@ if [ ! -z "$NATIVE_BUILD_STRING" ]; then
 
   # libhdfs
   cp ${BUILD_DIR}/c++/${NATIVE_BUILD_STRING}/lib/libhdfs.so.0.0.0 $PREFIX/usr/lib
-  ln -s libhdfs.so.0.0.0 $PREFIX/usr/lib/libhdfs.so.0
+  ln -sf libhdfs.so.0.0.0 $PREFIX/usr/lib/libhdfs.so.0
 
   # libhdfs-dev - hadoop doesn't realy install these things in nice places :(
   mkdir -p $PREFIX/usr/share/doc/libhdfs0-dev/examples
 
-  cp ${BUILD_DIR}/src/c++/libhdfs/hdfs.h $PREFIX/usr/include/
-  cp ${BUILD_DIR}/src/c++/libhdfs/hdfs_*.c $PREFIX/usr/share/doc/libhdfs0-dev/examples
+  cp ${SRC_DIR}/c++/libhdfs/hdfs.h $PREFIX/usr/include/
+  cp ${SRC_DIR}/c++/libhdfs/hdfs_*.c $PREFIX/usr/share/doc/libhdfs0-dev/examples
 
   #    This is somewhat unintuitive, but the -dev package has this symlink (see Debian Library Packaging Guide)
-  ln -s libhdfs.so.0.0.0 $PREFIX/usr/lib/libhdfs.so
+  ln -sf libhdfs.so.0.0.0 $PREFIX/usr/lib/libhdfs.so
   sed -e "s|^libdir='.*'|libdir='/usr/lib'|" \
       ${BUILD_DIR}/c++/${NATIVE_BUILD_STRING}/lib/libhdfs.la > $PREFIX/usr/lib/libhdfs.la
 fi

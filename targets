@@ -8,13 +8,15 @@
 
 # Version of Hadoop our system is based on:
 base_hadoop_ver = "0.20.0"
+base_hadoop_branch = "0.20"
+
 hadoop_ver_string = "hadoop-" + base_hadoop_ver
 
 # Cloudera Hadoop dist version.
-base_ch_ver = "0.3.0"
+base_ch_ver = "0.5.0"
 
 # RPM release number
-rpm_release="12.cloudera.CH0_3"
+rpm_release="1.cloudera.CH0_5"
 
 # pig version
 base_pig_ver="0.1.1"
@@ -22,6 +24,7 @@ base_pig_ver="0.1.1"
 RegisterProperty('projects.HadoopDist.base_ch_ver', base_ch_ver)
 RegisterProperty('projects.HadoopDist.release', rpm_release)
 RegisterProperty('projects.HadoopDist.base_hadoop_ver', base_hadoop_ver)
+RegisterProperty('projects.HadoopDist.base_hadoop_branch', base_hadoop_branch)
 RegisterProperty('projects.HadoopDist.base_pig_ver', base_pig_ver)
 
 hadoop_cloudera_ver_string = "hadoop-%s-%s" % (base_hadoop_ver, rpm_release)
@@ -58,9 +61,9 @@ supportedHadoopPackage = PackageTarget(
       properties = {'version': '%s-%s' % (base_hadoop_ver, rpm_release),
                     'libhdfs': 'true',
                     'compile.native': 'true',
-                    'compile.c++': 'true',
-                    'java5.home': '${java5-home}'},
-      ant_target = "package"),
+                    'compile.c++': 'true'},
+      
+      ant_target = "bin-package"),
     Tar(
       filename = hadoop_cloudera_ver_string + ".tar.gz",
       dir = "build/%s" % (hadoop_cloudera_ver_string)
