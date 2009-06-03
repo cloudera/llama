@@ -21,5 +21,11 @@ diff -q <(git rev-list --no-merges $FROM_REF..$TO_REF) <(git rev-list $FROM_REF.
   exit 2
 )
 
+git diff -q || git diff --cached -q || (
+  echo "Git repository in $REPO appears to have either a dirty index or "
+  echo "working directory. Please commit changes before building a package."
+  exit 3
+)
+
 mkdir -p $OUT_DIR
 git format-patch -o $OUT_DIR $FROM_REF..$TO_REF
