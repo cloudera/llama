@@ -1,0 +1,25 @@
+#!/bin/bash
+
+set -e
+
+if [ $# -ne 4 ]; then
+  echo usage: $0 'repo <from-ref> <to-ref> <out-dir>'
+  exit 1
+fi
+
+REPO=$1
+FROM_REF=$2
+TO_REF=$3
+OUT_DIR=$4
+
+cd $REPO
+
+# Ensure that the revision history is linear
+diff -q <(git rev-list --no-merges $FROM_REF..$TO_REF) <(git rev-list $FROM_REF..$TO_REF) || (
+  echo "Revision history $FROM_REF..$TO_REF is nonlinear."
+  echo " Please rebase to create a linear history first."
+  exit 2
+)
+
+mkdir -p $OUT_DIR
+git format-patch -o $OUT_DIR $FROM_REF..$TO_REF

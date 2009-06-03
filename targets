@@ -7,7 +7,7 @@
 # Set some version constants which appear throughout this project.
 
 # Version of Hadoop our system is based on:
-base_hadoop_ver = "0.18.3"
+base_hadoop_ver = "0.20.0"
 hadoop_ver_string = "hadoop-" + base_hadoop_ver
 
 # Cloudera Hadoop dist version.
@@ -41,21 +41,25 @@ supportedHadoopPackage = PackageTarget(
     CopyDir(
       src_dir="hadoop",
       dest_dir="$/cloudera"),
+
+    # copy git patches inside
+    Exec(
+      executable="%(srcdir)/tools/export_patchseries",
+      arguments=["./repos/hadoop",
+                 "apache/tags/release-" + base_hadoop_ver,
+                 "HEAD",
+                 "%(assemblydir)/cloudera/git-patches"],
+      dir="%(srcdir)"),
     # clouderification:
     #   - applies our patches
     #   - inserts our files
-    Exec(
-      executable="%(assemblydir)/cloudera/clouderify_hadoop.py",
-      arguments=["%(assemblydir)/",
-                 base_hadoop_ver,
-                 rpm_release
-                 ]),
+    Exec(executable="%(assemblydir)/cloudera/clouderify_hadoop.sh"),
     AntCall(
-      build_file = "$/cloudera/build.xml",
       properties = {'version': '%s-%s' % (base_hadoop_ver, rpm_release),
                     'libhdfs': 'true',
                     'compile.native': 'true',
-                    'compile.c++': 'true'},
+                    'compile.c++': 'true',
+                    'java5.home': '${java5-home}'},
       ant_target = "package"),
     Tar(
       filename = hadoop_cloudera_ver_string + ".tar.gz",
