@@ -146,10 +146,13 @@ install -d -m 0755 $PREFIX/etc/hadoop/conf.empty
 (cd ${BUILD_DIR}/conf && tar cf - .) | (cd $PREFIX/etc/hadoop/conf.empty && tar xf -)
 
 # Make the pseudo-distributed config
-install -d -m 0755 $PREFIX/etc/hadoop/conf.pseudo
-(cd ${BUILD_DIR}/conf && tar -cf - .) | (cd $PREFIX/etc/hadoop/conf.pseudo && tar -xf -)
-# Overwrite the hadoop-site.xml with our special pseudo-distributed one
-cp ${CLOUDERA_SOURCE_DIR}/hadoop-site-pseudo.xml $PREFIX/etc/hadoop/conf.pseudo/hadoop-site.xml
+for conf in conf.pseudo ; do
+  install -d -m 0755 $PREFIX/etc/hadoop/$conf
+  # Install the default configurations
+  (cd ${BUILD_DIR}/conf && tar -cf - .) | (cd $PREFIX/etc/hadoop/$conf && tar -xf -)
+  # Overlay the -site files
+  (cd ${BUILD_DIR}/../../example-confs/$conf && tar -cf - .) | (cd $PREFIX/etc/hadoop/$conf && tar -xf -)
+done
 
 mkdir -p `dirname $PREFIX$HADOOP_CONFIG_INSTALL_LOCATION`
 mv $LIB_DIR/bin/hadoop-config.sh $PREFIX$HADOOP_CONFIG_INSTALL_LOCATION
