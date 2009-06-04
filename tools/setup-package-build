@@ -39,15 +39,4 @@ PRISTINE_NAME=${TGZ_BN%.tar.gz}
 tar  --strip-components 1 -xf $PRISTINE_TGZ -C $BUILD_DIR
 
 # Make our cloudera dir inside
-CLOUDERA_DIR=$BUILD_DIR/cloudera
-rm -Rf $CLOUDERA_DIR
-mkdir -p $CLOUDERA_DIR
-
-# Format patches into cloudera dir
-mkdir -p $CLOUDERA_DIR/patches
-$TOOLS_DIR/export_patchseries $GIT_REPO $BASE_BRANCH $BUILD_BRANCH $CLOUDERA_DIR/patches
-
-# Copy redistributed tools
-for tool in $TOOLS_DIR/redist/* ; do
-  cp -a $tool $CLOUDERA_DIR/
-done
+$TOOLS_DIR/create-cloudera-dir $GIT_REPO $BASE_BRANCH $BUILD_BRANCH $BUILD_DIR/cloudera
