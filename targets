@@ -35,24 +35,28 @@ RegisterProperty('pig.pristine.tarball',
                  '%%(srcdir)/repos/pristine/%s.tar.gz' % pig_ver_string)
 
 
-hadoop_cloudera_ver_string = "hadoop-%s-%s" % (base_hadoop_ver, rpm_release)
+# Hive
+base_hive_ver="0.3.0"
+hive_ver_string="hive-" + base_hive_ver
 
+RegisterProperty('hive.base.version', base_hive_ver)
+RegisterProperty('hive.repo', '%(srcdir)/repos/hive')
+RegisterProperty('hive.base.ref', 'apache/tags/release-%s' % base_hive_ver)
+RegisterProperty('hive.build.ref', 'cdh-0.18')
+RegisterProperty('hive.rpm.release', '4.cloudera.CH0_3')
+RegisterProperty('hive.pristine.tarball',
+                 '%(srcdir)/repos/pristine/hive-0.3.0-hadoop-0.18.0-dev.tar.gz')
+
+
+
+hadoop_cloudera_ver_string = "hadoop-%s-%s" % (base_hadoop_ver, rpm_release)
 
 
 supportedHadoopPackage = PackageTarget(
   package_name = hadoop_cloudera_ver_string,
   clean_first=True,
   steps = [
-  # Set up the build tree
-    Exec(
-      executable="//tools/setup-package-build",
-      arguments=["${hadoop.repo}",
-                 "${hadoop.base.ref}",
-                 "${hadoop.build.ref}",
-                 "${hadoop.pristine.tarball}",
-                 "%(assemblydir)/"],
-      inputs=["${hadoop.repo}/"],
-      ),
+    cloudera.SetupBuildStep("hadoop"),
   # Apply patches
     Exec(
       executable="%(assemblydir)/cloudera/apply-patches",
@@ -75,8 +79,8 @@ supportedHadoopPackage = PackageTarget(
 ProjectList(required_targets=[
   "repos/hadoop-package/:rpm",
   "repos/hadoop-package/:deb",
-  "repos/hive-package/rpm",
-  "repos/hive-package/deb",
+  "repos/hive-package/:rpm",
+  "repos/hive-package/:deb",
   "repos/pig-package/:rpm",
   "repos/pig-package/:deb",
   ":supportedHadoopPackage",
