@@ -27,11 +27,6 @@ def DebTarget(package_name):
       CopyFile(
         src_file = "${%s.pristine.tarball}" % package_name,
         dest_file = "%s_${%s.base.version}.orig.tar.gz" % (package_name, package_name)),
-#      Exec(
-#        executable="/bin/cp",
-#        arguments=["${%s.pristine.tarball}" % package_name,
-#                   "%%(assemblydir)/%s_${%s.base.version}.orig.tar.gz" %
-#                   (package_name, package_name)]),
       CopyDir(
         src_dir = "deb/debian.%s/" % package_name,
         exclude_patterns=['*.ex', '*.EX', '.*~'],
