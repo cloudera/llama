@@ -8,12 +8,12 @@
  
   "projects":
     {"hadoop": { "refspec": "cdh-0.18", "dir":"repos/hadoop", "remotes": ["origin", "apache"] },
-     "pig": {"refspec": "tags/release-0.2.0", "dir": "repos/pig", "remotes": ["apache"]},
+     "pig": {"refspec": "cdh-0.18", "dir": "repos/pig", "remotes": ["origin", "apache"]},
      "hive": {"refspec": "tags/release-0.3.0", "dir": "repos/hive", "remotes": ["apache"]},
 
      "hadoop-package": { "refspec": "cdh-0.18", "dir": "repos/hadoop-package"},
      "hive-package": { "dir": "repos/hive-package"},
-     "pig-package": { "dir": "repos/pig-package"},
+     "pig-package": { "refspec": "cdh-0.18", "dir": "repos/pig-package"},
      "pristine-tarballs": { "dir": "repos/pristine" }
     }
 }

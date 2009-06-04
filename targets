@@ -18,19 +18,32 @@ rpm_release="12.cloudera.CH0_3"
 
 # pig version
 base_pig_ver="0.2.0"
+pig_ver_string="pig-" + base_pig_ver
 
 RegisterProperty('projects.HadoopDist.base_ch_ver', base_ch_ver)
 RegisterProperty('projects.HadoopDist.release', rpm_release)
 RegisterProperty('projects.HadoopDist.base_hadoop_ver', base_hadoop_ver)
 RegisterProperty('projects.HadoopDist.base_pig_ver', base_pig_ver)
 
+# Hadoop
 RegisterProperty('hadoop.repo', '%(srcdir)/repos/hadoop')
 RegisterProperty('hadoop.base.ref', 'apache/tags/release-%s' % base_hadoop_ver)
 RegisterProperty('hadoop.build.ref', 'cdh-0.18')
 RegisterProperty('hadoop.pristine.tarball',
                  '%%(srcdir)/repos/pristine/%s.tar.gz' % hadoop_ver_string)
 
+# Pig
+RegisterProperty('pig.version', base_pig_ver)
+RegisterProperty('pig.repo', '%(srcdir)/repos/pig')
+RegisterProperty('pig.base.ref', 'apache/tags/release-%s' % base_pig_ver)
+RegisterProperty('pig.build.ref', 'cdh-0.18')
+RegisterProperty('pig.pristine.tarball',
+                 '%%(srcdir)/repos/pristine/%s.tar.gz' % pig_ver_string)
+
+
 hadoop_cloudera_ver_string = "hadoop-%s-%s" % (base_hadoop_ver, rpm_release)
+
+
 
 supportedHadoopPackage = PackageTarget(
   package_name = hadoop_cloudera_ver_string,
