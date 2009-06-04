@@ -7,36 +7,30 @@
 # Set some version constants which appear throughout this project.
 
 # Version of Hadoop our system is based on:
-base_hadoop_ver = "0.18.3"
-hadoop_ver_string = "hadoop-" + base_hadoop_ver
-
-# Cloudera Hadoop dist version.
-base_ch_ver = "0.3.0"
 
 # RPM release number
 rpm_release="12.cloudera.CH0_3"
 
-# pig version
-base_pig_ver="0.2.0"
-pig_ver_string="pig-" + base_pig_ver
-
-RegisterProperty('projects.HadoopDist.base_ch_ver', base_ch_ver)
-RegisterProperty('projects.HadoopDist.release', rpm_release)
-RegisterProperty('projects.HadoopDist.base_hadoop_ver', base_hadoop_ver)
-RegisterProperty('projects.HadoopDist.base_pig_ver', base_pig_ver)
-
 # Hadoop
+base_hadoop_ver = "0.18.3"
+hadoop_ver_string = "hadoop-" + base_hadoop_ver
 RegisterProperty('hadoop.repo', '%(srcdir)/repos/hadoop')
+RegisterProperty('hadoop.base.version', base_hadoop_ver)
+RegisterProperty('hadoop.rpm.release', rpm_release)
 RegisterProperty('hadoop.base.ref', 'apache/tags/release-%s' % base_hadoop_ver)
 RegisterProperty('hadoop.build.ref', 'cdh-0.18')
 RegisterProperty('hadoop.pristine.tarball',
                  '%%(srcdir)/repos/pristine/%s.tar.gz' % hadoop_ver_string)
 
 # Pig
-RegisterProperty('pig.version', base_pig_ver)
+base_pig_ver="0.2.0"
+pig_ver_string="pig-" + base_pig_ver
+
+RegisterProperty('pig.base.version', base_pig_ver)
 RegisterProperty('pig.repo', '%(srcdir)/repos/pig')
 RegisterProperty('pig.base.ref', 'apache/tags/release-%s' % base_pig_ver)
 RegisterProperty('pig.build.ref', 'cdh-0.18')
+RegisterProperty('pig.rpm.release', '1.cloudera.CH0_3')
 RegisterProperty('pig.pristine.tarball',
                  '%%(srcdir)/repos/pristine/%s.tar.gz' % pig_ver_string)
 
@@ -79,11 +73,11 @@ supportedHadoopPackage = PackageTarget(
 
 # subdirectory targets:
 ProjectList(required_targets=[
-  "repos/hadoop-package/rpm",
-  "repos/hadoop-package/deb",
+  "repos/hadoop-package/:rpm",
+  "repos/hadoop-package/:deb",
   "repos/hive-package/rpm",
   "repos/hive-package/deb",
-  "repos/pig-package/rpm",
-  "repos/pig-package/deb",
+  "repos/pig-package/:rpm",
+  "repos/pig-package/:deb",
   ":supportedHadoopPackage",
   ])
