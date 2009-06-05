@@ -17,7 +17,7 @@ cd $TARGET_DIR
 # inside a gitignored build/ dir)
 # even though we never commit to this "repository", this serves to
 # anchor the repository root at the source dir root.
-git init
+git init-db
 for PATCH in `ls -1 $PATCH_DIR/* | sort` ; do
     git apply --whitespace=nowarn $PATCH
 done
