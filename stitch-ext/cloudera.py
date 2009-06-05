@@ -64,7 +64,8 @@ def RpmTarget(package_name):
         arguments=["${%s.repo}" % package_name,
                    "${%s.base.ref}" % package_name,
                    "${%s.build.ref}" % package_name,
-                   "$/cloudera"]), # TODO(todd) inputs=
+                   "$/cloudera"],
+        inputs=["${%s.repo}/" % package_name]),
       Exec(
         executable = "${tar-exec}",
         arguments = ["-czf",
