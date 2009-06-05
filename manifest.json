@@ -12,7 +12,7 @@
      "hive": {"refspec": "cdh-0.18", "dir": "repos/hive", "remotes": ["origin", "apache"]},
 
      "hadoop-package": { "refspec": "cdh-0.18", "dir": "repos/hadoop-package"},
-     "hive-package": { "dir": "repos/hive-package"},
+     "hive-package": { "refspec": "cdh-0.18", "dir": "repos/hive-package"},
      "pig-package": { "refspec": "cdh-0.18", "dir": "repos/pig-package"},
      "pristine-tarballs": { "dir": "repos/pristine" }
     }
