@@ -1,0 +1,42 @@
+#!/bin/bash -x
+set -e
+TOOLS_DIR=$(readlink -f $(dirname $0))
+
+if [ $# -ne 5 ]; then
+  echo usage: $0 git-repo base-branch build-branch pristine-tgz build-dir
+  exit 1
+fi
+
+# Params
+GIT_REPO=$1
+BASE_BRANCH=$2
+BUILD_BRANCH=$3
+PRISTINE_TGZ=$4
+BUILD_DIR=$5
+
+
+# Check inputs
+if [ ! -d $GIT_REPO -o ! -d $GIT_REPO/.git ]; then
+  echo git repo not found at $GIT_REPO
+  exit 1
+fi
+
+if [ ! -f $PRISTINE_TGZ ]; then
+  echo no pristine tarball at $PRISTINE_TGZ
+  exit 1
+fi
+
+if [ ! -d $BUILD_DIR ]; then
+  echo no build dir at $BUILD_DIR
+  exit 1
+fi
+
+# Figure out what name this will expand into
+TGZ_BN=$(basename $PRISTINE_TGZ)
+PRISTINE_NAME=${TGZ_BN%.tar.gz}
+
+# Unpack
+tar  --strip-components 1 -xf $PRISTINE_TGZ -C $BUILD_DIR
+
+# Make our cloudera dir inside
+$TOOLS_DIR/create-cloudera-dir $GIT_REPO $BASE_BRANCH $BUILD_BRANCH $BUILD_DIR/cloudera

@@ -58,7 +58,7 @@ mv /bin/more.no /bin/more
 
 ############# BUILD PACKAGE ####################
 
-# Add centos.karan.org which has lzo-devel
+# Add centos.karan.org which has lzo-devel and git
 curl 'http://centos.karan.org/kbsingh-CentOS-Extras.repo' | sed -e 's/enabled=1/enabled=0/' \
   > /etc/yum.repos.d/kbsingh-Centos-Extras.repo
 MD5=$(curl http://centos.karan.org/RPM-GPG-KEY-karan.org.txt | tee /tmp/karan_key | md5sum - | awk '{print $1}')
@@ -67,7 +67,7 @@ if [ "$MD5" != "ec11342109b2ab5563265cb75e63df3c" ]; then
   exit 1
 fi
 
-# TODO(todd) we should rebuild lzo-devel and put it in our own yum repo so we don't have to
+# TODO(todd) we should rebuild lzo-devel and git and put it in our own yum repo so we don't have to
 # rely on some random dude
 
 # Satisfy build deps

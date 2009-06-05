@@ -1,0 +1,25 @@
+#!/bin/bash -x
+# Creates the cloudera/ dir inside of a package.
+# This dir initially contains the "redistributable tools" tools/redist
+# and the set of git patches between the given base branch and build branch
+# from a git repo
+set -e
+TOOLS_DIR=$(readlink -f $(dirname $0))
+
+GIT_REPO=$1
+BASE_BRANCH=$2
+BUILD_BRANCH=$3
+TARGET_DIR=$4
+
+CLOUDERA_DIR=$TARGET_DIR
+rm -Rf $CLOUDERA_DIR
+mkdir -p $CLOUDERA_DIR
+
+# Format patches into cloudera dir
+mkdir -p $CLOUDERA_DIR/patches
+$TOOLS_DIR/export_patchseries $GIT_REPO $BASE_BRANCH $BUILD_BRANCH $CLOUDERA_DIR/patches
+
+# Copy redistributed tools
+for tool in $TOOLS_DIR/redist/* ; do
+  cp -a $tool $CLOUDERA_DIR/
+done

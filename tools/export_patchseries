@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 set -e
 
@@ -15,17 +15,19 @@ OUT_DIR=$4
 cd $REPO
 
 # Ensure that the revision history is linear
-diff -q <(git rev-list --no-merges $FROM_REF..$TO_REF) <(git rev-list $FROM_REF..$TO_REF) || (
+diff -q <(git rev-list --no-merges $FROM_REF..$TO_REF) <(git rev-list $FROM_REF..$TO_REF)
+if [ $? -ne 0 ] ; then
   echo "Revision history $FROM_REF..$TO_REF is nonlinear."
   echo " Please rebase to create a linear history first."
   exit 2
-)
+fi
 
-git diff -q || git diff --cached -q || (
+git diff -q || git diff --cached -q
+if [ $? -ne 0 ] ; then
   echo "Git repository in $REPO appears to have either a dirty index or "
   echo "working directory. Please commit changes before building a package."
   exit 3
-)
+fi
 
 mkdir -p $OUT_DIR
 git format-patch -o $OUT_DIR $FROM_REF..$TO_REF

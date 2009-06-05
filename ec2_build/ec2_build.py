@@ -58,12 +58,12 @@ BUILD_ID = "%s-%s" % (USERNAME, datetime.datetime.now().strftime("%Y%m%d_%H%M%S"
 REDIST_DIR = os.path.join(SCRIPT_DIR, "../build/redist")
 
 # Where to find source packages TODO(todd) should be pulled from a VerStringTarget maybe?
-HD_DEB_ROOT = REDIST_DIR + "/repos/hadoop-package/deb/hadoop-deb"
-HD_RPM_ROOT = REDIST_DIR + "/repos/hadoop-package/rpm/hadoop-srpm/topdir/SRPMS"
-PIG_DEB_ROOT = REDIST_DIR + "/repos/hadoop-package/deb_pig_deb/pig-deb"
-PIG_RPM_ROOT = REDIST_DIR + "/repos/hadoop-package/rpm_pig_srpm/pig-srpm/topdir/SRPMS"
-HIVE_DEB_ROOT = REDIST_DIR + "/repos/hadoop-package/deb_hive_deb/hive-deb"
-HIVE_RPM_ROOT = REDIST_DIR + "/repos/hadoop-package/rpm_hive_srpm/hive-srpm/topdir/SRPMS"
+HD_DEB_ROOT = REDIST_DIR + "/repos/hadoop-package_deb/hadoop-deb"
+HD_RPM_ROOT = REDIST_DIR + "/repos/hadoop-package_rpm/hadoop-srpm/topdir/SRPMS"
+PIG_DEB_ROOT = REDIST_DIR + "/repos/pig-package_deb/pig-deb"
+PIG_RPM_ROOT = REDIST_DIR + "/repos/pig-package_rpm/pig-srpm/pig-srpm/topdir/SRPMS"
+HIVE_DEB_ROOT = REDIST_DIR + "/repos/hive-package_deb/hive-deb"
+HIVE_RPM_ROOT = REDIST_DIR + "/repos/hive-package_rpm/hive-srpm/topdir/SRPMS"
 
 # Files to upload
 # TODO(todd) this is kind of awful - maybe we should parse .changes files
