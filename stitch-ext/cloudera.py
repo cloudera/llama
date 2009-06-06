@@ -14,8 +14,12 @@ def SetupBuildStep(package_name,
     inputs=["${%s.repo}/" % package_name])
 
 
-def DebTarget(package_name):
-  pkgdir = "%%(assemblydir)/%s-${%s.base.version}" % (package_name, package_name)
+def DebTarget(package_name,
+              deb_source_name=None):
+
+  deb_source_name = deb_source_name or package_name
+
+  pkgdir = "%%(assemblydir)/%s-${%s.base.version}" % (deb_source_name, package_name)
 
   return PackageTarget(
     package_name = "%s-deb" % package_name,
@@ -26,7 +30,7 @@ def DebTarget(package_name):
       SetupBuildStep(package_name, pkgdir),
       CopyFile(
         src_file = "${%s.pristine.tarball}" % package_name,
-        dest_file = "%s_${%s.base.version}.orig.tar.gz" % (package_name, package_name)),
+        dest_file = "%s_${%s.base.version}.orig.tar.gz" % (deb_source_name, package_name)),
       CopyDir(
         src_dir = "deb/debian.%s/" % package_name,
         exclude_patterns=['*.ex', '*.EX', '.*~'],
