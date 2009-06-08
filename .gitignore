@@ -2,3 +2,4 @@ build/
 repos
 sbuild
 .*~
+stitch-ext/
