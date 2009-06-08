@@ -8,7 +8,7 @@
 
 # Version of Hadoop our system is based on:
 # RPM release number
-rpm_release="12.cloudera.CH0_3"
+rpm_release="1.cloudera"
 
 # Hadoop
 base_hadoop_ver = "0.20.0"
