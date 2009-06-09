@@ -27,12 +27,14 @@ __usage = """
 
 import boto
 import datetime
+import glob
 import md5
 from optparse import OptionParser
 import os
 import re
 import sys
 import time
+import deb_util
 
 class Options:
   def __init__(self):
@@ -45,6 +47,7 @@ class Options:
     # Default to building hadoop
     self.PACKAGE = 'hadoop'
   pass
+
 
 SCRIPT_DIR = os.path.realpath(os.path.dirname(sys.argv[0]))
 
@@ -69,31 +72,16 @@ HIVE_RPM_ROOT = REDIST_DIR + "/repos/hive-package_rpm/hive-srpm/topdir/SRPMS"
 # TODO(todd) this is kind of awful - maybe we should parse .changes files
 PACKAGE_FILES = {
   'hadoop': {
-    'deb': [os.path.join(HD_DEB_ROOT, x) for x in
-            ["hadoop_0.18.3-4cloudera0.3.0_source.changes",
-             "hadoop_0.18.3-4cloudera0.3.0.diff.gz",
-             "hadoop_0.18.3-4cloudera0.3.0.dsc",
-             "hadoop_0.18.3.orig.tar.gz"]],
-    'rpm': [os.path.join(HD_RPM_ROOT, x) for x in
-          ["hadoop-0.18.3-12.cloudera.CH0_3.src.rpm"]],
+    'deb': deb_util.find_source_deb_files(HD_DEB_ROOT),
+    'rpm': glob.glob(os.path.join(HD_RPM_ROOT, "*.src.rpm")),
     },
   'pig': {
-    'deb': [os.path.join(PIG_DEB_ROOT, x) for x in
-            ["pig_0.1.1-0cloudera0.3.0.dsc",
-             "pig_0.1.1-0cloudera0.3.0.diff.gz",
-             "pig_0.1.1-0cloudera0.3.0_source.changes",
-             "pig_0.1.1.orig.tar.gz"]],
-    'rpm': [os.path.join(PIG_RPM_ROOT, x) for x in
-            ["hadoop-pig-0.1.1-12.cloudera.CH0_3.src.rpm"]],
+    'deb': deb_util.find_source_deb_files(PIG_DEB_ROOT),
+    'rpm': glob.glob(os.path.join(PIG_RPM_ROOT, "*.src.rpm"))
     },
   'hive': {
-    'deb': [os.path.join(HIVE_DEB_ROOT, x) for x in
-            ["hive_0.3~svn759018-0cloudera0.3.0.dsc",
-             "hive_0.3~svn759018-0cloudera0.3.0_source.changes",
-             "hive_0.3~svn759018-0cloudera0.3.0.diff.gz",
-             "hive_0.3~svn759018.orig.tar.gz"]],
-    'rpm': [os.path.join(HIVE_RPM_ROOT, x) for x in
-            ["hadoop-hive-r759018_branch0.3-12.cloudera.CH0_3.src.rpm"]],
+    'deb': deb_util.find_source_deb_files(HIVE_DEB_ROOT),
+    'rpm': glob.glob(os.path.join(HIVE_RPM_ROOT, "*.src.rpm"))
     },
   }
 
@@ -194,6 +182,7 @@ def parse_args():
     ret_opts.PACKAGE = opts.package
 
   return ret_opts
+
 
 def md5file(filename):
   """ Return the hex digest of a file without loading it all into memory. """
