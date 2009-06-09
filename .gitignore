@@ -2,4 +2,4 @@ build/
 repos
 sbuild
 .*~
-stitch-ext/
+*.pyc
