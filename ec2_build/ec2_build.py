@@ -169,7 +169,8 @@ def parse_args():
        if (type in opts.only or
            distro in opts.only or
            arch in opts.only or
-           "%s-%s"%(distro, arch) in opts.only)])
+           "%s-%s"%(distro, arch) in opts.only or
+           "%s-%s"%(type,arch) in opts.only)])
 
   ret_opts.DRY_RUN = opts.dry_run
   if opts.bucket:
