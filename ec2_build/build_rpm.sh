@@ -71,7 +71,9 @@ fi
 # rely on some random dude
 
 # Satisfy build deps
-rpm -qRp hadoop*src.rpm | awk '{print $1}' | xargs yum --nogpgcheck --enablerepo=kbs-CentOS-Testing -y install
+YUMINST="yum --nogpgcheck --enablerepo=kbs-CentOS-Testing -y install"
+$YUMINST git-core
+rpm -qRp hadoop*src.rpm | awk '{print $1}' | xargs $YUMINST
 
 # make build dir
 rm -Rf /tmp/topdir
