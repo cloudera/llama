@@ -64,7 +64,7 @@ REDIST_DIR = os.path.join(SCRIPT_DIR, "../build/redist")
 HD_DEB_ROOT = REDIST_DIR + "/repos/hadoop-package_deb/hadoop-deb"
 HD_RPM_ROOT = REDIST_DIR + "/repos/hadoop-package_rpm/hadoop-srpm/topdir/SRPMS"
 PIG_DEB_ROOT = REDIST_DIR + "/repos/pig-package_deb/pig-deb"
-PIG_RPM_ROOT = REDIST_DIR + "/repos/pig-package_rpm/pig-srpm/pig-srpm/topdir/SRPMS"
+PIG_RPM_ROOT = REDIST_DIR + "/repos/pig-package_rpm/pig-srpm/topdir/SRPMS"
 HIVE_DEB_ROOT = REDIST_DIR + "/repos/hive-package_deb/hive-deb"
 HIVE_RPM_ROOT = REDIST_DIR + "/repos/hive-package_rpm/hive-srpm/topdir/SRPMS"
 
