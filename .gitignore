@@ -2,3 +2,5 @@ build/
 repos
 sbuild
 .*~
+*.pyc
+*/#*
