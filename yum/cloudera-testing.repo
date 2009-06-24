@@ -1,0 +1,5 @@
+[cloudera-testing]
+name=Cloudera's Distribution for Hadoop (el$releasever)
+mirrorlist=http://archive.cloudera.com/testing/redhat/el$releasever/cloudera-testing-mirrors
+gpgkey = file:///etc/pki/rpm-gpg/RPM-GPG-KEY-cloudera-testing
+gpgcheck = 1

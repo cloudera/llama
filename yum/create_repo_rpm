@@ -1,0 +1,11 @@
+#!/bin/sh
+#
+# This is a simple script for making the cloudera-testing repo
+#
+RPMBUILD="$HOME/rpmbuild"
+for file in cloudera-testing.repo mirrors-cloudera-testing RPM-GPG-KEY-cloudera-testing
+do
+  cp $file $RPMBUILD/SOURCES
+done
+rpmbuild -bb --target noarch cloudera-testing.spec
+cp $RPMBUILD/RPMS/noarch/cloudera-testing* .
