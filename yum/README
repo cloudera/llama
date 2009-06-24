@@ -1,0 +1,13 @@
+gnupg holds the .gnupg contents for the 
+Yum Maintainers keys
+
+Generated the key using
+$ gpg --gen-key
+
+Exported the key using 
+$ gpg --export -a "Yum Maintainer <webmaster@cloudera.com>" > RPM-GPG-KEY-cloudera.com
+
+To sign RPMs
+(1) Add the line  "%_gpg_name Yum Maintainer <webmaster@cloudera.com>" to .rpmmacros
+(2) rpm --addsign *.rpm
+(3) To get the secret passphrase, ask Matt Massie
