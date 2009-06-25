@@ -45,10 +45,15 @@ def DebTarget(package_name,
     ])
 
 
-def RpmTarget(package_name):
+def RpmTarget(package_name, cloudera_base_ver = None):
   base_ver = "${%s.base.version}" % package_name
   rpm_release = "${%s.rpm.release}" % package_name
-  cloudera_ver_string = "%s-%s-%s" % (package_name, base_ver, rpm_release)
+
+  cloudera_ver_string = base_ver
+
+  # Check if this is a non-pristine package build
+  if cloudera_base_ver:
+    cloudera_ver_string += "+%s" % cloudera_base_ver
 
   return PackageTarget(
     package_name = "%s-srpm" % package_name,
@@ -73,7 +78,7 @@ def RpmTarget(package_name):
       Exec(
         executable = "${tar-exec}",
         arguments = ["-czf",
-                     "%%(assemblydir)/topdir/SOURCES/cloudera-%s.tar.gz" % rpm_release,
+                     "%%(assemblydir)/topdir/SOURCES/cloudera-%s.tar.gz" % cloudera_ver_string,
                      "cloudera"],
         dir = "%(assemblydir)"),
       Exec(
@@ -83,10 +88,11 @@ def RpmTarget(package_name):
           "%(assemblydir)/",
           "%(assemblydir)/topdir",
           rpm_release,
-          base_ver]),
+          base_ver,
+          cloudera_ver_string]),
       CopyDir(
         src_dir ="$/topdir/SRPMS/",
         dest_dir="${rpmdir}/SRPMS/"),
     ],
-    outputs = [("$/topdir/SRPMS/%s.src.rpm" % cloudera_ver_string),
-             ("${rpmdir}/SRPMS/%s.src.rpm" % cloudera_ver_string)])
+    outputs = [("$/topdir/SRPMS/%s-%s.src.rpm" % (package_name, cloudera_ver_string)),
+             ("${rpmdir}/SRPMS/%s-%s.src.rpm" % (package_name, cloudera_ver_string))])
