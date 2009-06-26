@@ -53,7 +53,7 @@ def RpmTarget(package_name, cloudera_base_ver = None):
 
   # Check if this is a non-pristine package build
   if cloudera_base_ver:
-    cloudera_ver_string += "+%s" % cloudera_base_ver
+    cloudera_ver_string += "~%s" % cloudera_base_ver
 
   return PackageTarget(
     package_name = "%s-srpm" % package_name,
