@@ -71,7 +71,7 @@ we refer to the public hostname of this instance as $EC2_HOST from now on
   s3sync.rb --make-dirs -r cloudera-apt:debian/ debian.new/ # this takes a long time
   chmod 644 `find debian.new -type f`
   chmod 755 `find debian.new -type d`
-  rsync -avn debian.new/ debian/
+  rsync --size-only -avn debian.new/ debian/
 
   # make sure the dry run looked like reasonable diffs, then actually do the sync:
 
