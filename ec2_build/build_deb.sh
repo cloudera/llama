@@ -92,7 +92,7 @@ sudo /usr/lib/pbuilder/pbuilder-satisfydepends
 if [ ! -z "$DISTRO" ]; then
   DISTROTAG="~$DISTRO"
 fi
-VERSION=$(dpkg-parsechangelog | grep Version | awk '{print $2}')
+VERSION=$(dpkg-parsechangelog | grep '^Version:' | awk '{print $2}')
 NEWVERSION=$VERSION$DISTROTAG
 
 DEBEMAIL=info@cloudera.com \
