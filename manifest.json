@@ -7,7 +7,7 @@
      "apache": { "fetch": "ssh://git@git.sf.cloudera.com/apache-%s.git" }},
  
   "projects":
-    {"hadoop": { "refspec": "cdh-0.18", "dir":"repos/hadoop", "remotes": ["origin", "apache"] },
+    {"hadoop": { "refspec": "cdh-0.18.3", "dir":"repos/hadoop", "remotes": ["origin", "apache"] },
      "pig": {"refspec": "cdh-0.18", "dir": "repos/pig", "remotes": ["origin", "apache"]},
      "hive": {"refspec": "cdh-0.18", "dir": "repos/hive", "remotes": ["origin", "apache"]},
 
