@@ -16,9 +16,8 @@ base_hadoop_ver = "0.18.3"
 hadoop_ver_string = "hadoop-" + base_hadoop_ver
 RegisterProperty('hadoop.repo', '%(srcdir)/repos/hadoop')
 RegisterProperty('hadoop.base.version', base_hadoop_ver)
-RegisterProperty('hadoop.rpm.release', rpm_release)
 RegisterProperty('hadoop.base.ref', 'apache/tags/release-%s' % base_hadoop_ver)
-RegisterProperty('hadoop.build.ref', 'cdh-0.18')
+RegisterProperty('hadoop.build.ref', 'cdh-0.18.3')
 RegisterProperty('hadoop.pristine.tarball',
                  '%%(srcdir)/repos/pristine/%s.tar.gz' % hadoop_ver_string)
 
@@ -30,7 +29,6 @@ RegisterProperty('pig.base.version', base_pig_ver)
 RegisterProperty('pig.repo', '%(srcdir)/repos/pig')
 RegisterProperty('pig.base.ref', 'apache/tags/release-%s' % base_pig_ver)
 RegisterProperty('pig.build.ref', 'cdh-0.18')
-RegisterProperty('pig.rpm.release', '1.cloudera.CH0_3')
 RegisterProperty('pig.pristine.tarball',
                  '%%(srcdir)/repos/pristine/%s.tar.gz' % pig_ver_string)
 
@@ -43,18 +41,14 @@ RegisterProperty('hive.base.version', base_hive_ver)
 RegisterProperty('hive.repo', '%(srcdir)/repos/hive')
 RegisterProperty('hive.base.ref', 'apache/tags/release-%s' % base_hive_ver)
 RegisterProperty('hive.build.ref', 'cdh-0.18')
-RegisterProperty('hive.rpm.release', '4.cloudera.CH0_3')
 RegisterProperty('hive.pristine.tarball',
                  '%(srcdir)/repos/pristine/hive-0.3.0-hadoop-0.18.0-dev.tar.gz')
 
 
-
-hadoop_cloudera_ver_string = "hadoop-%s-%s" % (base_hadoop_ver, rpm_release)
-
-
 supportedHadoopPackage = PackageTarget(
-  package_name = hadoop_cloudera_ver_string,
+  package_name = "hadoop-build",
   clean_first=True,
+  create_tarball=False,
   steps = [
     cloudera.SetupBuildStep("hadoop"),
   # Apply patches
@@ -64,15 +58,11 @@ supportedHadoopPackage = PackageTarget(
                  "%(assemblydir)/cloudera/patches"]),
   # Build, baby, build
     AntCall(
-      properties = {'version': '%s-%s' % (base_hadoop_ver, rpm_release),
-                    'libhdfs': 'true',
+      properties = {'libhdfs': 'true',
                     'compile.native': 'true',
                     'compile.c++': 'true'},
-      ant_target = "package"),
-    Tar(
-      filename = hadoop_cloudera_ver_string + ".tar.gz",
-      dir = "build/%s" % (hadoop_cloudera_ver_string)
-      ),
+      property_file="%(assemblydir)/cloudera/build.properties",
+      ant_target = "tar"),
   ])
 
 # subdirectory targets:

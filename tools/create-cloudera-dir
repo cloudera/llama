@@ -23,3 +23,6 @@ $TOOLS_DIR/export_patchseries $GIT_REPO $BASE_BRANCH $BUILD_BRANCH $CLOUDERA_DIR
 for tool in $TOOLS_DIR/redist/* ; do
   cp -a $tool $CLOUDERA_DIR/
 done
+
+# Setup build.properties file for ant
+$TOOLS_DIR/generate-build-properties $GIT_REPO $BASE_BRANCH $BUILD_BRANCH $CLOUDERA_DIR/build.properties

@@ -13,6 +13,17 @@ def SetupBuildStep(package_name,
                dst_dir],
     inputs=["${%s.repo}/" % package_name])
 
+def GenerateDebianChangesStep(package_name,
+                              dst_file):
+  """ Generate a Debian "changelog" file from the git repository. """
+  return Exec(
+    executable="//tools/generate-debian-changelog",
+    arguments=["${%s.repo}" % package_name,
+               "${%s.base.ref}" % package_name,
+               "${%s.build.ref}" % package_name,
+               package_name,
+               dst_file],
+    inputs=["${%s.repo}/" % package_name])
 
 def DebTarget(package_name):
   pkgdir = "%%(assemblydir)/%s-${%s.base.version}" % (package_name, package_name)
@@ -31,6 +42,8 @@ def DebTarget(package_name):
         src_dir = "deb/debian.%s/" % package_name,
         exclude_patterns=['*.ex', '*.EX', '.*~'],
         dest_dir = "%s/debian" % pkgdir),
+      GenerateDebianChangesStep(package_name,
+                                "%s/debian/changelog" % pkgdir),
       Exec(
         executable="${debuild-exec}",
         arguments=['-uc',
@@ -43,12 +56,10 @@ def DebTarget(package_name):
 
 def RpmTarget(package_name):
   base_ver = "${%s.base.version}" % package_name
-  rpm_release = "${%s.rpm.release}" % package_name
-  cloudera_ver_string = "%s-%s-%s" % (package_name, base_ver, rpm_release)
-
   return PackageTarget(
     package_name = "%s-srpm" % package_name,
     clean_first = True,
+    create_tarball=False,
     steps = [
     # Should be able to use OutputComponent here but couldn't get it to work
       CopyDir(
@@ -60,29 +71,21 @@ def RpmTarget(package_name):
         arguments=["${%s.pristine.tarball}" % package_name,
                    "$/topdir/SOURCES/"]),
       Exec(
-        executable="//tools/create-cloudera-dir",
+        executable="//tools/create-cloudera-tarball",
         arguments=["${%s.repo}" % package_name,
                    "${%s.base.ref}" % package_name,
                    "${%s.build.ref}" % package_name,
-                   "$/cloudera"],
-        inputs=["${%s.repo}/" % package_name]),
-      Exec(
-        executable = "${tar-exec}",
-        arguments = ["-czf",
-                     "%%(assemblydir)/topdir/SOURCES/cloudera-%s.tar.gz" % rpm_release,
-                     "cloudera"],
-        dir = "%(assemblydir)"),
+                   "$/topdir/SOURCES/"],
+        inputs=["${%s.repo}/" % package_name]),    
       Exec(
         executable="%(srcdir)/rpm/create_rpms",
         arguments=[
           package_name,
           "%(assemblydir)/",
           "%(assemblydir)/topdir",
-          rpm_release,
+          "${%s.repo}" % package_name,
           base_ver]),
       CopyDir(
         src_dir ="$/topdir/SRPMS/",
         dest_dir="${rpmdir}/SRPMS/"),
-    ],
-    outputs = [("$/topdir/SRPMS/%s.src.rpm" % cloudera_ver_string),
-             ("${rpmdir}/SRPMS/%s.src.rpm" % cloudera_ver_string)])
+    ])

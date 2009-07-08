@@ -1,0 +1,89 @@
+#!/usr/bin/env python2.5
+# Copyright (c) 2009 Cloudera, inc.
+
+import os
+import re
+import subprocess
+import sys
+import time
+from cdh_lib import cdh_get_version, git
+
+def git_log(from_ref, to_ref):
+  """
+  Return the git log between two refs as a list of dicts.
+
+  Each item in the list corresponds to a commit.
+  The keys are the keys show by "git log --pretty=raw"
+  plus an extra one called "body" for the text of the commit.
+  """
+  text_entries = git(['log', '--pretty=raw', '-z', '%s..%s' % (from_ref, to_ref)]).split("\0")
+    
+  entries = []
+  for entry in text_entries:
+    header_text, body_text = entry.split("\n\n", 1)
+
+    header_lines = header_text.split("\n")
+    headers = dict([line.split(" ", 1) for line in header_lines])
+    dict_entry = headers
+    dict_entry['body'] = re.sub(r'^    (?m)', '', body_text)
+    entries.append(dict_entry)
+  return entries
+
+def debianize_version(version):
+  orig_ver, appends = version.split("+", 1)
+  return "%s-%s.cdh" % (orig_ver, appends)
+
+def parse_person(p):
+  """
+  Parse the format of a git committer or author line.
+  Returns (committer_name, committer_email, epoch_time, date_tz)
+  """
+  m = re.match(r'^(.+) <(.+?)> (\d+) (-?\d+)$', p)
+  name, email, epoch_time, date_tz = m.groups()
+  t = time.localtime(int(epoch_time))
+
+  return name, email, t, date_tz
+  
+
+def main(args):
+  prog_name = os.path.basename(args[0])
+  repo, base_ref, build_ref, package_name, dst_path = args[1:]
+
+  out_file = sys.stdout if dst_path == '-' else file(dst_path, "w")
+
+  os.chdir(repo)
+  log_entries = git_log(base_ref, build_ref)
+
+  first = True
+  for entry in log_entries:
+    commit_hash = entry['commit']
+    print >>sys.stderr, "[%s] generating changelog entry for %s" % \
+          (prog_name, commit_hash)
+    version = debianize_version(cdh_get_version(commit_hash))
+
+    committer_name, committer_email, commit_time, commit_tz = parse_person(entry['committer'])
+    author_name, author_email, author_time, author_tz = parse_person(entry['author'])
+    
+    commit_time = time.strftime("%a, %d %b %Y %H:%M:%S", commit_time) + " " + commit_tz
+    author_time = time.strftime("%a, %d %b %Y %H:%M:%S", author_time) + " " + author_tz
+
+    # Separate commits by a blank line
+    if not first: print >>out_file
+    first = False
+
+    out = ""
+    out +="%s (%s) cloudera; urgency=low\n" % (package_name, version)
+    out += "\n"
+    out += "  Commit %s:\n" % commit_hash
+    out += re.sub(r'^(?m)', '    ', entry['body']) + "\n" # indent
+
+    # If the committer cherry-picked/rebased something, include the original author
+    if author_name != committer_name:
+      out += "  \n"
+      out += "  Author: %s <%s>  %s\n"  % (author_name, author_email, author_time)
+
+    out += " -- %s <%s>  %s\n" % (committer_name, committer_email, commit_time)
+    print >>out_file, out
+
+if __name__ == "__main__":
+  main(sys.argv)
