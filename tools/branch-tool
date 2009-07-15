@@ -15,7 +15,7 @@ import sys
 import subprocess
 
 from optparse import OptionParser
-from cdh_lib import git, git_rev_parse, cdh_get_version
+from cdh_lib import git, git_rev_parse, cdh_get_version, git_cur_branch
 
 VERBOSE = False
 AUTOMATIC_YES = False
@@ -46,7 +46,7 @@ def usage(argv):
 
 def branch(argv):
   """ Create a new branch from this point """
-  version = cdh_get_version('HEAD')
+  version = cdh_get_version(git_cur_branch())
   sideeffect_git(['checkout', '-b', 'cdh-' + version])
 
 def version(argv):
@@ -54,7 +54,7 @@ def version(argv):
   Print the version of the revision on the command line, or else that
   of HEAD.
   """
-  ref = argv[2] if len(argv) == 3 else 'HEAD'  
+  ref = argv[2] if len(argv) == 3 else git_cur_branch()
   print cdh_get_version(ref)
 
 def cust_branch(argv):
@@ -68,7 +68,7 @@ def cust_branch(argv):
     usage(argv)
 
   cust_name = argv[2]
-  head_ver = cdh_get_version('HEAD')
+  head_ver = cdh_get_version(git_cur_branch())
   head_ver_branch = 'cdh-' + head_ver
   try:
     git_rev_parse('refs/heads/' + head_ver_branch)

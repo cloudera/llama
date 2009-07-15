@@ -27,6 +27,15 @@ def git_rev_list(a, b):
 def git_rev_parse(r):
   return git(['rev-parse', '--verify', '--quiet', r])
 
+def git_cur_branch():
+  try:
+    ret = git(['symbolic-ref', '--quiet', 'HEAD'])
+    if ret.startswith("refs/heads/"):
+      return re.sub(r'^refs/heads/', '', ret)
+    return None
+  except:
+    return None
+
 def count_commits_from(from_rev, to_rev):
   """Return the number of commits from from_rev to to_rev"""
   return len(git_rev_list(from_rev, to_rev))
@@ -68,7 +77,11 @@ def cdh_ancestor_branch(branch):
 
 def cdh_get_version(rev):
   """ Given a revision, determine the unique version number for it. """
-  cur_branch = cdh_best_branch(rev)
+
+  if rev.startswith('cdh-'):
+    cur_branch = rev
+  else:
+    cur_branch = cdh_best_branch(rev)
   assert cur_branch.startswith("cdh-")
   base_version = re.sub(r'^cdh-', '', cur_branch)
   ancestor = cdh_ancestor_branch(cur_branch)
