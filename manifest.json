@@ -11,7 +11,7 @@
      "pig": {"refspec": "cdh-0.18", "dir": "repos/pig", "remotes": ["origin", "apache"]},
      "hive": {"refspec": "cdh-0.18", "dir": "repos/hive", "remotes": ["origin", "apache"]},
 
-     "hadoop-package": { "refspec": "cdh-0.18", "dir": "repos/hadoop-package"},
+     "hadoop-package": { "refspec": "cdh-0.18.3", "dir": "repos/hadoop-package"},
      "hive-package": { "refspec": "cdh-0.18", "dir": "repos/hive-package"},
      "pig-package": { "refspec": "cdh-0.18", "dir": "repos/pig-package"},
      "pristine-tarballs": { "dir": "repos/pristine"},
