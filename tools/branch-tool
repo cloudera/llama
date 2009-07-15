@@ -13,7 +13,7 @@ tool is:
 import re
 import sys
 import subprocess
-import unittest
+
 from optparse import OptionParser
 from cdh_lib import git, git_rev_parse, cdh_get_version
 
@@ -100,12 +100,6 @@ def main(argv):
     usage(argv)
   tool = args[0]
   TOOLS[tool]([argv[0]] + args)
-
-class Test(unittest.TestCase):
-  def testAncestor(self):
-    self.assertEquals(ancestor_branch('cdh-0.18.3'), 'apache/tags/release-0.18.3')
-    self.assertEquals(ancestor_branch('cdh-0.18.3+3'), 'cdh-0.18.3')
-    self.assertEquals(ancestor_branch('cdh-0.18.3+3.4'), 'cdh-0.18.3+3')
 
 if __name__ == "__main__":
   main(sys.argv)

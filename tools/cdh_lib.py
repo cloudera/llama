@@ -3,6 +3,7 @@
 
 import re
 import subprocess
+import unittest
 
 GIT = "git"
 
@@ -78,3 +79,11 @@ def cdh_get_version(rev):
     return base_version + '+' + str(count)
   else:
     return base_version + '.' + str(count)
+
+
+class Test(unittest.TestCase):
+  def testAncestor(self):
+    self.assertEquals(cdh_ancestor_branch('cdh-0.18.3'), 'apache/tags/release-0.18.3')
+    self.assertEquals(cdh_ancestor_branch('cdh-0.18.3+3'), 'cdh-0.18.3')
+    self.assertEquals(cdh_ancestor_branch('cdh-0.18.3+3.4'), 'cdh-0.18.3+3')
+    self.assertEquals(cdh_ancestor_branch('cdh-0.20.0'), 'apache/tags/release-0.20.0')
