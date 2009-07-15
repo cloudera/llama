@@ -3,3 +3,5 @@ repos
 sbuild
 .*~
 *.pyc
+*/#*
+my.properties

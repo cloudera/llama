@@ -1,0 +1,111 @@
+#!/usr/bin/env python2.5
+# (c) Copyright 2009 Cloudera, Inc.
+__usage = """
+flags:
+  -v   - verbose
+  -y   - ask forgiveness, not permission
+
+tool is:
+  branch - make a new branch from this point
+  cust-branch [cust] - make a customer branch
+  version [ref] - output version number for a ref
+"""
+import re
+import sys
+import subprocess
+import unittest
+from optparse import OptionParser
+from cdh_lib import git, git_rev_parse, cdh_get_version
+
+VERBOSE = False
+AUTOMATIC_YES = False
+
+def sideeffect_git(cmdv):
+  """
+  Run a git command that will have side effects.
+
+  In default operation, this will ask for permission. It will also
+  print out what it's doing if VERBOSE is set.
+
+  Raises an Exception if the user denies permission.
+  """
+  if not AUTOMATIC_YES:
+    print >>sys.stderr, "OK to run:", " ".join(cmdv)
+    print >>sys.stderr, "(Y/n):"
+    res = sys.stdin.readline().rstrip().lower()
+    if res != 'y' and res != '':
+      raise Exception("Command denied")
+  if VERBOSE:
+    print "+ %s" % (" ".join(cmdv))
+  git(cmdv)
+
+def usage(argv):
+  """ Print usage and exit. """
+  print >>sys.stderr, __usage
+  sys.exit(1)
+
+def branch(argv):
+  """ Create a new branch from this point """
+  version = cdh_get_version('HEAD')
+  sideeffect_git(['checkout', '-b', 'cdh-' + version])
+
+def version(argv):
+  """
+  Print the version of the revision on the command line, or else that
+  of HEAD.
+  """
+  ref = argv[2] if len(argv) == 3 else 'HEAD'  
+  print cdh_get_version(ref)
+
+def cust_branch(argv):
+  """
+  Create a customer branch from this point. For example, if you currently
+  have the cdh-0.18.3 branch checked out, 58 revisions ahead of Apache, and
+  you run this, it will first create the cdh-0.18.3+58 branch, then the
+  cdh-0.18.3+58+custname branch.
+  """
+  if len(argv) != 3:
+    usage(argv)
+
+  cust_name = argv[2]
+  head_ver = cdh_get_version('HEAD')
+  head_ver_branch = 'cdh-' + head_ver
+  try:
+    git_rev_parse('refs/heads/' + head_ver_branch)
+  except Exception, e:
+    # No branch for this branch point yet, so make one
+    sideeffect_git(['branch', head_ver_branch, 'HEAD'])    
+  sideeffect_git(['checkout', '-b', '%s+%s' % (head_ver_branch, cust_name)])
+
+TOOLS = {
+  'branch': branch,
+  'version': version,
+  'cust-branch': cust_branch,
+}
+
+def parse_args(args):
+  op = OptionParser(usage = __usage)
+  op.add_option('-y', '--yes', action='store_true')
+  op.add_option('-v', '--verbose', action='store_true')
+  opts, args = op.parse_args()
+  return opts, args
+
+def main(argv):
+  global VERBOSE, AUTOMATIC_YES
+  opts, args = parse_args(argv[1:])
+  AUTOMATIC_YES = opts.yes
+  VERBOSE = opts.verbose
+
+  if len(args) == 0:
+    usage(argv)
+  tool = args[0]
+  TOOLS[tool]([argv[0]] + args)
+
+class Test(unittest.TestCase):
+  def testAncestor(self):
+    self.assertEquals(ancestor_branch('cdh-0.18.3'), 'apache/tags/release-0.18.3')
+    self.assertEquals(ancestor_branch('cdh-0.18.3+3'), 'cdh-0.18.3')
+    self.assertEquals(ancestor_branch('cdh-0.18.3+3.4'), 'cdh-0.18.3+3')
+
+if __name__ == "__main__":
+  main(sys.argv)

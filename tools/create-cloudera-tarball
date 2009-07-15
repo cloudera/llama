@@ -1,0 +1,18 @@
+#!/bin/bash -x
+
+set -e
+
+BINDIR=$(dirname $0)
+
+GIT_REPO=$1
+BASE_BRANCH=$2
+BUILD_BRANCH=$3
+TARGET_DIR=$4
+
+TMPDIR=`mktemp -d`
+$BINDIR/create-cloudera-dir $GIT_REPO $BASE_BRANCH $BUILD_BRANCH $TMPDIR/cloudera
+
+VERSION=$(cd $GIT_REPO && $BINDIR/branch-tool version)
+
+(cd $TMPDIR && tar -czf - cloudera) > $TARGET_DIR/cloudera-$VERSION.tar.gz
+rm -rf $TMPDIR

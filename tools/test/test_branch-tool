@@ -1,0 +1,94 @@
+#!/bin/bash -x
+set -e
+
+BIN=$(readlink -f $(dirname $0)/../branch-tool)
+
+TESTDIR=`mktemp -d`
+cd $TESTDIR
+
+function do_commits() {
+  for x in `seq 1 $2` ; do
+    echo $1 $x >> foo
+    git add foo
+    git commit -m "$1 $x"
+    git tag $1.$x
+  done
+}
+
+failure() {
+  set +x
+  echo -----------------------
+  echo TEST FAILED!
+  echo See output above for failed command
+  echo -----------------------
+}
+
+function cur_branch() {
+  git symbolic-ref HEAD | sed -e s,refs/heads/,,
+}    
+
+trap failure ERR
+
+git init
+touch foo
+git add foo
+git commit -a -m initial
+git checkout -b apache/tags/release-0.18.3
+
+# Make an unstable branch
+UNSTABLE=cdh-0.18.3
+git checkout -b $UNSTABLE
+do_commits $UNSTABLE 5
+
+# Branch testing
+$BIN branch -y
+TESTING=$(cur_branch)
+git checkout $UNSTABLE
+
+# Make a couple more commits on unstable
+do_commits cont-$UNSTABLE 3
+
+# Do some commits on testing
+git checkout $TESTING
+do_commits $TESTING 3
+
+# Branch stable
+$BIN branch -y
+STABLE=$(cur_branch)
+git checkout $TESTING
+
+do_commits cont-$TESTING 4
+
+git checkout $STABLE
+do_commits $STABLE 6
+
+test $($BIN version cdh-0.18.3.1) == 0.18.3+1
+test $($BIN version cdh-0.18.3.5) == 0.18.3+5
+test $($BIN version cdh-0.18.3+5.1) == 0.18.3+5.1
+test $($BIN version cont-cdh-0.18.3+5.1) == 0.18.3+5.4
+
+# Check out a customer branch
+
+git checkout cdh-0.18.3.4
+$BIN cust-branch -y mycust
+
+test $($BIN version) == 0.18.3+4
+
+do_commits mycust 3
+
+test $($BIN version) == 0.18.3+4+mycust.3
+
+# Some other customer branch
+
+git checkout cdh-0.18.3+5.3.4
+$BIN cust-branch -y cust2
+
+test $($BIN version) == 0.18.3+5.3.4
+do_commits cust2 3
+
+test $($BIN version) == 0.18.3+5.3.4+cust2.3
+
+
+echo
+echo All tests passed.
+
