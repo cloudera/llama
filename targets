@@ -8,18 +8,20 @@
 
 # Version of Hadoop our system is based on:
 
-# RPM release number
-rpm_release="14.cloudera.CH0_3"
-
 # Hadoop
 base_hadoop_ver = "0.18.3"
 hadoop_ver_string = "hadoop-" + base_hadoop_ver
 RegisterProperty('hadoop.repo', '%(srcdir)/repos/hadoop')
+BacktickProperty('hadoop.version',
+                 executable='//tools/branch-tool',
+                 arguments=['version'],
+                 dir='${hadoop.repo}')
 RegisterProperty('hadoop.base.version', base_hadoop_ver)
 RegisterProperty('hadoop.base.ref', 'apache/tags/release-%s' % base_hadoop_ver)
 RegisterProperty('hadoop.build.ref', 'cdh-0.18.3')
 RegisterProperty('hadoop.pristine.tarball',
                  '%%(srcdir)/repos/pristine/%s.tar.gz' % hadoop_ver_string)
+
 
 # Pig
 base_pig_ver="0.2.0"
@@ -56,14 +58,18 @@ supportedHadoopPackage = PackageTarget(
       executable="%(assemblydir)/cloudera/apply-patches",
       arguments=["%(assemblydir)/",
                  "%(assemblydir)/cloudera/patches"]),
-  # Build, baby, build
-    AntCall(
-      properties = {'libhdfs': 'true',
-                    'compile.native': 'true',
-                    'compile.c++': 'true'},
-      property_file="%(assemblydir)/cloudera/build.properties",
-      ant_target = "tar"),
-  ])
+    Exec(
+      executable="%(assemblydir)/cloudera/do-release-build",
+      env={
+       'JAVA32_HOME': '${java32.home}',
+       'JAVA64_HOME': '${java64.home}',
+      }),
+  ],
+  outputs=[
+    '%(assemblydir)/build/hadoop-${hadoop.version}.tar.gz',
+    ]      
+  )
+
 
 # subdirectory targets:
 ProjectList(required_targets=[

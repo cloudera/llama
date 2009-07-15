@@ -53,7 +53,6 @@ def DebTarget(package_name):
         dir=pkgdir),
     ])
 
-
 def RpmTarget(package_name):
   base_ver = "${%s.base.version}" % package_name
   return PackageTarget(

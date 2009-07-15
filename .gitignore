@@ -4,3 +4,4 @@ sbuild
 .*~
 *.pyc
 */#*
+my.properties

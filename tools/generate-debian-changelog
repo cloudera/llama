@@ -30,8 +30,7 @@ def git_log(from_ref, to_ref):
   return entries
 
 def debianize_version(version):
-  orig_ver, appends = version.split("+", 1)
-  return "%s-%s.cdh" % (orig_ver, appends)
+  return "%s-1cdh" % version
 
 def parse_person(p):
   """

@@ -19,6 +19,9 @@ mkdir -p $CLOUDERA_DIR
 mkdir -p $CLOUDERA_DIR/patches
 $TOOLS_DIR/export_patchseries $GIT_REPO $BASE_BRANCH $BUILD_BRANCH $CLOUDERA_DIR/patches
 
+# Generate cloudera change log
+(cd $GIT_REPO && git log $BASE_BRANCH..$BUILD_BRANCH) > $CLOUDERA_DIR/CHANGES.cloudera.txt
+
 # Copy redistributed tools
 for tool in $TOOLS_DIR/redist/* ; do
   cp -a $tool $CLOUDERA_DIR/
