@@ -10,15 +10,15 @@
 base_hadoop_ver = "0.20.0"
 
 hadoop_ver_string = "hadoop-" + base_hadoop_ver
-RegisterProperty('hadoop.repo', '%(srcdir)/repos/hadoop')
-BacktickProperty('hadoop.version',
+RegisterProperty('hadoop-0.20.repo', '%(srcdir)/repos/hadoop')
+BacktickProperty('hadoop-0.20.version',
                  executable='//tools/branch-tool',
                  arguments=['version'],
-                 dir='${hadoop.repo}')
-RegisterProperty('hadoop.base.version', base_hadoop_ver)
-RegisterProperty('hadoop.base.ref', 'apache/tags/release-%s' % base_hadoop_ver)
-RegisterProperty('hadoop.build.ref', 'cdh-0.20.0')
-RegisterProperty('hadoop.pristine.tarball',
+                 dir='${hadoop-0.20.repo}')
+RegisterProperty('hadoop-0.20.base.version', base_hadoop_ver)
+RegisterProperty('hadoop-0.20.base.ref', 'apache/tags/release-%s' % base_hadoop_ver)
+RegisterProperty('hadoop-0.20.build.ref', 'cdh-0.20.0')
+RegisterProperty('hadoop-0.20.pristine.tarball',
                  '%%(srcdir)/repos/pristine/%s.tar.gz' % hadoop_ver_string)
 
 
@@ -50,7 +50,7 @@ supportedHadoopPackage = PackageTarget(
   clean_first=True,
   create_tarball=False,
   steps = [
-    cloudera.SetupBuildStep("hadoop"),
+    cloudera.SetupBuildStep("hadoop-0.20"),
   # Apply patches
     Exec(
       executable="%(assemblydir)/cloudera/apply-patches",
@@ -61,10 +61,12 @@ supportedHadoopPackage = PackageTarget(
       env={
        'JAVA32_HOME': '${java32.home}',
        'JAVA64_HOME': '${java64.home}',
+       'JAVA5_HOME':  '${java5-home}',
+       'FORREST_HOME': '${forrest-home}',
       }),
   ],
   outputs=[
-    '%(assemblydir)/build/hadoop-${hadoop.version}.tar.gz',
+    '%(assemblydir)/build/hadoop-${hadoop-0.20.version}.tar.gz',
     ]      
   )
 
