@@ -21,7 +21,7 @@ also covers setting up your build environments, the versioning and the release p
 
 === Python
 
-You need to have at least version 2.5.x of Python installed.
+You need to have version 2.5.x of Python installed.
 
 === Crepo and Stitch
 
