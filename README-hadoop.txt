@@ -2,16 +2,10 @@
 
 The CDH build process is comprised of several targets.
 
-The main target is ':supportedHadoopPackage', defined in '//targets'. This target
-builds the supported Hadoop tarball.
-
 === The ':supportedHadoopPackage' target
 
-Prerequisites:
-
-To build a release tarball, you need:
-
-  - 32-bit and 64-bit JVMs
+The main target is ':supportedHadoopPackage', defined in '//targets'. This target
+builds the supported Hadoop tarball.
 
 [NOTE]
 Since we want the tarball to be useful for people running both 32-bit and
@@ -21,18 +15,44 @@ architectures. Therefore, you need to be running 64-bit Linux and have both
 them anywhere you like. Then create a file 'my.properties' in the git root
 which sets "java32.home" and "java64.home" to point to those directories.
 
-To build:
+.Preparing for a build
+----
+$ git clone git@git.sf.cloudera.com:cdh.git
+$ cd cdh
+$ git checkout -b <release> origin/<release>
+$ crepo.py init
+----
+clones the 'cdh' repos, checks out the <release> of 'cdh' to build and
+initializing the directory structure based on the 'manifest.json' file in the
+top-level of the 'cdh' repository using `crepo.py`.  *Crepo* will put all
+cloned repositories in the 'repos' subdirectory.
+
+.Checking the status crepo-managed build structure 
+----
+$ crepo.py fetch
+$ crepo.py status
+----
+will tell you if your repositories are dirty or out of date for example.
+
+Once you have the directory structure created, you can use stitch to build the
+release.  
+
+////
+TODO: This is how to build hadoop and NOT a release.  Fix this.
+////
+
+.Building the Hadoop tarball
 ----
 $ stitch
 $ ./sbuild :supportedHadoopPackage
 ----
 
-# Build product ends up here:
+.Finding the :supportedHadoopPackage output
 ----
 $ ls build/redist/_supportedHadoopPackage/hadoop-build/build/*tar.gz
 ----
 
-How it works:
+==== How it works
 
 I'll structure this as an outline since there is a lot of nested scripting
 going on:
@@ -65,13 +85,11 @@ example of how to do that, look at 'ec2_build/build_{rpm,deb}.sh'
 
 The src rpm/deb targets are 'repos/hadoop-package/:deb' and 'repos/hadoop-package/:rpm'
 
-For example, to build RPMs once the source RPM has been created, we run the
-following
+.Turning source RPM into binary RPMs
 ----
 $ rpmbuild --rebuild build/rpm/SRPMS/hadoop-*.src.rpm
 $ rpmbuild --rebuild --target noarch build/rpm/SRPMS/hadoop-*.src.rpm
 ----
-to create the binary RPMs.  
 
 //// 
 TODO: Debian example?

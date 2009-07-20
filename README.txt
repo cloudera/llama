@@ -33,10 +33,12 @@ installs `/usr/bin/python` instead of using a symlink.
 
 *Crepo* is a git repository management tool.  *Stitch* is a higher-order
 target definition and build system.  You'll need to have both tools installed
-to build CDH.  If you are interested in learning more about them, 
-take a look a their top-level 'README' files on github.
+to build CDH.
 
-To clone both tool's git repositories...
+[TIP]
+Read the top-level 'README' files for both *Crepo* and *Stitch*
+
+.Cloning the stitch and crepo repositories
 ----
 $ git clone git://github.com/cloudera/stitch.git
 $ git clone git://github.com/cloudera/crepo.git
@@ -54,26 +56,32 @@ You need to run the build process on a 64-bit machine.  You can just install
 the 64-bit version of CentOS or Ubuntu (for example) inside of the VM.  This
 is required for us to build both 32 and 64 bit native libraries.
 
-=== Java, Forrest and Ant
+=== Java and Apache Forrest
 
-The build process requires that you have Apache Ant, Apache Forrest and Sun
+The build process requires that you have Apache Forrest and Sun
 Java JDK 5 and 6 (for JDK 6 you need both the 32-bit and 64-bit JDK).
 The build script need to know the locations of these tools.
 
 In the root directory of the 'cdh' git repository, you could create a file
 called 'my.properties' which points to the location of these tools, e.g.
 
+.Sample contents of my.properties file
 ----
-# The file my.properties allows you to set build configuration
 java32.home=/home/matt/bin/jdk1.6.0_14_i586
 java64.home=/home/matt/bin/jdk1.6.0_14_x86_64
 java5-home=/home/matt/bin/jdk1.5.0_19
 forrest-home=/home/matt/bin/apache-forrest-0.8
 ----
 
-For Ant, you will need set the environment variable 'ANT_HOME' to the location
-you downloaded and extracted the Ant, e.g. for bash
+=== Apache Ant
 
+You need to install Apache version greater than or equal to 1.7.1.
+
+[IMPORTANT]
+You should download the Apache Ant tarball from http://ant.apache.org/.  There
+are currently no good Debian and RPM packages for Apache Ant. 
+
+.Setting Ant Environment Variables
 ----
 export ANT_HOME="/workspace/apache-ant-1.7.1"
 export PATH="${PATH}:${ANT_HOME}/bin"
