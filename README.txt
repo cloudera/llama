@@ -77,9 +77,21 @@ forrest-home=/home/matt/bin/apache-forrest-0.8
 
 You need to install Apache version greater than or equal to 1.7.1.
 
+.Apt ant package 
+----
+$ apt-cache policy ant
+ant:
+  Installed: 1.7.1-0ubuntu1
+  Candidate: 1.7.1-0ubuntu1
+  Version table:
+ *** 1.7.1-0ubuntu1 0
+        500 http://us.archive.ubuntu.com intrepid/main Packages
+        100 /var/lib/dpkg/status
+----
+
 [IMPORTANT]
-You should download the Apache Ant tarball from http://ant.apache.org/.  There
-are currently no good Debian and RPM packages for Apache Ant. 
+For CentOS 5, you should download the Apache Ant tarball from http://ant.apache.org/ as
+there are currently no good RPM packages for Apache Ant. 
 
 .Setting Ant Environment Variables
 ----
@@ -94,8 +106,6 @@ include::README-hadoop.txt[]
 It's important for our customers and community to understand exactly what our
 packages contain.  Among other things it makes it easier for us to debug their problems 
 and helps them plan upgrades as we move forward with features and fixes.
-
-=== Format
 
 .Examples of Hadoop packages 
 [grid="all"]
@@ -118,7 +128,7 @@ hadoop-0.20-0.20.0+23-1.cloudera.noarch.rpm
 hadoop-0.20-conf-pseudo-0.20.0+23-1.cloudera.noarch.rpm
 ----
 
-==== Name
+=== Name
 
 The name of the package include the base version of Hadoop is created
 against.  This allow people to install two versions of Hadoop at the same
@@ -126,7 +136,7 @@ time very similarly to installing `gcc-3` and `gcc-4` at the same time.  The
 packages are built in a way to ensure there are no file conflicts, e.g.
 configuration files are in '/etc/hadoop-0.18' and '/etc/hadoop-0.20'.
 
-==== Version
+=== Version
 
 The version of the packages explicitly states the version of Hadoop which is
 is built against, e.g. '0.18.3', and the number of patches applied, e.g.
@@ -158,13 +168,13 @@ Apache git repository.  All cloudera work on hadoop is in the read/write
 repository, e.g. 'hadoop'.  This allows us to use `git` branches and separate
 remotes to automatically manage our patch process.
 
-==== Release
+=== Release
 
 The release number should rarely change (if ever).  In the case that we need to make a
 packaging change _without changing the package contents_, we will increment
 the release number.  
 
-==== Suffix
+=== Suffix
 
 This contains information about the architecture, platform and package is
 released for.  
@@ -193,7 +203,75 @@ repository but shouldn't have glaring issues.  Changes which break interfaces
 can occur but are avoided if possible.
 unstable:: Automatic nightly builds 
 
+These repositories currently reside at http://archive.cloudera.com/releases/.
+
 === Life of a Package
 
-All packages in a release follow the same life cycle.
+All packages in a release follow the same life cycle.  This section will walk
+through this process from beginning to end.
 
+The version scheme we use (documented above) allows us to know exactly how
+many patches have been applied to each component (e.g. hadoop, pig, hive, etc)
+of our distribution.  The patch level is the number(s) directly following
+the base version, e.g. 'package-0.1+45'.  The patch level would be '45' in this
+example.  It's also possible that we have "dot" patch levels, e.g.
+'package-0.1+45.5' or 'package-0.1+45.5.9'.  The patch levels would be '45.5'
+and '45.5.9' respectively in this example.
+
+==== Unstable repository
+
+All packages begin their life in the 'unstable' repository as part of an
+automated build process.  For example, a source change to hadoop's '0.20'
+branch will cause a cascading build of 'hadoop-0.20', 
+'hadoop-0.20-conf-pseudo', etc.
+
+[IMPORTANT]
+Each patch to a component causes the patch level to increase, e.g.
+'package-0.1+10' to 'package-0.1+11' to 'package-0.1+12', etc.  A revert of a 
+patch causes this number to *increase* as well.  Patch levels *never* decrease
+and there will never be a "dot" patch level, e.g. '1.3', '6.23' in the
+'unstable' repository. Each package just keeps marching forward.
+
+==== Promoting 'unstable' package to 'testing'
+
+Once an 'unstable' package has been found to show enough stability (through
+automated testing, customer feedback, etc), it is promoted to the 'testing'
+repository.  Promotion requires only that the package is copied from the
+'unstable' apt/yum repository to the 'testing' apt/yum repository.
+
+[NOTE] 
+The package version never has any text assigning it to 'testing' or 'unstable', e.g. 
+'package-0.10-testing', 'package-0.10-unstable'.  This isn't necessary and
+increases the package maintainence costs.
+
+IMPORTANT: put explicit requirements here for promotion
+
+==== Testing repository
+
+Once a package is in the 'testing' repository, it may have "dot" patch levels.
+
+[NOTE]
+Packages in the 'testing' repository are not *required* to have a "dot" patch
+level.  It's possible (however unlikely) that an 'unstable' package proved to
+be stable enough for promotion without any changes.
+
+==== Promoting 'testing' to 'stable'
+
+After a number of months of proven stability in production environments and
+rigorous testing, a package in the 'testing' repository may be promoted to the
+'stable' repository.
+
+IMPORTANT: put explicit requirement here for promotion
+
+==== Stable repository
+
+Once a package is in the 'stable' repository, it may have "dot" patch levels.
+
+[NOTE]
+Packages in the 'stable' repository are not *required* to have "dot" patch
+levels.  It's possible (however unlikely) that an 'unstable' or 'testing'
+package proved to be stable enough for promotion without any changes.
+
+=== Mapping releases to 'cdh' git repository
+
+Explain how branching/tagging in 'cdh.git' relate to our 'CDH' releases.

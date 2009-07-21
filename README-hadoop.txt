@@ -22,7 +22,7 @@ $ cd cdh
 $ git checkout -b <release> origin/<release>
 $ crepo.py init
 ----
-clones the 'cdh' repos, checks out the <release> of 'cdh' to build and
+The above commands clone the 'cdh' repos, checkout the <release> branch of 'cdh' to build and
 initializing the directory structure based on the 'manifest.json' file in the
 top-level of the 'cdh' repository using `crepo.py`.  *Crepo* will put all
 cloned repositories in the 'repos' subdirectory.
@@ -52,7 +52,7 @@ $ ./sbuild :supportedHadoopPackage
 $ ls build/redist/_supportedHadoopPackage/hadoop-build/build/*tar.gz
 ----
 
-==== How it works
+How it works
 
 I'll structure this as an outline since there is a lot of nested scripting
 going on:
@@ -65,18 +65,16 @@ going on:
 ..... formats the git patch series into 'cloudera/patches/'
 ..... writes the git log into 'cloudera/CHANGES.cloudera.txt'
 ..... copies 'tools/redist' into 'cloudera/'
-..... calls '//tools/generate-build-properties' script which:
-...... creates 'cloudera/build.propeties', which includes the git hash, the 
-base branch, the branch being built, the version number, etc.
-... calls 'cloudera/apply-patches' script which:
-.... just calls 'git-apply' on everything inside 'cloudera/patches'
+..... calls '//tools/generate-build-properties' script which creates 'cloudera/build.properties', 
+which includes the git hash, the base branch, the branch being built, the version number, etc.
+... calls 'cloudera/apply-patches' script which just calls 'git-apply' on everything inside 'cloudera/patches'
 ... calls 'cloudera/do-release-build' with +JAVA32_HOME+ and +JAVA64_HOME+ set
 by properties in 'build.properties' or 'my.properties'
 .... checks JDKs that they are the right architecture
 .... runs the right ant commands to build a Hadoop release (pretty much
 following the HowToRelease hadoop wiki)
 
-== Package Targets
+=== Source Package Targets
 
 Brief summary: the package targets take the output of '//:supportedHadoopPackage'
 and package them as source RPMs and source Debs. There are currently no stitch
