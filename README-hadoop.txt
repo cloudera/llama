@@ -52,26 +52,25 @@ $ ./sbuild :supportedHadoopPackage
 $ ls build/redist/_supportedHadoopPackage/hadoop-build/build/*tar.gz
 ----
 
-How it works
+==== How it works
 
 I'll structure this as an outline since there is a lot of nested scripting
 going on:
 
-.':supportedHadoopPackage' target calls:
-.. 'stitch-ext/cloudera.py:SetupBuildStep' target which:
-... calls '//tools/setup-package-build' script which:
-.... unpacks the pristine source into the assembly directory
-.... calls the '//tools/create-cloudera-dir' script which:
-..... formats the git patch series into 'cloudera/patches/'
-..... writes the git log into 'cloudera/CHANGES.cloudera.txt'
-..... copies 'tools/redist' into 'cloudera/'
-..... calls '//tools/generate-build-properties' script which creates 'cloudera/build.properties', 
+.':supportedHadoopPackage' target calls 'stitch-ext/cloudera.py:SetupBuildStep' target which:
+.. calls '//tools/setup-package-build' script which:
+... unpacks the pristine source into the assembly directory
+... calls the '//tools/create-cloudera-dir' script which:
+.... formats the git patch series into 'cloudera/patches/'
+.... writes the git log into 'cloudera/CHANGES.cloudera.txt'
+.... copies 'tools/redist' into 'cloudera/'
+.... calls '//tools/generate-build-properties' script which creates 'cloudera/build.properties', 
 which includes the git hash, the base branch, the branch being built, the version number, etc.
-... calls 'cloudera/apply-patches' script which just calls 'git-apply' on everything inside 'cloudera/patches'
-... calls 'cloudera/do-release-build' with +JAVA32_HOME+ and +JAVA64_HOME+ set
+.. calls 'cloudera/apply-patches' script which just calls 'git-apply' on everything inside 'cloudera/patches'
+.. calls 'cloudera/do-release-build' with +JAVA32_HOME+ and +JAVA64_HOME+ set
 by properties in 'build.properties' or 'my.properties'
-.... checks JDKs that they are the right architecture
-.... runs the right ant commands to build a Hadoop release (pretty much
+... checks JDKs that they are the right architecture
+... runs the right ant commands to build a Hadoop release (pretty much
 following the HowToRelease hadoop wiki)
 
 === Source Package Targets
