@@ -56,7 +56,7 @@ def cdh_best_branch(r):
 
   return branches[0]
 
-def cdh_ancestor_branch(branch):
+def cdh_ancestor_branch(branch, apache_remote):
   """
   Determine the ancestor branch of the given branch name.
   If the current branch is like cdh-a.b+c.d then will chop
@@ -71,11 +71,11 @@ def cdh_ancestor_branch(branch):
   
   m = re.match(r'cdh-([\d\.]+)$', branch)
   if m:
-    return 'apache/tags/release-' + m.group(1)
+    return "%s/tags/release-%s" % (apache_remote, m.group(1))
 
   return re.sub(r'[\.\+][^\.\+]+?$', '', branch)
 
-def cdh_get_version(rev):
+def cdh_get_version(rev, apache_remote):
   """ Given a revision, determine the unique version number for it. """
 
   if rev.startswith('cdh-'):
@@ -84,7 +84,7 @@ def cdh_get_version(rev):
     cur_branch = cdh_best_branch(rev)
   assert cur_branch.startswith("cdh-")
   base_version = re.sub(r'^cdh-', '', cur_branch)
-  ancestor = cdh_ancestor_branch(cur_branch)
+  ancestor = cdh_ancestor_branch(cur_branch, apache_remote)
   merge_base = git_merge_base(rev, ancestor)
   count = count_commits_from(merge_base, rev)
 

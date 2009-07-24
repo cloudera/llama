@@ -12,7 +12,8 @@ TARGET_DIR=$4
 TMPDIR=`mktemp -d`
 $BINDIR/create-cloudera-dir $GIT_REPO $BASE_BRANCH $BUILD_BRANCH $TMPDIR/cloudera
 
-VERSION=$(cd $GIT_REPO && $BINDIR/branch-tool version)
+APACHE_REMOTE=$(echo $BASE_BRANCH| awk -F/ '{print $1}')
+VERSION=$(cd $GIT_REPO && $BINDIR/branch-tool -a $APACHE_REMOTE version)
 
 (cd $TMPDIR && tar -czf - cloudera) > $TARGET_DIR/cloudera-$VERSION.tar.gz
 rm -rf $TMPDIR

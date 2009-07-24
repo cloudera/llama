@@ -5,6 +5,10 @@ flags:
   -v   - verbose
   -y   - ask forgiveness, not permission
 
+options:
+  -a   - name of Apache remote to compare
+ 
+
 tool is:
   branch - make a new branch from this point
   cust-branch [cust] - make a customer branch
@@ -46,7 +50,7 @@ def usage(argv):
 
 def branch(argv):
   """ Create a new branch from this point """
-  version = cdh_get_version(git_cur_branch())
+  version = cdh_get_version(git_cur_branch(), APACHE_REMOTE)
   sideeffect_git(['checkout', '-b', 'cdh-' + version])
 
 def version(argv):
@@ -55,7 +59,7 @@ def version(argv):
   of HEAD.
   """
   ref = argv[2] if len(argv) == 3 else git_cur_branch()
-  print cdh_get_version(ref)
+  print cdh_get_version(ref, APACHE_REMOTE)
 
 def cust_branch(argv):
   """
@@ -68,7 +72,7 @@ def cust_branch(argv):
     usage(argv)
 
   cust_name = argv[2]
-  head_ver = cdh_get_version(git_cur_branch())
+  head_ver = cdh_get_version(git_cur_branch(), APACHE_REMOTE)
   head_ver_branch = 'cdh-' + head_ver
   try:
     git_rev_parse('refs/heads/' + head_ver_branch)
@@ -87,14 +91,16 @@ def parse_args(args):
   op = OptionParser(usage = __usage)
   op.add_option('-y', '--yes', action='store_true')
   op.add_option('-v', '--verbose', action='store_true')
+  op.add_option('-a', '--apache-remote', action="store", type="string", dest="apacheremote", default="apache")
   opts, args = op.parse_args()
   return opts, args
 
 def main(argv):
-  global VERBOSE, AUTOMATIC_YES
+  global VERBOSE, AUTOMATIC_YES, APACHE_REMOTE
   opts, args = parse_args(argv[1:])
   AUTOMATIC_YES = opts.yes
   VERBOSE = opts.verbose
+  APACHE_REMOTE = opts.apacheremote
 
   if len(args) == 0:
     usage(argv)
