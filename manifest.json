@@ -3,17 +3,30 @@
   "default-refspec": "master",
   
   "remotes":
-    {"origin": { "fetch": "ssh://git@git.sf.cloudera.com/%s.git" },
-     "apache": { "fetch": "ssh://git@git.sf.cloudera.com/apache-%s.git" }},
+    {"origin": { "fetch": "ssh://git@git.sf.cloudera.com/%(name)s.git" },
+     "apache": { "fetch": "ssh://git@git.sf.cloudera.com/apache-%(name)s.git" },
+
+     "hadoop": { "fetch": "ssh://git@git.sf.cloudera.com/hadoop.git" },
+     "apache-hadoop": {"fetch": "ssh://git@git.sf.cloudera.com/apache-hadoop.git"},
+     "hadoop-package": { "fetch": "ssh://git@git.sf.cloudera.com/hadoop-package.git"}},
  
   "projects":
-    {"hadoop": { "refspec": "cdh-0.20.0", "dir":"repos/hadoop", "remotes": ["origin", "apache"] },
+    {"hadoop-0.18": { "refspec": "cdh-0.18.3", "dir":"repos/hadoop-0.18", 
+                      "from-remote":"hadoop", "remotes": ["hadoop", "apache-hadoop"] },
+     "hadoop-0.20": { "refspec": "cdh-0.20.0", "dir":"repos/hadoop-0.20", 
+                      "from-remote":"hadoop", "remotes": ["hadoop", "apache-hadoop"] },
+
      "pig": {"refspec": "cdh-0.18", "dir": "repos/pig", "remotes": ["origin", "apache"]},
      "hive": {"refspec": "cdh-0.18", "dir": "repos/hive", "remotes": ["origin", "apache"]},
 
-     "hadoop-package": { "refspec": "cdh-0.20.0", "dir": "repos/hadoop-package"},
+     "hadoop-0.18-package": { "refspec": "cdh-0.18.3", "dir": "repos/hadoop-0.18-package",
+                              "remotes": ["hadoop-package"]},
+     "hadoop-0.20-package": { "refspec": "cdh-0.20.0", "dir": "repos/hadoop-0.20-package",
+                              "remotes": ["hadoop-package"]},
+     
      "hive-package": { "refspec": "cdh-0.18", "dir": "repos/hive-package"},
      "pig-package": { "refspec": "cdh-0.18", "dir": "repos/pig-package"},
+
      "pristine-tarballs": { "dir": "repos/pristine"},
 
      "cdhbuild": { "dir": "repos/cdhbuild"}

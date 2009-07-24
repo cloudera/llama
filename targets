@@ -10,13 +10,13 @@
 base_hadoop_ver = "0.20.0"
 
 hadoop_ver_string = "hadoop-" + base_hadoop_ver
-RegisterProperty('hadoop-0.20.repo', '%(srcdir)/repos/hadoop')
+RegisterProperty('hadoop-0.20.repo', '%(srcdir)/repos/hadoop-0.20')
 BacktickProperty('hadoop-0.20.version',
                  executable='//tools/branch-tool',
-                 arguments=['version'],
+                 arguments=['-a', 'apache-hadoop', 'version'],
                  dir='${hadoop-0.20.repo}')
 RegisterProperty('hadoop-0.20.base.version', base_hadoop_ver)
-RegisterProperty('hadoop-0.20.base.ref', 'apache/tags/release-%s' % base_hadoop_ver)
+RegisterProperty('hadoop-0.20.base.ref', 'apache-hadoop/tags/release-%s' % base_hadoop_ver)
 RegisterProperty('hadoop-0.20.build.ref', 'cdh-0.20.0')
 RegisterProperty('hadoop-0.20.pristine.tarball',
                  '%%(srcdir)/repos/pristine/%s.tar.gz' % hadoop_ver_string)
@@ -72,8 +72,10 @@ supportedHadoopPackage = PackageTarget(
 
 # subdirectory targets:
 ProjectList(required_targets=[
-  "repos/hadoop-package/:rpm",
-  "repos/hadoop-package/:deb",
+  "repos/hadoop-0.20-package/:rpm",
+  "repos/hadoop-0.18-package/:rpm",
+  "repos/hadoop-0.20-package/:deb",
+  "repos/hadoop-0.18-package/:deb",
   "repos/hive-package/:rpm",
   "repos/hive-package/:deb",
   "repos/pig-package/:rpm",
