@@ -19,6 +19,12 @@ also covers setting up your build environments, the versioning and the release p
 
 == Setting up your build environment
 
+=== 64-bit machine/VM
+
+You need to run the build process on a 64-bit machine.  You can just install
+the 64-bit version of CentOS or Ubuntu (for example) inside of the VM.  This
+is required for us to build both 32 and 64 bit native libraries.
+
 === Python
 
 You need to have version 2.5.x of Python installed.  Python 2.4 or 2.6 will
@@ -28,6 +34,10 @@ not work.
 You'll see that in many places `/usr/bin/python2.5` is hard-coded in 
 script shabangs.  The reason for this is that the CentOS 5 python 2.4 package
 installs `/usr/bin/python` instead of using a symlink.
+
+=== Git
+
+*Git* is a popular SCM.  You'll need git to fetch various tools required for building.
 
 === Crepo and Stitch
 
@@ -50,17 +60,16 @@ have the 'simplejson' python module installed.
 'stitch' requires installation which is documented in the top-level 'INSTALL'
 file in the 'stitch' git repository (mostly a `python setup.py install`).
 
-=== 64-bit machine/VM
-
-You need to run the build process on a 64-bit machine.  You can just install
-the 64-bit version of CentOS or Ubuntu (for example) inside of the VM.  This
-is required for us to build both 32 and 64 bit native libraries.
-
 === Java and Apache Forrest
 
 The build process requires that you have Apache Forrest and Sun
 Java JDK 5 and 6 (for JDK 6 you need both the 32-bit and 64-bit JDK).
-The build script need to know the locations of these tools.
+The build script need to know the locations of these tools.  It's easiest
+to install each of these JDKs from the non-RPM and non-DEB .bin files.
+
+[NOTE]
+If you haven't yet checked out the 'cdh' git repository, do so with
+*git clone ssh://git@git.sf.cloudera.com/cdh.git*
 
 In the root directory of the 'cdh' git repository, you could create a file
 called 'my.properties' which points to the location of these tools, e.g.
@@ -100,6 +109,15 @@ export PATH="${PATH}:${ANT_HOME}/bin"
 ----
 
 include::README-hadoop.txt[]
+
+=== gcc and other native components
+
+You need 'zlib headers', 'gcc', 'gcc headers', 'gcc c++', 'gcc c++ headers', and 'glibc headers' to compile
+the Hadoop native libraries. This can all be installed with your favorite package manager.
+
+=== rpmbuild
+
+You need rpmbuild for building RPM packages.  Use your favorite package manager to install rpmbuild.
 
 == Package Versioning
 
