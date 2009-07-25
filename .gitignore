@@ -5,4 +5,4 @@ sbuild
 *.pyc
 */#*
 my.properties
-README.html
+/README.html
