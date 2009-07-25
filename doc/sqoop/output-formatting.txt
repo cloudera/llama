@@ -23,3 +23,4 @@ character, and no escape character. Note that this can lead to
 ambiguous/unparsible records if you import database records containing
 commas or newlines in the field data. For unambiguous parsing, both must
 be enabled, e.g., via +--mysql-delimiters+.
+

@@ -389,7 +389,7 @@ Hive's types, and a +LOAD DATA INPATH+ statement to move the data files
 into Hive's warehouse directory. The script will be executed by
 calling the installed copy of hive on the machine where Sqoop is run.
 If you have multiple Hive installations, or +hive+ is not in your
-+$PATH+ use the +--hive-home+ option to identify the Hive installation
++$PATH+ use the +*--hive-home*+ option to identify the Hive installation
 directory. Sqoop will use +$HIVE_HOME/bin/hive+ from here.
 
 NOTE: This function is incompatible with +--as-sequencefile+.
