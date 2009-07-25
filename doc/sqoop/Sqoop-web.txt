@@ -1,0 +1,419 @@
+
+Introduction
+------------
+
+Sqoop is a tool designed to help users of large data import
+existing relational databases into their Hadoop clusters. Sqoop uses
+JDBC to connect to a database, examine each table's schema, and
+auto-generate the necessary classes to import data into HDFS. It
+then instantiates a MapReduce job to read tables from the database
+via the DBInputFormat (JDBC-based InputFormat). Tables are read
+into a set of files loaded into HDFS. Both SequenceFile and
+text-based targets are supported. Sqoop also supports high-performance
+imports from select databases including MySQL.
+
+This document describes how to get started using Sqoop to import
+your data into Hadoop.
+
+Getting Sqoop
+-------------
+
+Sqoop is an open source program contributed to the Apache
+Hadoop project, and included in
+link:http://www.cloudera.com/hadoop[Cloudera's Distribution for Hadoop].
+The most recent release already contains Sqoop. If you've
+been using our RPM packages, running `yum update hadoop-0.20`
+should bring you up to date. Debian users can upgrade to the
+newest release of Cloudera's Distribution for Hadoop by
+running `apt-get update && apt-get install hadoop0.20`.
+
+.Sqoop and Hadoop 0.18.3
+NOTE: A version of Sqoop compatible with Hadoop 0.18.3 was
+included with Cloudera's Distribution for Hadoop 0.18.3. All
+new Sqoop development, however, will focus on the 0.20 branch
+of Hadoop.
+
+
+The Sqoop Command Line
+----------------------
+
+The main way to execute Sqoop is via a program installed 
+as `/usr/bin/sqoop`. You pass this program options describing the
+import job you want to perform. If you need a hint, running
+`sqoop --help` will print out a list of all the command line
+options available. The +sqoop(1)+ manual page will also describe
+Sqoop's available arguments in greater detail (type `man sqoop` to
+read it.) The following subsections will describe the most
+common modes of operation.
+
+Connecting to a Database Server
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Sqoop is designed to import tables from a database into HDFS. As such,
+it requires a _connect string_ that describes how to connect to the
+database. The _connect string_ looks like a URL, and is communicated to
+Sqoop with the +--connect+ argument. This describes the server and
+database to connect to; it may also specify the port. e.g.: 
+
+----
+$ sqoop --connect jdbc:mysql://database.example.com/employees
+----
+
+This string will connect to a MySQL database named +employees+ on the
+host +database.example.com+. It's important that you *do not* use the URL
++localhost+ if you intend to use Sqoop with a distributed Hadoop
+cluster. The connect string you supply will be used on TaskTracker nodes
+throughout your MapReduce cluster; if they're told to connect to the
+literal name +localhost+, they'll each reach a different
+database (or more likely, no database at all)! Instead, you should use
+the full hostname or IP address of the database host that can be seen
+by all your remote nodes.
+
+You may need to authenticate against the database before you can
+access it. The +--username+ and +--password+ or +-P+ parameters can
+be used to supply a username and a password to the database. e.g.:
+
+----
+$ sqoop --connect jdbc:mysql://database.example.com/employees \
+    --username aaron --password 12345
+----
+
+.Password security
+WARNING: The +--password+ parameter is insecure, as other users may
+be able to read your password from the command-line arguments via
+the output of programs such as `ps`. The *+-P+* argument will read
+a password from a console prompt, and is the preferred method of
+entering credentials.
+
+Sqoop automatically supports MySQL and HSQLDB. Connect strings beginning
+with +jdbc:mysql://+ and +jdbc:hsqldb:*//+ are handled automatically by
+JDBC drivers that are bundled with Sqoop. You can use Sqoop with any other
+JDBC-compliant database as well. First, download the appropriate JDBC
+driver for the database you want to import from, and install the .jar
+file in the +/usr/hadoop/lib+ directory on all machines in your Hadoop
+cluster, or some other directory which is in the classpath
+on all nodes. Each driver jar also has a specific driver class which defines
+the entry-point to the driver. For example, MySQL's Connector/J library has
+a driver class of +com.mysql.jdbc.Driver+. Refer to your database
+vendor-specific documentation to determine the main driver class.
+This class must be provided as an argument to Sqoop with +--driver+.
+
+For example, to connect to a postgres database, first download the driver from
+link:http://jdbc.postgresql.org and install it in your Hadoop lib path.
+Then run Sqoop with something like:
+
+----
+$ sqoop --connect jdbc:postgresql://postgres-server.example.com/employees \
+    --driver org.postgresql.Driver
+----
+
+NOTE: Sqoop uses the JDBC specification to connect to databases; this
+should provide a versatile client that interoperates with many different
+databases. We have thoroughly tested this tool with HSQLDB and MySQL. If
+you try this tool with another database, please share your success (or
+problems!) with us on our
+link:http://getsatisfaction.com/cloudera/products/cloudera_sqoop[Sqoop
+support and feedback] page. Sqoop is known to *not* work with Oracle at
+the moment; we are link:http://issues.apache.org/jira/browse/MAPREDUCE-789[actively
+working] on this problem.
+
+Listing Available Databases
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Once connected to a database server, you can list the available
+databases with the +--list-databases+ parameter. This currently is supported
+only by HSQLDB and MySQL. Note that in this case, the connect string does
+not include a database name, just a server address.
+
+----
+$ sqoop --connect jdbc:mysql://database.example.com/ --list-databases
+information_schema
+employees
+----
+_This only works with HSQLDB and MySQL. A vendor-agnostic implementation of
+this function has not yet been implemented._
+
+Listing Available Tables
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Within a database, you can list the tables available for import with
+the +--list-tables+ command. The following example shows four tables available
+within the "employees" example database:
+
+----
+$ sqoop --connect jdbc:mysql://database.example.com/employees --list-tables
+employee_names
+payroll_checks
+job_descriptions
+office_supplies
+----
+
+Automatic Full-database Import
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+If you want to import all the tables in a database, you can use the
++--all-tables+ command to do so:
+
+----
+$ sqoop --connect jdbc:mysql://database.example.com/employees --all-tables
+----
+
+This will query the database for the available tables, generate an ORM
+class for each table, and run a MapReduce job to import each one.
+Hadoop uses the DBInputFormat to read from a database into a Mapper
+instance. To read a table into a MapReduce program requires creating a
+class to hold the fields of one row of the table. One of the benefits
+of Sqoop is that it generates this class definition for you, based on
+the table definition in the database.
+
+The generated +.java+ files are, by default, placed in the current
+directory. You can supply a different directory with the +--outdir+
+parameter. These are then compiled into +.class+ and +.jar+ files for use
+by the MapReduce job that it launches. These files are created in a
+temporary directory. You can redirect this target with +--bindir+.
+
+Each table will be imported into a separate directory in HDFS, with
+the same name as the table. For instance, if my Hadoop username is
+aaron, the above command would have generated the following
+directories in HDFS:
+
+----
+/user/aaron/employee_names
+/user/aaron/payroll_checks
+/user/aaron/job_descriptions
+/user/aaron/office_supplies
+----
+
+You can change the base directory under which the tables are loaded
+with the +--warehouse-dir+ parameter. For example:
+
+----
+$ sqoop --connect jdbc:mysql://database.example.com/employees --all-tables \
+    --warehouse-dir /common/warehouse
+----
+
+This would create the following directories instead:
+
+----
+/common/warehouse/employee_names
+/common/warehouse/payroll_checks
+/common/warehouse/job_descriptions
+/common/warehouse/office_supplies
+----
+
+By default the data will be read into text files in HDFS. Each of the
+columns will be represented as comma-delimited text. Each row is
+terminated by a newline. See the section on "Controlling the Output
+Format" below for information on how to change these delimiters.
+
+If you want to leverage compression and binary file formats, the
++--as-sequencefile+ argument to Sqoop will import the table
+to a set of SequenceFiles instead. This stores each field of each
+database record in a separate object in a SequenceFile.
+This representation is also likely to be higher performance when used
+as an input to subsequent MapReduce programs as it does not require
+parsing. For completeness, Sqoop provides an +--as-textfile+ option, which is
+implied by default. An +--as-textfile+ on the command-line will override
+a previous +--as-sequencefile+ argument.
+
+The SequenceFile format will embed the records from the database as
+objects using the code generated by Sqoop. It is important that you
+retain the +.java+ file for this class, as you will need to be able to
+instantiate the same type to read the objects back later, in other
+user-defined applications.
+
+Importing Individual Tables
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In addition to full-database imports, Sqoop will allow you to import
+individual tables. Instead of using +--all-tables+, specify the name of
+a particular table with the +--table+ argument:
+
+----
+$ sqoop --connect jdbc:mysql://database.example.com/employees \
+    --table employee_names
+----
+
+You can further specify a subset of the columns in a table by using
+the +--columns+ argument. This takes a list of column names, delimited
+by commas, with no spaces in between. e.g.:
+
+----
+$ sqoop --connect jdbc:mysql://database.example.com/employees \
+    --table employee_names --columns employee_id,first_name,last_name,dept_id
+----
+
+Sqoop will use a MapReduce job to read sections of the table in
+parallel. For the MapReduce tasks to divide the table space, the
+results returned by the database must be orderable. Sqoop will
+automatically detect the primary key for a table and use that to order
+the results. If no primary key is available, or (less likely) you want
+to order the results along a different column, you can specify the
+column name with +--order-by+.
+
+.Row ordering
+IMPORTANT:  To guarantee correctness of your input, you must select an
+ordering column for which each row has a unique value. If duplicate
+values appear in the ordering column, the results of the import are
+undefined, and Sqoop will not be able to detect the error.
+
+Finally, you can control which rows of a table are imported via the
++--where+ argument. With this argument, you may specify a clause to be
+appended to the SQL statement used to select rows from the table,
+e.g.:
+
+----
+$ sqoop --connect jdbc:mysql://database.example.com/employees \
+  --table employee_names --where "employee_id > 40 AND active = 1"
+----
+
+The +--columns+, +--order-by+, and +--where+ arguments are incompatible with
++--all-tables+. If you require special handling for some of the tables,
+then you must manually run a separate import job for each table.
+
+Controlling the Output Format
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+include::output-formatting.txt[]
+
+The following arguments allow you to control the output format of
+records:
+
+include::output-formatting-args.txt[]
+
+For example, we may want to separate records by tab characters, with
+every record surrounded by "double quotes", and internal quote marks
+escaped by a backslash (+\+) character:
+
+----
+$ sqoop --connect jdbc:mysql://database.example.com/employees \
+  --table employee_names --fields-terminated-by \t \
+  --lines-terminated-by \n --enclosed-by '\"' --escaped-by '\\'
+----
+
+Controlling the Input Format
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+include::input-formatting.txt[]
+
+The following arguments allow you to control the input format of
+records:
+
+include::input-formatting-args.txt[]
+
+If you have already imported data into HDFS in a text-based
+representation and want to change the delimiters being used, you
+should regenerate the class via `sqoop --generate-only`, specifying
+the new delimiters with +--fields-terminated-by+, etc., and the old
+delimiters with +--input-fields-terminated-by+, etc. Then run a
+MapReduce job where your mapper creates an instance of your record
+class, uses its +parse()+ method to read the fields using the old
+delimiters, and emits a new +Text+ output value via the record's
++toString()+ method, which will use the new delimiters. You'll then
+want to regenerate the class another time without the
++--input-fields-terminated-by+ specified so that the new delimiters
+are used for both input and output.
+
+Generated Class Names
+~~~~~~~~~~~~~~~~~~~~~
+
+By default, classes are named after the table they represent. e.g.,
++sqoop --table foo+ will generate a file named +foo.java+. You can
+override the generated class name with the +--class-name+ argument.
+
+----
+$ sqoop --connect jdbc:mysql://database.example.com/employees \
+  --table employee_names --class-name com.example.EmployeeNames
+----
+_This generates a file named +com/example/EmployeeNames.java+_
+
+If you want to specify a package name for generated classes, but
+still want them to be named after the table they represent, you
+can instead use the argument +--package-name+:
+
+----
+$ sqoop --connect jdbc:mysql://database.example.com/employees \
+  --table employee_names --package-name com.example
+----
+_This generates a file named +com/example/employee_names.java+_
+
+
+
+Miscellaneous Additional Arguments
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you want to generate the Java classes to represent tables without
+actually performing an import, supply a connect string and
+(optionally) credentials as above, as well as +--all-tables+ or
++--table+, but also use the +--generate-only+ argument. This will
+generate the classes and cease further operation.
+
+You can override the +$HADOOP_HOME+ environment variable within Sqoop
+with the +--hadoop-home+ argument. You can override the +$HIVE_HOME+
+environment variable with +--hive-home+.
+
+
+Fast MySQL Imports
+------------------
+
+While the JDBC-based import method used by Sqoop provides it with the
+ability to read from a variety of databases using a generic driver, it
+is not the most high-performance method available. Sqoop can read from
+a local MySQL database considerably faster by using the +mysqldump+ tool
+distributed with MySQL. If you run Sqoop on the same machine where a
+MySQL database is present, you can take advantage of this faster
+import method by running Sqoop with the +--local+ argument. This
+combined with a connect string that begins with +jdbc:mysql://+ will
+inform Sqoop that it should select the faster access method.
+
+If your delimiters exactly match the delimiters used by +mysqldump+,
+then Sqoop will use a fast-path that copies the data directly from
++mysqldump+'s output into HDFS. Otherwise, Sqoop will parse +mysqldump+'s
+output into fields and transcode them into the user-specified delimiter set.
+This is about 50% slower. For convenience, the +--mysql-delimiters+
+argument will set all the output delimiters to be consistent with
++mysqldump+'s format.
+
+
+Importing Data Into Hive
+------------------------
+
+Sqoop's primary function is to upload your data into files in HDFS. If
+you have a Hive metastore associated with your HDFS cluster, Sqoop can
+also import the data into Hive by generating and executing a +CREATE
+TABLE+ statement to define the data's layout in Hive. Importing data
+into Hive is as simple as adding the *+--hive-import+* option to your
+Sqoop command line.
+
+After your data is imported into HDFS, Sqoop will generate a Hive
+script containing a +CREATE TABLE+ operation defining your columns using
+Hive's types, and a +LOAD DATA INPATH+ statement to move the data files
+into Hive's warehouse directory. The script will be executed by
+calling the installed copy of hive on the machine where Sqoop is run.
+If you have multiple Hive installations, or +hive+ is not in your
++$PATH+ use the +--hive-home+ option to identify the Hive installation
+directory. Sqoop will use +$HIVE_HOME/bin/hive+ from here.
+
+NOTE: This function is incompatible with +--as-sequencefile+.
+
+Hive's text parser does not know how to support escaping or enclosing
+characters. Sqoop will print a warning if you use +--escaped-by+,
++--enclosed-by+, or +--optionally-enclosed-by+ since Hive does not know
+how to parse these. It will pass the field and record terminators through
+to Hive. If you do not set any delimiters and do use +--hive-import+,
+the field delimiter will be set to +^A+ and the record delimiter will
+be set to +\n+ to be consistent with Hive's defaults.
+
+Hive's Type System
+~~~~~~~~~~~~~~~~~~
+
+Hive users will note that there is not a one-to-one mapping between
+SQL types and Hive types. In general, SQL types that do not have a
+direct mapping (e.g., +DATE+, +TIME+, and +TIMESTAMP+) will be coerced to
++STRING+ in Hive. The +NUMERIC+ and +DECIMAL+ SQL types will be coerced to
++DOUBLE+. In these cases, Sqoop will emit a warning in its log messages
+informing you of the loss of precision.
+
+Troubleshooting and Getting Help
+--------------------------------
+
+include::troubleshooting.txt[]
+

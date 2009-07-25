@@ -1,0 +1,21 @@
+--fields-terminated-by (char)::
+  Sets the field separator character
+
+--lines-terminated-by (char)::
+  Sets the end-of-line character
+
+--optionally-enclosed-by (char)::
+  Sets a field-enclosing character which may be used if a
+  value contains delimiter characters.
+
+--enclosed-by (char)::
+  Sets a field-enclosing character which will be used for all fields.
+
+--escaped-by (char)::
+  Sets the escape character
+
+--mysql-delimiters::
+Uses MySQL's default delimiter set:
++
+fields: ,  lines: \n  escaped-by: \  optionally-enclosed-by: '
+

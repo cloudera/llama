@@ -1,0 +1,16 @@
+
+--input-fields-terminated-by (char)::
+  Sets the input field separator
+
+--input-lines-terminated-by (char)::
+  Sets the input end-of-line char
+
+--input-optionally-enclosed-by (char)::
+  Sets an input field-enclosing character
+
+--input-enclosed-by (char)::
+  Sets a required input field encloser
+
+--input-escaped-by (char)::
+  Sets the input escape character
+

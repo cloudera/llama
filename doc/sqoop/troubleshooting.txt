@@ -1,0 +1,13 @@
+Sqoop's output is emitted via log4j, a logging system for Java
+that is used by other components of Hadoop. If Sqoop is failing
+to import your tables correctly, you can enable more verbose logging
+by adding the following line to +/etc/hadoop/conf/log4j.properties+:
+
+----
+log4j.logger.org.apache.hadoop.sqoop=DEBUG
+----
+
+If you continue to have trouble using Sqoop, drop us a line on our
+link:http://getsatisfaction.com/cloudera/products/cloudera_sqoop[community
+support portal] and we'll help you out.
+
