@@ -1,4 +1,5 @@
 from stitch.targets.alltargets import PackageTarget
+from stitch.targets.alltargets import BacktickProperty
 from stitch.steps.filesteps import *
 from stitch.steps.execstep import *
 
@@ -12,6 +13,54 @@ def SetupBuildStep(package_name,
                "${%s.pristine.tarball}" % package_name,
                dst_dir],
     inputs=["${%s.repo}/" % package_name])
+
+def MagicGitPackage(package_name,
+                    repo_directory,
+                    apache_base_version,
+                    apache_remote,
+                    apache_base_ref,
+                    cloudera_build_ref,
+                    pristine_tarball):
+  """ Generates a Package from our build repositories """
+  BacktickProperty("%s.version" % package_name,
+          executable='//tools/branch-tool',
+          arguments=['-a', apache_remote, 'version'],
+          dir=repo_directory)
+  return PackageTarget(
+      package_name="%s-build" % (package_name),
+      clean_first=True,
+      create_tarball=False,
+      steps = [
+         # 1. Setup package build
+         #    Extract pristine and create cloudera directory
+         Exec(
+            executable="//tools/setup-package-build",
+            arguments=[repo_directory,
+                       apache_base_ref,
+                       cloudera_build_ref,
+                       pristine_tarball,
+                       "%(assemblydir)/"],
+            inputs=[repo_directory + "/**"]),
+         # 2. Apply patches 
+         Exec(
+            executable="%(assemblydir)/cloudera/apply-patches",
+            arguments=["%(assemblydir)/",
+                       "%(assemblydir)/cloudera/patches"]),
+         # 3. Do the release build
+         Exec(
+            executable="%(assemblydir)/cloudera/do-release-build",
+            env={
+             'JAVA32_HOME': '${java32.home}',
+             'JAVA64_HOME': '${java64.home}',
+             'JAVA5_HOME':  '${java5-home}',
+             'FORREST_HOME': '${forrest-home}',
+            }),
+      ],
+    # TODO: fix the outputs w/o specify hadoop directly
+    outputs=[
+      "%%(assemblydir)/build/hadoop-${%s.version}.tar.gz" % package_name
+      ]
+    )
 
 def GenerateDebianChangesStep(package_name,
                               dst_file):

@@ -6,22 +6,6 @@
 
 # Set some version constants which appear throughout this project.
 
-# Hadoop
-base_hadoop_ver = "0.20.0"
-
-hadoop_ver_string = "hadoop-" + base_hadoop_ver
-RegisterProperty('hadoop-0.20.repo', '%(srcdir)/repos/hadoop-0.20')
-BacktickProperty('hadoop-0.20.version',
-                 executable='//tools/branch-tool',
-                 arguments=['-a', 'apache-hadoop', 'version'],
-                 dir='${hadoop-0.20.repo}')
-RegisterProperty('hadoop-0.20.base.version', base_hadoop_ver)
-RegisterProperty('hadoop-0.20.base.ref', 'apache-hadoop/tags/release-%s' % base_hadoop_ver)
-RegisterProperty('hadoop-0.20.build.ref', 'cdh-0.20.0')
-RegisterProperty('hadoop-0.20.pristine.tarball',
-                 '%%(srcdir)/repos/pristine/%s.tar.gz' % hadoop_ver_string)
-
-
 # Pig
 base_pig_ver="0.2.0"
 pig_ver_string="pig-" + base_pig_ver
@@ -45,30 +29,16 @@ RegisterProperty('hive.build.ref', 'cdh-0.18')
 RegisterProperty('hive.pristine.tarball',
                  '%(srcdir)/repos/pristine/hive-0.3.0-hadoop-0.18.0-dev.tar.gz')
 
-supportedHadoopPackage = PackageTarget(
-  package_name = "hadoop-build",
-  clean_first=True,
-  create_tarball=False,
-  steps = [
-    cloudera.SetupBuildStep("hadoop-0.20"),
-  # Apply patches
-    Exec(
-      executable="%(assemblydir)/cloudera/apply-patches",
-      arguments=["%(assemblydir)/",
-                 "%(assemblydir)/cloudera/patches"]),
-    Exec(
-      executable="%(assemblydir)/cloudera/do-release-build",
-      env={
-       'JAVA32_HOME': '${java32.home}',
-       'JAVA64_HOME': '${java64.home}',
-       'JAVA5_HOME':  '${java5-home}',
-       'FORREST_HOME': '${forrest-home}',
-      }),
-  ],
-  outputs=[
-    '%(assemblydir)/build/hadoop-${hadoop-0.20.version}.tar.gz',
-    ]      
-  )
+# Hadoop
+supportedHadoopPackage = cloudera.MagicGitPackage(
+                       "hadoop-0.20",                                   # package name
+                       "%(srcdir)/repos/hadoop-0.20",                   # git repos directory
+                       "0.20.0",                                        # Apache base version
+                       "apache-hadoop",                                 # Apache remote
+                       "apache-hadoop/tags/release-0.20.0",             # Apache base ref
+                       "cdh-0.20.0",                                    # Cloudera build ref
+                       "%(srcdir)/repos/pristine/hadoop-0.20.0.tar.gz"  # Pristine tarball
+)
 
 # subdirectory targets:
 ProjectList(required_targets=[
