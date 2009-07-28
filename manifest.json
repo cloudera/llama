@@ -25,8 +25,6 @@
      "hive-package": { "refspec": "cdh-0.18", "dir": "repos/hive-package"},
      "pig-package": { "refspec": "cdh-0.18", "dir": "repos/pig-package"},
 
-     "pristine-tarballs": { "dir": "repos/pristine"},
-
      "cdhbuild": { "dir": "repos/cdhbuild"}
     }
 }
