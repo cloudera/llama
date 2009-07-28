@@ -17,14 +17,13 @@ def SetupBuildStep(package_name,
 def MagicGitPackage(package_name,
                     repo_directory,
                     apache_base_version,
-                    apache_remote,
                     apache_base_ref,
                     cloudera_build_ref,
                     pristine_tarball):
   """ Generates a Package from our build repositories """
   BacktickProperty("%s.version" % package_name,
           executable='//tools/branch-tool',
-          arguments=['-a', apache_remote, 'version'],
+          arguments=['version'],
           dir=repo_directory)
   return PackageTarget(
       package_name="%s-build" % (package_name),

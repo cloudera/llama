@@ -34,11 +34,21 @@ supportedHadoopPackage = cloudera.MagicGitPackage(
                        "hadoop-0.20",                                   # package name
                        "%(srcdir)/repos/hadoop-0.20",                   # git repos directory
                        "0.20.0",                                        # Apache base version
-                       "apache-hadoop",                                 # Apache remote
-                       "apache-hadoop/tags/release-0.20.0",             # Apache base ref
+                       "apache/tags/release-0.20.0",             # Apache base ref
                        "cdh-0.20.0",                                    # Cloudera build ref
                        "%(srcdir)/repos/pristine/hadoop-0.20.0.tar.gz"  # Pristine tarball
 )
+
+supportedHadoopPackage18 = cloudera.MagicGitPackage(
+                       "hadoop-0.18",                                   # package name
+                       "%(srcdir)/repos/hadoop-0.18",                   # git repos directory
+                       "0.18.3",                             # Apache base version
+                       "release-0.18.3-with-jdiff",              # Apache base ref
+                       "cdh-0.18.3",                                    # Cloudera build ref
+                       "%(srcdir)/repos/pristine/hadoop-0.18.3.tar.gz"  # Pristine tarball
+)
+
+
 
 # subdirectory targets:
 ProjectList(required_targets=[
