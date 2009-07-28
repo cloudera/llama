@@ -30,7 +30,7 @@ RegisterProperty('hive.pristine.tarball',
                  '%(srcdir)/repos/pristine/hive-0.3.0-hadoop-0.18.0-dev.tar.gz')
 
 # Hadoop
-supportedHadoopPackage = cloudera.MagicGitPackage(
+hadoop20Package = cloudera.MagicGitPackage(
                        "hadoop-0.20",                                   # package name
                        "%(srcdir)/repos/hadoop-0.20",                   # git repos directory
                        "0.20.0",                                        # Apache base version
@@ -39,16 +39,18 @@ supportedHadoopPackage = cloudera.MagicGitPackage(
                        "%(srcdir)/repos/pristine/hadoop-0.20.0.tar.gz"  # Pristine tarball
 )
 
-supportedHadoopPackage18 = cloudera.MagicGitPackage(
+hadoop18Package = cloudera.MagicGitPackage(
                        "hadoop-0.18",                                   # package name
                        "%(srcdir)/repos/hadoop-0.18",                   # git repos directory
                        "0.18.3",                             # Apache base version
                        "release-0.18.3-with-jdiff",              # Apache base ref
                        "cdh-0.18.3",                                    # Cloudera build ref
-                       "%(srcdir)/repos/pristine/hadoop-0.18.3.tar.gz"  # Pristine tarball
+                       "%(srcdir)/repos/pristine/hadoop-0.18.3.tar.gz",  # Pristine tarball
 )
 
-
+# For backward compatibility...
+defaultTarget(supportedHadoopPackage)
+supportedHadoopPackage = EmptyTarget(required_targets=[":hadoop18Package", ":hadoop20Package"])
 
 # subdirectory targets:
 ProjectList(required_targets=[
