@@ -49,8 +49,8 @@ hadoop18Package = cloudera.MagicGitPackage(
 )
 
 # For backward compatibility...
-defaultTarget(supportedHadoopPackage)
 supportedHadoopPackage = EmptyTarget(required_targets=[":hadoop18Package", ":hadoop20Package"])
+defaultTarget(supportedHadoopPackage)
 
 # subdirectory targets:
 ProjectList(required_targets=[
