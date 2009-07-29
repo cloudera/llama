@@ -1,5 +1,5 @@
 BASE_DIR:=$(shell pwd)
-BUILD_DIR:=$(BASE_DIR)/build
+BUILD_DIR?=$(BASE_DIR)/build
 DL_DIR   ?=$(BASE_DIR)/dl
 STAMP_DIR:=$(BUILD_DIR)/stamps
 
