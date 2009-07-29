@@ -1,6 +1,6 @@
 BASE_DIR:=$(shell pwd)
 BUILD_DIR:=$(BASE_DIR)/build
-DL_DIR:=$(BASE_DIR)/dl
+DL_DIR   ?=$(BASE_DIR)/dl
 STAMP_DIR:=$(BUILD_DIR)/stamps
 
 -include config.mk
