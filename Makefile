@@ -15,6 +15,7 @@ TARGETS_HELP:=
 
 # optional configuration variables
 -include config.mk
+# TODO: Bail early if require config variables are not set
 
 include mk/gitpackage.mk
 
@@ -33,6 +34,11 @@ HADOOP18_BASE_REF=release-0.18.3-with-jdiff
 HADOOP18_BUILD_REF=cdh-$(HADOOP18_BASE_VERSION)
 $(eval $(call GITPACKAGE,hadoop18,HADOOP18))
 
+$(HADOOP18_HOOK_POST_BUILD):
+	@echo "PACKAGE=$(PKG) BUILD_DIR=$(PKG_BUILD_DIR) FULL_VERSION=$(PKG_FULL_VERSION)"
+	touch $@
+
+
 # Hadoop 0.20.0-based hadoop package
 HADOOP20_BASE_VERSION=0.20.0
 HADOOP20_SOURCE=hadoop-$(HADOOP20_BASE_VERSION).tar.gz
@@ -41,6 +47,10 @@ HADOOP20_GIT_REPO=$(BASE_DIR)/repos/hadoop-0.20
 HADOOP20_BASE_REF=apache/tags/release-$(HADOOP20_BASE_VERSION)
 HADOOP20_BUILD_REF=cdh-$(HADOOP20_BASE_VERSION)
 $(eval $(call GITPACKAGE,hadoop20,HADOOP20))
+
+$(HADOOP20_HOOK_POST_BUILD):
+	@echo "PACKAGE=$(PKG) BUILD_DIR=$(PKG_BUILD_DIR) FULL_VERSION=$(PKG_FULL_VERSION)"
+	touch $@
 
 # Pig 0.3.0
 #PIG_SOURCE=pig-0.3.0.tar.gz

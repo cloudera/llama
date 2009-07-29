@@ -28,19 +28,15 @@ define GITPACKAGE
 
 $(2)_BUILD_DIR =   $(BUILD_DIR)/$(1)-build
 
-$(2)_TARGET_DL    = $(STAMP_DIR)/$(1)-download
-$(2)_TARGET_PREP  = $(STAMP_DIR)/$(1)-prep
-$(2)_TARGET_PATCH = $(STAMP_DIR)/$(1)-patch
-$(2)_TARGET_BUILD = $(STAMP_DIR)/$(1)-build
+# Define the file stamps
+$(2)_TARGET_DL       = $(STAMP_DIR)/$(1)-download
+$(2)_TARGET_PREP     = $(STAMP_DIR)/$(1)-prep
+$(2)_TARGET_PATCH    = $(STAMP_DIR)/$(1)-patch
+$(2)_TARGET_BUILD    = $(STAMP_DIR)/$(1)-build
+$(2)_HOOK_POST_BUILD = $(STAMP_DIR)/$(1)-hook
 
+# Calculate the full version based on the git patches
 $(2)_FULL_VERSION:= $(shell cd $($(2)_GIT_REPO) && $(BASE_DIR)/tools/branch-tool version)
-$(2)_OUTPUT = $(OUTPUT_DIR)/hadoop-$$($(2)_FULL_VERSION).tar.gz
-
-# Step 5
-# TODO: don't make this hadoop specific
-#$$($(2)_TARGET_SAVE):
-#	cp -f $$($(2)_BUILD_DIR)/build/hadoop-$$($(2)_FULL_VERSION).tar.gz $(OUTPUT_DIR)
-#	touch $$@
 
 # We download target when the source is not in the download directory
 $(1)-download: $$($(2)_TARGET_DL) 
@@ -52,14 +48,9 @@ $(1)-prep: $(1)-download $$($(2)_TARGET_PREP)
 $(1)-patch: $(1)-prep $$($(2)_TARGET_PATCH)
  
 # To build target, we need to patch it first
-$(1): $(1)-patch $$($(2)_TARGET_BUILD)
+$(1): $(1)-patch $$($(2)_TARGET_BUILD) $$($(2)_HOOK_POST_BUILD)
 
-# Implicit rules with PKG variable
-$$($(2)_TARGET_DL):      PKG=$(2)
-$$($(2)_TARGET_PREP):    PKG=$(2)
-$$($(2)_TARGET_PATCH):   PKG=$(2)
-$$($(2)_TARGET_BUILD):   PKG=$(2)
-
+#### 
 # Helper targets -version -help etc
 $(1)-version:
 	@echo "Base: $$($(2)_BASE_VERSION)"
@@ -71,6 +62,18 @@ $(1)-help:
 $(1)-clean: 
 	-rm -f $(STAMP_DIR)/$(1)*
 	-rm -rf $$($(2)_BUILD_DIR)
+
+# Implicit rules with PKG variable
+$$($(2)_TARGET_DL):       PKG=$(2)
+$$($(2)_TARGET_PREP):     PKG=$(2)
+$$($(2)_TARGET_PATCH):    PKG=$(2)
+$$($(2)_TARGET_BUILD):    PKG=$(2)
+$$($(2)_HOOK_POST_BUILD): PKG=$(2) 
+$$($(2)_HOOK_POST_BUILD): PKG_FULL_VERSION=$$($(2)_FULL_VERSION)
+$$($(2)_HOOK_POST_BUILD): PKG_BUILD_DIR=$$($(2)_BUILD_DIR)
+
+# Default hook does nothing
+$$($(2)_HOOK_POST_BUILD):
 
 TARGETS += $(1) 
 TARGETS_HELP += $(1)-help
