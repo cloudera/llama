@@ -7,7 +7,7 @@ OUTPUT_DIR?=$(BUILD_DIR)/output
 REQUIRED_DIRS = $(BUILD_DIR) $(DL_DIR) $(STAMP_DIR) $(OUTPUT_DIR)
 $(shell for d in $(REQUIRED_DIRS); \
   do                               \
-    [[ -d $$d ]] || mkdir -p $$d;  \
+    [ -d $$d ] || mkdir -p $$d;  \
   done) 
 
 TARGETS:=
