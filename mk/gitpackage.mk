@@ -5,6 +5,7 @@ $(2)_BUILD_DIR =   $(BUILD_DIR)/$(1)-build
 $(2)_STAMP_PREP =  $(STAMP_DIR)/$(1)-prep
 $(2)_STAMP_PATCH = $(STAMP_DIR)/$(1)-patch
 $(2)_STAMP_BUILD = $(STAMP_DIR)/$(1)-build
+$(2)_VERSION:= $(shell cd $($(2)_GIT_REPO) && $(BASE_DIR)/tools/branch-tool version)
 
 $(DL_DIR)/$($2_SOURCE):
 	wget -P $(DL_DIR) --progress bar $($(2)_SITE)/$($(2)_SOURCE)
@@ -27,6 +28,9 @@ $(1)-download: $(DL_DIR)/$$($(2)_SOURCE)
 $(1)-prep: $(1)-download $$($(2)_STAMP_PREP)
 
 $(1)-patch: $(1)-prep $$($(2)_STAMP_PATCH)
+
+$(1)-version:
+	@echo "$$($(2)_VERSION)"
 
 $(1)-clean: 
 	-rm -f $(STAMP_DIR)/$(1)*

@@ -31,5 +31,13 @@ HADOOP20_BASE_REF=apache/tags/release-0.20.0
 HADOOP20_BUILD_REF=cdh-0.20.0
 $(eval $(call gitpackage,hadoop20,HADOOP20))
 
+# Pig 0.3.0
+#PIG_SOURCE=pig-0.3.0.tar.gz
+#PIG_SITE=http://apache.cloudera.com/hadoop/pig/pig-0.3.0
+#PIG_GIT_REPO=$(BASE_DIR)/repos/pig
+#PIG_BASE_VERSION=0.3.0
+#PIG_BASE_REF=apache/tags/release-0.3.0
+#PIG_BUILD_REF=cdh-0.18
+#$(eval $(call gitpackage,pig,PIG))
 
 packages: $(TARGETS)
