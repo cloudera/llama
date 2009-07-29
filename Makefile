@@ -1,11 +1,9 @@
 BASE_DIR  :=$(shell pwd)
 BUILD_DIR ?=$(BASE_DIR)/build
 DL_DIR    ?=$(BASE_DIR)/dl
-STAMP_DIR :=$(BUILD_DIR)/stamps
-OUTPUT_DIR?=$(BUILD_DIR)/output
 
-REQUIRED_DIRS = $(BUILD_DIR) $(DL_DIR) $(STAMP_DIR) $(OUTPUT_DIR)
-$(shell for d in $(REQUIRED_DIRS); \
+REQUIRED_DIRS = $(BUILD_DIR) $(DL_DIR)
+_MKDIRS :=$(shell for d in $(REQUIRED_DIRS); \
   do                               \
     [ -d $$d ] || mkdir -p $$d;  \
   done) 
@@ -27,6 +25,7 @@ world: all
 # Hadoop 0.18.3-based hadoop package
 HADOOP18_BASE_VERSION=0.18.3
 HADOOP18_SOURCE=hadoop-$(HADOOP18_BASE_VERSION).tar.gz
+HADOOP18_SOURCE_MD5=dab91dd836fc5d6564b63550f0a0e6ee
 HADOOP18_SITE=http://apache.cloudera.com/hadoop/core/hadoop-$(HADOOP18_BASE_VERSION)
 HADOOP18_GIT_REPO=$(BASE_DIR)/repos/hadoop-0.18
 # jdiff workaround... bother.
@@ -42,6 +41,7 @@ $(HADOOP18_HOOK_POST_BUILD):
 # Hadoop 0.20.0-based hadoop package
 HADOOP20_BASE_VERSION=0.20.0
 HADOOP20_SOURCE=hadoop-$(HADOOP20_BASE_VERSION).tar.gz
+HADOOP20_SOURCE_MD5=6c751617e6429f23ec9b7ea7a02a73c2
 HADOOP20_SITE=http://apache.cloudera.com/hadoop/core/hadoop-$(HADOOP20_BASE_VERSION)
 HADOOP20_GIT_REPO=$(BASE_DIR)/repos/hadoop-0.20
 HADOOP20_BASE_REF=apache/tags/release-$(HADOOP20_BASE_VERSION)
