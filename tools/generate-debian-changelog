@@ -37,7 +37,9 @@ def parse_person(p):
   Parse the format of a git committer or author line.
   Returns (committer_name, committer_email, epoch_time, date_tz)
   """
-  m = re.match(r'^(.+) <(.+?)> (\d+) (-?\d+)$', p)
+  m = re.match(r'^(.+) <(.+?)> (\d+) ([-+]?\d+)$', p)
+  if not m:
+    raise Exception("Couldn't parse person: %s" % p)
   name, email, epoch_time, date_tz = m.groups()
   t = time.localtime(int(epoch_time))
 
