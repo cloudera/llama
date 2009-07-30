@@ -1,8 +1,9 @@
 BASE_DIR  :=$(shell pwd)
 BUILD_DIR ?=$(BASE_DIR)/build
 DL_DIR    ?=$(BASE_DIR)/dl
+OUTPUT_DIR?=$(BASE_DIR)/output
 
-REQUIRED_DIRS = $(BUILD_DIR) $(DL_DIR)
+REQUIRED_DIRS = $(BUILD_DIR) $(DL_DIR) $(OUTPUT_DIR)
 _MKDIRS :=$(shell for d in $(REQUIRED_DIRS); \
   do                               \
     [ -d $$d ] || mkdir -p $$d;  \
@@ -12,10 +13,9 @@ TARGETS:=
 TARGETS_HELP:=
 
 # optional configuration variables
--include config.mk
 # TODO: Bail early if require config variables are not set
-
-include mk/gitpackage.mk
+-include config.mk
+include mk/*.mk
 
 help: package-help
 
@@ -31,12 +31,13 @@ HADOOP18_GIT_REPO=$(BASE_DIR)/repos/hadoop-0.18
 # jdiff workaround... bother.
 HADOOP18_BASE_REF=release-0.18.3-with-jdiff
 HADOOP18_BUILD_REF=cdh-$(HADOOP18_BASE_VERSION)
+HADOOP18_PACKAGE_GIT_REPO=$(BASE_DIR)/repos/hadoop-0.18-package
 $(eval $(call GITPACKAGE,hadoop18,HADOOP18))
 
-$(HADOOP18_HOOK_POST_BUILD):
-	@echo "PACKAGE=$(PKG) BUILD_DIR=$(PKG_BUILD_DIR) FULL_VERSION=$(PKG_FULL_VERSION)"
+# @echo "PACKAGE=$(PKG) BUILD_DIR=$(PKG_BUILD_DIR) FULL_VERSION=$(PKG_FULL_VERSION)"
+$(HADOOP18_HOOK_POST_BUILD): 
+	$(call SRPM,$^)
 	touch $@
-
 
 # Hadoop 0.20.0-based hadoop package
 HADOOP20_BASE_VERSION=0.20.0
@@ -46,11 +47,13 @@ HADOOP20_SITE=http://apache.cloudera.com/hadoop/core/hadoop-$(HADOOP20_BASE_VERS
 HADOOP20_GIT_REPO=$(BASE_DIR)/repos/hadoop-0.20
 HADOOP20_BASE_REF=apache/tags/release-$(HADOOP20_BASE_VERSION)
 HADOOP20_BUILD_REF=cdh-$(HADOOP20_BASE_VERSION)
+HADOOP20_PACKAGE_GIT_REPO=$(BASE_DIR)/repos/hadoop-0.20-package
 $(eval $(call GITPACKAGE,hadoop20,HADOOP20))
 
 $(HADOOP20_HOOK_POST_BUILD):
-	@echo "PACKAGE=$(PKG) BUILD_DIR=$(PKG_BUILD_DIR) FULL_VERSION=$(PKG_FULL_VERSION)"
+	$(call SRPM,$^)
 	touch $@
+
 
 # Pig 0.3.0
 #PIG_SOURCE=pig-0.3.0.tar.gz

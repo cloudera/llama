@@ -68,7 +68,7 @@ $$($(2)_TARGET_DL):       PKG=$(2)
 $$($(2)_TARGET_PREP):     PKG=$(2)
 $$($(2)_TARGET_PATCH):    PKG=$(2)
 $$($(2)_TARGET_BUILD):    PKG=$(2)
-$$($(2)_HOOK_POST_BUILD): PKG=$(2) 
+$$($(2)_HOOK_POST_BUILD): PKG=$(2)
 $$($(2)_HOOK_POST_BUILD): PKG_FULL_VERSION=$$($(2)_FULL_VERSION)
 $$($(2)_HOOK_POST_BUILD): PKG_BUILD_DIR=$$($(2)_BUILD_DIR)
 
