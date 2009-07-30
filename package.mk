@@ -20,6 +20,7 @@ $(BUILD_DIR)/%/.patch:
 # Build
 $(BUILD_DIR)/%/.build:
 	/usr/bin/env JAVA32_HOME=$(JAVA32_HOME) JAVA64_HOME=$(JAVA64_HOME) JAVA5_HOME=$(JAVA5_HOME) FORREST_HOME=$(FORREST_HOME) $($(PKG)_BUILD_DIR)/cloudera/do-release-build
+	cp $($(PKG)_BUILD_DIR)/build/$($(PKG)_NAME)-$($(PKG)_FULL_VERSION).tar.gz $(OUTPUT_DIR)
 	touch $@
 
 # Make source RPMs
@@ -29,20 +30,22 @@ $(BUILD_DIR)/%/.srpm:
 	cp -r $($(PKG)_PACKAGE_GIT_REPO)/rpm/topdir $(PKG_BUILD_ROOT)/rpm
 	mkdir -p $(PKG_BUILD_ROOT)/rpm/topdir/INSTALL
 	mkdir -p $(PKG_BUILD_ROOT)/rpm/topdir/SOURCES
-	cp $(PKG_BUILD_DIR)/build/$($(PKG)_NAME)-$(PKG_FULL_VERSION).tar.gz $(PKG_BUILD_ROOT)/rpm/topdir/SOURCES
+	cp $(OUTPUT_DIR)/$($(PKG)_NAME)-$($(PKG)_FULL_VERSION).tar.gz $(PKG_BUILD_ROOT)/rpm/topdir/SOURCES
 	$($(PKG)_PACKAGE_GIT_REPO)/rpm/create_rpms $($(PKG)_NAME) $(PKG_BUILD_ROOT)/rpm/topdir/INSTALL $(PKG_BUILD_ROOT)/rpm/topdir $($(PKG)_BASE_VERSION) $(PKG_FULL_VERSION)
+	cp $(PKG_BUILD_ROOT)/rpm/topdir/SRPMS/$($(PKG)_NAME)-$($(PKG)_FULL_VERSION)-$($(PKG)_RELEASE).src.rpm $(OUTPUT_DIR)
 	touch $@
 
 # Make source DEBs
 $(BUILD_DIR)/%/.sdeb:
 	-rm -rf $(PKG_BUILD_ROOT)/deb/
 	mkdir -p $(PKG_BUILD_ROOT)/deb/
-	cp $(PKG_BUILD_DIR)/build/$($(PKG)_NAME)-$(PKG_FULL_VERSION).tar.gz $(PKG_BUILD_ROOT)/deb/$($(PKG)_NAME)-$(PKG_FULL_VERSION).orig.tar.gz
+	cp $(OUTPUT_DIR)/$($(PKG)_NAME)-$(PKG_FULL_VERSION).tar.gz $(PKG_BUILD_ROOT)/deb/$($(PKG)_NAME)-$(PKG_FULL_VERSION).orig.tar.gz
 	cd $(PKG_BUILD_ROOT)/deb && tar -xvf $($(PKG)_NAME)-$(PKG_FULL_VERSION).orig.tar.gz  && cd $($(PKG)_NAME)-$(PKG_FULL_VERSION) && \
 	cp -r $($(PKG)_PACKAGE_GIT_REPO)/deb/debian.$($(PKG)_NAME) debian && \
 	find debian -name "*.[ex,EX,~]" | xargs rm -f && \
 	$(BASE_DIR)/tools/generate-debian-changelog $($(PKG)_GIT_REPO) $($(PKG)_BASE_REF) $($(PKG)_BUILD_REF) $($(PKG)_NAME) debian/changelog && \
 	dpkg-buildpackage -uc -us -sa -S 
+	for file in $($(PKG)_NAME)_$(PKG_FULL_VERSION)-1cdh.dsc  $($(PKG)_NAME)_$(PKG_FULL_VERSION)-1cdh_source.changes $($(PKG)_NAME)_$(PKG_FULL_VERSION)-1cdh.tar.gz $($(PKG)_NAME)-$(PKG_FULL_VERSION).orig.tar.gz; do cp $(PKG_BUILD_ROOT)/deb/$$file $(OUTPUT_DIR); done
 	touch $@
 	
 
@@ -52,6 +55,9 @@ define PACKAGE
 
 # The default PKG_NAME will be the target prefix
 $(2)_NAME           ?= $(1)
+
+# The default PKG_RELEASE will be 1 unless specified
+$(2)_RELEASE        ?= 1
 
 # Calculate the full version based on the git patches
 $(2)_FULL_VERSION   := $(shell cd $($(2)_GIT_REPO) && $(BASE_DIR)/tools/branch-tool version)
