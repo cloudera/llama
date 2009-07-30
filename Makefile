@@ -13,7 +13,7 @@ _MKDIRS :=$(shell for d in $(REQUIRED_DIRS); \
 TARGETS:=
 TARGETS_HELP:=
 
-# optional configuration variables
+# Pull in the config variables
 -include $(CONFIG)
 ifndef JAVA32_HOME
 $(error Please set JAVA32_HOME in $(CONFIG) or environment)
@@ -36,6 +36,7 @@ all: packages
 world: all
 
 # Hadoop 0.18.3-based hadoop package
+HADOOP18_NAME=hadoop
 HADOOP18_BASE_VERSION=0.18.3
 HADOOP18_SOURCE=hadoop-$(HADOOP18_BASE_VERSION).tar.gz
 HADOOP18_SOURCE_MD5=dab91dd836fc5d6564b63550f0a0e6ee
@@ -52,6 +53,7 @@ $(HADOOP18_HOOK_POST_BUILD):
 	touch $@
 
 # Hadoop 0.20.0-based hadoop package
+HADOOP20_NAME=hadoop
 HADOOP20_BASE_VERSION=0.20.0
 HADOOP20_SOURCE=hadoop-$(HADOOP20_BASE_VERSION).tar.gz
 HADOOP20_SOURCE_MD5=6c751617e6429f23ec9b7ea7a02a73c2

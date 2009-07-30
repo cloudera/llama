@@ -26,6 +26,9 @@ $(BUILD_DIR)/%/.build:
 # $1 is the target prefix, $2 is the variable prefix
 define GITPACKAGE
 
+# The default PKG_NAME will be the target prefix
+$(2)_NAME          ?= $(1)
+
 # Calculate the full version based on the git patches
 $(2)_FULL_VERSION:= $(shell cd $($(2)_GIT_REPO) && $(BASE_DIR)/tools/branch-tool version)
 
