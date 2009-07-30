@@ -2,6 +2,7 @@ BASE_DIR  :=$(shell pwd)
 BUILD_DIR ?=$(BASE_DIR)/build
 DL_DIR    ?=$(BASE_DIR)/dl
 OUTPUT_DIR?=$(BASE_DIR)/output
+CONFIG    ?=$(BASE_DIR)/config.mk
 
 REQUIRED_DIRS = $(BUILD_DIR) $(DL_DIR) $(OUTPUT_DIR)
 _MKDIRS :=$(shell for d in $(REQUIRED_DIRS); \
@@ -13,8 +14,20 @@ TARGETS:=
 TARGETS_HELP:=
 
 # optional configuration variables
-# TODO: Bail early if require config variables are not set
--include config.mk
+-include $(CONFIG)
+ifndef JAVA32_HOME
+$(error Please set JAVA32_HOME in $(CONFIG) or environment)
+endif
+ifndef JAVA64_HOME
+$(error Please set JAVA64_HOME in $(CONFIG) or environment)
+endif
+ifndef JAVA5_HOME
+$(error Please set JAVA5_HOME in $(CONFIG) or environment)
+endif
+ifndef FORREST_HOME
+$(error Please set FORREST_HOME in $(CONFIG) or environment)
+endif
+
 include mk/*.mk
 
 help: package-help
