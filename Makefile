@@ -27,6 +27,7 @@ endif
 ifndef FORREST_HOME
 $(error Please set FORREST_HOME in $(CONFIG) or environment)
 endif
+APACHE_MIRROR ?= http://mirror.cloudera.com/apache/
 
 include mk/*.mk
 
@@ -40,7 +41,7 @@ HADOOP18_NAME=hadoop
 HADOOP18_BASE_VERSION=0.18.3
 HADOOP18_SOURCE=hadoop-$(HADOOP18_BASE_VERSION).tar.gz
 HADOOP18_SOURCE_MD5=dab91dd836fc5d6564b63550f0a0e6ee
-HADOOP18_SITE=http://apache.cloudera.com/hadoop/core/hadoop-$(HADOOP18_BASE_VERSION)
+HADOOP18_SITE=$(APACHE_MIRROR)/hadoop/core/hadoop-$(HADOOP18_BASE_VERSION)
 HADOOP18_GIT_REPO=$(BASE_DIR)/repos/hadoop-0.18
 # jdiff workaround... bother.
 HADOOP18_BASE_REF=release-0.18.3-with-jdiff
@@ -57,7 +58,7 @@ HADOOP20_NAME=hadoop
 HADOOP20_BASE_VERSION=0.20.0
 HADOOP20_SOURCE=hadoop-$(HADOOP20_BASE_VERSION).tar.gz
 HADOOP20_SOURCE_MD5=6c751617e6429f23ec9b7ea7a02a73c2
-HADOOP20_SITE=http://apache.cloudera.com/hadoop/core/hadoop-$(HADOOP20_BASE_VERSION)
+HADOOP20_SITE=$(APACHE_MIRROR)/hadoop/core/hadoop-$(HADOOP20_BASE_VERSION)
 HADOOP20_GIT_REPO=$(BASE_DIR)/repos/hadoop-0.20
 HADOOP20_BASE_REF=apache/tags/release-$(HADOOP20_BASE_VERSION)
 HADOOP20_BUILD_REF=cdh-$(HADOOP20_BASE_VERSION)
