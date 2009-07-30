@@ -33,10 +33,9 @@ HADOOP18_BASE_REF=release-0.18.3-with-jdiff
 HADOOP18_BUILD_REF=cdh-$(HADOOP18_BASE_VERSION)
 HADOOP18_PACKAGE_GIT_REPO=$(BASE_DIR)/repos/hadoop-0.18-package
 $(eval $(call GITPACKAGE,hadoop18,HADOOP18))
-
-# @echo "PACKAGE=$(PKG) BUILD_DIR=$(PKG_BUILD_DIR) FULL_VERSION=$(PKG_FULL_VERSION)"
 $(HADOOP18_HOOK_POST_BUILD): 
 	$(call SRPM,$^)
+	$(call SDEB,$^)
 	touch $@
 
 # Hadoop 0.20.0-based hadoop package
@@ -49,9 +48,9 @@ HADOOP20_BASE_REF=apache/tags/release-$(HADOOP20_BASE_VERSION)
 HADOOP20_BUILD_REF=cdh-$(HADOOP20_BASE_VERSION)
 HADOOP20_PACKAGE_GIT_REPO=$(BASE_DIR)/repos/hadoop-0.20-package
 $(eval $(call GITPACKAGE,hadoop20,HADOOP20))
-
 $(HADOOP20_HOOK_POST_BUILD):
 	$(call SRPM,$^)
+	$(call SDEB,$^)
 	touch $@
 
 
