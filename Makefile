@@ -12,6 +12,7 @@ _MKDIRS :=$(shell for d in $(REQUIRED_DIRS); \
 
 TARGETS:=
 TARGETS_HELP:=
+TARGETS_CLEAN:=
 
 # Pull in the config variables
 -include $(CONFIG)
@@ -27,9 +28,12 @@ endif
 ifndef FORREST_HOME
 $(error Please set FORREST_HOME in $(CONFIG) or environment)
 endif
+
+# Default Apache mirror
 APACHE_MIRROR ?= http://mirror.cloudera.com/apache/
 
-include mk/*.mk
+# Include the implicit rules and functions for building packages
+include package.mk
 
 help: package-help
 
@@ -47,11 +51,7 @@ HADOOP18_GIT_REPO=$(BASE_DIR)/repos/hadoop-0.18
 HADOOP18_BASE_REF=release-0.18.3-with-jdiff
 HADOOP18_BUILD_REF=cdh-$(HADOOP18_BASE_VERSION)
 HADOOP18_PACKAGE_GIT_REPO=$(BASE_DIR)/repos/hadoop-0.18-package
-$(eval $(call GITPACKAGE,hadoop18,HADOOP18))
-$(HADOOP18_HOOK_POST_BUILD): 
-	$(call SRPM,$^)
-	$(call SDEB,$^)
-	touch $@
+$(eval $(call PACKAGE,hadoop18,HADOOP18))
 
 # Hadoop 0.20.0-based hadoop package
 HADOOP20_NAME=hadoop
@@ -63,12 +63,7 @@ HADOOP20_GIT_REPO=$(BASE_DIR)/repos/hadoop-0.20
 HADOOP20_BASE_REF=apache/tags/release-$(HADOOP20_BASE_VERSION)
 HADOOP20_BUILD_REF=cdh-$(HADOOP20_BASE_VERSION)
 HADOOP20_PACKAGE_GIT_REPO=$(BASE_DIR)/repos/hadoop-0.20-package
-$(eval $(call GITPACKAGE,hadoop20,HADOOP20))
-$(HADOOP20_HOOK_POST_BUILD):
-	$(call SRPM,$^)
-	$(call SDEB,$^)
-	touch $@
-
+$(eval $(call PACKAGE,hadoop20,HADOOP20))
 
 # Pig 0.3.0
 #PIG_SOURCE=pig-0.3.0.tar.gz
@@ -86,3 +81,7 @@ help-header:
 	@echo "    all (or world)"
 
 package-help: help-header $(TARGETS_HELP)
+
+clean: $(TARGETS_CLEAN)
+
+#.PHONY: clean package-help help-header packages all world help
