@@ -35,6 +35,13 @@ $(BUILD_DIR)/%/.srpm:
 	cp $(PKG_BUILD_DIR)/rpm/topdir/SRPMS/$($(PKG)_PKG_NAME)-$($(PKG)_FULL_VERSION)-$($(PKG)_RELEASE).src.rpm $(OUTPUT_DIR)
 	touch $@
 
+# Make binary RPMs
+$(BUILD_DIR)/%/.rpm: SRCRPM=$(OUTPUT_DIR)/$($(PKG)_PKG_NAME)-$($(PKG)_FULL_VERSION)-$($(PKG)_RELEASE).src.rpm
+$(BUILD_DIR)/%/.rpm:
+	rpmbuild --rebuild $(SRCRPM)
+	rpmbuild --rebuild --target noarch $(SRCRPM)
+	touch $@
+
 # Make source DEBs
 $(BUILD_DIR)/%/.sdeb:
 	-rm -rf $(PKG_BUILD_DIR)/deb/
@@ -79,6 +86,7 @@ $(2)_TARGET_PREP     = $$($(2)_BUILD_DIR)/.prep
 $(2)_TARGET_PATCH    = $$($(2)_BUILD_DIR)/.patch
 $(2)_TARGET_BUILD    = $$($(2)_BUILD_DIR)/.build
 $(2)_TARGET_SRPM     = $$($(2)_BUILD_DIR)/.srpm
+$(2)_TARGET_RPM      = $$($(2)_BUILD_DIR)/.rpm
 $(2)_TARGET_SDEB     = $$($(2)_BUILD_DIR)/.sdeb
 
 # We download target when the source is not in the download directory
@@ -95,6 +103,9 @@ $(1): $(1)-patch $$($(2)_TARGET_BUILD) $$($(2)_HOOK_POST_BUILD)
 
 # To make srpms, we need to build the package
 $(1)-srpm: $(1) $$($(2)_TARGET_SRPM)
+
+# To make binary rpms, we need to build source RPMs
+$(1)-rpm: $(1)-srpm $$($(2)_TARGET_RPM)
 
 # To make sdebs, we need to build the package
 $(1)-sdeb: $(1) $$($(2)_TARGET_SDEB)
@@ -116,10 +127,10 @@ $$($(2)_TARGET_DL):       PKG=$(2)
 $$($(2)_TARGET_PREP):     PKG=$(2)
 $$($(2)_TARGET_PATCH):    PKG=$(2)
 $$($(2)_TARGET_BUILD):    PKG=$(2)
-$$($(2)_TARGET_SRPM) $$($(2)_TARGET_SDEB): PKG=$(2)
-$$($(2)_TARGET_SRPM) $$($(2)_TARGET_SDEB): PKG_FULL_VERSION=$$($(2)_FULL_VERSION)
-$$($(2)_TARGET_SRPM) $$($(2)_TARGET_SDEB): PKG_SOURCE_DIR=$$($(2)_SOURCE_DIR)
-$$($(2)_TARGET_SRPM) $$($(2)_TARGET_SDEB): PKG_BUILD_DIR=$$($(2)_BUILD_DIR)
+$$($(2)_TARGET_RPM) $$($(2)_TARGET_SRPM) $$($(2)_TARGET_SDEB): PKG=$(2)
+$$($(2)_TARGET_RPM) $$($(2)_TARGET_SRPM) $$($(2)_TARGET_SDEB): PKG_FULL_VERSION=$$($(2)_FULL_VERSION)
+$$($(2)_TARGET_RPM) $$($(2)_TARGET_SRPM) $$($(2)_TARGET_SDEB): PKG_SOURCE_DIR=$$($(2)_SOURCE_DIR)
+$$($(2)_TARGET_RPM) $$($(2)_TARGET_SRPM) $$($(2)_TARGET_SDEB): PKG_BUILD_DIR=$$($(2)_BUILD_DIR)
 
 TARGETS += $(1) 
 TARGETS_HELP += $(1)-help
