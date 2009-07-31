@@ -32,7 +32,7 @@ $(BUILD_DIR)/%/.srpm:
 	mkdir -p $(PKG_BUILD_ROOT)/rpm/topdir/SOURCES
 	cp $(OUTPUT_DIR)/$($(PKG)_NAME)-$($(PKG)_FULL_VERSION).tar.gz $(PKG_BUILD_ROOT)/rpm/topdir/SOURCES
 	$($(PKG)_PACKAGE_GIT_REPO)/rpm/create_rpms $($(PKG)_NAME) $(PKG_BUILD_ROOT)/rpm/topdir/INSTALL $(PKG_BUILD_ROOT)/rpm/topdir $($(PKG)_BASE_VERSION) $(PKG_FULL_VERSION)
-	cp $(PKG_BUILD_ROOT)/rpm/topdir/SRPMS/$($(PKG)_NAME)-$($(PKG)_FULL_VERSION)-$($(PKG)_RELEASE).src.rpm $(OUTPUT_DIR)
+	cp $(PKG_BUILD_ROOT)/rpm/topdir/SRPMS/$($(PKG)_PKG_NAME)-$($(PKG)_FULL_VERSION)-$($(PKG)_RELEASE).src.rpm $(OUTPUT_DIR)
 	touch $@
 
 # Make source DEBs

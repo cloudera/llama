@@ -42,6 +42,7 @@ world: all
 
 # Hadoop 0.18.3-based hadoop package
 HADOOP18_NAME=hadoop
+HADOOP18_PKG_NAME=hadoop-0.18
 HADOOP18_BASE_VERSION=0.18.3
 HADOOP18_SOURCE=hadoop-$(HADOOP18_BASE_VERSION).tar.gz
 HADOOP18_SOURCE_MD5=dab91dd836fc5d6564b63550f0a0e6ee
@@ -85,5 +86,6 @@ help-header:
 package-help: help-header $(TARGETS_HELP)
 
 clean: $(TARGETS_CLEAN)
+	-rm -rf $(BUILD_DIR)
 
-#.PHONY: clean package-help help-header packages all world help
+.PHONY: clean package-help help-header packages all world help
