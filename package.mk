@@ -39,16 +39,16 @@ $(BUILD_DIR)/%/.srpm:
 $(BUILD_DIR)/%/.sdeb:
 	-rm -rf $(PKG_BUILD_ROOT)/deb/
 	mkdir -p $(PKG_BUILD_ROOT)/deb/
-	cp $(OUTPUT_DIR)/$($(PKG)_NAME)-$(PKG_FULL_VERSION).tar.gz $(PKG_BUILD_ROOT)/deb/$($(PKG)_NAME)_$(PKG_FULL_VERSION).orig.tar.gz
-	cd $(PKG_BUILD_ROOT)/deb && tar -xvf $($(PKG)_NAME)_$(PKG_FULL_VERSION).orig.tar.gz  && cd $($(PKG)_NAME)-$(PKG_FULL_VERSION) && \
+	cp $(OUTPUT_DIR)/$($(PKG)_NAME)-$(PKG_FULL_VERSION).tar.gz $(PKG_BUILD_ROOT)/deb/$($(PKG)_PKG_NAME)_$(PKG_FULL_VERSION).orig.tar.gz
+	cd $(PKG_BUILD_ROOT)/deb && tar -xvf $($(PKG)_PKG_NAME)_$(PKG_FULL_VERSION).orig.tar.gz  && cd $($(PKG)_NAME)-$(PKG_FULL_VERSION) && \
 	cp -r $($(PKG)_PACKAGE_GIT_REPO)/deb/debian.$($(PKG)_NAME) debian && \
 	find debian -name "*.[ex,EX,~]" | xargs rm -f && \
-	$(BASE_DIR)/tools/generate-debian-changelog $($(PKG)_GIT_REPO) $($(PKG)_BASE_REF) $($(PKG)_BUILD_REF) $($(PKG)_NAME) debian/changelog && \
+	$(BASE_DIR)/tools/generate-debian-changelog $($(PKG)_GIT_REPO) $($(PKG)_BASE_REF) $($(PKG)_BUILD_REF) $($(PKG)_PKG_NAME) debian/changelog && \
 	dpkg-buildpackage -uc -us -sa -S 
-	for file in $($(PKG)_NAME)_$(PKG_FULL_VERSION)-1cdh.dsc \
-                    $($(PKG)_NAME)_$(PKG_FULL_VERSION)-1cdh.diff.gz \
-                    $($(PKG)_NAME)_$(PKG_FULL_VERSION)-1cdh_source.changes \
-                    $($(PKG)_NAME)_$(PKG_FULL_VERSION).orig.tar.gz ; \
+	for file in $($(PKG)_PKG_NAME)_$(PKG_FULL_VERSION)-1cdh.dsc \
+                    $($(PKG)_PKG_NAME)_$(PKG_FULL_VERSION)-1cdh.diff.gz \
+                    $($(PKG)_PKG_NAME)_$(PKG_FULL_VERSION)-1cdh_source.changes \
+                    $($(PKG)_PKG_NAME)_$(PKG_FULL_VERSION).orig.tar.gz ; \
             do cp $(PKG_BUILD_ROOT)/deb/$$file $(OUTPUT_DIR); \
         done
 	touch $@
@@ -60,6 +60,9 @@ define PACKAGE
 
 # The default PKG_NAME will be the target prefix
 $(2)_NAME           ?= $(1)
+
+# For deb packages, the name of the package itself
+$(2)_PKG_NAME       ?= $$($(2)_NAME)
 
 # The default PKG_RELEASE will be 1 unless specified
 $(2)_RELEASE        ?= 1
