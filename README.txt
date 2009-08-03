@@ -39,26 +39,21 @@ installs `/usr/bin/python` instead of using a symlink.
 
 *Git* is a popular SCM.  You'll need git to fetch various tools required for building.
 
-=== Crepo and Stitch
+=== Crepo
 
-*Crepo* is a git repository management tool.  *Stitch* is a higher-order
-target definition and build system.  You'll need to have both tools installed
+*Crepo* is a git repository management tool.  You'll need to have this tool installed
 to build CDH.
 
 [TIP]
-Read the top-level 'README' files for both *Crepo* and *Stitch*
+Read the top-level 'README' files for *Crepo*
 
-.Cloning the stitch and crepo repositories
+.Cloning the crepo repository
 ----
-$ git clone git://github.com/cloudera/stitch.git
 $ git clone git://github.com/cloudera/crepo.git
 ----
 
 'crepo' is run directly out of its git repository and only requires that you
 have the 'simplejson' python module installed.
-
-'stitch' requires installation which is documented in the top-level 'INSTALL'
-file in the 'stitch' git repository (mostly a `python setup.py install`).
 
 === Java and Apache Forrest
 
