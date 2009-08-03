@@ -112,7 +112,7 @@ include::README-hadoop.txt[]
 
 === gcc and other native components
 
-You need 'zlib headers', 'gcc', 'gcc headers', 'gcc c++', 'gcc c++ headers', and 'glibc headers' to compile
+You need 'zlib headers', 'gcc', 'gcc headers', 'gcc c++', 'gcc c++ headers', 'lzo headers', and 'glibc headers' to compile
 the Hadoop native libraries. This can all be installed with your favorite package manager.
 
 === rpmbuild
