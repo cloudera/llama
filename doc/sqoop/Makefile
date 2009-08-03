@@ -1,4 +1,8 @@
 
+# When we copy the build artifacts into the deployment directory
+# for packaging, where do they go?
+DEPLOY_TARGET=../../repos/hadoop/src/contrib/sqoop/doc/
+
 all: man webpage
 
 man: sqoop.1
@@ -17,4 +21,10 @@ clean:
 	-rm hadoop-sqoop.html
 	-rm sqoop.1
 
-.PHONY: all man webpage clean
+# copy build artifacts into the hadoop subrepo
+deploy: all
+	cp sqoop.1 $(DEPLOY_TARGET)/sqoop.1
+	cp Sqoop-web.html $(DEPLOY_TARGET)/SqoopUserGuide.html
+
+.PHONY: all man webpage clean deploy
+
