@@ -1,6 +1,7 @@
 #!/bin/sh -x
 # (c) Copyright 2009 Cloudera, Inc.
 set -e
+set -x
 
 ##SUBSTITUTE_VARS##
 
@@ -20,59 +21,123 @@ if (/^rpm/) {
 }' manifest.txt
 
 # Some package deps
-yum -y install rpm-build yum-utils ruby gcc-c++
+rpm -Uvh http://download.fedora.redhat.com/pub/epel/5/i386/epel-release-5-3.noarch.rpm
+yum -y install rpm-build yum-utils zlib-devel gcc gcc-devel gcc-c++ gcc-c++-devel lzo-devel glibc-devel ant ant-nodeps ruby
 
 # Install s3cmd
-OLDDIR=`pwd`
-cd /tmp
-  wget http://s3.amazonaws.com/ServEdge_pub/s3sync/s3sync.tar.gz
-  tar xzvf s3sync.tar.gz
-  S3CMD=`pwd`/s3sync/s3cmd.rb
-cd $OLDDIR
+pushd /tmp
+wget http://s3.amazonaws.com/ServEdge_pub/s3sync/s3sync.tar.gz
+tar xzvf s3sync.tar.gz
+S3CMD=`pwd`/s3sync/s3cmd.rb
+popd
 
 ############### JAVA STUFF #######################
 
-# install jdk
+pushd /mnt # all these java packages are going to be pretty big, possibly too big for /tmp
+DEFAULT_JAVA_PATH=/usr/java/default
+echo "export JAVA_HOME=$DEFAULT_JAVA_PATH" >> /etc/profile
+export JAVA_HOME=$DEFAULT_JAVA_PATH
+SECONDARY_JDK_PATH="/opt/java/jdk1.6.0_14" # i386 and x64 have the same path
+mkdir -p $(dirname $SECONDARY_JDK_PATH)
+
+# install the "main" java (from RPM) and the "secondary" java, not
+# from RPM.
 ARCH=`uname -i`
 if [ "$ARCH" = "x86_64" ]; then
-  JDK_PACKAGE=jdk-6u7-linux-$ARCH-rpm.bin
-  JDK_INSTALL_PATH=/usr/java/jdk1.6.0_07
+  MAIN_JDK_PACKAGE="jdk-6u14-linux-x64-rpm.bin"
+  echo "export JAVA64_HOME=$DEFAULT_JAVA_PATH" >> /etc/profile
+  export JAVA64_HOME=$DEFAULT_JAVA_PATH
+  SECONDARY_JDK_PACKAGE="jdk-6u14-linux-i386.bin"
+  echo "export JAVA32_HOME=$SECONDARY_JDK_PATH" >> /etc/profile
+  export JAVA32_HOME=$SECONDARY_JDK_PATH
 else
-  JDK_PACKAGE=jdk-6u10-linux-$ARCH-rpm.bin
-  JDK_INSTALL_PATH=/usr/java/jdk1.6.0_10
+  MAIN_JDK_PACKAGE="jdk-6u14-linux-i386-rpm.bin"
+  echo "export JAVA32_HOME=$DEFAULT_JAVA_PATH" >> /etc/profile
+  export JAVA32_HOME=$DEFAULT_JAVA_PATH
+  SECONDARY_JDK_PACKAGE="jdk-6u14-linux-x64.bin"
+  echo "export JAVA64_HOME=$SECONDARY_JDK_PATH" >> /etc/profile
+  export JAVA64_HOME=$SECONDARY_JDK_PATH
 fi
-$S3CMD get "cloudera-packages:$JDK_PACKAGE" "$JDK_PACKAGE"
+JDK5_PACKAGE="jdk-1_5_0_19-linux-i386.bin"
+JAVA5_HOME=/opt/java/jdk1.5.0_19
+echo "export JAVA5_HOME=$JAVA5_HOME" >> /etc/profile
+export JAVA5_HOME=$JAVA5_HOME
 
-# install Java on the host system so we can run EC2 tools.
-chmod 700 "$JDK_PACKAGE"
+
+$S3CMD get "cloudera-packages:$MAIN_JDK_PACKAGE" "$MAIN_JDK_PACKAGE"
+$S3CMD get "cloudera-packages:$SECONDARY_JDK_PACKAGE" "$SECONDARY_JDK_PACKAGE"
+$S3CMD get "cloudera-packages:$JDK5_PACKAGE" "$JDK5_PACKAGE"
+
+chmod a+x "$MAIN_JDK_PACKAGE"
+chmod a+x "$SECONDARY_JDK_PACKAGE"
+chmod a+x "$JDK5_PACKAGE"
+
 # java wants to show you a license with more. Disable this so they can't
 # interrupt our unattended installation
 mv /bin/more /bin/more.no
-yes | ./$JDK_PACKAGE -noregister
+yes | ./$MAIN_JDK_PACKAGE -noregister
+yes | ./$SECONDARY_JDK_PACKAGE -noregister
+yes | ./$JDK5_PACKAGE -noregister
 
-echo "export JAVA_HOME=$JDK_INSTALL_PATH" >> /etc/profile
-export JAVA_HOME=$JDK_INSTALL_PATH
+mv $(basename $SECONDARY_JDK_PATH) $SECONDARY_JDK_PATH
+mv $(basename $JAVA5_HOME) $JAVA5_HOME
+
+export PATH=$DEFAULT_JAVA_PATH/bin:$PATH
+echo "export PATH=$DEFAULT_JAVA_PATH/bin:\$PATH" >> /etc/profile
+
 java -version
+$SECONDARY_JDK_PATH/bin/java -version
+$JAVA5_HOME/bin/java -version
 
 mv /bin/more.no /bin/more
 
-############# BUILD PACKAGE ####################
+popd
 
-# Add centos.karan.org which has lzo-devel and git
-curl 'http://centos.karan.org/kbsingh-CentOS-Extras.repo' | sed -e 's/enabled=1/enabled=0/' \
-  > /etc/yum.repos.d/kbsingh-Centos-Extras.repo
-MD5=$(curl http://centos.karan.org/RPM-GPG-KEY-karan.org.txt | tee /tmp/karan_key | md5sum - | awk '{print $1}')
-if [ "$MD5" != "ec11342109b2ab5563265cb75e63df3c" ]; then
-  echo MD5 of karan repository key has changed! Now is $MD5
-  exit 1
-fi
+############# ANT ######################
+pushd /mnt # to be sure we don't run out of space on /tmp
+
+# Note that the ant and ant-nodeps RPMs have already been installed via yum.  We need ant 1.7, though.
+ANT_PACKAGE_NAME="apache-ant-1.7.1-bin.tar.gz"
+ANT_DIR="apache-ant-1.7.1"
+ANT_HOME=/opt/$ANT_DIR
+
+$S3CMD get "cloudera-packages:$ANT_PACKAGE_NAME" "$ANT_PACKAGE_NAME"
+tar xzf "$ANT_PACKAGE_NAME"
+mv $ANT_DIR $ANT_HOME
+
+export ANT_HOME=$ANT_HOME
+echo "export ANT_HOME=$ANT_HOME" >> /etc/profile
+export PATH=$ANT_HOME/bin:$PATH
+echo "export PATH=$ANT_HOME/bin:\$PATH" >> /etc/profile
+
+popd
+
+############## FORREST ####################
+pushd /mnt # to be sure we don't run out of space on /tmp
+
+FORREST_PACKAGE_NAME="apache-forrest-0.8.tar.gz"
+FORREST_DIR="apache-forrest-0.8"
+FORREST_HOME=/opt/$FORREST_DIR
+
+$S3CMD get "cloudera-packages:$FORREST_PACKAGE_NAME" "$FORREST_PACKAGE_NAME"
+tar xzf "$FORREST_PACKAGE_NAME"
+mv "$FORREST_DIR" "$FORREST_HOME"
+
+export FORREST_HOME=$FORREST_HOME
+echo "export FORREST_HOME=$FORREST_HOME" >> /etc/profile
+
+chmod a+w "$FORREST_HOME"
+
+popd
+
+############# BUILD PACKAGE ####################
 
 # TODO(todd) we should rebuild lzo-devel and git and put it in our own yum repo so we don't have to
 # rely on some random dude
 
 # Satisfy build deps
-YUMINST="yum --nogpgcheck --enablerepo=kbs-CentOS-Testing -y install"
-$YUMINST git-core
+YUMINST="yum --nogpgcheck -y install"
+$YUMINST git
 rpm -qRp hadoop*src.rpm | awk '{print $1}' | xargs $YUMINST
 
 # make build dir
