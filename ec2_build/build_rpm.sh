@@ -1,7 +1,6 @@
 #!/bin/sh -x
 # (c) Copyright 2009 Cloudera, Inc.
 set -e
-set -x
 
 ##SUBSTITUTE_VARS##
 
