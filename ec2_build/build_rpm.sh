@@ -20,19 +20,18 @@ if (/^rpm/) {
 }' manifest.txt
 
 # Some package deps
-rpm -Uvh http://download.fedora.redhat.com/pub/epel/5/i386/epel-release-5-3.noarch.rpm
-yum -y install rpm-build yum-utils zlib-devel gcc gcc-devel gcc-c++ gcc-c++-devel lzo-devel glibc-devel ant ant-nodeps ruby
+wget http://download.fedora.redhat.com/pub/epel/5/i386/epel-release-5-3.noarch.rpm
+rpm -Uvh epel*.rpm
+yum -y install rpm-build yum-utils zlib-devel gcc gcc-devel gcc-c++ gcc-c++-devel lzo-devel glibc-devel ant ant-nodeps ruby git
 
 # Install s3cmd
-pushd /tmp
 wget http://s3.amazonaws.com/ServEdge_pub/s3sync/s3sync.tar.gz
 tar xzvf s3sync.tar.gz
 S3CMD=`pwd`/s3sync/s3cmd.rb
-popd
 
 ############### JAVA STUFF #######################
 
-pushd /mnt # all these java packages are going to be pretty big, possibly too big for /tmp
+pushd /mnt # all these packages are going to be pretty big, possibly too big for /tmp
 DEFAULT_JAVA_PATH=/usr/java/default
 echo "export JAVA_HOME=$DEFAULT_JAVA_PATH" >> /etc/profile
 export JAVA_HOME=$DEFAULT_JAVA_PATH
@@ -63,13 +62,11 @@ echo "export JAVA5_HOME=$JAVA5_HOME" >> /etc/profile
 export JAVA5_HOME=$JAVA5_HOME
 
 
-$S3CMD get "cloudera-packages:$MAIN_JDK_PACKAGE" "$MAIN_JDK_PACKAGE"
-$S3CMD get "cloudera-packages:$SECONDARY_JDK_PACKAGE" "$SECONDARY_JDK_PACKAGE"
-$S3CMD get "cloudera-packages:$JDK5_PACKAGE" "$JDK5_PACKAGE"
-
-chmod a+x "$MAIN_JDK_PACKAGE"
-chmod a+x "$SECONDARY_JDK_PACKAGE"
-chmod a+x "$JDK5_PACKAGE"
+for pkg in $MAIN_JDK_PACKAGE $SECONDARY_JDK_PACKAGE $JDK5_PACKAGE
+do
+  $S3CMD get "cloudera-packages:$pkg" "$pkg"
+  chmod a+x "$pkg"
+done
 
 # java wants to show you a license with more. Disable this so they can't
 # interrupt our unattended installation
@@ -90,11 +87,7 @@ $JAVA5_HOME/bin/java -version
 
 mv /bin/more.no /bin/more
 
-popd
-
 ############# ANT ######################
-pushd /mnt # to be sure we don't run out of space on /tmp
-
 # Note that the ant and ant-nodeps RPMs have already been installed via yum.  We need ant 1.7, though.
 ANT_PACKAGE_NAME="apache-ant-1.7.1-bin.tar.gz"
 ANT_DIR="apache-ant-1.7.1"
@@ -109,10 +102,7 @@ echo "export ANT_HOME=$ANT_HOME" >> /etc/profile
 export PATH=$ANT_HOME/bin:$PATH
 echo "export PATH=$ANT_HOME/bin:\$PATH" >> /etc/profile
 
-popd
-
 ############## FORREST ####################
-pushd /mnt # to be sure we don't run out of space on /tmp
 
 FORREST_PACKAGE_NAME="apache-forrest-0.8.tar.gz"
 FORREST_DIR="apache-forrest-0.8"
@@ -131,12 +121,8 @@ popd
 
 ############# BUILD PACKAGE ####################
 
-# TODO(todd) we should rebuild lzo-devel and git and put it in our own yum repo so we don't have to
-# rely on some random dude
-
 # Satisfy build deps
 YUMINST="yum --nogpgcheck -y install"
-$YUMINST git
 rpm -qRp hadoop*src.rpm | awk '{print $1}' | xargs $YUMINST
 
 # make build dir
