@@ -47,8 +47,8 @@ Database connection options
 -P::
   Prompt for user password
 
---local::
-  Use local import fast path (mysql only)
+--direct::
+  Use direct import fast path (mysql only)
 
 Import control options
 ~~~~~~~~~~~~~~~~~~~~~~

@@ -31,7 +31,8 @@ running `apt-get update && apt-get install hadoop0.20`.
 NOTE: A version of Sqoop compatible with Hadoop 0.18.3 was
 included with Cloudera's Distribution for Hadoop 0.18.3. All
 new Sqoop development, however, will focus on the 0.20 branch
-of Hadoop.
+of Hadoop. This document describes some features only present
+on the 0.20 branch of Sqoop.
 
 
 The Sqoop Command Line
@@ -83,11 +84,15 @@ WARNING: The +--password+ parameter is insecure, as other users may
 be able to read your password from the command-line arguments via
 the output of programs such as `ps`. The *+-P+* argument will read
 a password from a console prompt, and is the preferred method of
-entering credentials.
+entering credentials. Credentials may still be transferred between
+nodes of the MapReduce cluster using insecure means.
 
-Sqoop automatically supports MySQL and HSQLDB. Connect strings beginning
-with +jdbc:mysql://+ and +jdbc:hsqldb:*//+ are handled automatically by
-JDBC drivers that are bundled with Sqoop. You can use Sqoop with any other
+Sqoop automatically supports several databases, including MySQL. Connect strings beginning
+with +jdbc:mysql://+ are handled automatically by
+JDBC drivers that are bundled with Sqoop. (A full list of databases with
+built-in support is provided in the "Supported Databases" section, below.
+
+You can use Sqoop with any other
 JDBC-compliant database as well. First, download the appropriate JDBC
 driver for the database you want to import from, and install the .jar
 file in the +/usr/hadoop/lib+ directory on all machines in your Hadoop
@@ -99,7 +104,8 @@ vendor-specific documentation to determine the main driver class.
 This class must be provided as an argument to Sqoop with +--driver+.
 
 For example, to connect to a postgres database, first download the driver from
-link:http://jdbc.postgresql.org and install it in your Hadoop lib path.
+link:http://jdbc.postgresql.org[http://jdbc.postgresql.org] and
+install it in your Hadoop lib path.
 Then run Sqoop with something like:
 
 ----
@@ -109,13 +115,12 @@ $ sqoop --connect jdbc:postgresql://postgres-server.example.com/employees \
 
 NOTE: Sqoop uses the JDBC specification to connect to databases; this
 should provide a versatile client that interoperates with many different
-databases. We have thoroughly tested this tool with HSQLDB and MySQL. If
+databases. We have thoroughly tested this tool with a few databases, such as MySQL.
+A complete list is provided in the "Supported Databases" section below. If
 you try this tool with another database, please share your success (or
 problems!) with us on our
 link:http://getsatisfaction.com/cloudera/products/cloudera_sqoop[Sqoop
-support and feedback] page. Sqoop is known to *not* work with Oracle at
-the moment; we are link:http://issues.apache.org/jira/browse/MAPREDUCE-789[actively
-working] on this problem.
+support and feedback] page.
 
 Listing Available Databases
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -360,7 +365,7 @@ is not the most high-performance method available. Sqoop can read from
 a local MySQL database considerably faster by using the +mysqldump+ tool
 distributed with MySQL. If you run Sqoop on the same machine where a
 MySQL database is present, you can take advantage of this faster
-import method by running Sqoop with the +--local+ argument. This
+import method by running Sqoop with the +--direct+ argument. This
 combined with a connect string that begins with +jdbc:mysql://+ will
 inform Sqoop that it should select the faster access method.
 
@@ -368,7 +373,8 @@ If your delimiters exactly match the delimiters used by +mysqldump+,
 then Sqoop will use a fast-path that copies the data directly from
 +mysqldump+'s output into HDFS. Otherwise, Sqoop will parse +mysqldump+'s
 output into fields and transcode them into the user-specified delimiter set.
-This is about 50% slower. For convenience, the +--mysql-delimiters+
+This incurs additional processing, so performance may suffer.
+For convenience, the +--mysql-delimiters+
 argument will set all the output delimiters to be consistent with
 +mysqldump+'s format.
 
@@ -411,6 +417,43 @@ direct mapping (e.g., +DATE+, +TIME+, and +TIMESTAMP+) will be coerced to
 +STRING+ in Hive. The +NUMERIC+ and +DECIMAL+ SQL types will be coerced to
 +DOUBLE+. In these cases, Sqoop will emit a warning in its log messages
 informing you of the loss of precision.
+
+Supported Databases
+-------------------
+
+Sqoop uses JDBC to connect to databases. JDBC is a compatibility layer
+that allows a program to access many different databases through a common
+API. Slight differences in the SQL language spoken by each database, however,
+may mean that Sqoop can't use every database out of the box, or that some
+databases may be used in an inefficient manner.
+
+When you provide a connect string to Sqoop, it inspects the protocol scheme to
+determine appropriate vendor-specific logic to use. If Sqoop knows about
+a given database, it will work automatically. If not, you may need to
+specify the driver class to load via +--driver+. This will use a generic
+code path which will use standard SQL to access the database. Sqoop provides
+some databases with faster, non-JDBC-based access mechanisms. These can be
+enabled by specfying the +--direct+ parameter.
+
+Sqoop includes vendor-specific code paths for the following databases:
+
+[grid="all"]
+`-----------`--------`--------------------`---------------------
+Database    version  +--direct+ support?  connect string matches
+----------------------------------------------------------------
+HSQLDB      1.8.0+   No                   +jdbc:hsqldb:*//+
+MySQL       5.0+     Yes                  +jdbc:mysql://+
+Oracle      10.2.0+  No                   +jdbc:oracle:*//+
+----------------------------------------------------------------
+
+Sqoop may work with older versions of the databases listed, but we have
+only tested it with the versions specified above.
+
+Even if Sqoop supports a database internally, you may still need to
+install the database vendor's JDBC driver in your +$HADOOP_HOME/lib+
+path. Cloudera's Distribution for Hadoop includes JDBC drivers for
+HSQLDB and MySQL.
+
 
 Troubleshooting and Getting Help
 --------------------------------

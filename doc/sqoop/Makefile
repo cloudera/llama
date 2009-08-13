@@ -9,15 +9,16 @@ man: sqoop.1
 
 webpage: hadoop-sqoop.html
 
-sqoop.1: Sqoop-manpage.txt
+sqoop.1: Sqoop-manpage.txt *formatting*.txt
 	asciidoc -b docbook -d manpage Sqoop-manpage.txt
 	xmlto man Sqoop-manpage.xml
 
-hadoop-sqoop.html: Sqoop-web.txt
+hadoop-sqoop.html: Sqoop-web.txt *formatting*.txt
 	asciidoc Sqoop-web.txt
 
 clean:
 	-rm Sqoop-manpage.xml
+	-rm Sqoop-web.html
 	-rm hadoop-sqoop.html
 	-rm sqoop.1
 

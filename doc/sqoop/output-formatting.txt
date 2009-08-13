@@ -12,7 +12,7 @@ an escape sequence. Arguments of the form +\0xhhh+ will be interpreted
 as a hexidecimal representation of a character with hex number _hhh_.
 Arguments of the form +\0ooo+ will be treated as an octal representation
 of a character represented by octal number _ooo_. The special escapes
-+\n+, +\r+, +\"+, +\b+, and +\\+ act as they do inside Java strings. +\0+ will be
++\n+, +\r+, +\"+, +\b+, +\t+, and +\\+ act as they do inside Java strings. +\0+ will be
 treated as NUL. This will insert NUL characters between fields or lines
 (if used for +--fields-terminated-by+ or +--lines-terminated-by+), or will
 disable enclosing/escaping if used for one of the +--enclosed-by+,
