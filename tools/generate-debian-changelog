@@ -30,7 +30,7 @@ def git_log(from_ref, to_ref):
   return entries
 
 def debianize_version(version):
-  return "%s-1cdh" % version
+  return "%s-1" % version
 
 def parse_person(p):
   """

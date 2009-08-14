@@ -20,7 +20,8 @@ $(BUILD_DIR)/%/.patch:
 # Build
 $(BUILD_DIR)/%/.build: 
 	/usr/bin/env JAVA32_HOME=$(JAVA32_HOME) JAVA64_HOME=$(JAVA64_HOME) JAVA5_HOME=$(JAVA5_HOME) FORREST_HOME=$(FORREST_HOME) $($(PKG)_SOURCE_DIR)/cloudera/do-release-build
-	cp $($(PKG)_SOURCE_DIR)/build/$($(PKG)_NAME)-$($(PKG)_FULL_VERSION).tar.gz $(OUTPUT_DIR)
+	mkdir -p $($(PKG)_OUTPUT_DIR)
+	cp $($(PKG)_SOURCE_DIR)/build/$($(PKG)_NAME)-$($(PKG)_FULL_VERSION).tar.gz $($(PKG)_OUTPUT_DIR)
 	touch $@
 
 # Make source RPMs
@@ -30,13 +31,13 @@ $(BUILD_DIR)/%/.srpm:
 	cp -r $($(PKG)_PACKAGE_GIT_REPO)/rpm/topdir $(PKG_BUILD_DIR)/rpm
 	mkdir -p $(PKG_BUILD_DIR)/rpm/topdir/INSTALL
 	mkdir -p $(PKG_BUILD_DIR)/rpm/topdir/SOURCES
-	cp $(OUTPUT_DIR)/$($(PKG)_NAME)-$($(PKG)_FULL_VERSION).tar.gz $(PKG_BUILD_DIR)/rpm/topdir/SOURCES
+	cp $($(PKG)_OUTPUT_DIR)/$($(PKG)_NAME)-$($(PKG)_FULL_VERSION).tar.gz $(PKG_BUILD_DIR)/rpm/topdir/SOURCES
 	$($(PKG)_PACKAGE_GIT_REPO)/rpm/create_rpms $($(PKG)_NAME) $(PKG_BUILD_DIR)/rpm/topdir/INSTALL $(PKG_BUILD_DIR)/rpm/topdir $($(PKG)_BASE_VERSION) $(PKG_FULL_VERSION)
-	cp $(PKG_BUILD_DIR)/rpm/topdir/SRPMS/$($(PKG)_PKG_NAME)-$($(PKG)_FULL_VERSION)-$($(PKG)_RELEASE).src.rpm $(OUTPUT_DIR)
+	cp $(PKG_BUILD_DIR)/rpm/topdir/SRPMS/$($(PKG)_PKG_NAME)-$($(PKG)_FULL_VERSION)-$($(PKG)_RELEASE).src.rpm $($(PKG)_OUTPUT_DIR)
 	touch $@
 
 # Make binary RPMs
-$(BUILD_DIR)/%/.rpm: SRCRPM=$(OUTPUT_DIR)/$($(PKG)_PKG_NAME)-$($(PKG)_FULL_VERSION)-$($(PKG)_RELEASE).src.rpm
+$(BUILD_DIR)/%/.rpm: SRCRPM=$($(PKG)_OUTPUT_DIR)/$($(PKG)_PKG_NAME)-$($(PKG)_FULL_VERSION)-$($(PKG)_RELEASE).src.rpm
 $(BUILD_DIR)/%/.rpm:
 	rpmbuild --rebuild $(SRCRPM)
 	rpmbuild --rebuild --target noarch $(SRCRPM)
@@ -46,17 +47,17 @@ $(BUILD_DIR)/%/.rpm:
 $(BUILD_DIR)/%/.sdeb:
 	-rm -rf $(PKG_BUILD_DIR)/deb/
 	mkdir -p $(PKG_BUILD_DIR)/deb/
-	cp $(OUTPUT_DIR)/$($(PKG)_NAME)-$(PKG_FULL_VERSION).tar.gz $(PKG_BUILD_DIR)/deb/$($(PKG)_PKG_NAME)_$(PKG_FULL_VERSION).orig.tar.gz
+	cp $($(PKG)_OUTPUT_DIR)/$($(PKG)_NAME)-$(PKG_FULL_VERSION).tar.gz $(PKG_BUILD_DIR)/deb/$($(PKG)_PKG_NAME)_$(PKG_FULL_VERSION).orig.tar.gz
 	cd $(PKG_BUILD_DIR)/deb && tar -xvf $($(PKG)_PKG_NAME)_$(PKG_FULL_VERSION).orig.tar.gz  && cd $($(PKG)_NAME)-$(PKG_FULL_VERSION) && \
 	cp -r $($(PKG)_PACKAGE_GIT_REPO)/deb/debian.$($(PKG)_NAME) debian && \
 	find debian -name "*.[ex,EX,~]" | xargs rm -f && \
 	$(BASE_DIR)/tools/generate-debian-changelog $($(PKG)_GIT_REPO) $($(PKG)_BASE_REF) $($(PKG)_BUILD_REF) $($(PKG)_PKG_NAME) debian/changelog && \
 	dpkg-buildpackage -uc -us -sa -S 
-	for file in $($(PKG)_PKG_NAME)_$(PKG_FULL_VERSION)-1cdh.dsc \
-                    $($(PKG)_PKG_NAME)_$(PKG_FULL_VERSION)-1cdh.diff.gz \
-                    $($(PKG)_PKG_NAME)_$(PKG_FULL_VERSION)-1cdh_source.changes \
+	for file in $($(PKG)_PKG_NAME)_$(PKG_FULL_VERSION)-$($(PKG)_RELEASE).dsc \
+                    $($(PKG)_PKG_NAME)_$(PKG_FULL_VERSION)-$($(PKG)_RELEASE).diff.gz \
+                    $($(PKG)_PKG_NAME)_$(PKG_FULL_VERSION)-$($(PKG)_RELEASE)_source.changes \
                     $($(PKG)_PKG_NAME)_$(PKG_FULL_VERSION).orig.tar.gz ; \
-            do cp $(PKG_BUILD_DIR)/deb/$$file $(OUTPUT_DIR); \
+            do cp $(PKG_BUILD_DIR)/deb/$$file $($(PKG)_OUTPUT_DIR); \
         done
 	touch $@
 	
@@ -76,8 +77,10 @@ $(2)_RELEASE        ?= 1
 
 # Calculate the full version based on the git patches
 $(2)_FULL_VERSION   := $(shell cd $($(2)_GIT_REPO) && $(BASE_DIR)/tools/branch-tool version)
+$(2)_BUILD_REF      := $(notdir $(shell cd $($(2)_GIT_REPO) && git symbolic-ref --quiet HEAD))
 
 $(2)_BUILD_DIR      = $(BUILD_DIR)/$(1)/$$($(2)_FULL_VERSION)/
+$(2)_OUTPUT_DIR      = $(OUTPUT_DIR)/$(1)
 $(2)_SOURCE_DIR       = $$($(2)_BUILD_DIR)/source
 
 # Define the file stamps

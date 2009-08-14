@@ -63,7 +63,6 @@ HADOOP20_SOURCE_MD5=6c751617e6429f23ec9b7ea7a02a73c2
 HADOOP20_SITE=$(APACHE_MIRROR)/hadoop/core/hadoop-$(HADOOP20_BASE_VERSION)
 HADOOP20_GIT_REPO=$(BASE_DIR)/repos/hadoop-0.20
 HADOOP20_BASE_REF=apache/tags/release-$(HADOOP20_BASE_VERSION)
-HADOOP20_BUILD_REF=cdh-$(HADOOP20_BASE_VERSION)
 HADOOP20_PACKAGE_GIT_REPO=$(BASE_DIR)/repos/hadoop-0.20-package
 $(eval $(call PACKAGE,hadoop20,HADOOP20))
 
@@ -88,4 +87,7 @@ package-help: help-header $(TARGETS_HELP)
 clean: $(TARGETS_CLEAN)
 	-rm -rf $(BUILD_DIR)
 
-.PHONY: clean package-help help-header packages all world help
+realclean: clean
+	-rm -rf $(OUTPUT_DIR)
+
+.PHONY: realclean clean package-help help-header packages all world help

@@ -1,42 +1,29 @@
-#!/bin/sh -x
+#!/bin/bash -x
 # (c) Copyright 2009 Cloudera, Inc.
 
 set -e
 
-##SUBSTITUTE_VARS##
+function copy_logs_s3 {
+  if [ -e $S3CMD ]; then
+      $S3CMD put $S3_BUCKET:build/$BUILD_ID/deb_${CODENAME}_${DEB_HOST_ARCH}/user.log /var/log/user.log
+  fi
+}
 
+if [ "x$INTERACTIVE" == "xFalse" ]; then
+  trap "copy_logs_s3; hostname -f | grep -q ec2.internal && shutdown -h now;" INT TERM EXIT
+  trap "hostname -f | grep -q ec2.internal && shutdown -h now;" INT TERM EXIT
+fi
+
+##SUBSTITUTE_VARS##
 export AWS_ACCESS_KEY_ID
 export AWS_SECRET_ACCESS_KEY
-
-############################## DOWNLOAD ##############################
-
-mkdir /tmp/$BUILD_ID
-cd /tmp/$BUILD_ID
-
-# fetch deb parts of manifest
-curl -s $MANIFEST_URL | grep ^deb > manifest.txt
-
-# download all the files
-perl -n -a -e '
-if (/^deb/) {
-  print "Fetching $F[1]...\n";
-  system("/usr/bin/curl", "-s", "-o", $F[1], $F[3]);
-}' manifest.txt
-
 
 ############################## SETUP BUILD ENV ##############################
 
 # Install things needed to build
 export DEBIAN_FRONTEND=noninteractive
 
-if [ -z "$(which sudo)" ]; then
-    # If we don't have sudo, we're running as root
-    # and we just need to update and install it
-    aptitude update
-    aptitude install sudo
-else
-    sudo aptitude update
-fi
+apt-get update
 
 # Some basic tools we need:
 #
@@ -47,8 +34,9 @@ fi
 #  build-essential - compilers, etc
 #  dctrl-tools - for dpkg-grepctrl
 
-sudo aptitude -y install devscripts pbuilder debconf-utils liburi-perl build-essential \
-  dctrl-tools
+# Need to do this first so we can set the debconfs before other packages (e.g., postfix)
+# get pulled in
+apt-get -y install debconf-utils 
 
 # Mark java license as accepted so that, if it's pulled in by some package, it won't
 # block on user input to accept the sun license (ed: oracle license? haha)
@@ -60,69 +48,112 @@ sun-java6-jre   sun-java6-jre/jcepolicy note
 sun-java6-bin   shared/present-sun-dlj-v1-1     note
 sun-java6-jdk   shared/present-sun-dlj-v1-1     note
 sun-java6-jre   shared/present-sun-dlj-v1-1     note
-' | sudo debconf-set-selections
+postfix  postfix/main_mailer_type  select  Local only
+postfix  postfix/root_address  string 
+postfix  postfix/rfc1035_violation  boolean  false
+postfix  postfix/retry_upgrade_warning boolean
+# Install postfix despite an unsupported kernel?
+postfix  postfix/kernel_version_warning  boolean
+postfix  postfix/mydomain_warning  boolean 
+postfix  postfix/mynetworks  string  127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128
+postfix  postfix/not_configured  error 
+postfix  postfix/mailbox_limit string 0
+postfix  postfix/relayhost string  
+postfix  postfix/procmail  boolean false
+postfix  postfix/bad_recipient_delimiter error 
+postfix  postfix/protocols select  all
+postfix  postfix/mailname  string  dontcare
+postfix  postfix/tlsmgr_upgrade_warning  boolean 
+postfix  postfix/recipient_delim  string +
+postfix  postfix/main_mailer_type  select  Local only
+postfix  postfix/destinations  string  localhost
+postfix  postfix/chattr  boolean  false
+' | debconf-set-selections
 
-# If we're on etch, add backports since we depend on a couple bpo packages
-# (eg sun-java6-jdk and debhelper >= 6)
-if [ "x$DISTRO" = "xetch" ]; then
-  echo 'deb http://www.backports.org/debian etch-backports main contrib non-free' \
-  | sudo tee /etc/apt/sources.list.d/backports.list
-  sudo aptitude update
-  sudo apt-get -t etch-backports -y --force-yes install debhelper
-fi
+apt-get -y install devscripts pbuilder liburi-perl build-essential dctrl-tools
 
 # Install s3cmd
-OLDDIR=`pwd`
-cd /tmp
+pushd /tmp
   wget http://s3.amazonaws.com/ServEdge_pub/s3sync/s3sync.tar.gz
   tar xzvf s3sync.tar.gz
-  S3CMD=`pwd`/s3sync/s3cmd.rb
-cd $OLDDIR
+  export S3CMD=`pwd`/s3sync/s3cmd.rb
+popd
 
+############################## DOWNLOAD ##############################
+
+for PACKAGE in $PACKAGES; do
+ 
+  echo $PACKAGE
+
+  mkdir /tmp/$BUILD_ID
+  pushd /tmp/$BUILD_ID
+
+  # fetch deb parts of manifest
+  curl -s $MANIFEST_URL | grep ^$PACKAGE > manifest.txt
+
+  # download all the files
+  perl -n -a -e "
+  if (/^$PACKAGE-deb/) {
+    print \"Fetching \$F[1]...\\n\";
+    system(\"/usr/bin/curl\", \"-s\", \"-o\", \$F[1], \$F[3]);
+  }" manifest.txt
 
 ############################## BUILD ##############################
 
-# Unpack source package
-dpkg-source -x *dsc
+  # Unpack source package
+  dpkg-source -x *dsc
 
-cd `find . -maxdepth 1 -type d | grep -vx .`
+  pushd `find . -maxdepth 1 -type d | grep -vx .`
 
-sudo /usr/lib/pbuilder/pbuilder-satisfydepends
+  /usr/lib/pbuilder/pbuilder-satisfydepends
 
-if [ ! -z "$DISTRO" ]; then
-  DISTROTAG="~$DISTRO"
-fi
-VERSION=$(dpkg-parsechangelog | grep '^Version:' | awk '{print $2}')
-NEWVERSION=$VERSION$DISTROTAG
+  if [ ! -z "$CODENAME" ]; then
+    CODENAMETAG="~$CODENAME"
+  fi
+  VERSION=$(dpkg-parsechangelog | grep '^Version:' | awk '{print $2}')
+  NEWVERSION=$VERSION$CODENAMETAG
 
-DEBEMAIL=info@cloudera.com \
-  DEBFULLNAME="Cloudera Automatic Build System" \
-  yes | dch --force-bad-version -v $NEWVERSION --distribution $DISTRO "EC2 Build ID $BUILD_ID"
+  DEBEMAIL=info@cloudera.com \
+    DEBFULLNAME="Cloudera Automatic Build System" \
+    yes | dch --force-bad-version -v $NEWVERSION --distribution $CODENAME "EC2 Build ID $BUILD_ID"
 
-if [ -z "$DEBUILD_FLAG" ]; then
-  DEBUILD_FLAG='-b'
-fi
-debuild -uc -us $DEBUILD_FLAG
+  if [ -z "$DEBUILD_FLAG" ]; then
+    DEBUILD_FLAG='-b'
+  fi
+  debuild -uc -us $DEBUILD_FLAG
 
-cd ..
+  popd 
+
+  pwd
+
+  ############################## UPLOAD ##############################
 
 
+  eval `dpkg-architecture` # set DEB_* variables
 
+  # we don't want to upload back the source change list
+  rm *_source.changes
 
-############################## UPLOAD ##############################
+  FILES=$(grep-dctrl -n -s Files '' *changes | grep . | awk '{print $5}')
 
+  for f in $FILES *changes ; do
+      $S3CMD put $S3_BUCKET:build/$BUILD_ID/deb_${CODENAME}_${DEB_HOST_ARCH}/$(basename $f) $f
+  done
 
-eval `dpkg-architecture` # set DEB_* variables
-CODENAME=$(lsb_release --short --codename)
+  # Leave /tmp/$BUILD_ID
+  popd
 
-# we don't want to upload back the source change list
-rm *_source.changes
+  rm -rf /tmp/$BUILD_ID
 
-FILES=$(grep-dctrl -n -s Files '' *changes | grep . | awk '{print $5}')
-
-for f in $FILES *changes ; do
-    $S3CMD put $S3_BUCKET:build/$BUILD_ID/deb_${CODENAME}_${DEB_HOST_ARCH}/$(basename $f) $f
 done
+
+# Untrap, we're shutting down directly from here so the exit trap probably won't
+# have time to do anything
+if [ "x$INTERACTIVE" == "xFalse" ]; then
+  trap - INT TERM EXIT
+fi
+
+copy_logs_s3
 
 # If we're running on S3, shutdown the node
 # (do the check so you can test elsewhere)

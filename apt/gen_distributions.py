@@ -3,10 +3,10 @@
 
 
 DISTS=[
-  ('etch', '4.0'),
   ('lenny', '4.1'),
   ('hardy', '8.04'),
   ('intrepid', '8.10'),
+  ('jaunty', '9.04'),
   ]
 
 stanzas = []
@@ -21,7 +21,7 @@ Version: %(version)s
 Architectures: i386 amd64 source
 Components: contrib
 Description: Cloudera packages for %(codename)s
-SignWith: yes""" % {
+SignWith: 02A818DD""" % {
     'suite': codename,
     'codename': codename,
     'version': version,

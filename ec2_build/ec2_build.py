@@ -11,6 +11,7 @@ __usage = """
                           slaves
                           (default: cloudera, <username>)
 
+   --dir | -d <dir>       Build products directory where we find source debs and rpms
    --only <rpm|deb>       Only rebuild RPMs/debs
    --only <distro>        Only build on given distro (eg centos5)
    --only <arch>          Only build slaves of given arch (eg amd64)
@@ -22,8 +23,17 @@ __usage = """
    --dry-run | -n         Don't actually take any actions - just print out what
                           would normally happen
 
-   --package | -p <pkg>   Select package to build
+   --packages | -p <pkg>  Select package(s) to build may be listed multiple times
 """
+
+# Sanity check:
+#
+# DEBIAN_DISTROS: lenny, hardy, intrepid, jaunty, etc
+# DEBIAN_SUITES: stable, testing
+# SUITE: $DEBIAN_DISTRO-$DEBIAN_SUITE, $DEBIAN_DISTRO-testing 
+# CDH_RELEASE: cdh1, cdh2
+# CODENAME: $DEBIAN_DISTRO-$CDH_RELEASE
+# RELEASE: a build with version info hadoop-0.20_0.20.0+69+desktop.49-1cdh~intrepid-cdh2_i386
 
 import boto
 import datetime
@@ -35,85 +45,30 @@ import re
 import sys
 import time
 import deb_util
+from ec2_constants import AMIS, BUILD_INSTANCE_TYPES, DEFAULT_BUILD_MACHINES
 
-class Options:
-  def __init__(self):
-    # Bucket to store source RPMs/debs in
-    self.S3_BUCKET = 'ec2-build'
-    self.EC2_KEY_NAME = os.getlogin()
-    self.EC2_GROUPS=['cloudera', os.getlogin()]
-    self.BUILD_MACHINES = DEFAULT_BUILD_MACHINES
-    self.DRY_RUN = False
-    # Default to building hadoop
-    self.PACKAGE = 'hadoop'
-  pass
-
-
+# Expected location of build_[deb,rpm.sh]
 SCRIPT_DIR = os.path.realpath(os.path.dirname(sys.argv[0]))
+
+# Expected localtion of directories with sdebs and srpms
+DEFAULT_BUILD_PRODUCTS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "output"))
+
+# Default codename (needs to be bumped with every CDH release)
+DEFAULT_CDH_RELEASE = 'cdh2'
 
 # User running the script
 USERNAME = os.getlogin()
 
+POSSIBLE_PACKAGES = [ 'hadoop18', 'hadoop20', 'pig', 'hive' ]
+DEFAULT_PACKAGES = ['hadoop18', 'hadoop20']
 # Build ID
 BUILD_ID = "%s-%s" % (USERNAME, datetime.datetime.now().strftime("%Y%m%d_%H%M%S"))
-
-# TODO(todd) this is kind of gross - is there no nicer way of doing this?
-REDIST_DIR = os.path.join(SCRIPT_DIR, "../build/redist")
-
-# Where to find source packages TODO(todd) should be pulled from a VerStringTarget maybe?
-HD_DEB_ROOT = REDIST_DIR + "/repos/hadoop-package_deb/hadoop-deb"
-HD_RPM_ROOT = REDIST_DIR + "/repos/hadoop-package_rpm/hadoop-srpm/topdir/SRPMS"
-PIG_DEB_ROOT = REDIST_DIR + "/repos/pig-package_deb/pig-deb"
-PIG_RPM_ROOT = REDIST_DIR + "/repos/pig-package_rpm/pig-srpm/topdir/SRPMS"
-HIVE_DEB_ROOT = REDIST_DIR + "/repos/hive-package_deb/hive-deb"
-HIVE_RPM_ROOT = REDIST_DIR + "/repos/hive-package_rpm/hive-srpm/topdir/SRPMS"
-
-# Files to upload
-# TODO(todd) this is kind of awful - maybe we should parse .changes files
-PACKAGE_FILES = {
-  'hadoop': {
-    'deb': deb_util.find_source_deb_files(HD_DEB_ROOT),
-    'rpm': glob.glob(os.path.join(HD_RPM_ROOT, "*.src.rpm")),
-    },
-  'pig': {
-    'deb': deb_util.find_source_deb_files(PIG_DEB_ROOT),
-    'rpm': glob.glob(os.path.join(PIG_RPM_ROOT, "*.src.rpm"))
-    },
-  'hive': {
-    'deb': deb_util.find_source_deb_files(HIVE_DEB_ROOT),
-    'rpm': glob.glob(os.path.join(HIVE_RPM_ROOT, "*.src.rpm"))
-    },
-  }
 
 # Directory in S3_BUCKET to put files
 FILECACHE_S3="file-cache"
 
 # How long should manifests be valid for
 EXPIRATION=60*60*6 # 6h
-
-# dict from (distro, arch) => AMI ID
-# These AMIs must run their userdata on startup if it has
-# a shebang!
-AMIS={
-# Alestic ubuntu/debian AMIs
-  ('intrepid', 'x86'):   'ami-ec48af85',
-  ('intrepid', 'amd64'): 'ami-e057b089',
-  ('hardy', 'x86'):      'ami-ef48af86',
-  ('hardy', 'amd64'):    'ami-e257b08b',
-  ('lenny', 'x86'):      'ami-e348af8a',
-  ('lenny', 'amd64'):    'ami-fb57b092',
-  ('etch', 'x86'):       'ami-e248af8b',
-  ('etch', 'amd64'):     'ami-fd57b094',
-# home built centos5 AMIs
-  ('centos5', 'x86'):    'ami-c950b7a0',
-  ('centos5', 'amd64'):  'ami-a7a244ce',
-  }
-
-# What kind of instances should be started to run the various builds
-BUILD_INSTANCE_TYPES = {
-  'x86':   'm1.small',
-  'amd64': 'm1.large',
-  }
 
 # Shell scripts to run to perform builds
 BUILD_DEB=file(SCRIPT_DIR + "/build_deb.sh").read()
@@ -126,20 +81,20 @@ BUILD_SCRIPTS = {
   'rpm': BUILD_RPM,
   }
 
-# What we actually want to build
-# tuples of (build type, distro, arch)
-DEFAULT_BUILD_MACHINES = [
-  ('deb', 'intrepid', 'x86'),
-  ('deb', 'intrepid', 'amd64'),
-  ('deb', 'hardy',    'x86'),
-  ('deb', 'hardy',    'amd64'),
-  ('deb', 'lenny',    'x86'),
-  ('deb', 'lenny',    'amd64'),
-  ('deb', 'etch',     'x86'),
-  ('deb', 'etch',     'amd64'),
-  ('rpm', 'centos5',  'x86'),
-  ('rpm', 'centos5',  'amd64'),
-  ]
+class Options:
+  def __init__(self):
+    # Bucket to store source RPMs/debs in
+    self.S3_BUCKET = 'ec2-build'
+    self.EC2_KEY_NAME = os.getlogin()
+    self.EC2_GROUPS=['cloudera', os.getlogin()]
+    self.BUILD_MACHINES = DEFAULT_BUILD_MACHINES
+    self.CDH_RELEASE=DEFAULT_CDH_RELEASE
+    self.BUILD_PRODUCTS_DIR=DEFAULT_BUILD_PRODUCTS_DIR
+    self.DRY_RUN = False
+    self.INTERACTIVE = False
+    # Default to building hadoop
+    self.PACKAGES = DEFAULT_PACKAGES
+  pass
 
 def parse_args():
   """ Parse command line arguments into globals. """
@@ -150,11 +105,15 @@ def parse_args():
   op.add_option('-b', '--bucket')
   op.add_option('-k', '--key')
   op.add_option('-g', '--groups')
+  op.add_option('-d', '--dir')
+  op.add_option('-t', '--tag')
   op.add_option('--only', action='append')
   op.add_option('-n', '--dry-run', action='store_true')
-  op.add_option('-p', '--package', action='store', choices=PACKAGE_FILES.keys())
+  op.add_option('-p', '--packages', action='append', choices=POSSIBLE_PACKAGES)
+  op.add_option("-i", '--interactive', action="store_true")
 
   opts, args = op.parse_args()
+
   if len(args):
     op.print_usage()
     raise Exception("Unhandled args: %s" % repr(args))
@@ -173,17 +132,25 @@ def parse_args():
            "%s-%s"%(type,arch) in opts.only)])
 
   ret_opts.DRY_RUN = opts.dry_run
+  
+  ret_opts.INTERACTIVE = opts.interactive
+
   if opts.bucket:
     ret_opts.S3_BUCKET = opts.bucket
 
   if opts.key:
     ret_opts.EC2_KEY_NAME = opts.key
 
-  if opts.package:
-    ret_opts.PACKAGE = opts.package
+  if opts.packages:
+    ret_opts.PACKAGES = opts.packages
+
+  if opts.dir:
+    ret_opts.BUILD_PRODUCTS_DIR = opts.dir
+  
+  if opts.tag:
+    ret_opts.CDH_RELEASE = opts.tag
 
   return ret_opts
-
 
 def md5file(filename):
   """ Return the hex digest of a file without loading it all into memory. """
@@ -230,10 +197,12 @@ def satisfy_in_cache(bucket, path):
 
   return (checksum, k.generate_url(EXPIRATION))
 
-def upload_files_and_manifest(options):
+def upload_files_and_manifest(options, package_files):
   """
   Upload all of the required files as well as a manifest.txt file into
   the BUILD_ID dir on S3.
+
+  @param package_files A dictionary keyed by the package to be build. Each key's value is dictionary keyed for deb|rpm that have lists of files needed to build the package
   """
   s3 = boto.connect_s3()
   bucket = s3.lookup(options.S3_BUCKET)
@@ -242,12 +211,13 @@ def upload_files_and_manifest(options):
 
   manifest_list = []
 
-  files = PACKAGE_FILES[options.PACKAGE]
-  for tag, paths in files.iteritems():
-    for path in paths:
-      dest = os.path.join(build_dir, os.path.basename(path))
-      (checksum, url) = satisfy_in_cache(bucket, path)
-      manifest_list.append((tag, os.path.basename(path), checksum, url))
+  for package in package_files:
+    files = package_files[package]
+    for package_format, paths in files.iteritems():
+      for path in paths:
+        dest = os.path.join(build_dir, os.path.basename(path))
+        (checksum, url) = satisfy_in_cache(bucket, path)
+        manifest_list.append(('-'.join([package, package_format]), os.path.basename(path), checksum, url))
 
   manifest = "\n".join(
     ["\t".join(el) for el in manifest_list])
@@ -262,15 +232,25 @@ def upload_files_and_manifest(options):
     return "<manifest not uploaded - dry run>"
 
 def main():
+
   options = parse_args()
-  manifest_url = upload_files_and_manifest(options)
+
+  # Figure out what packages need to built
+  package_files = {}
+  for package in options.PACKAGES:
+    package_files[package] = {
+      'deb': deb_util.find_source_deb_files(os.path.join(options.BUILD_PRODUCTS_DIR, package)),
+      'rpm': glob.glob(os.path.join(options.BUILD_PRODUCTS_DIR, package, "*.src.rpm")),
+    }
+
+  manifest_url = upload_files_and_manifest(options, package_files)
   print manifest_url
 
   ec2 = boto.connect_ec2()
 
   instances = []
-  for build_type, distro, arch in options.BUILD_MACHINES:
-    ami = AMIS[(distro, arch)]
+  for build_type, debian_distro, arch in options.BUILD_MACHINES:
+    ami = AMIS[(debian_distro, arch)]
     image = ec2.get_image(ami)
     instance_type = BUILD_INSTANCE_TYPES[arch]
     start_script = BUILD_SCRIPTS[build_type]
@@ -278,8 +258,11 @@ def main():
     subs = {
       'build_id': BUILD_ID,
       'username': USERNAME,
-      'distro': distro,
+      'debian_distro': debian_distro,
+      'cdh_release': options.CDH_RELEASE,
+      'interactive': str(options.INTERACTIVE),
       'manifest_url': manifest_url,
+      'packages': ' '.join(options.PACKAGES),
       's3_bucket': options.S3_BUCKET,
       'aws_access_key_id': ec2.aws_access_key_id,
       'aws_secret_access_key': ec2.aws_secret_access_key,
@@ -289,15 +272,18 @@ def main():
       "##SUBSTITUTE_VARS##",
       """
       BUILD_ID='%(build_id)s'
+      CDH_RELEASE='%(cdh_release)s'
+      INTERACTIVE='%(interactive)s'
       BUILD_USER='%(username)s'
-      DISTRO='%(distro)s'
+      CODENAME='%(debian_distro)s-%(cdh_release)s'
       MANIFEST_URL='%(manifest_url)s'
+      PACKAGES='%(packages)s'
       S3_BUCKET='%(s3_bucket)s'
       AWS_ACCESS_KEY_ID='%(aws_access_key_id)s'
       AWS_SECRET_ACCESS_KEY='%(aws_secret_access_key)s'
       """ % subs)
 
-    print "Starting %s-%s build slave (%s)..." % (distro, arch, ami)
+    print "Starting %s-%s build slave (%s)..." % (debian_distro, arch, ami)
     if not options.DRY_RUN:
       reservation = image.run(
         key_name=options.EC2_KEY_NAME,

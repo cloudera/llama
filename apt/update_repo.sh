@@ -1,4 +1,4 @@
-#!/bin/sh -x
+#!/bin/bash -x
 # (c) Copyright 2009 Cloudera, Inc.
 #
 # After a build has been run from ec2_build.py, the build slaves
@@ -12,16 +12,44 @@ set -e
 # rather than retaining the literal *
 shopt -s nullglob
 
-if [ $# -ne 2 ]; then
-  echo usage: $0 build_bucket build_id
+function usage {
+  echo "usage: $0 -s <s3_bucket> -i <build_id> -c <cdh release> -r <repo>"
+  echo "       s3_bucket: The S3 bucket the debs are in (e.g., ec2-build)"
+  echo "       build_id: The dir in the s3 bucket with the debs (e.g., chad-20090810_192726)"
+  echo "       cdh release: The codename for this release (e.g., cdh2)"
+  echo "       repo: The top level dir of the apt repo"
   exit 1
+}
+
+while getopts "s:b:t:r:" options; do
+  case $options in
+    s ) S3_BUCKET=$OPTARG;;
+    b ) BUILD_ID=$OPTARG;;
+    c ) CDH_RELEASE=$OPTARG;;
+    r ) REPO=$OPTARG;;
+    h ) usage;;
+    \?) usage;;
+    * ) usage;;
+
+  esac
+done
+
+if [ -z "$S3_BUCKET" ] || [ -z "$BUILD_ID" ] || [ -z "$CDH_RELEASE" ] || [ -z "$REPO" ]; then
+  usage
 fi
 
-S3_BUCKET=$1
-BUILD_ID=$2
-DISTROS="etch lenny hardy intrepid"
+# Sanity check:
+#
+# DEBIAN_DISTROS: lenny, hardy, intrepid, jaunty, etc
+# DEBIAN_SUITES: stable, testing
+# SUITE: $DEBIAN_DISTRO-$DEBIAN_SUITE, $DEBIAN_DISTRO-testing 
+# CDH_RELEASE: cdh1, cdh2
+# CODENAME: $DEBIAN_DISTRO-$CDH_RELEASE
+# RELEASE: a build with version info hadoop-0.20_0.20.0+69+desktop.49-1cdh~intrepid-cdh2_i386
+
+DEBIAN_DISTROS="lenny hardy intrepid jaunty"
+
 ARCHS="i386 amd64"
-REPO=repo
 
 # Download all the build data
 s3cmd sync s3://$S3_BUCKET/build/$BUILD_ID $BUILD_ID
@@ -36,30 +64,31 @@ if (/^deb/) {
 }' manifest.txt
 cd ..
 
-
 REPREPRO_FLAGS="--export=never --keepunreferenced --basedir $REPO"
 
-for DISTRO in $DISTROS ; do
+for DEBIAN_DISTRO in $DEBIAN_DISTROS ; do
+
+  CODENAME=$DEBIAN_DISTRO-$CDH_RELEASE
 
   # include source package
   for changefile in $BUILD_ID/source/*changes ; do
-      reprepro --ignore=wrongdistribution $REPREPRO_FLAGS include $DISTRO $changefile
+      reprepro --ignore=wrongdistribution $REPREPRO_FLAGS include $CODENAME $changefile
   done
 
   # Include binary packages
   for ARCH in $ARCHS ; do
-    BUILD_DIR=$BUILD_ID/deb_${DISTRO}_${ARCH}
+    BUILD_DIR=$BUILD_ID/deb_${CODENAME}_${ARCH}
     if [ $ARCH = "i386" ]; then
       # On i386, install all built packages
       for changefile in $BUILD_DIR/*changes ; do
-        reprepro $REPREPRO_FLAGS include $DISTRO $changefile
+        reprepro $REPREPRO_FLAGS include $CODENAME $changefile
       done
     else
       # On other platforms, however, include just the arch-specific, since
       # otherwise we'll get a hash-conflict, since we already included the
       # _all.deb packages from i386
       for deb in $BUILD_DIR/*_$ARCH.deb ; do
-        reprepro $REPREPRO_FLAGS includedeb $DISTRO $deb
+        reprepro $REPREPRO_FLAGS includedeb $CODENAME $deb
       done
     fi
   done
@@ -69,7 +98,7 @@ echo
 echo Exporting repo and running checks...
 echo
 
-for action in export check checkpool ; do
+for action in export check checkpool createsymlinks ; do
   echo $action...
   reprepro --basedir $REPO $action
   echo done

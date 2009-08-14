@@ -10,7 +10,7 @@ def find_source_deb_files(root):
   """
   changes = [f for f in os.listdir(root) if f.endswith("_source.changes")]
   if len(changes) == 0:
-    raise Exception("No source debs found in %s" % root)
+    return []
   elif len(changes) > 1:
     raise Exception("Multiple source debs found in %s: %s" % (root, repr(changes)))
   changes = changes[0]
@@ -26,4 +26,7 @@ def find_source_deb_files(root):
   for f in files:
     if not os.path.exists(f):
       raise Exception("Postcondition error: %s does not exist" % f)
+
+  print files
+
   return files
