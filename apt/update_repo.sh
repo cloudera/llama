@@ -13,7 +13,7 @@ set -e
 shopt -s nullglob
 
 function usage {
-  echo "usage: $0 -s <s3_bucket> -i <build_id> -c <cdh release> -r <repo>"
+  echo "usage: $0 -s <s3_bucket> -b <build_id> -c <cdh release> -r <repo>"
   echo "       s3_bucket: The S3 bucket the debs are in (e.g., ec2-build)"
   echo "       build_id: The dir in the s3 bucket with the debs (e.g., chad-20090810_192726)"
   echo "       cdh release: The codename for this release (e.g., cdh2)"
@@ -21,7 +21,7 @@ function usage {
   exit 1
 }
 
-while getopts "s:b:t:r:" options; do
+while getopts "s:b:c:r:" options; do
   case $options in
     s ) S3_BUCKET=$OPTARG;;
     b ) BUILD_ID=$OPTARG;;

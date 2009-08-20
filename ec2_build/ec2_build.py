@@ -249,8 +249,8 @@ def main():
   ec2 = boto.connect_ec2()
 
   instances = []
-  for build_type, debian_distro, arch in options.BUILD_MACHINES:
-    ami = AMIS[(debian_distro, arch)]
+  for build_type, os_distro, arch in options.BUILD_MACHINES:
+    ami = AMIS[(os_distro, arch)]
     image = ec2.get_image(ami)
     instance_type = BUILD_INSTANCE_TYPES[arch]
     start_script = BUILD_SCRIPTS[build_type]
@@ -258,7 +258,7 @@ def main():
     subs = {
       'build_id': BUILD_ID,
       'username': USERNAME,
-      'debian_distro': debian_distro,
+      'os_distro': os_distro,
       'cdh_release': options.CDH_RELEASE,
       'interactive': str(options.INTERACTIVE),
       'manifest_url': manifest_url,
@@ -275,7 +275,7 @@ def main():
       CDH_RELEASE='%(cdh_release)s'
       INTERACTIVE='%(interactive)s'
       BUILD_USER='%(username)s'
-      CODENAME='%(debian_distro)s-%(cdh_release)s'
+      CODENAME='%(os_distro)s-%(cdh_release)s'
       MANIFEST_URL='%(manifest_url)s'
       PACKAGES='%(packages)s'
       S3_BUCKET='%(s3_bucket)s'
@@ -283,7 +283,7 @@ def main():
       AWS_SECRET_ACCESS_KEY='%(aws_secret_access_key)s'
       """ % subs)
 
-    print "Starting %s-%s build slave (%s)..." % (debian_distro, arch, ami)
+    print "Starting %s-%s build slave (%s)..." % (os_distro, arch, ami)
     if not options.DRY_RUN:
       reservation = image.run(
         key_name=options.EC2_KEY_NAME,

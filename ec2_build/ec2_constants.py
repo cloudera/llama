@@ -12,8 +12,8 @@ AMIS={
   ('lenny', 'x86'):      'ami-1d729474',
   ('lenny', 'amd64'):    'ami-ed749284',
 # home built centos5 AMIs
-  ('centos5', 'x86'):    'ami-f95cba90',
-  ('centos5', 'amd64'):  'ami-155cba7c',
+  ('centos5', 'x86'):    'ami-6d749504',
+  ('centos5', 'amd64'):  'ami-7b749512',
   }
 
 # What kind of instances should be started to run the various builds

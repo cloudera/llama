@@ -3,21 +3,28 @@
 set -e
 
 ##SUBSTITUTE_VARS##
-
+export BUILD_ID
+export CDH_RELEASE
+export INTERACTIVE
+export BUILD_USER
+export CODENAME
+export MANIFEST_URL
+export PACKAGES
+export S3_BUCKET
 export AWS_ACCESS_KEY_ID
 export AWS_SECRET_ACCESS_KEY
 
+function copy_logs_s3 {
+  if [ -e $S3CMD ]; then
+      $S3CMD put $S3_BUCKET:build/$BUILD_ID/${CODENAME}-user.log /tmp/log.txt
+  fi
+}
+
+if [ "x$INTERACTIVE" == "xFalse" ]; then
+  trap "copy_logs_s3; hostname -f | grep -q ec2.internal && shutdown -h now;" INT TERM EXIT
+fi
+
 cd /tmp
-
-# fetch deb parts of manifest
-curl -s $MANIFEST_URL | grep ^rpm > manifest.txt
-
-# download all the files
-perl -n -a -e '
-if (/^rpm/) {
-  print "Fetching $F[1]...\n";
-  system("/usr/bin/curl", "-s", "-o", $F[1], $F[3]);
-}' manifest.txt
 
 # Some package deps
 wget http://download.fedora.redhat.com/pub/epel/5/i386/epel-release-5-3.noarch.rpm
@@ -52,15 +59,12 @@ else
   MAIN_JDK_PACKAGE="jdk-6u14-linux-i386-rpm.bin"
   echo "export JAVA32_HOME=$DEFAULT_JAVA_PATH" >> /etc/profile
   export JAVA32_HOME=$DEFAULT_JAVA_PATH
-  SECONDARY_JDK_PACKAGE="jdk-6u14-linux-x64.bin"
-  echo "export JAVA64_HOME=$SECONDARY_JDK_PATH" >> /etc/profile
-  export JAVA64_HOME=$SECONDARY_JDK_PATH
+  SECONDARY_JDK_PACKAGE=
 fi
 JDK5_PACKAGE="jdk-1_5_0_19-linux-i386.bin"
 JAVA5_HOME=/opt/java/jdk1.5.0_19
 echo "export JAVA5_HOME=$JAVA5_HOME" >> /etc/profile
 export JAVA5_HOME=$JAVA5_HOME
-
 
 for pkg in $MAIN_JDK_PACKAGE $SECONDARY_JDK_PACKAGE $JDK5_PACKAGE
 do
@@ -71,18 +75,27 @@ done
 # java wants to show you a license with more. Disable this so they can't
 # interrupt our unattended installation
 mv /bin/more /bin/more.no
+
 yes | ./$MAIN_JDK_PACKAGE -noregister
-yes | ./$SECONDARY_JDK_PACKAGE -noregister
+
+if [ ! -z "$SECONDARY_JDK_PACKAGE" ]; then
+  yes | ./$SECONDARY_JDK_PACKAGE -noregister
+  mv $(basename $SECONDARY_JDK_PATH) $SECONDARY_JDK_PATH
+fi
+
 yes | ./$JDK5_PACKAGE -noregister
 
-mv $(basename $SECONDARY_JDK_PATH) $SECONDARY_JDK_PATH
 mv $(basename $JAVA5_HOME) $JAVA5_HOME
 
 export PATH=$DEFAULT_JAVA_PATH/bin:$PATH
 echo "export PATH=$DEFAULT_JAVA_PATH/bin:\$PATH" >> /etc/profile
 
 java -version
-$SECONDARY_JDK_PATH/bin/java -version
+
+if [ ! -z "$SECONDARY_JDK_PACKAGE" ]; then
+  $SECONDARY_JDK_PATH/bin/java -version
+fi
+
 $JAVA5_HOME/bin/java -version
 
 mv /bin/more.no /bin/more
@@ -121,33 +134,61 @@ popd
 
 ############# BUILD PACKAGE ####################
 
-# Satisfy build deps
-YUMINST="yum --nogpgcheck -y install"
-rpm -qRp hadoop*src.rpm | awk '{print $1}' | xargs $YUMINST
+for PACKAGE in $PACKAGES; do
+ 
+  echo $PACKAGE
 
-# make build dir
-rm -Rf /tmp/topdir
-mkdir /tmp/topdir
-(cd /tmp/topdir && mkdir BUILD RPMS SOURCE SPECS SRPMS)
+  mkdir /tmp/$BUILD_ID
+  pushd /tmp/$BUILD_ID
 
-for TARGET_ARCH in noarch $ARCH ; do
-  rm -Rf /tmp/buildroot
-  mkdir /tmp/buildroot
-  rpmbuild --define "_topdir /tmp/topdir" --buildroot /tmp/buildroot --target $TARGET_ARCH --rebuild hadoop*src.rpm
-done
+  # fetch deb parts of manifest
+  curl -s $MANIFEST_URL | grep ^$PACKAGE > manifest.txt
 
+  # download all the files
+  perl -n -a -e "
+  if (/^$PACKAGE-rpm/) {
+    print \"Fetching \$F[1]...\\n\";
+    system(\"/usr/bin/curl\", \"-s\", \"-o\", \$F[1], \$F[3]);
+  }" manifest.txt
 
-############################## UPLOAD ##############################
+  # Satisfy build deps
+  YUMINST="yum --nogpgcheck -y install"
+  rpm -qRp *src.rpm | awk '{print $1}' | xargs $YUMINST
 
+  # make build dir
+  rm -Rf /tmp/topdir
+  mkdir /tmp/topdir
+  (cd /tmp/topdir && mkdir BUILD RPMS SOURCE SPECS SRPMS)
 
-CODENAME=$(lsb_release -is -r | tr 'A-Z' 'a-z' | sed -e 's/ //g')
+  for TARGET_ARCH in noarch $ARCH ; do
+    rm -Rf /tmp/buildroot
+    mkdir /tmp/buildroot
+    rpmbuild --define "_topdir /tmp/topdir" --buildroot /tmp/buildroot --target $TARGET_ARCH --rebuild *src.rpm
+  done
 
-for arch_dir in /tmp/topdir/RPMS/*  ; do
+  ############################## UPLOAD ##############################
+
+  for arch_dir in /tmp/topdir/RPMS/*  ; do
     TARGET_ARCH=$(basename $arch_dir)
     for f in $arch_dir/*.rpm ; do
         $S3CMD put $S3_BUCKET:build/$BUILD_ID/rpm_${CODENAME}_${ARCH}/$(basename $f) $f
     done
+  done
+
+  # Leave /tmp/$BUILD_ID
+  popd
+
+  rm -rf /tmp/$BUILD_ID
+
 done
+
+# Untrap, we're shutting down directly from here so the exit trap probably won't
+# have time to do anything
+if [ "x$INTERACTIVE" == "xFalse" ]; then
+  trap - INT TERM EXIT
+fi
+
+copy_logs_s3
 
 # If we're running on S3, shutdown the node
 # (do the check so you can test elsewhere)

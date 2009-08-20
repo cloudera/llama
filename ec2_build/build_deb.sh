@@ -20,6 +20,8 @@ export AWS_SECRET_ACCESS_KEY
 
 ############################## SETUP BUILD ENV ##############################
 
+eval `dpkg-architecture` # set DEB_* variables
+
 # Install things needed to build
 export DEBIAN_FRONTEND=noninteractive
 
@@ -129,7 +131,6 @@ for PACKAGE in $PACKAGES; do
   ############################## UPLOAD ##############################
 
 
-  eval `dpkg-architecture` # set DEB_* variables
 
   # we don't want to upload back the source change list
   rm *_source.changes
