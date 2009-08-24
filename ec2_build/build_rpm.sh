@@ -14,130 +14,40 @@ export S3_BUCKET
 export AWS_ACCESS_KEY_ID
 export AWS_SECRET_ACCESS_KEY
 
+export ANT_HOME=/usr/local/share/apache-ant-1.7.1
+export PATH=$ANT_HOME/bin:$PATH
+
+export JAVA5_HOME=/usr/java/jdk1.5.0_18
+export JAVA32_HOME=/usr/java/jdk1.6.0_14_i386
+export JAVA_HOME=$JAVA32_HOME
+
+export ARCH=$(uname -i)
+
+if [ "$ARCH" == "x64_86" ]; then
+  export JAVA64_HOME=/usr/java/jdk1.6.0_14
+  export JAVA_HOME=$JAVA64_HOME
+fi
+
+export FORREST_HOME=/usr/local/share/apache-forrest-0.8
+
+chmod a+w "$FORREST_HOME"
+
 function copy_logs_s3 {
-  if [ -e $S3CMD ]; then
-      $S3CMD put $S3_BUCKET:build/$BUILD_ID/${CODENAME}-user.log /tmp/log.txt
-  fi
+      s3cmd.rb put $S3_BUCKET:build/$BUILD_ID/${CODENAME}-${ARCH}-user.log /tmp/log.txt
 }
 
 if [ "x$INTERACTIVE" == "xFalse" ]; then
   trap "copy_logs_s3; hostname -f | grep -q ec2.internal && shutdown -h now;" INT TERM EXIT
 fi
 
-cd /tmp
+rm -rf /usr/local/share/apache-forrest-0.8/build/plugins # build fails with this symlink in place, so remove it
 
-# Some package deps
-wget http://download.fedora.redhat.com/pub/epel/5/i386/epel-release-5-3.noarch.rpm
-rpm -Uvh epel*.rpm
-yum -y install rpm-build yum-utils zlib-devel gcc gcc-devel gcc-c++ gcc-c++-devel lzo-devel glibc-devel ant ant-nodeps ruby git
-
-# Install s3cmd
-wget http://s3.amazonaws.com/ServEdge_pub/s3sync/s3sync.tar.gz
-tar xzvf s3sync.tar.gz
-S3CMD=`pwd`/s3sync/s3cmd.rb
-
-############### JAVA STUFF #######################
-
-pushd /mnt # all these packages are going to be pretty big, possibly too big for /tmp
-DEFAULT_JAVA_PATH=/usr/java/default
-echo "export JAVA_HOME=$DEFAULT_JAVA_PATH" >> /etc/profile
-export JAVA_HOME=$DEFAULT_JAVA_PATH
-SECONDARY_JDK_PATH="/opt/java/jdk1.6.0_14" # i386 and x64 have the same path
-mkdir -p $(dirname $SECONDARY_JDK_PATH)
-
-# install the "main" java (from RPM) and the "secondary" java, not
-# from RPM.
-ARCH=`uname -i`
-if [ "$ARCH" = "x86_64" ]; then
-  MAIN_JDK_PACKAGE="jdk-6u14-linux-x64-rpm.bin"
-  echo "export JAVA64_HOME=$DEFAULT_JAVA_PATH" >> /etc/profile
-  export JAVA64_HOME=$DEFAULT_JAVA_PATH
-  SECONDARY_JDK_PACKAGE="jdk-6u14-linux-i386.bin"
-  echo "export JAVA32_HOME=$SECONDARY_JDK_PATH" >> /etc/profile
-  export JAVA32_HOME=$SECONDARY_JDK_PATH
-else
-  MAIN_JDK_PACKAGE="jdk-6u14-linux-i386-rpm.bin"
-  echo "export JAVA32_HOME=$DEFAULT_JAVA_PATH" >> /etc/profile
-  export JAVA32_HOME=$DEFAULT_JAVA_PATH
-  SECONDARY_JDK_PACKAGE=
-fi
-JDK5_PACKAGE="jdk-1_5_0_19-linux-i386.bin"
-JAVA5_HOME=/opt/java/jdk1.5.0_19
-echo "export JAVA5_HOME=$JAVA5_HOME" >> /etc/profile
-export JAVA5_HOME=$JAVA5_HOME
-
-for pkg in $MAIN_JDK_PACKAGE $SECONDARY_JDK_PACKAGE $JDK5_PACKAGE
-do
-  $S3CMD get "cloudera-packages:$pkg" "$pkg"
-  chmod a+x "$pkg"
-done
-
-# java wants to show you a license with more. Disable this so they can't
-# interrupt our unattended installation
-mv /bin/more /bin/more.no
-
-yes | ./$MAIN_JDK_PACKAGE -noregister
-
-if [ ! -z "$SECONDARY_JDK_PACKAGE" ]; then
-  yes | ./$SECONDARY_JDK_PACKAGE -noregister
-  mv $(basename $SECONDARY_JDK_PATH) $SECONDARY_JDK_PATH
-fi
-
-yes | ./$JDK5_PACKAGE -noregister
-
-mv $(basename $JAVA5_HOME) $JAVA5_HOME
-
-export PATH=$DEFAULT_JAVA_PATH/bin:$PATH
-echo "export PATH=$DEFAULT_JAVA_PATH/bin:\$PATH" >> /etc/profile
-
-java -version
-
-if [ ! -z "$SECONDARY_JDK_PACKAGE" ]; then
-  $SECONDARY_JDK_PATH/bin/java -version
-fi
-
-$JAVA5_HOME/bin/java -version
-
-mv /bin/more.no /bin/more
-
-############# ANT ######################
-# Note that the ant and ant-nodeps RPMs have already been installed via yum.  We need ant 1.7, though.
-ANT_PACKAGE_NAME="apache-ant-1.7.1-bin.tar.gz"
-ANT_DIR="apache-ant-1.7.1"
-ANT_HOME=/opt/$ANT_DIR
-
-$S3CMD get "cloudera-packages:$ANT_PACKAGE_NAME" "$ANT_PACKAGE_NAME"
-tar xzf "$ANT_PACKAGE_NAME"
-mv $ANT_DIR $ANT_HOME
-
-export ANT_HOME=$ANT_HOME
-echo "export ANT_HOME=$ANT_HOME" >> /etc/profile
-export PATH=$ANT_HOME/bin:$PATH
-echo "export PATH=$ANT_HOME/bin:\$PATH" >> /etc/profile
-
-############## FORREST ####################
-
-FORREST_PACKAGE_NAME="apache-forrest-0.8.tar.gz"
-FORREST_DIR="apache-forrest-0.8"
-FORREST_HOME=/opt/$FORREST_DIR
-
-$S3CMD get "cloudera-packages:$FORREST_PACKAGE_NAME" "$FORREST_PACKAGE_NAME"
-tar xzf "$FORREST_PACKAGE_NAME"
-mv "$FORREST_DIR" "$FORREST_HOME"
-
-export FORREST_HOME=$FORREST_HOME
-echo "export FORREST_HOME=$FORREST_HOME" >> /etc/profile
-
-chmod a+w "$FORREST_HOME"
-
-popd
+yum -y install rpm-build yum-utils zlib-devel gcc gcc-devel gcc-c++ gcc-c++-devel lzo-devel glibc-devel ant ant-nodeps ruby git libtool
 
 ############# BUILD PACKAGE ####################
 
 for PACKAGE in $PACKAGES; do
  
-  echo $PACKAGE
-
   mkdir /tmp/$BUILD_ID
   pushd /tmp/$BUILD_ID
 
@@ -171,7 +81,7 @@ for PACKAGE in $PACKAGES; do
   for arch_dir in /tmp/topdir/RPMS/*  ; do
     TARGET_ARCH=$(basename $arch_dir)
     for f in $arch_dir/*.rpm ; do
-        $S3CMD put $S3_BUCKET:build/$BUILD_ID/rpm_${CODENAME}_${ARCH}/$(basename $f) $f
+        s3cmd.rb put $S3_BUCKET:build/$BUILD_ID/rpm_${CODENAME}_${ARCH}/$(basename $f) $f
     done
   done
 
