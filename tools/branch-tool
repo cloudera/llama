@@ -12,6 +12,7 @@ options:
 tool is:
   branch - make a new branch from this point
   cust-branch [cust] - make a customer branch
+  migrate-cust-branch [old-cust-branch] - migrate an existing customer branch onto trunk
   version [ref] - output version number for a ref
 """
 import re
@@ -70,21 +71,73 @@ def cust_branch(argv):
   """
   if len(argv) != 3:
     usage(argv)
+  make_cust_branch(argv[2])
 
-  cust_name = argv[2]
+def get_cust_branch_target(cust_name):
   head_ver = cdh_get_version(git_cur_branch())
-  head_ver_branch = 'cdh-' + head_ver
+  return 'cdh-%s+%s' % (head_ver, cust_name)
+
+def ensure_head_version_branch(checkout=False):
+  head_ver = cdh_get_version(git_cur_branch())
+  branch = 'cdh-' + head_ver
   try:
-    git_rev_parse('refs/heads/' + head_ver_branch)
+    git_rev_parse('refs/heads/' + branch)
   except Exception, e:
     # No branch for this branch point yet, so make one
-    sideeffect_git(['branch', head_ver_branch, 'HEAD'])    
-  sideeffect_git(['checkout', '-b', '%s+%s' % (head_ver_branch, cust_name)])
+    sideeffect_git(['branch', branch, 'HEAD'])    
+  if checkout:
+    sideeffect_git(["checkout", branch])
+  return branch
+
+def make_cust_branch(cust_name):
+  ensure_head_version_branch()
+  sideeffect_git(['checkout', '-b', get_cust_branch_target(cust_name)])
+
+def migrate_cust_branch(argv):
+  if len(argv) != 3:
+    usage(argv)
+  old_branch = argv[2]
+
+  m = re.match(r'^(cdh.+?)\+(\w+)$', old_branch)
+  if not m:
+    raise Exception("This branch doesn't match cdh-version+customername")
+  src_base, cust_name = m.groups()
+  patches = git(["log", "--pretty=oneline", "--abbrev-commit",
+                 "%s..%s" % (src_base, old_branch)])
+  target_base = git_cur_branch()
+  target_branch = get_cust_branch_target(cust_name)
+
+  print "Migrating customer branch for customer: %s" % cust_name
+  print "-" * 80
+  print "Customer branch base: %s" % src_base
+  print "Customer-specific patches:"
+  print "\n".join(["  " + p for p in patches.split("\n")])
+  print "Target base: %s" % target_base
+  print "Target branch: %s" % target_branch
+  print "-" * 80
+
+  # Make sure we have a branch for the current head
+  head_ver_branch = ensure_head_version_branch()
+
+  # Make a tmp branch copy of the old customer branch
+  tmp_branch = 'cust_%s_tmp' % cust_name
+  sideeffect_git(['checkout', '-b', tmp_branch, old_branch])
+
+  # Rebase the old patches to the new location
+  print sideeffect_git(['rebase', '--onto', head_ver_branch, src_base])
+
+  # Make the new branch here
+  sideeffect_git(['checkout', '-b', target_branch])
+
+  # Kill the tmp
+  sideeffect_git(['branch', '-d', tmp_branch])
+
 
 TOOLS = {
   'branch': branch,
   'version': version,
   'cust-branch': cust_branch,
+  'migrate-cust-branch': migrate_cust_branch,
 }
 
 def parse_args(args):
