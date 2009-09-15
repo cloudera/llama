@@ -71,7 +71,10 @@ def cdh_ancestor_branch(branch):
   
   m = re.match(r'cdh-([\d\.]+)$', branch)
   if m:
-    return "apache/tags/release-%s" % (m.group(1))
+    if m.group(1).find('18.3') > 0:
+      return "apache/tags/release-%s" % (m.group(1))
+    else:
+      return "cdh-base-%s" % (m.group(1))
 
   return re.sub(r'[\.\+][^\.\+]+?$', '', branch)
 
@@ -99,4 +102,4 @@ class Test(unittest.TestCase):
     self.assertEquals(cdh_ancestor_branch('cdh-0.18.3'), 'apache/tags/release-0.18.3')
     self.assertEquals(cdh_ancestor_branch('cdh-0.18.3+3'), 'cdh-0.18.3')
     self.assertEquals(cdh_ancestor_branch('cdh-0.18.3+3.4'), 'cdh-0.18.3+3')
-    self.assertEquals(cdh_ancestor_branch('cdh-0.20.0'), 'apache/tags/release-0.20.0')
+    self.assertEquals(cdh_ancestor_branch('cdh-0.20.1'), 'cdh-base-0.20.1')
