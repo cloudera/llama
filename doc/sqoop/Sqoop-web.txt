@@ -11,7 +11,7 @@ The most recent release already contains Sqoop. If you've
 been using our RPM packages, running `yum update hadoop-0.20`
 should bring you up to date. Debian users can upgrade to the
 newest release of Cloudera's Distribution for Hadoop by
-running `apt-get update && apt-get install hadoop0.20`.
+running `apt-get update && apt-get install hadoop-0.20`.
 
 .Sqoop and Hadoop 0.18.3
 NOTE: A version of Sqoop compatible with Hadoop 0.18.3 was
@@ -125,7 +125,7 @@ include::../../repos/hadoop/src/contrib/sqoop/doc/classnames.txt[]
 
 include::../../repos/hadoop/src/contrib/sqoop/doc/misc-args.txt[]
 
-include::../../repos/hadoop/src/contrib/sqoop/doc/mysql.txt[]
+include::../../repos/hadoop/src/contrib/sqoop/doc/direct.txt[]
 
 include::../../repos/hadoop/src/contrib/sqoop/doc/hive.txt[]
 

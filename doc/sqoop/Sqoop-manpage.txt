@@ -1,4 +1,4 @@
-include::../../repos/hadoop/src/contrib/sqoop/doc/Sqoop-manpage.txt
+include::../../repos/hadoop/src/contrib/sqoop/doc/Sqoop-manpage.txt[]
 
 
 TROUBLESHOOTING
