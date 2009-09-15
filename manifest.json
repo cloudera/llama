@@ -4,7 +4,7 @@
   
   "remotes":
     {"origin": { "fetch": "ssh://git@git.sf.cloudera.com/%(name)s.git" },
-     "apache": { "fetch": "ssh://git@git.sf.cloudera.com/apache-%(name)s.git" }},
+     "apache": { "fetch": "ssh://git@git.sf.cloudera.com/apache-%(name)s.git" },
      "common": { "fetch": "ssh://git@git.sf.cloudera.com/apache-hadoop-common.git" }},
  
   "projects":
@@ -20,7 +20,7 @@
 
      "hadoop-0.18-package": { "refspec": "cdh-0.18.3", "dir": "repos/hadoop-0.18-package",
                               "remote-project-name": "hadoop-package"},
-     "hadoop-0.20-package": { "refspec": "cdh-0.20.0", "dir": "repos/hadoop-0.20-package",
+     "hadoop-0.20-package": { "refspec": "cdh-0.20.1", "dir": "repos/hadoop-0.20-package",
                               "remote-project-name": "hadoop-package"},
      
      "hive-package": { "refspec": "cdh-0.18", "dir": "repos/hive-package"},
