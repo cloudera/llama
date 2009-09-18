@@ -72,7 +72,8 @@ postfix  postfix/destinations  string  localhost
 postfix  postfix/chattr  boolean  false
 ' | debconf-set-selections
 
-apt-get -y install devscripts pbuilder liburi-perl build-essential dctrl-tools asciidoc
+apt-get -y install devscripts pbuilder liburi-perl build-essential dctrl-tools 
+apt-get -y install asciidoc xmlto
 
 # Install s3cmd
 pushd /tmp

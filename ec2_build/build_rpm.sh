@@ -42,7 +42,7 @@ fi
 
 rm -rf /usr/local/share/apache-forrest-0.8/build/plugins # build fails with this symlink in place, so remove it
 
-yum -y install rpm-build yum-utils zlib-devel gcc gcc-devel gcc-c++ gcc-c++-devel lzo-devel glibc-devel ant ant-nodeps ruby git libtool asciidoc
+yum -y install rpm-build yum-utils zlib-devel gcc gcc-devel gcc-c++ gcc-c++-devel lzo-devel glibc-devel ant ant-nodeps ruby git libtool asciidoc xmlto
 
 ############# BUILD PACKAGE ####################
 
