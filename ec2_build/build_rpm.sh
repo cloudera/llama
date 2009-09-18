@@ -37,12 +37,12 @@ function copy_logs_s3 {
 }
 
 if [ "x$INTERACTIVE" == "xFalse" ]; then
-  trap "copy_logs_s3; hostname -f | grep -q ec2.internal && shutdown -h now;" INT TERM EXIT
+  trap "copy_logs_s3; hostname -f | grep -q internal && shutdown -h now;" INT TERM EXIT
 fi
 
 rm -rf /usr/local/share/apache-forrest-0.8/build/plugins # build fails with this symlink in place, so remove it
 
-yum -y install rpm-build yum-utils zlib-devel gcc gcc-devel gcc-c++ gcc-c++-devel lzo-devel glibc-devel ant ant-nodeps ruby git libtool
+yum -y install rpm-build yum-utils zlib-devel gcc gcc-devel gcc-c++ gcc-c++-devel lzo-devel glibc-devel ant ant-nodeps ruby git libtool asciidoc xmlto
 
 ############# BUILD PACKAGE ####################
 
@@ -102,4 +102,4 @@ copy_logs_s3
 
 # If we're running on S3, shutdown the node
 # (do the check so you can test elsewhere)
-hostname -f | grep -q ec2.internal && shutdown -h now
+hostname -f | grep -q internal && shutdown -h now

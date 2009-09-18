@@ -63,6 +63,7 @@ HADOOP20_SOURCE_MD5=719e169b7760c168441b49f405855b72
 HADOOP20_SITE=$(APACHE_MIRROR)/hadoop/core/hadoop-$(HADOOP20_BASE_VERSION)
 HADOOP20_GIT_REPO=$(BASE_DIR)/repos/hadoop-0.20
 HADOOP20_BASE_REF=cdh-base-$(HADOOP20_BASE_VERSION)
+HADOOP20_BUILD_REF=HEAD
 HADOOP20_PACKAGE_GIT_REPO=$(BASE_DIR)/repos/hadoop-0.20-package
 $(eval $(call PACKAGE,hadoop20,HADOOP20))
 
@@ -75,11 +76,8 @@ PIG_GIT_REPO=$(BASE_DIR)/repos/pig
 PIG_BASE_REF=cdh-base-$(PIG_BASE_VERSION)
 PIG_BUILD_REF=cdh-$(PIG_BASE_VERSION)
 PIG_PACKAGE_GIT_REPO=$(BASE_DIR)/repos/pig-package
+PIG_SITE=file://$(BASE_DIR)/repos/pristine
 $(eval $(call PACKAGE,pig,PIG))
-$(PIG_TARGET_DL):
-	mkdir -p $(@D)
-	cp $(BASE_DIR)/repos/pristine/$(PIG_SOURCE) $(DL_DIR)/$(PIG_SOURCE)
-	touch $@
 
 # Hive 0.4.0 (branch cut)
 
@@ -119,5 +117,6 @@ clean: $(TARGETS_CLEAN)
 
 realclean: clean
 	-rm -rf $(OUTPUT_DIR)
+	-rm -rf $(DL_DIR)
 
 .PHONY: realclean clean package-help help-header packages all world help

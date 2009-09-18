@@ -10,8 +10,7 @@ function copy_logs_s3 {
 }
 
 if [ "x$INTERACTIVE" == "xFalse" ]; then
-  trap "copy_logs_s3; hostname -f | grep -q ec2.internal && shutdown -h now;" INT TERM EXIT
-  trap "hostname -f | grep -q ec2.internal && shutdown -h now;" INT TERM EXIT
+  trap "copy_logs_s3; hostname -f | grep -q internal && shutdown -h now;" INT TERM EXIT
 fi
 
 ##SUBSTITUTE_VARS##
@@ -72,7 +71,8 @@ postfix  postfix/destinations  string  localhost
 postfix  postfix/chattr  boolean  false
 ' | debconf-set-selections
 
-apt-get -y install devscripts pbuilder liburi-perl build-essential dctrl-tools
+apt-get -y install devscripts pbuilder liburi-perl build-essential dctrl-tools 
+apt-get -y install asciidoc xmlto
 
 # Install s3cmd
 pushd /tmp
@@ -158,4 +158,4 @@ copy_logs_s3
 
 # If we're running on S3, shutdown the node
 # (do the check so you can test elsewhere)
-hostname -f | grep -q ec2.internal && shutdown -h now
+hostname -f | grep -q internal && shutdown -h now
