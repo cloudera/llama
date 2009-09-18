@@ -94,5 +94,6 @@ clean: $(TARGETS_CLEAN)
 
 realclean: clean
 	-rm -rf $(OUTPUT_DIR)
+	-rm -rf $(DL_DIR)
 
 .PHONY: realclean clean package-help help-header packages all world help
