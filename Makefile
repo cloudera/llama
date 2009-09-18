@@ -69,7 +69,7 @@ $(eval $(call PACKAGE,hadoop20,HADOOP20))
 # Pig 
 PIG_BASE_VERSION=0.3.99
 PIG_NAME=pig
-PIG_PKG_NAME=pig
+PIG_PKG_NAME=hadoop-pig
 PIG_SOURCE=pig-$(PIG_BASE_VERSION).1.tar.gz
 PIG_GIT_REPO=$(BASE_DIR)/repos/pig
 PIG_BASE_REF=cdh-base-$(PIG_BASE_VERSION)
