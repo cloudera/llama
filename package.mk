@@ -13,7 +13,7 @@ $(BUILD_DIR)/%/.prep:
 	  $($(PKG)_GIT_REPO) \
 	  $($(PKG)_BASE_REF) \
 	  $($(PKG)_BUILD_REF) \
-	  $(DL_DIR)/$($(PKG)_SOURCE) \
+	  $($(PKG)_DOWNLOAD_DST) \
 	  $($(PKG)_SOURCE_DIR)
 	touch $@
 
@@ -157,8 +157,24 @@ $(1)-clean:
 
 $(1)-info:
 	@echo "Info for package $(1)"
-	@echo "   Download URL: $$($(2)_DOWNLOAD_URL)"
-	@echo "   Download dst: $$($(2)_DOWNLOAD_DST)"
+	@echo "  Will download from URL: $$($(2)_DOWNLOAD_URL)"
+	@echo "  To destination file: $$($(2)_DOWNLOAD_DST)"
+	@echo "  Then unpack into $$($(2)_SOURCE_DIR)"
+	@echo
+	@echo "Patches:"
+	@echo "  BASE_REF: $$($(2)_BASE_REF)"
+	@echo "  BUILD_REF: $$($(2)_BUILD_REF)"
+	@echo "  Generated from: git log $$($(2)_BASE_REF)..$$($(2)_BUILD_REF) in $$($(2)_GIT_REPO)"
+	@echo
+	@echo "Git repo: " $$($(2)_GIT_REPO)
+	@echo "Currently checked out: " $(shell cd $($(2)_GIT_REPO) && git symbolic-ref --quiet HEAD)
+	@echo "Version: $$($(2)_FULL_VERSION)"
+	@echo
+	@echo "Stamp status:"
+	@for mystamp in DL PREP PATCH BUILD SRPM RPM SDEB;\
+	  do echo -n "  $$$$mystamp: " ; \
+	  ([ -f $($(1)_$$$$mystamp) ] && echo present || echo not present) ; \
+	done
 
 # Implicit rules with PKG variable
 $$($(2)_TARGET_DL):       PKG=$(2)
