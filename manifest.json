@@ -15,7 +15,7 @@
                       "remotes": ["origin", "common"],
                       "remote-project-name": "hadoop" },
 
-     "pig": {"refspec": "cdh-0.3.99", "dir": "repos/pig", "remotes": ["origin", "apache"]},
+     "pig": {"refspec": "cdh-0.4.99.0", "dir": "repos/pig", "remotes": ["origin", "apache"]},
      "hive": {"refspec": "cdh-0.3.99.1", "dir": "repos/hive", "remotes": ["origin", "apache"]},
 
      "hadoop-0.18-package": { "refspec": "cdh-0.18.3", "dir": "repos/hadoop-0.18-package",
