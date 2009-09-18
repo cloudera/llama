@@ -3,7 +3,7 @@
 # Download 
 $(BUILD_DIR)/%/.download:
 	mkdir -p $(@D)
-	[ -f $(DL_DIR)/$($(PKG)_SOURCE) ] || wget -P $(DL_DIR) --progress bar $($(PKG)_SITE)/$($(PKG)_SOURCE)
+	[ -f $($(PKG)_DOWNLOAD_DST) ] || (cd $(DL_DIR) && curl -# -O $($(PKG)_DOWNLOAD_URL))
 	touch $@
 
 # Prep
@@ -60,7 +60,7 @@ $(BUILD_DIR)/%/.sdeb:
             do cp $(PKG_BUILD_DIR)/deb/$$file $($(PKG)_OUTPUT_DIR); \
         done
 	touch $@
-	
+
 
 # Package make function
 # $1 is the target prefix, $2 is the variable prefix
@@ -82,6 +82,10 @@ $(2)_BUILD_REF      := $(notdir $(shell cd $($(2)_GIT_REPO) && git symbolic-ref 
 $(2)_BUILD_DIR      = $(BUILD_DIR)/$(1)/$$($(2)_FULL_VERSION)/
 $(2)_OUTPUT_DIR      = $(OUTPUT_DIR)/$(1)
 $(2)_SOURCE_DIR       = $$($(2)_BUILD_DIR)/source
+
+# Download source URL and destination path
+$(2)_DOWNLOAD_URL = $($(2)_SITE)/$($(2)_SOURCE)
+$(2)_DOWNLOAD_DST = $(DL_DIR)/$($(2)_SOURCE)
 
 # Define the file stamps
 $(2)_TARGET_DL       = $$($(2)_BUILD_DIR)/.download
@@ -124,6 +128,11 @@ $(1)-help:
 
 $(1)-clean: 
 	-rm -rf $(BUILD_DIR)/$(1)
+
+$(1)-info:
+	@echo "Info for package $(1)"
+	@echo "   Download URL: $$($(2)_DOWNLOAD_URL)"
+	@echo "   Download dst: $$($(2)_DOWNLOAD_DST)"
 
 # Implicit rules with PKG variable
 $$($(2)_TARGET_DL):       PKG=$(2)
