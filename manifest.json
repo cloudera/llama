@@ -24,7 +24,7 @@
                               "remote-project-name": "hadoop-package"},
      
      "hive-package": { "refspec": "cdh-0.18", "dir": "repos/hive-package"},
-     "pig-package": { "refspec": "cdh-0.18", "dir": "repos/pig-package"},
+     "pig-package": { "refspec": "cdh-0.3.99", "dir": "repos/pig-package"},
 
      "cdhbuild": { "dir": "repos/cdhbuild"},
      "pristine-tarballs": { "dir": "repos/pristine"}
