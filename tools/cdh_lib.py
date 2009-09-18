@@ -91,7 +91,7 @@ def cdh_get_version(rev):
   merge_base = git_merge_base(rev, ancestor)
   count = count_commits_from(merge_base, rev)
 
-  if ancestor.startswith('apache'):
+  if ancestor.startswith('apache') or ancestor.startswith('cdh-base'):
     return base_version + '+' + str(count)
   else:
     return base_version + '.' + str(count)
