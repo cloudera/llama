@@ -87,6 +87,12 @@ $(BUILD_DIR)/%/.sdeb:
         done
 	touch $@
 
+$(BUILD_DIR)/%/.deb: SRCDEB=$($(PKG)_PKG_NAME)_$($(PKG)_FULL_VERSION)-$($(PKG)_RELEASE).dsc
+$(BUILD_DIR)/%/.deb:
+	cd $($(PKG)_OUTPUT_DIR) && \
+		dpkg-source -x $(SRCDEB) && \
+		cd $($(PKG)_PKG_NAME)-$(PKG_FULL_VERSION) && \
+			debuild -uc -us -b 
 
 # Package make function
 # $1 is the target prefix, $2 is the variable prefix
@@ -121,6 +127,7 @@ $(2)_TARGET_BUILD    = $$($(2)_BUILD_DIR)/.build
 $(2)_TARGET_SRPM     = $$($(2)_BUILD_DIR)/.srpm
 $(2)_TARGET_RPM      = $$($(2)_BUILD_DIR)/.rpm
 $(2)_TARGET_SDEB     = $$($(2)_BUILD_DIR)/.sdeb
+$(2)_TARGET_DEB      = $$($(2)_BUILD_DIR)/.deb
 
 # We download target when the source is not in the download directory
 $(1)-download: $$($(2)_TARGET_DL) 
@@ -142,6 +149,9 @@ $(1)-rpm: $(1)-srpm $$($(2)_TARGET_RPM)
 
 # To make sdebs, we need to build the package
 $(1)-sdeb: $(1) $$($(2)_TARGET_SDEB)
+
+# To make debs, we need to make source packages
+$(1)-deb: $(1)-sdeb $$($(2)_TARGET_DEB)
 
 #### 
 # Helper targets -version -help etc
@@ -181,10 +191,10 @@ $$($(2)_TARGET_DL):       PKG=$(2)
 $$($(2)_TARGET_PREP):     PKG=$(2)
 $$($(2)_TARGET_PATCH):    PKG=$(2)
 $$($(2)_TARGET_BUILD):    PKG=$(2)
-$$($(2)_TARGET_RPM) $$($(2)_TARGET_SRPM) $$($(2)_TARGET_SDEB): PKG=$(2)
-$$($(2)_TARGET_RPM) $$($(2)_TARGET_SRPM) $$($(2)_TARGET_SDEB): PKG_FULL_VERSION=$$($(2)_FULL_VERSION)
-$$($(2)_TARGET_RPM) $$($(2)_TARGET_SRPM) $$($(2)_TARGET_SDEB): PKG_SOURCE_DIR=$$($(2)_SOURCE_DIR)
-$$($(2)_TARGET_RPM) $$($(2)_TARGET_SRPM) $$($(2)_TARGET_SDEB): PKG_BUILD_DIR=$$($(2)_BUILD_DIR)
+$$($(2)_TARGET_RPM) $$($(2)_TARGET_SRPM) $$($(2)_TARGET_SDEB) $$($(2)_TARGET_DEB): PKG=$(2)
+$$($(2)_TARGET_RPM) $$($(2)_TARGET_SRPM) $$($(2)_TARGET_SDEB) $$($(2)_TARGET_DEB): PKG_FULL_VERSION=$$($(2)_FULL_VERSION)
+$$($(2)_TARGET_RPM) $$($(2)_TARGET_SRPM) $$($(2)_TARGET_SDEB) $$($(2)_TARGET_DEB): PKG_SOURCE_DIR=$$($(2)_SOURCE_DIR)
+$$($(2)_TARGET_RPM) $$($(2)_TARGET_SRPM) $$($(2)_TARGET_SDEB) $$($(2)_TARGET_DEB): PKG_BUILD_DIR=$$($(2)_BUILD_DIR)
 
 TARGETS += $(1) 
 TARGETS_HELP += $(1)-help
