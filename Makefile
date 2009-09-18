@@ -66,15 +66,20 @@ HADOOP20_BASE_REF=cdh-base-$(HADOOP20_BASE_VERSION)
 HADOOP20_PACKAGE_GIT_REPO=$(BASE_DIR)/repos/hadoop-0.20-package
 $(eval $(call PACKAGE,hadoop20,HADOOP20))
 
-# Pig 0.3.0
-#PIG_BASE_VERSION=0.3.0
-#PIG_SOURCE=pig-$(PIG_BASE_VERSION).tar.gz
-#PIG_SITE=$(APACHE_MIRROR)/hadoop/pig/pig-$(PIG_BASE_VERSION)
-#PIG_GIT_REPO=$(BASE_DIR)/repos/pig
-#PIG_BASE_REF=apache/tags/release-$(PIG_BASE_VERSION)
-#PIG_BUILD_REF=cdh-$(PIG_BASE_VERSION)
-#PIG_PACKAGE_GIT_REPO=$(BASE_DIR)/repos/pig-package
-#$(eval $(call PACKAGE,pig,PIG))
+# Pig 
+PIG_BASE_VERSION=0.3.99
+PIG_NAME=pig
+PIG_PKG_NAME=pig
+PIG_SOURCE=pig-$(PIG_BASE_VERSION).1.tar.gz
+PIG_GIT_REPO=$(BASE_DIR)/repos/pig
+PIG_BASE_REF=cdh-base-$(PIG_BASE_VERSION)
+PIG_BUILD_REF=cdh-$(PIG_BASE_VERSION)
+PIG_PACKAGE_GIT_REPO=$(BASE_DIR)/repos/pig-package
+$(eval $(call PACKAGE,pig,PIG))
+$(PIG_TARGET_DL):
+	mkdir -p $(@D)
+	cp $(BASE_DIR)/repos/pristine/$(PIG_SOURCE) $(DL_DIR)/$(PIG_SOURCE)
+	touch $@
 
 packages: $(TARGETS) 
 
