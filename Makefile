@@ -81,6 +81,8 @@ $(eval $(call PACKAGE,pig,PIG))
 
 # Hive 0.4.0 (branch cut)
 
+HIVE_NAME=hive
+HIVE_PKG_NAME=hadoop-hive
 HIVE_BASE_VERSION=0.3.99.1.3a1e22af57
 HIVE_SOURCE=hive-$(HIVE_BASE_VERSION).tar.gz
 HIVE_GIT_REPO=$(BASE_DIR)/repos/hive
