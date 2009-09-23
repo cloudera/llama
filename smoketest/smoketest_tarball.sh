@@ -130,7 +130,7 @@ bin/hadoop namenode -format
 start_daemon namenode
 start_daemon datanode
 ./bin/hadoop dfsadmin -safemode wait
-sleep 5
+sleep 15
 start_daemon jobtracker
 JT=$LAST_STARTED
 start_daemon tasktracker
@@ -148,12 +148,12 @@ fi
 kill $JT $TT
 
 ######## FAIR SCHEDULER TIME, BABY! ############
-sed -i -e "s,</configuration>,
+perl -p -i -e "s,</configuration>,
 <property>
   <name>mapred.jobtracker.taskScheduler</name>
   <value>org.apache.hadoop.mapred.FairScheduler</value>
 </property>
-</configuration>
+</configuration>,
 " $HADOOP_CONF_DIR/mapred-site.xml
 
 start_daemon jobtracker
