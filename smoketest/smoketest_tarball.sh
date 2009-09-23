@@ -29,6 +29,7 @@ start_daemon() {
   ./bin/hadoop $1 &
   pid=$!
   HADOOP_DAEMON_PIDS="$HADOOP_DAEMON_PIDS $pid"
+  LAST_STARTED=$pid
 }
 
 set -e
@@ -131,7 +132,9 @@ start_daemon datanode
 ./bin/hadoop dfsadmin -safemode wait
 sleep 5
 start_daemon jobtracker
+JT=$LAST_STARTED
 start_daemon tasktracker
+TT=$LAST_STARTED
 
 ./bin/hadoop fs -ls /
 ./bin/hadoop fs -copyFromLocal /etc/motd /motd
@@ -141,3 +144,20 @@ if [ "$HD_MD5" != "$(cat /etc/motd | md5sum -)" ]; then
   exit 1
 fi
 ./bin/hadoop jar hadoop-*-examples.jar pi 1 1000
+
+kill $JT $TT
+
+######## FAIR SCHEDULER TIME, BABY! ############
+sed -i -e "s,</configuration>,
+<property>
+  <name>mapred.jobtracker.taskScheduler</name>
+  <value>org.apache.hadoop.mapred.FairScheduler</value>
+</property>
+</configuration>
+" $HADOOP_CONF_DIR/mapred-site.xml
+
+start_daemon jobtracker
+start_daemon tasktracker
+
+./bin/hadoop jar hadoop-*-examples.jar pi 1 1000
+
