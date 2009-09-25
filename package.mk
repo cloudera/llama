@@ -31,6 +31,7 @@ $(BUILD_DIR)/%/.build:
 	  JAVA64_HOME=$(JAVA64_HOME) \
 	  JAVA5_HOME=$(JAVA5_HOME) \
 	  FORREST_HOME=$(FORREST_HOME) \
+	  FULL_VERSION=$($(PKG)_FULL_VERSION) \
 	  $($(PKG)_SOURCE_DIR)/cloudera/do-release-build
 	mkdir -p $($(PKG)_OUTPUT_DIR)
 	cp $($(PKG)_SOURCE_DIR)/build/$($(PKG)_NAME)-$($(PKG)_FULL_VERSION).tar.gz $($(PKG)_OUTPUT_DIR)
