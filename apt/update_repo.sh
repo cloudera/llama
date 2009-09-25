@@ -58,7 +58,7 @@ s3cmd sync s3://$S3_BUCKET/build/$BUILD_ID $BUILD_ID
 cd $BUILD_ID
 mkdir -p source
 perl -n -a -e '
-if (/^deb/) {
+if (/deb/) {
   print "Fetching $F[1]...\n";
   system("/usr/bin/curl", "-s", "-o", "source/" . $F[1], $F[3]);
 }' manifest.txt

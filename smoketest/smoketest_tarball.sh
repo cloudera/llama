@@ -49,7 +49,6 @@ cd $HADOOP
 # All the tests
 FILES=(
   cloudera/CHANGES.cloudera.txt 
-  docs/jdiff-cloudera/changes.html
   lib/native/Linux-i386-32/libhadoop.so.1.0.0
   lib/native/Linux-i386-32/libhadoop.so
   lib/native/Linux-i386-32/libhadoop.so.1
@@ -130,7 +129,7 @@ bin/hadoop namenode -format
 start_daemon namenode
 start_daemon datanode
 ./bin/hadoop dfsadmin -safemode wait
-sleep 15
+sleep 60
 start_daemon jobtracker
 JT=$LAST_STARTED
 start_daemon tasktracker

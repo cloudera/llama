@@ -83,21 +83,17 @@ $(eval $(call PACKAGE,pig,PIG))
 
 HIVE_NAME=hive
 HIVE_PKG_NAME=hadoop-hive
-HIVE_BASE_VERSION=0.3.99.1.3a1e22af57
-HIVE_SOURCE=hive-$(HIVE_BASE_VERSION).tar.gz
+HIVE_BASE_VERSION=0.3.99.1
+HIVE_SOURCE=hive-$(HIVE_BASE_VERSION).3a1e22af57.tar.gz
 HIVE_GIT_REPO=$(BASE_DIR)/repos/hive
-HIVE_BASE_REF=3a1e22af57
+HIVE_BASE_REF=cdh-base-$(HIVE_BASE_VERSION)
 HIVE_BUILD_REF=cdh-$(HIVE_BASE_VERSION)
 HIVE_PACKAGE_GIT_REPO=$(BASE_DIR)/repos/hive-package
+HIVE_SITE=file://$(BASE_DIR)/repos/pristine
 $(eval $(call PACKAGE,hive,HIVE))
+
 HIVE_ORIG_SOURCE_DIR=$(HIVE_BUILD_DIR)/source
 HIVE_SOURCE_DIR=$(HIVE_BUILD_DIR)/source/src
-
-
-$(HIVE_TARGET_DL):
-	mkdir -p $(@D)
-	cp $(BASE_DIR)/repos/pristine/hive-$(HIVE_BASE_VERSION).tar.gz $(DL_DIR)/hive-$(HIVE_BASE_VERSION).tar.gz
-	touch $@
 
 $(HIVE_TARGET_PREP):
 	mkdir -p $($(PKG)_SOURCE_DIR)
