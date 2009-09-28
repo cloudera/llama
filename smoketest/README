@@ -1,0 +1,6 @@
+# Checkout the circus repo from git.sf.cloudera.com
+# Follow the directions in CIRCUS_HOME/INSTALL
+# Run the following:
+
+$ cd cdh
+$ circus -c local --test-dir=smoketest/tests path/to/hadoop.tar.gz
