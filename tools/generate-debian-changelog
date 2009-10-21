@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.5
+#!/usr/bin/env python
 # Copyright (c) 2009 Cloudera, inc.
 
 import os
@@ -50,7 +50,7 @@ def main(args):
   prog_name = os.path.basename(args[0])
   repo, base_ref, build_ref, package_name, dst_path = args[1:]
 
-  out_file = sys.stdout if dst_path == '-' else file(dst_path, "w")
+  out_file = dst_path == '-' and sys.stdout or file(dst_path, "w")
 
   os.chdir(repo)
   log_entries = git_log(base_ref, build_ref)

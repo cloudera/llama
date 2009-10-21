@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.5
+#!/usr/bin/env python
 # (c) Copyright 2009 Cloudera, Inc.
 
 import re
@@ -95,7 +95,6 @@ def cdh_get_version(rev):
     return base_version + '+' + str(count)
   else:
     return base_version + '.' + str(count)
-
 
 class Test(unittest.TestCase):
   def testAncestor(self):
