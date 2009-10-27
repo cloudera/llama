@@ -79,17 +79,16 @@ PIG_PACKAGE_GIT_REPO=$(BASE_DIR)/repos/pig-package
 PIG_SITE=file://$(BASE_DIR)/repos/pristine
 $(eval $(call PACKAGE,pig,PIG))
 
-# Hive 0.4.0 (branch cut)
-
+# Hive
 HIVE_NAME=hive
 HIVE_PKG_NAME=hadoop-hive
-HIVE_BASE_VERSION=0.3.99.1
-HIVE_SOURCE=hive-$(HIVE_BASE_VERSION).3a1e22af57.tar.gz
+HIVE_BASE_VERSION=0.4.0
+HIVE_SOURCE=hive-$(HIVE_BASE_VERSION)-hadoop-0.20.0-dev.tar.gz
 HIVE_GIT_REPO=$(BASE_DIR)/repos/hive
 HIVE_BASE_REF=cdh-base-$(HIVE_BASE_VERSION)
 HIVE_BUILD_REF=cdh-$(HIVE_BASE_VERSION)
 HIVE_PACKAGE_GIT_REPO=$(BASE_DIR)/repos/hive-package
-HIVE_SITE=file://$(BASE_DIR)/repos/pristine
+HIVE_SITE=$(APACHE_MIRROR)/hadoop/hive/hive-$(HIVE_BASE_VERSION)/
 $(eval $(call PACKAGE,hive,HIVE))
 
 HIVE_ORIG_SOURCE_DIR=$(HIVE_BUILD_DIR)/source
@@ -100,7 +99,6 @@ $(HIVE_TARGET_PREP):
 	$(BASE_DIR)/tools/setup-package-build $($(PKG)_GIT_REPO) $($(PKG)_BASE_REF) $($(PKG)_BUILD_REF) $(DL_DIR)/$($(PKG)_SOURCE) $(HIVE_BUILD_DIR)/source
 	rsync -av $(HIVE_ORIG_SOURCE_DIR)/cloudera/ $(HIVE_SOURCE_DIR)/cloudera/
 	touch $@
-
 
 packages: $(TARGETS) 
 
