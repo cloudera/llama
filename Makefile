@@ -76,7 +76,7 @@ PIG_GIT_REPO=$(BASE_DIR)/repos/pig
 PIG_BASE_REF=cdh-base-$(PIG_BASE_VERSION)
 PIG_BUILD_REF=cdh-$(PIG_BASE_VERSION)
 PIG_PACKAGE_GIT_REPO=$(BASE_DIR)/repos/pig-package
-PIG_SITE=file://$(BASE_DIR)/repos/pristine
+PIG_SITE=$(APACHE_MIRROR)/hadoop/pig/pig-$(PIG_BASE_VERSION)
 $(eval $(call PACKAGE,pig,PIG))
 
 # Hive
