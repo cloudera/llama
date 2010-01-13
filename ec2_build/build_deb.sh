@@ -19,10 +19,15 @@ export AWS_SECRET_ACCESS_KEY
 
 ############################## SETUP BUILD ENV ##############################
 
-eval `dpkg-architecture` # set DEB_* variables
 
 # Install things needed to build
 export DEBIAN_FRONTEND=noninteractive
+
+# The Karmic AMI is from Canonical instead of Alestic. They don't enable multiverse by
+# default. We need multiverse for sun-java6-jdk.
+if [ $(lsb_release -c -s) == "karmic" ]; then 
+  sed -i 's/universe/universe multiverse/' /etc/apt/sources.list
+fi
 
 apt-get update
 
@@ -72,7 +77,7 @@ postfix  postfix/chattr  boolean  false
 ' | debconf-set-selections
 
 apt-get -y install devscripts pbuilder liburi-perl build-essential dctrl-tools 
-apt-get -y install asciidoc xmlto
+apt-get -y install asciidoc xmlto libopenssl-ruby
 
 # Install s3cmd
 pushd /tmp
@@ -82,6 +87,8 @@ pushd /tmp
 popd
 
 ############################## DOWNLOAD ##############################
+
+eval `dpkg-architecture` # set DEB_* variables
 
 for PACKAGE in $PACKAGES; do
  
