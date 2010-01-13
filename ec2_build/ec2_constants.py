@@ -7,8 +7,6 @@ AMIS={
   ('karmic', 'amd64'):   'ami-ab15f6c2',
   ('jaunty', 'x86'):     'ami-0d729464',
   ('jaunty', 'amd64'):   'ami-1f749276',
-  ('jaunty', 'x86'):     'ami-0d729464',
-  ('jaunty', 'amd64'):   'ami-1f749276',
   ('intrepid', 'x86'):   'ami-0372946a', 
   ('intrepid', 'amd64'): 'ami-1374927a',
   ('hardy', 'x86'):      'ami-0772946e', 
