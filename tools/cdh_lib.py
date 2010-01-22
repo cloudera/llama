@@ -76,7 +76,8 @@ def cdh_ancestor_branch(branch):
     else:
       return "cdh-base-%s" % (m.group(1))
 
-  return re.sub(r'[\.\+][^\.\+]+?$', '', branch)
+  # Add origin to all ancestor branches 
+  return re.sub(r'[\.\+][^\.\+]+?$', '', 'origin/' + branch)
 
 def cdh_get_version(rev):
   """ Given a revision, determine the unique version number for it. """
