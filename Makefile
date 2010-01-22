@@ -31,6 +31,7 @@ endif
 
 # Default Apache mirror
 APACHE_MIRROR ?= http://mirror.cloudera.com/apache/
+CLOUDERA_ARCHIVE ?= http://archive.cloudera.com/tarballs/
 
 # Include the implicit rules and functions for building packages
 include package.mk
@@ -58,9 +59,9 @@ $(eval $(call PACKAGE,hadoop18,HADOOP18))
 HADOOP20_NAME=hadoop
 HADOOP20_PKG_NAME=hadoop-0.20
 HADOOP20_BASE_VERSION=0.20.1
-HADOOP20_SOURCE=hadoop-$(HADOOP20_BASE_VERSION).tar.gz
-HADOOP20_SOURCE_MD5=719e169b7760c168441b49f405855b72
-HADOOP20_SITE=$(APACHE_MIRROR)/hadoop/core/hadoop-$(HADOOP20_BASE_VERSION)
+HADOOP20_SOURCE=hadoop-$(HADOOP20_BASE_VERSION)-r812594.tar.gz
+HADOOP20_SOURCE_MD5=2a114a035407efe8ab27bc36a7e1d3fa
+HADOOP20_SITE=$(CLOUDERA_ARCHIVE)
 HADOOP20_GIT_REPO=$(BASE_DIR)/repos/hadoop-0.20
 HADOOP20_BASE_REF=cdh-base-$(HADOOP20_BASE_VERSION)
 HADOOP20_BUILD_REF=HEAD
