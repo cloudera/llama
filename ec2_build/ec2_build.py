@@ -92,6 +92,7 @@ class Options:
     self.BUILD_PRODUCTS_DIR=DEFAULT_BUILD_PRODUCTS_DIR
     self.DRY_RUN = False
     self.INTERACTIVE = False
+    self.WAIT = False
     # Default to building hadoop
     self.PACKAGES = DEFAULT_PACKAGES
   pass
@@ -111,6 +112,7 @@ def parse_args():
   op.add_option('-n', '--dry-run', action='store_true')
   op.add_option('-p', '--packages', action='append', choices=POSSIBLE_PACKAGES)
   op.add_option("-i", '--interactive', action="store_true")
+  op.add_option('-w', '--wait', action="store_true")
 
   opts, args = op.parse_args()
 
@@ -134,6 +136,8 @@ def parse_args():
   ret_opts.DRY_RUN = opts.dry_run
   
   ret_opts.INTERACTIVE = opts.interactive
+
+  ret_opts.WAIT = opts.wait
 
   if opts.bucket:
     ret_opts.S3_BUCKET = opts.bucket
@@ -312,6 +316,14 @@ def main():
   print "To update apt repo after build is finished:"
   print "  update_repo.sh %s %s" % (options.S3_BUCKET, BUILD_ID)
 
+  if options.WAIT:
+    print "Waiting for instances to terminate..."
+    for instance in instances:
+      instance.update()
+      while instance.state != 'terminated':
+        time.sleep(5)
+        instance.update()
+      print "   terminated %s" % (instance.id)
 
 if __name__ == "__main__":
   main()
