@@ -47,7 +47,7 @@ fi
 # CODENAME: $DEBIAN_DISTRO-$CDH_RELEASE
 # RELEASE: a build with version info hadoop-0.20_0.20.0+69+desktop.49-1cdh~intrepid-cdh2_i386
 
-DEBIAN_DISTROS="lenny hardy intrepid jaunty"
+DEBIAN_DISTROS="lenny hardy intrepid jaunty karmic"
 
 ARCHS="i386 amd64"
 
