@@ -68,7 +68,7 @@ BUILD_ID = "%s-%s" % (USERNAME, datetime.datetime.now().strftime("%Y%m%d_%H%M%S"
 FILECACHE_S3="file-cache"
 
 # How long should manifests be valid for
-EXPIRATION=60*60*6 # 6h
+EXPIRATION=60*60*24*7 # 7days
 
 # Shell scripts to run to perform builds
 BUILD_DEB=file(SCRIPT_DIR + "/build_deb.sh").read()
