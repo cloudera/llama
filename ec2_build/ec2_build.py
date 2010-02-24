@@ -12,14 +12,9 @@ __usage = """
                           (default: cloudera, <username>)
 
    --dir | -d <dir>       Build products directory where we find source debs and rpms
-   --only <rpm|deb>       Only rebuild RPMs/debs
-   --only <distro>        Only build on given distro (eg centos5)
-   --only <arch>          Only build slaves of given arch (eg amd64)
-   --only <distro-arch>   Only build slaves of given distro-arch
-
-                          The --only options may be listed multiple times,
-                          in which case the union of the sets is built.
-
+   --type <rpm|deb>       Only rebuild RPMs/debs
+   --distro <distro>      Only build on given distro (eg centos5)
+   --arch <arch>          Only build slaves of given arch (eg amd64)
    --dry-run | -n         Don't actually take any actions - just print out what
                           would normally happen
 
@@ -108,7 +103,9 @@ def parse_args():
   op.add_option('-g', '--groups')
   op.add_option('-d', '--dir')
   op.add_option('-t', '--tag')
-  op.add_option('--only', action='append')
+  op.add_option('--type', action='append')
+  op.add_option('--distro', action='append')
+  op.add_option('--arch', action='append')
   op.add_option('-n', '--dry-run', action='store_true')
   op.add_option('-p', '--packages', action='append', choices=POSSIBLE_PACKAGES)
   op.add_option("-i", '--interactive', action="store_true")
@@ -123,15 +120,14 @@ def parse_args():
   if opts.groups:
     ret_opts.EC2_GROUPS = groups.split(',')
 
-  if opts.only:
-    ret_opts.BUILD_MACHINES = (
-      [(type, distro, arch) for
-       (type, distro, arch) in ret_opts.BUILD_MACHINES
-       if (type in opts.only or
-           distro in opts.only or
-           arch in opts.only or
-           "%s-%s"%(distro, arch) in opts.only or
-           "%s-%s"%(type,arch) in opts.only)])
+  if opts.arch:
+    ret_opts.BUILD_MACHINES = [(type,distro,arch ) for (type, distro, arch) in ret_opts.BUILD_MACHINES if arch in opts.arch  ]
+
+  if opts.distro:
+    ret_opts.BUILD_MACHINES = [(type,distro,arch ) for (type, distro, arch) in ret_opts.BUILD_MACHINES if distro in opts.distro ]
+
+  if opts.type:
+    ret_opts.BUILD_MACHINES = [(type,distro,arch ) for (type, distro, arch) in ret_opts.BUILD_MACHINES if type in opts.type  ]
 
   ret_opts.DRY_RUN = opts.dry_run
   
