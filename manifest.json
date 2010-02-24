@@ -16,6 +16,7 @@
 
      "pig": {"track-branch": "cdh-0.5.0+11", "dir": "repos/pig", "remotes": ["origin", "apache"]},
      "hive": {"track-branch": "cdh-0.4.1+14", "dir": "repos/hive", "remotes": ["origin", "apache"]},
+     "zookeeper": {"track-branch": "cdh-3.2.2", "dir": "repos/zookeeper", "remotes": ["origin", "apache"]},
 
      "hadoop-0.18-package": { "track-branch": "CDH2-0.18", "dir": "repos/hadoop-0.18-package",
                               "remote-project-name": "hadoop-package"},
@@ -24,6 +25,7 @@
      
      "hive-package": { "track-branch": "CDH2-0.4.0", "dir": "repos/hive-package"},
      "pig-package": { "track-branch": "CDH2-0.5.0", "dir": "repos/pig-package"},
+     "zookeeper-package": { "track-branch": "CDH2-3.2.2", "dir": "repos/zookeeper-package"},
 
      "cdhbuild": { "dir": "repos/cdhbuild"},
      "pristine-tarballs": { "dir": "repos/pristine"}

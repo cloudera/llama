@@ -54,7 +54,7 @@ DEFAULT_CDH_RELEASE = 'cdh2'
 # User running the script
 USERNAME = os.getlogin()
 
-POSSIBLE_PACKAGES = [ 'hadoop18', 'hadoop20', 'pig', 'hive' ]
+POSSIBLE_PACKAGES = [ 'hadoop18', 'hadoop20', 'pig', 'hive' , 'zookeeper' ]
 DEFAULT_PACKAGES = ['hadoop18', 'hadoop20']
 # Build ID
 BUILD_ID = "%s-%s" % (USERNAME, datetime.datetime.now().strftime("%Y%m%d_%H%M%S"))
