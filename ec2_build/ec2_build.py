@@ -210,6 +210,12 @@ def upload_files_and_manifest(options, package_files):
   """
   s3 = boto.connect_s3()
   bucket = s3.lookup(options.S3_BUCKET)
+  if not bucket:
+    error_string = "Unable to lookup bucket %s\n" % str(options.S3_BUCKET)
+    error_string += "This is most likely due to not setting your"
+    error_string += " AWS_SECRET_ACCESS_KEY correctly"
+    raise Exception(error_string)
+
 
   build_dir = os.path.join("build", BUILD_ID)
 
