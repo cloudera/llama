@@ -52,7 +52,10 @@ DEFAULT_BUILD_PRODUCTS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file
 DEFAULT_CDH_RELEASE = 'cdh2'
 
 # User running the script
-USERNAME = os.getlogin()
+try:
+	USERNAME = os.getlogin()
+except:
+	USERNAME = "build"
 
 POSSIBLE_PACKAGES = [ 'hadoop18', 'hadoop20', 'pig', 'hive' , 'zookeeper' ]
 DEFAULT_PACKAGES = ['hadoop18', 'hadoop20']
@@ -80,8 +83,8 @@ class Options:
   def __init__(self):
     # Bucket to store source RPMs/debs in
     self.S3_BUCKET = 'ec2-build'
-    self.EC2_KEY_NAME = os.getlogin()
-    self.EC2_GROUPS=['cloudera', os.getlogin()]
+    self.EC2_KEY_NAME = USERNAME
+    self.EC2_GROUPS=['cloudera', USERNAME]
     self.BUILD_MACHINES = DEFAULT_BUILD_MACHINES
     self.CDH_RELEASE=DEFAULT_CDH_RELEASE
     self.BUILD_PRODUCTS_DIR=DEFAULT_BUILD_PRODUCTS_DIR
