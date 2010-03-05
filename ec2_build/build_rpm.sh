@@ -33,7 +33,7 @@ export FORREST_HOME=/usr/local/share/apache-forrest-0.8
 chmod a+w "$FORREST_HOME"
 
 function copy_logs_s3 {
-      s3cmd.rb put $S3_BUCKET:build/$BUILD_ID/${CODENAME}-${ARCH}-user.log /tmp/log.txt
+      s3cmd.rb put $S3_BUCKET:build/$BUILD_ID/${CODENAME}-${ARCH}-user.log /tmp/log.txt x-amz-acl:public-read
 }
 
 if [ "x$INTERACTIVE" == "xFalse" ]; then
@@ -81,7 +81,7 @@ for PACKAGE in $PACKAGES; do
   for arch_dir in /tmp/topdir/RPMS/*  ; do
     TARGET_ARCH=$(basename $arch_dir)
     for f in $arch_dir/*.rpm ; do
-        s3cmd.rb put $S3_BUCKET:build/$BUILD_ID/rpm_${CODENAME}_${ARCH}/$(basename $f) $f
+        s3cmd.rb put $S3_BUCKET:build/$BUILD_ID/rpm_${CODENAME}_${ARCH}/$(basename $f) $f x-amz-acl:public-read
     done
   done
 

@@ -5,7 +5,7 @@ set -e
 
 function copy_logs_s3 {
   if [ -e $S3CMD ]; then
-      $S3CMD put $S3_BUCKET:build/$BUILD_ID/deb_${CODENAME}_${DEB_HOST_ARCH}/user.log /var/log/user.log
+      $S3CMD put $S3_BUCKET:build/$BUILD_ID/deb_${CODENAME}_${DEB_HOST_ARCH}/user.log /var/log/user.log x-amz-acl:public-read
   fi
 }
 
@@ -145,7 +145,8 @@ for PACKAGE in $PACKAGES; do
   FILES=$(grep-dctrl -n -s Files '' *changes | grep . | awk '{print $5}')
 
   for f in $FILES *changes ; do
-      $S3CMD put $S3_BUCKET:build/$BUILD_ID/deb_${CODENAME}_${DEB_HOST_ARCH}/$(basename $f) $f
+      $S3CMD put $S3_BUCKET:build/$BUILD_ID/deb_${CODENAME}_${DEB_HOST_ARCH}/$(basename $f) $f x-amz-acl:public-read
+
   done
 
   # Leave /tmp/$BUILD_ID
