@@ -3,6 +3,7 @@
 __usage = """
    --bucket | -b <bucket> bucket to dump sources and build products into
                           (default: ec2-build)
+   
 
    --key | -k  <key>      SSH key to allow connection to build slave instances
                           (default: current user name)
@@ -19,6 +20,7 @@ __usage = """
                           would normally happen
 
    --packages | -p <pkg>  Select package(s) to build may be listed multiple times
+   --build_id <build_id>  Override the default build id 
 """
 
 # Sanity check:
@@ -60,7 +62,6 @@ except:
 POSSIBLE_PACKAGES = [ 'hadoop18', 'hadoop20', 'pig', 'hive' , 'zookeeper' ]
 DEFAULT_PACKAGES = ['hadoop18', 'hadoop20']
 # Build ID
-BUILD_ID = "%s-%s" % (USERNAME, datetime.datetime.now().strftime("%Y%m%d_%H%M%S"))
 
 # Directory in S3_BUCKET to put files
 FILECACHE_S3="file-cache"
@@ -83,8 +84,9 @@ class Options:
   def __init__(self):
     # Bucket to store source RPMs/debs in
     self.S3_BUCKET = 'ec2-build'
-    self.EC2_KEY_NAME = os.getlogin() 
-    self.EC2_GROUPS=['cloudera', os.getlogin() ]
+    self.BUILD_ID = "%s-%s" % (USERNAME, datetime.datetime.now().strftime("%Y%m%d_%H%M%S"))
+    self.EC2_KEY_NAME = USERNAME 
+    self.EC2_GROUPS=['cloudera', USERNAME ]
     self.BUILD_MACHINES = DEFAULT_BUILD_MACHINES
     self.CDH_RELEASE=DEFAULT_CDH_RELEASE
     self.BUILD_PRODUCTS_DIR=DEFAULT_BUILD_PRODUCTS_DIR
@@ -109,6 +111,7 @@ def parse_args():
   op.add_option('--type', action='append')
   op.add_option('--distro', action='append')
   op.add_option('--arch', action='append')
+  op.add_option('--build_id')
   op.add_option('-n', '--dry-run', action='store_true')
   op.add_option('-p', '--packages', action='append', choices=POSSIBLE_PACKAGES)
   op.add_option("-i", '--interactive', action="store_true")
@@ -140,6 +143,9 @@ def parse_args():
 
   if opts.bucket:
     ret_opts.S3_BUCKET = opts.bucket
+
+  if opts.build_id:
+    ret_opts.BUILD_ID = opts.build_id
 
   if opts.key:
     ret_opts.EC2_KEY_NAME = opts.key
@@ -215,8 +221,7 @@ def upload_files_and_manifest(options, package_files):
     error_string += " AWS_SECRET_ACCESS_KEY correctly"
     raise Exception(error_string)
 
-
-  build_dir = os.path.join("build", BUILD_ID)
+  build_dir = os.path.join("build", options.BUILD_ID)
 
   manifest_list = []
 
@@ -267,7 +272,7 @@ def main():
     start_script = BUILD_SCRIPTS[build_type]
 
     subs = {
-      'build_id': BUILD_ID,
+      'build_id': options.BUILD_ID,
       'username': USERNAME,
       'os_distro': os_distro,
       'cdh_release': options.CDH_RELEASE,
@@ -319,9 +324,9 @@ def main():
   print "To killall: "
   print "  ec2-terminate-instances %s" % (" ".join([i.id for i in instances]))
   print
-  print "Expect results at s3://%s/build/%s/" % (options.S3_BUCKET, BUILD_ID)
+  print "Expect results at s3://%s/build/%s/" % (options.S3_BUCKET, options.BUILD_ID)
   print "To update apt repo after build is finished:"
-  print "  update_repo.sh %s %s" % (options.S3_BUCKET, BUILD_ID)
+  print "  update_repo.sh %s %s" % (options.S3_BUCKET, options.BUILD_ID)
 
   if options.WAIT:
     print "Waiting for instances to terminate..."
