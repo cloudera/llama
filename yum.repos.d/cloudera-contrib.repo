@@ -1,0 +1,4 @@
+[cloudera-contrib]
+name=Cloudera's Distribution for Hadoop (thirdparty contrib)
+baseurl=http://archive.cloudera.com/redhat/cdh/contrib
+gpgcheck = 0

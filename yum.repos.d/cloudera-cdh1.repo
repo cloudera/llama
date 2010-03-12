@@ -1,0 +1,5 @@
+[cloudera-cdh1]
+name=Cloudera's Distribution for Hadoop, Version 1
+mirrorlist=http://archive.cloudera.com/redhat/cdh/1/mirrors
+gpgkey = http://archive.cloudera.com/redhat/cdh/RPM-GPG-KEY-cloudera 
+gpgcheck = 0
