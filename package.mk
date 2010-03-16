@@ -200,4 +200,6 @@ $$($(2)_TARGET_RPM) $$($(2)_TARGET_SRPM) $$($(2)_TARGET_SDEB) $$($(2)_TARGET_DEB
 TARGETS += $(1) 
 TARGETS_HELP += $(1)-help
 TARGETS_CLEAN += $(1)-clean
+TARGETS_SRPM += $(1)-srpm
+TARGETS_SDEB += $(1)-sdeb
 endef

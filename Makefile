@@ -38,7 +38,7 @@ include package.mk
 
 help: package-help
 
-all: packages
+all: srpm sdeb tgz
 world: all
 
 # Hadoop 0.18.3-based hadoop package
@@ -114,10 +114,14 @@ $(eval $(call PACKAGE,zookeeper,ZK))
 
 
 packages: $(TARGETS) 
+tgz: packages
 
 help-header:
-	@echo "CDH targets:"
-	@echo "    all (or world)"
+	@echo "    CDH targets:"
+	@echo "    all     (all TGZs/SRPMS/SDEBS)"
+	@echo "    tgz     (all Source TGZs)"
+	@echo "    srpm    (all SRPMs)"
+	@echo "    sdeb    (all SDEBs)"
 
 package-help: help-header $(TARGETS_HELP)
 
@@ -128,4 +132,8 @@ realclean: clean
 	-rm -rf $(OUTPUT_DIR)
 	-rm -rf $(DL_DIR)
 
-.PHONY: realclean clean package-help help-header packages all world help
+srpm: $(TARGETS_SRPM)
+
+sdeb: $(TARGETS_SDEB)
+
+.PHONY: realclean clean package-help help-header packages all world help tgz srpm sdeb
