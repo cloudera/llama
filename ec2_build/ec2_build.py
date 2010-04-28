@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.5
+#!/usr/bin/python
 # (c) Copyright 2009 Cloudera, Inc.
 __usage = """
    --bucket | -b <bucket> bucket to dump sources and build products into
@@ -23,6 +23,8 @@ __usage = """
    --build_id <build_id>  Override the default build id 
 """
 
+class TimeoutException(Exception):
+	pass
 # Sanity check:
 #
 # DEBIAN_DISTROS: lenny, hardy, intrepid, jaunty, etc
@@ -59,7 +61,7 @@ try:
 except:
 	USERNAME = 'build'
 
-POSSIBLE_PACKAGES = [ 'hadoop18', 'hadoop20', 'pig', 'hive' , 'zookeeper' ]
+POSSIBLE_PACKAGES = [ 'hadoop18', 'hadoop20', 'pig', 'hive' , 'zookeeper','hbase' ]
 DEFAULT_PACKAGES = ['hadoop18', 'hadoop20']
 # Build ID
 
@@ -93,6 +95,7 @@ class Options:
     self.DRY_RUN = False
     self.INTERACTIVE = False
     self.WAIT = False
+    self.TIMEOUT = -1
     # Default to building hadoop
     self.PACKAGES = DEFAULT_PACKAGES
   pass
@@ -113,6 +116,7 @@ def parse_args():
   op.add_option('--arch', action='append')
   op.add_option('--build_id')
   op.add_option('-n', '--dry-run', action='store_true')
+  op.add_option("--timeout", metavar="TIMEOUT", help="Kill off instances if we run for to long in minutes")
   op.add_option('-p', '--packages', action='append', choices=POSSIBLE_PACKAGES)
   op.add_option("-i", '--interactive', action="store_true")
   op.add_option('-w', '--wait', action="store_true")
@@ -152,6 +156,9 @@ def parse_args():
 
   if opts.packages:
     ret_opts.PACKAGES = opts.packages
+
+  if opts.timeout:
+    ret_opts.TIMEOUT = int(float(opts.timeout)*60)
 
   if opts.dir:
     ret_opts.BUILD_PRODUCTS_DIR = opts.dir
@@ -309,33 +316,51 @@ def main():
       instances.append(reservation.instances[0])
     else:
       print "   [dry run: not starting]"
-
-  print "Waiting for instances to boot..."
-  for instance in instances:
-    instance.update()
-    while instance.state != 'running':
-      print "   waiting on %s to start..." % instance.id
-      time.sleep(5)
-      instance.update()
-    print "   Booted %s at %s" % (instance.id, instance.dns_name)
-
-  print "All build slaves booted!"
-  print
-  print "To killall: "
-  print "  ec2-terminate-instances %s" % (" ".join([i.id for i in instances]))
-  print
-  print "Expect results at s3://%s/build/%s/" % (options.S3_BUCKET, options.BUILD_ID)
-  print "To update apt repo after build is finished:"
-  print "  update_repo.sh %s %s" % (options.S3_BUCKET, options.BUILD_ID)
-
-  if options.WAIT:
-    print "Waiting for instances to terminate..."
+  try:
+    print "Waiting for instances to boot..."
+      
     for instance in instances:
       instance.update()
-      while instance.state != 'terminated':
+      while instance.state != 'running':
+        print "   waiting on %s to start..." % instance.id
         time.sleep(5)
         instance.update()
-      print "   terminated %s" % (instance.id)
+      print "   Booted %s at %s" % (instance.id, instance.dns_name)
+
+    print "All build slaves booted!"
+    print
+    print "To killall: "
+    print "  ec2-terminate-instances %s" % (" ".join([i.id for i in instances]))
+    print
+    print "Expect results at s3://%s/build/%s/" % (options.S3_BUCKET, options.BUILD_ID)
+    print "To update apt repo after build is finished:"
+    print "  update_repo.sh %s %s" % (options.S3_BUCKET, options.BUILD_ID)
+
+    if options.WAIT:
+      print "Waiting for instances to terminate..."
+
+      counter = 0
+      for instance in instances:
+        instance.update()
+#this can be improved by timout based on launchTime instead of counter.
+        while instance.state != 'terminated':
+          if options.TIMEOUT > 0 and counter > options.TIMEOUT:
+            raise TimeoutException("Counter Exceeded")
+
+          time.sleep(5)
+          counter += 5
+          instance.update()
+        print "   terminated %s" % (instance.id)
+  except KeyboardInterrupt:
+    print "Interrupting cleaning up old instances"
+    for instance in instances:
+      print "Stopping instance: %s " % instance
+      instance.stop()
+  except TimeoutException:
+    print "Interrupting cleaning up old instances"
+    for instance in instances:
+      print "Stopping instance: %s " % instance
+      instance.stop()
 
 if __name__ == "__main__":
   main()
