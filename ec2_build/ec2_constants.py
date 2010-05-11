@@ -3,6 +3,8 @@
 # a shebang!
 AMIS={
 # Alestic ubuntu/debian AMIs
+  ('lucid', 'x86'):      'ami-2d4aa444',
+  ('lucid', 'amd64'):    'ami-fd4aa494',
   ('karmic', 'x86'):     'ami-1515f67c',
   ('karmic', 'amd64'):   'ami-ab15f6c2',
   ('jaunty', 'x86'):     'ami-0d729464',
@@ -27,12 +29,12 @@ BUILD_INSTANCE_TYPES = {
 # What we actually want to build
 # tuples of (build type, distro, arch)
 DEFAULT_BUILD_MACHINES = [
+  ('deb', 'lucid', 'x86'),
+  ('deb', 'lucid', 'amd64'),
   ('deb', 'karmic', 'x86'),
   ('deb', 'karmic', 'amd64'),
   ('deb', 'jaunty', 'x86'),
   ('deb', 'jaunty', 'amd64'),
-  ('deb', 'intrepid', 'x86'),
-  ('deb', 'intrepid', 'amd64'),
   ('deb', 'hardy',    'x86'),
   ('deb', 'hardy',    'amd64'),
   ('deb', 'lenny',    'x86'),

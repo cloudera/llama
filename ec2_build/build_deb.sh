@@ -25,8 +25,14 @@ export DEBIAN_FRONTEND=noninteractive
 
 # The Karmic AMI is from Canonical instead of Alestic. They don't enable multiverse by
 # default. We need multiverse for sun-java6-jdk.
-if [ $(lsb_release -c -s) == "karmic" ]; then 
+if [ $(lsb_release -c -s) == "karmic" ]; then
   sed -i 's/universe/universe multiverse/' /etc/apt/sources.list
+fi
+
+# Canoncial moved Sun Java into the partner repo. Pull in the multiverse just in case.
+if [ $(lsb_release -c -s) == "lucid" ]; then
+  sed -i 's/universe/universe multiverse/' /etc/apt/sources.list
+  add-apt-repository “deb http://archive.canonical.com/ lucid partner”
 fi
 
 apt-get update

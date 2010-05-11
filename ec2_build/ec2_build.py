@@ -40,7 +40,6 @@ import glob
 import md5
 from optparse import OptionParser
 import os
-import re
 import sys
 import time
 import deb_util
@@ -57,9 +56,9 @@ DEFAULT_CDH_RELEASE = 'cdh2'
 
 # User running the script
 try:
-	USERNAME = os.getlogin()
+  USERNAME = os.getlogin()
 except:
-	USERNAME = 'build'
+  USERNAME = 'build'
 
 POSSIBLE_PACKAGES = [ 'hadoop18', 'hadoop20', 'pig', 'hive' , 'zookeeper','hbase' ]
 DEFAULT_PACKAGES = ['hadoop18', 'hadoop20']
@@ -128,7 +127,7 @@ def parse_args():
     raise Exception("Unhandled args: %s" % repr(args))
 
   if opts.groups:
-    ret_opts.EC2_GROUPS = groups.split(',')
+    ret_opts.EC2_GROUPS = opts.groups.split(',')
 
   if opts.arch:
     ret_opts.BUILD_MACHINES = [(type,distro,arch ) for (type, distro, arch) in ret_opts.BUILD_MACHINES if arch in opts.arch  ]
@@ -140,7 +139,7 @@ def parse_args():
     ret_opts.BUILD_MACHINES = [(type,distro,arch ) for (type, distro, arch) in ret_opts.BUILD_MACHINES if type in opts.type  ]
 
   ret_opts.DRY_RUN = opts.dry_run
-  
+
   ret_opts.INTERACTIVE = opts.interactive
 
   ret_opts.WAIT = opts.wait
@@ -162,7 +161,7 @@ def parse_args():
 
   if opts.dir:
     ret_opts.BUILD_PRODUCTS_DIR = opts.dir
-  
+
   if opts.tag:
     ret_opts.CDH_RELEASE = opts.tag
 
@@ -236,7 +235,6 @@ def upload_files_and_manifest(options, package_files):
     files = package_files[package]
     for package_format, paths in files.iteritems():
       for path in paths:
-        dest = os.path.join(build_dir, os.path.basename(path))
         (checksum, url) = satisfy_in_cache(bucket, path)
         manifest_list.append(('-'.join([package, package_format]), os.path.basename(path), checksum, url))
 
@@ -249,7 +247,7 @@ def upload_files_and_manifest(options, package_files):
       manifest,
       headers={'Content-Type': 'text/plain'})
     man_key.set_acl('public-read')
-    
+
     return man_key.generate_url(EXPIRATION)
   else:
     return "<manifest not uploaded - dry run>"
@@ -318,7 +316,7 @@ def main():
       print "   [dry run: not starting]"
   try:
     print "Waiting for instances to boot..."
-      
+
     for instance in instances:
       instance.update()
       while instance.state != 'running':
@@ -342,7 +340,7 @@ def main():
       counter = 0
       for instance in instances:
         instance.update()
-#this can be improved by timout based on launchTime instead of counter.
+        #this can be improved by timout based on launchTime instead of counter.
         while instance.state != 'terminated':
           if options.TIMEOUT > 0 and counter > options.TIMEOUT:
             raise TimeoutException("Counter Exceeded")

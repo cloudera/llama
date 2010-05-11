@@ -7,6 +7,8 @@ DISTS=[
   ('hardy', '8.04'),
   ('intrepid', '8.10'),
   ('jaunty', '9.04'),
+  ('karmic', '9.10'),
+  ('lucid', '10.04'),
   ]
 
 stanzas = []
