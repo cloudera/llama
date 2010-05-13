@@ -77,7 +77,9 @@ postfix  postfix/chattr  boolean  false
 ' | debconf-set-selections
 
 apt-get -y install devscripts pbuilder liburi-perl build-essential dctrl-tools 
-apt-get -y install asciidoc xmlto libopenssl-ruby
+apt-get -y install asciidoc xmlto libopenssl-ruby autoconf automake
+apt-get -y install fuse-utils libfuse-dev libfuse2
+
 
 # Install s3cmd
 pushd /tmp
