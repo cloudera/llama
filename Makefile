@@ -100,18 +100,6 @@ $(HIVE_TARGET_PREP):
 	$(BASE_DIR)/tools/setup-package-build $($(PKG)_GIT_REPO) $($(PKG)_BASE_REF) $($(PKG)_BUILD_REF) $(DL_DIR)/$($(PKG)_SOURCE) $(HIVE_BUILD_DIR)/source
 	rsync -av $(HIVE_ORIG_SOURCE_DIR)/cloudera/ $(HIVE_SOURCE_DIR)/cloudera/
 	touch $@
-# Zookeeper
-ZK_NAME=zookeeper
-ZK_PKG_NAME=hadoop-zookeeper
-ZK_BASE_VERSION=3.2.2
-ZK_SOURCE=zookeeper-$(ZK_BASE_VERSION).tar.gz
-ZK_GIT_REPO=$(BASE_DIR)/repos/zookeeper
-ZK_BASE_REF=cdh-base-$(ZK_BASE_VERSION)
-ZK_BUILD_REF=cdh-$(ZK_BASE_VERSION)
-ZK_PACKAGE_GIT_REPO=$(BASE_DIR)/repos/zookeeper-package
-ZK_SITE=$(APACHE_MIRROR)/hadoop/zookeeper/zookeeper-$(ZK_BASE_VERSION)
-$(eval $(call PACKAGE,zookeeper,ZK))
-
 
 packages: $(TARGETS) 
 tgz: packages
