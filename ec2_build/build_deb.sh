@@ -164,8 +164,6 @@
 
   done
 
-} 2>&1 | tee /var/log/user.log
-
 # Untrap, we're shutting down directly from here so the exit trap probably won't
 # have time to do anything
 if [ "x$INTERACTIVE" == "xFalse" ]; then
@@ -177,3 +175,5 @@ copy_logs_s3
 # If we're running on S3, shutdown the node
 # (do the check so you can test elsewhere)
 hostname -f | grep -q internal && shutdown -h now
+
+} 2>&1 | tee /var/log/user.log
