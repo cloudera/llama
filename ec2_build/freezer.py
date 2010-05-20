@@ -99,6 +99,22 @@ def move_to_freezer(ec2_build_source, freezer_destination):
           source_artifact.copy(FREEZER_BUCKET, artifact_destination_patch)
 
 
+def download_from_freezer(freezer_location):
+
+  if not freezer_location.endswith('/'):
+    freezer_location = freezer_location + '/'
+
+  for freezer_file in FREEZER_BUCKET.list(prefix=freezer_location):
+
+    directory_name = os.path.join(OPTIONS.local_path, os.path.dirname(freezer_file.name))
+
+    if not os.path.exists(directory_name):
+      if_verbose_print("Making directory: %s" % directory_name)
+      os.makedirs(directory_name)
+
+    filename = os.path.join(OPTIONS.local_path, freezer_file.name)
+    if_verbose_print("Fetching File: %s" % filename)
+    freezer_file.get_contents_to_filename(filename)
 
 
 def main(args):
@@ -107,6 +123,9 @@ def main(args):
 
   op.add_option('-d','--dry-run', action="store_true",default=False,
       help="Dont do anything just pretend")
+
+  op.add_option('-l','--local-path', default=None,
+      help="We can download these files for ya, and place them in a specified path ")
 
   op.add_option('-r','--rename', action="store_true",default=False,
     help="All we do in this mode is rename a build from the source to the destination. The required arguments change to the source and destination of the move")
@@ -127,7 +146,15 @@ def main(args):
   if options.rename:
     rename_key(ec2_build_source, freezer_destination)
   else:
+    if_verbose_print("Moving build to freezer:")
+    if_verbose_print("========================")
     move_to_freezer(ec2_build_source, freezer_destination)
+
+    if OPTIONS.local_path:
+      if_verbose_print('-' * 80)
+      if_verbose_print("Downloading frozen build:")
+      if_verbose_print("=========================")
+      download_from_freezer(freezer_destination)
 
 if __name__ == "__main__":
   main(sys.argv)
