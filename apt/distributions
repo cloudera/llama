@@ -1,0 +1,149 @@
+Origin: Cloudera
+Label: Cloudera
+Suite: lenny-stable
+Codename: lenny-cdh1
+Version: 4.1
+Architectures: i386 amd64 source
+Components: contrib
+Description: Cloudera stable packages for lenny
+SignWith: 02A818DD
+
+Origin: Cloudera
+Label: Cloudera
+Suite: hardy-stable
+Codename: hardy-cdh1
+Version: 8.04
+Architectures: i386 amd64 source
+Components: contrib
+Description: Cloudera stable packages for hardy
+SignWith: 02A818DD
+
+Origin: Cloudera
+Label: Cloudera
+Suite: intrepid-stable
+Codename: intrepid-cdh1
+Version: 8.10
+Architectures: i386 amd64 source
+Components: contrib
+Description: Cloudera stable packages for intrepid
+SignWith: 02A818DD
+
+Origin: Cloudera
+Label: Cloudera
+Suite: jaunty-stable
+Codename: jaunty-cdh1
+Version: 9.04
+Architectures: i386 amd64 source
+Components: contrib
+Description: Cloudera stable packages for jaunty
+SignWith: 02A818DD
+
+Origin: Cloudera
+Label: Cloudera
+Suite: lenny-testing
+Codename: lenny-cdh2
+Version: 4.1
+Architectures: i386 amd64 source
+Components: contrib
+Description: Cloudera testing packages for lenny
+SignWith: 02A818DD
+
+Origin: Cloudera
+Label: Cloudera
+Suite: hardy-testing
+Codename: hardy-cdh2
+Version: 8.04
+Architectures: i386 amd64 source
+Components: contrib
+Description: Cloudera testing packages for hardy
+SignWith: 02A818DD
+
+Origin: Cloudera
+Label: Cloudera
+Suite: intrepid-testing
+Codename: intrepid-cdh2
+Version: 8.10
+Architectures: i386 amd64 source
+Components: contrib
+Description: Cloudera testing packages for intrepid
+SignWith: 02A818DD
+
+Origin: Cloudera
+Label: Cloudera
+Suite: jaunty-testing
+Codename: jaunty-cdh2
+Version: 9.04
+Architectures: i386 amd64 source
+Components: contrib
+Description: Cloudera testing packages for jaunty
+SignWith: 02A818DD
+
+Origin: Cloudera
+Label: Cloudera
+Suite: karmic-testing
+Codename: karmic-cdh2
+Version: 9.10
+Architectures: i386 amd64 source
+Components: contrib
+Description: Cloudera testing packages for karmic
+SignWith: 02A818DD
+
+Origin: Cloudera
+Label: Cloudera
+Suite: lucid-testing
+Codename: lucid-cdh2
+Version: 10.04
+Architectures: i386 amd64 source
+Components: contrib
+Description: Cloudera testing packages for lucid
+SignWith: 02A818DD
+
+Origin: Cloudera
+Label: Cloudera
+Suite: lenny-cdh3
+Codename: lenny-cdh3b1
+Version: 4.1
+Architectures: i386 amd64 source
+Components: contrib
+Description: Cloudera testing packages for lenny
+SignWith: 02A818DD
+
+Origin: Cloudera
+Label: Cloudera
+Suite: hardy-cdh3
+Codename: hardy-cdh3b1
+Version: 8.04
+Architectures: i386 amd64 source
+Components: contrib
+Description: Cloudera testing packages for hardy
+SignWith: 02A818DD
+
+Origin: Cloudera
+Label: Cloudera
+Suite: intrepid-cdh3
+Codename: intrepid-cdh3b1
+Version: 8.10
+Architectures: i386 amd64 source
+Components: contrib
+Description: Cloudera testing packages for intrepid
+SignWith: 02A818DD
+
+Origin: Cloudera
+Label: Cloudera
+Suite: jaunty-cdh3
+Codename: jaunty-cdh3b1
+Version: 9.04
+Architectures: i386 amd64 source
+Components: contrib
+Description: Cloudera testing packages for jaunty
+SignWith: 02A818DD
+
+Origin: Cloudera
+Label: Cloudera
+Suite: karmic-cdh3
+Codename: karmic-cdh3b1
+Version: 9.10
+Architectures: i386 amd64 source
+Components: contrib
+Description: Cloudera testing packages for karmic
+SignWith: 02A818DD
