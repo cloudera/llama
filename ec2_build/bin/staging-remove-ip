@@ -1,0 +1,40 @@
+#!/usr/bin/env python
+# Copyright (c) 2010 Cloudera, inc.
+# https://wiki.cloudera.com/display/PRODUCT/Staging+step
+
+import sys
+import os, re
+import boto
+import subprocess
+from optparse import OptionParser
+import time
+import cloudera.staging.ElasticIpManager
+from cloudera.utils import display_message
+
+
+
+
+def main():
+  usage = "usage: %prog  [options] --ip"
+  op = OptionParser(usage=usage)
+  op.add_option('-d', '--dry-run',
+              action="store_true",
+              default=False,
+              help="Dont do anything just pretend")
+
+  op.add_option('-i', '--ip',
+            help="IP address to be removed from the pool")
+
+  (options, args) = op.parse_args()
+
+
+  if not options.ip:
+    op.error('--ip option is mandatory')
+
+  eipManager = cloudera.staging.ElasticIpManager.ElasticIpManager()
+
+  display_message("Removing ip %s from the pool"%(options.ip))
+  eipManager.delete_ip(options.ip)
+  display_message("Ip removed from the pool. Please note that the ip has been removed from the pool of ip availables for archives but hasn't been released.")
+  
+main()

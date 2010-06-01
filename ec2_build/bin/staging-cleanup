@@ -1,0 +1,58 @@
+#!/usr/bin/env python
+# Copyright (c) 2010 Cloudera, inc.
+# https://wiki.cloudera.com/display/PRODUCT/Staging+step
+
+import sys
+import os, re
+import boto
+import subprocess
+from optparse import OptionParser
+import time
+import cloudera.aws.ec2
+import cloudera.staging.ElasticIpManager
+import cloudera.staging.StageManager
+from cloudera.utils import verbose_print
+
+
+def main():
+  usage = "usage: %prog  [options]"
+  op = OptionParser(usage=usage)
+  op.add_option('-d', '--dry-run',
+              action="store_true",
+              default=False,
+              help="Dont do anything just pretend")
+
+  (options, args) = op.parse_args()
+
+
+
+  ec2_connection  = boto.connect_ec2()
+  eipManager = cloudera.staging.ElasticIpManager.ElasticIpManager()
+  stageManager = cloudera.staging.StageManager.StageManager()
+
+  
+  # Clean up dead instances
+
+  # get all registered instances in StageManager
+  instances = stageManager.get_all_instances()
+  instances_ids = [instance[cloudera.staging.StageManager.StageManager.ATTRIBUTE_INSTANCE_ID] for instance in stageManager.get_all_instances()]
+  # get all registered instances in aws ec2
+  ec2_reservations = ec2_connection.get_all_instances(instances_ids)
+  ec2_instances = []
+  for reservation in ec2_reservations:
+    ec2_instances.extend(reservation.instances)
+  ec2_instances_ids = [ec2_instance.id for ec2_instance in  ec2_instances]
+  
+  # Remove non-referenced instances
+  for instance in instances_ids:
+    if not instance in ec2_instances_ids:
+      verbose_print('Removing %s'%(instance))
+      stageManager.delete_instance(instance)
+
+  # Remove referenced but terminated instances
+  for instance in ec2_instances:
+    if instance.update() == cloudera.aws.ec2.InstanceState.TERMINATED:
+      verbose_print('Removing %s'%(instance.id))
+      stageManager.delete_instance(instance.id)
+      
+main()

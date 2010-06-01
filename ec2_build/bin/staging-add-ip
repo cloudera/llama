@@ -1,0 +1,47 @@
+#!/usr/bin/env python
+# Copyright (c) 2010 Cloudera, inc.
+# https://wiki.cloudera.com/display/PRODUCT/Staging+step
+
+import sys
+import os, re
+import boto
+import subprocess
+from optparse import OptionParser
+import time
+import cloudera.staging.ElasticIpManager
+from cloudera.utils import display_message
+
+
+
+
+def main():
+  usage = "usage: %prog  [options] --ip"
+  op = OptionParser(usage=usage)
+  op.add_option('-d', '--dry-run',
+              action="store_true",
+              default=False,
+              help="Dont do anything just pretend")
+
+  op.add_option('-i', '--ip',
+            help="IP address to be added to the pool")
+
+  op.add_option('--hostname',
+            help="DNS entry associated to the ip address")
+
+  (options, args) = op.parse_args()
+
+
+  if not options.ip:
+    op.error('--ip option is mandatory')
+
+  eipManager = cloudera.staging.ElasticIpManager.ElasticIpManager()
+
+  display_message("Adding ip %s to the pool"%(options.ip))
+  if not options.dry_run:
+    dns = ''
+    if options.hostname:
+      dns = options.hostname
+
+    eipManager.add_ip(options.ip, dns)
+  
+main()

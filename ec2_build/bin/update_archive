@@ -1,0 +1,76 @@
+#!/usr/bin/env python
+import os, subprocess
+import paramiko
+from optparse import OptionParser
+import getpass
+import select
+from cloudera.utils import display_message
+import cloudera.staging.Archive
+
+
+def main():
+  usage = "usage: %prog  [options] <snap_id> "
+  op = OptionParser(usage=usage)
+  op.add_option('-d', '--dry-run',
+                action="store_true",
+              default=False,
+              help="Dont do anything just pretend")
+
+  op.add_option('-k','--key-file',
+            help="The keyname authorized")
+
+  op.add_option('-b','--build',
+            help="The build to deploy")
+
+  op.add_option('--hostname',
+            help="The build to deploy")
+
+  op.add_option('--gpg-sign',
+    action="store_true",
+    default=None,
+    help="Sign deployed packages")
+
+  default_s3_bucket = 'cloudera-freezer' 
+  op.add_option('-s','--s3-bucket',
+    default=default_s3_bucket,
+    help="S3 bucket where the build is located")
+
+  (options, args) = op.parse_args()
+
+  if not options.build:
+    op.error('build option is mandatory')
+
+  if not options.key_file:
+    op.error('key file option is mandatory')
+
+  if not options.hostname:
+    op.error('hostname file option is mandatory')
+
+  #XXX reprepo seems to insist on signing packages. Haven't found a work around yet
+  if not options.gpg_sign:
+    op.error('Staging without signing packages is not supported yet. Please add the option --gpg-sign')
+
+  # Get pass phrase first so user doesn't have to wait
+  passphrase = None
+  if options.gpg_sign:
+    passphrase = getpass.getpass("Please, enter gpg passphrase:")
+
+  archive = cloudera.staging.Archive.Archive()
+
+  # Set up instance
+  archive.connect(options.hostname, options.key_file)
+  archive.copy_scripts(options.hostname, options.key_file)  
+  archive.install_packages()
+
+  # Set up gpg-agent
+  if passphrase:
+    archive.start_gpg()
+    archive.get_gpg_env()
+    archive.set_gpg_passphrase(passphrase)
+
+  # Update repos
+  archive.update_deb_repo(options.build)
+  archive.update_yum_repo(options.build)
+
+
+main()

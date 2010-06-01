@@ -64,7 +64,7 @@ if (/deb/) {
 }' manifest.txt
 cd ..
 
-REPREPRO_FLAGS="--export=never --keepunreferenced --basedir $REPO"
+REPREPRO_FLAGS="--export=never --keepunreferenced --ignore=wrongdistribution --basedir $REPO"
 
 for DEBIAN_DISTRO in $DEBIAN_DISTROS ; do
 
@@ -74,13 +74,15 @@ for DEBIAN_DISTRO in $DEBIAN_DISTROS ; do
   for changefile in $BUILD_ID/source/*changes ; do
       reprepro --ignore=wrongdistribution $REPREPRO_FLAGS include $CODENAME $changefile
   done
-
-  # Include binary packages
+  #include all packages
+  for deb in /tmp/$BUILD_ID/binary/deb_${DEBIAN_DISTRO}-${CDH_RELEASE}_${ARCH}/*${DEBIAN_DISTRO}-${CDH_RELEASE}_all.deb ; do
+    reprepro $REPREPRO_FLAGS includedeb $CODENAME $deb
+  done
   for ARCH in $ARCHS ; do
     BUILD_DIR=$BUILD_ID/deb_${CODENAME}_${ARCH}
     if [ $ARCH = "i386" ]; then
       # On i386, install all built packages
-      for changefile in $BUILD_DIR/*changes ; do
+      for changefile in /tmp/$BUILD_ID/*changes ; do
         reprepro $REPREPRO_FLAGS include $CODENAME $changefile
       done
     else
@@ -91,6 +93,10 @@ for DEBIAN_DISTRO in $DEBIAN_DISTROS ; do
         reprepro $REPREPRO_FLAGS includedeb $CODENAME $deb
       done
     fi
+
+    for deb in /tmp/$BUILD_ID/binary/deb_${DEBIAN_DISTRO}-${CDH_RELEASE}_${ARCH}/*${DEBIAN_DISTRO}-${CDH_RELEASE}_${ARCH}.deb ; do
+      reprepro $REPREPRO_FLAGS includedeb $CODENAME $deb
+    done
   done
 done
 

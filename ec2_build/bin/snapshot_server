@@ -1,0 +1,35 @@
+#!/usr/bin/env python
+# Copyright (c) 2009 Cloudera, inc.
+# https://wiki.cloudera.com/display/PRODUCT/Freezer
+
+import sys
+import os
+import boto
+from optparse import OptionParser
+import time
+
+EC2  = boto.connect_ec2()
+
+
+def snapshot_volume(vol_id):
+  volume = EC2.get_all_volumes(volume_ids=vol_id)[0]
+  snap_id = volume.create_snapshot()
+  return(snap_id)
+  
+
+def main(args):
+  usage = "usage: %prog <vol_id> "
+  op = OptionParser(usage=usage)
+  (options, args) = op.parse_args()
+  global OPTIONS
+  OPTIONS = options
+
+  if len(args) != 1:
+    op.error("I need more arguments")
+
+  snap_id = snapshot_volume(args[0])
+  print("New snap_id created: %s" %snap_id)
+  
+
+if __name__ == "__main__":
+  main(sys.argv)

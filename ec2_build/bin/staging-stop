@@ -1,0 +1,72 @@
+#!/usr/bin/env python
+# Copyright (c) 2010 Cloudera, inc.
+# https://wiki.cloudera.com/display/PRODUCT/Staging+step
+
+import sys
+import os, re
+import boto
+import subprocess
+from optparse import OptionParser
+import time
+import cloudera.aws.ec2
+import cloudera.staging.ElasticIpManager
+import cloudera.staging.ArchiveManager
+import cloudera.staging.StageManager
+from cloudera.utils import display_message
+
+
+def main():
+  usage = "usage: %prog  [options] --instance <Instance id>"
+  op = OptionParser(usage=usage)
+  op.add_option('-d', '--dry-run',
+              action="store_true",
+              default=False,
+              help="Dont do anything just pretend")
+
+  op.add_option('-i', '--instance',
+            help="Instance to stop")
+
+  op.add_option('-a', '--ip-address',
+            help="IP address of the Instance to stop")
+
+
+  (options, args) = op.parse_args()
+
+
+  if not options.instance and not options.ip_address:
+    op.error("I don't know what to delete. Please provide either the instance id or an IP address")
+
+  # EC2 connection
+  ec2_connection  = boto.connect_ec2()
+
+  eipManager = cloudera.staging.ElasticIpManager.ElasticIpManager()
+  stageManager = cloudera.staging.StageManager.StageManager()
+
+  instance = cloudera.aws.ec2.instance_for_instance_id(ec2_connection, options.instance)
+  if not instance:
+    print "Couldn't find instance"
+    sys.exit(-1)
+
+  volumes = cloudera.aws.ec2.data_volume_for_instance(instance, [cloudera.staging.ArchiveManager.ArchiveManager.DEFAULT_ARCHIVE_VOLUME_MOUNT])
+  instance_info = stageManager.get_instance(instance.id)
+
+  display_message("Terminating instance %s"%(instance.id))
+  ec2_connection.terminate_instances([instance.id])
+  while(instance.update() != 'terminated'):
+    print "Waiting for the instance to terminate. Current state is [%s]"%(instance.state)
+    time.sleep(5)
+  
+  if volumes:
+    volume = volumes[0]
+    if not volume:
+      print "Couldn't find volume"
+    else:
+      display_message("Deleting volume %s"%(volume.volume_id))
+      cloudera.aws.ec2.throw_away_volume(ec2_connection, volume)
+  else:
+    print "No volume found"
+
+
+  cloudera.aws.ec2.cleanup_security_group(ec2_connection, instance_info[cloudera.staging.StageManager.StageManager.ATTRIBUTE_SECURITY_GROUP])
+
+main()

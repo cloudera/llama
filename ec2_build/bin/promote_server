@@ -1,0 +1,99 @@
+#!/usr/bin/env python
+# Copyright (c) 2009 Cloudera, inc.
+# https://wiki.cloudera.com/display/PRODUCT/Freezer
+
+import sys
+import os
+import boto
+from optparse import OptionParser
+import time
+import select
+
+EC2  = boto.connect_ec2()
+OPTIONS = {}
+POLL_RATE = 5 #In seconds
+AVAILABILITY_ZONE = 'us-east-1a' 
+VOLUME_MOUNT = '/dev/sdb'
+
+# I would make this a variable but I don't think we actually want people to change it
+
+
+def quiet_print(input_string):
+  ''' This prints only if quiet is not set'''
+  if not OPTIONS.quiet:
+    print(input_string)
+
+
+def verbose_print(input_string):
+  ''' This prints only if verbose is set'''
+  if OPTIONS.verbose:
+    print(input_string)
+
+
+def instance_to_security_group(target_instance):
+  ''' This finds the first security group attached to an ec2 instance '''
+  verbose_print("Target Instance: %s" % target_instance)
+  for security_group in EC2.get_all_security_groups():
+    verbose_print("instances on security_group: %s" % security_group)
+    verbose_print(security_group.instances())
+    for instance in security_group.instances():
+      verbose_print('checking instance: %s' % instance)
+      if target_instance.endswith(str(instance)):
+        return security_group
+
+
+def open_security_group(security_group):
+  ''' This opens up the instances web port preparing it for production'''
+  quiet_print("Adding global web to: %s" % security_group)
+  if not OPTIONS.dry_run:
+    security_group.authorize('tcp',80,80,'0.0.0.0/0')
+
+
+def promote_server( instance_id):
+  ''' This actually switches out the elastic ip on the instance'''
+  reservation = EC2.get_all_instances(instance_ids=instance_id)[0]
+  instance = reservation.instances[0]
+  quiet_print("Promoting %s" % instance_id)
+  if not OPTIONS.dry_run:
+    instance.use_ip(OPTIONS.elastic_ip)
+      
+
+def main(args):
+  usage = "usage: %prog  [options] <instance_id> "
+  op = OptionParser(usage=usage)
+
+  op.add_option('-d','--dry-run',
+      action="store_true", 
+      default=False,
+      help="Dont do anything just pretend")
+
+  op.add_option('--verbose',
+      default=False,
+      action="store_true",
+      help="Print extra stuff")
+
+  op.add_option('-q','--quiet',
+      default=False,
+      action="store_true",
+      help="Don't print")
+
+  default_elastic_ip = '184.73.207.189'
+  op.add_option('-i','--elastic-ip',
+      default=default_elastic_ip,
+      help="Override the default elastic ip: %s" % default_elastic_ip)
+
+  (options, args) = op.parse_args()
+  global OPTIONS
+  OPTIONS = options
+
+  if len(args) != 1:
+    op.error("I need more arguments")
+  instance = args[0]
+
+  security_group = instance_to_security_group(instance)
+  open_security_group(security_group)
+  promote_server(instance)
+  quiet_print("instance %s attached to %s" % (instance, OPTIONS.elastic_ip))
+
+if __name__ == "__main__":
+  main(sys.argv)
