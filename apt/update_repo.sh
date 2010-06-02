@@ -74,10 +74,6 @@ for DEBIAN_DISTRO in $DEBIAN_DISTROS ; do
   for changefile in $BUILD_ID/source/*changes ; do
       reprepro --ignore=wrongdistribution $REPREPRO_FLAGS include $CODENAME $changefile
   done
-  #include all packages
-  for deb in /tmp/$BUILD_ID/binary/deb_${DEBIAN_DISTRO}-${CDH_RELEASE}_${ARCH}/*${DEBIAN_DISTRO}-${CDH_RELEASE}_all.deb ; do
-    reprepro $REPREPRO_FLAGS includedeb $CODENAME $deb
-  done
   for ARCH in $ARCHS ; do
     BUILD_DIR=$BUILD_ID/deb_${CODENAME}_${ARCH}
     if [ $ARCH = "i386" ]; then
@@ -85,15 +81,14 @@ for DEBIAN_DISTRO in $DEBIAN_DISTROS ; do
       for changefile in /tmp/$BUILD_ID/*changes ; do
         reprepro $REPREPRO_FLAGS include $CODENAME $changefile
       done
-    else
-      # On other platforms, however, include just the arch-specific, since
-      # otherwise we'll get a hash-conflict, since we already included the
-      # _all.deb packages from i386
-      for deb in $BUILD_DIR/*_$ARCH.deb ; do
+
+      #include all packages
+      for deb in /tmp/$BUILD_ID/binary/deb_${DEBIAN_DISTRO}-${CDH_RELEASE}_${ARCH}/*${DEBIAN_DISTRO}-${CDH_RELEASE}_all.deb ; do
         reprepro $REPREPRO_FLAGS includedeb $CODENAME $deb
       done
     fi
 
+    #include arch specific packages
     for deb in /tmp/$BUILD_ID/binary/deb_${DEBIAN_DISTRO}-${CDH_RELEASE}_${ARCH}/*${DEBIAN_DISTRO}-${CDH_RELEASE}_${ARCH}.deb ; do
       reprepro $REPREPRO_FLAGS includedeb $CODENAME $deb
     done
