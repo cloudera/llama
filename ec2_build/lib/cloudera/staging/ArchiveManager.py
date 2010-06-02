@@ -7,7 +7,7 @@ import cloudera.staging.StageManager
 
 class ArchiveManager:
 
-  DEFAULT_AVAILABILITY_ZONE = 'us-east-1a' 
+  DEFAULT_AVAILABILITY_ZONE = 'us-east-1a'
   DEFAULT_ARCHIVE_VOLUME_MOUNT = '/dev/sdb'
   DEFAULT_AMI = 'ami-3397795a'
 
@@ -21,7 +21,7 @@ class ArchiveManager:
 
   def launch_server(self, security_group, volume, key_name, ami = DEFAULT_AMI):
     '''
-    This launches a new instance attaches a volume and security group to it 
+    This launches a new instance attaches a volume and security group to it
 
     @param security_group Security group
     @param volume Volume to be mounted
@@ -41,8 +41,8 @@ class ArchiveManager:
     msg = "Attaching vol: %s to mount: %s" %(volume, ArchiveManager.DEFAULT_ARCHIVE_VOLUME_MOUNT)
     verbose_print(msg)
     volume.attach(instance.id, ArchiveManager.DEFAULT_ARCHIVE_VOLUME_MOUNT)
-    return instance 
-    
+    return instance
+
 
   def create_security_group(self, security_group_name, security_group_desc):
     '''
@@ -82,7 +82,7 @@ class ArchiveManager:
   def promote(self, instance, eip):
     '''
     Promote an already staged archive to be the official one (archive.cloudera.com)
-    
+
     @param instance Instance to promote
     @param eip Current elastic IP used by the instance to be promoted
     '''

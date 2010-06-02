@@ -36,5 +36,5 @@ def main():
   display_message("Removing ip %s from the pool"%(options.ip))
   eipManager.delete_ip(options.ip)
   display_message("Ip removed from the pool. Please note that the ip has been removed from the pool of ip availables for archives but hasn't been released.")
-  
+
 main()

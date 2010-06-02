@@ -36,7 +36,7 @@ get_continue = False
 gpg_command = /usr/bin/gpg
 gpg_decrypt = %%(gpg_command)s -d --verbose --no-use-agent --batch --yes --passphrase-fd %%(passphrase_fd)s -o %%(output_file)s %%(input_file)s
 gpg_encrypt = %%(gpg_command)s -c --verbose --no-use-agent --batch --yes --passphrase-fd %%(passphrase_fd)s -o %%(output_file)s %%(input_file)s
-gpg_passphrase = 
+gpg_passphrase =
 guess_mime_type = True
 host_base = s3.amazonaws.com
 host_bucket = %%(bucket)s.s3.amazonaws.com
@@ -44,7 +44,7 @@ human_readable_sizes = False
 list_md5 = False
 preserve_attrs = True
 progress_meter = True
-proxy_host = 
+proxy_host =
 proxy_port = 0
 recursive = False
 recv_chunk = 4096
@@ -149,21 +149,21 @@ class Archive:
     """
     Update instance and install extra packages needed for the archive deployment
     """
-  
+
     # Update and install extra packages
     display_message("Update system:")
     self.execute("sudo apt-get update", True)
     self.execute("sudo apt-get -y upgrade", True)
-  
+
     display_message("Install " + ", ".join(Archive.PACKAGES_TO_INSTALL))
     self.execute("sudo apt-get -y install " + ' '.join(Archive.PACKAGES_TO_INSTALL), True)
-  
+
     # Create s3cmd config file
     display_message("Setup s3cmd configuration file")
     s3_config_content = S3TEMPLATE % {'access_key': os.getenv('AWS_ACCESS_KEY_ID'),
                          'secret_key': os.getenv('AWS_SECRET_ACCESS_KEY')}
     self.execute('echo "' + s3_config_content + '" > /home/' + self.username + '/.s3cfg')
-  
+
 
   def get_gpg_env(self):
     """
@@ -176,7 +176,7 @@ class Archive:
     lines = [line for line in stdout]
     line =  "".join(lines)
     gpg_env = line.strip()
-  
+
     self.env.append(gpg_env)
 
 
@@ -190,7 +190,7 @@ class Archive:
     self.execute('chmod -R 777 ' + Archive.BASE_DIR + '/apt/gpg-home/')
 
     # Start gpg-agent
-    # XXX Do not redirect stdout to stderr when starting gpg-agent. 
+    # XXX Do not redirect stdout to stderr when starting gpg-agent.
     # Some weird issues would block the connection
     # Seems to be related to tty
     display_message("Start gpg-agent")
@@ -231,7 +231,7 @@ class Archive:
 
     @param build Build to be published
     """
-  
+
     display_message("Update yum repository")
     self.execute(' sudo -E -u www-data ' + Archive.BASE_DIR + '/yum/update_repos.sh -s ' + Archive.BASE_DIR + '/' + build + '/ -c 2 -r /var/www/archive_public/redhat/', True)
 
@@ -246,10 +246,10 @@ class Archive:
 
     display_message("Copying changelog %s"%(changelog_filename))
     self.execute(' sudo -E -u www-data cp ' + changelog_filename + ' /var/www/archive_public/cdh/${CDH_VERSION}/hadoop-${hadoop_version}.CHANGES.txt', True)
-   
+
 
   def cp_docs(self, docs_dir, hadoop_version):
 
     display_message("Copying docs %s"%(changelog_filename))
     self.execute(' sudo -E -u www-data cp -r ' + docs_dir + ' /var/www/archive_public/cdh/${CDH_VERSION}/hadoop-${hadoop_version}/', True)
-     
+

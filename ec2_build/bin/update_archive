@@ -30,7 +30,7 @@ def main():
     default=None,
     help="Sign deployed packages")
 
-  default_s3_bucket = 'cloudera-freezer' 
+  default_s3_bucket = 'cloudera-freezer'
   op.add_option('-s','--s3-bucket',
     default=default_s3_bucket,
     help="S3 bucket where the build is located")
@@ -59,7 +59,7 @@ def main():
 
   # Set up instance
   archive.connect(options.hostname, options.key_file)
-  archive.copy_scripts(options.hostname, options.key_file)  
+  archive.copy_scripts(options.hostname, options.key_file)
   archive.install_packages()
 
   # Set up gpg-agent

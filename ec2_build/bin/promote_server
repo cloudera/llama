@@ -12,7 +12,7 @@ import select
 EC2  = boto.connect_ec2()
 OPTIONS = {}
 POLL_RATE = 5 #In seconds
-AVAILABILITY_ZONE = 'us-east-1a' 
+AVAILABILITY_ZONE = 'us-east-1a'
 VOLUME_MOUNT = '/dev/sdb'
 
 # I would make this a variable but I don't think we actually want people to change it
@@ -56,14 +56,14 @@ def promote_server( instance_id):
   quiet_print("Promoting %s" % instance_id)
   if not OPTIONS.dry_run:
     instance.use_ip(OPTIONS.elastic_ip)
-      
+
 
 def main(args):
   usage = "usage: %prog  [options] <instance_id> "
   op = OptionParser(usage=usage)
 
   op.add_option('-d','--dry-run',
-      action="store_true", 
+      action="store_true",
       default=False,
       help="Dont do anything just pretend")
 

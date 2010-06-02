@@ -34,7 +34,7 @@ def main():
   ec2_connection  = boto.connect_ec2()
   stageManager = cloudera.staging.StageManager.StageManager()
 
-  
+
   # Clean up dead instances
 
   # get all registered instances in StageManager
@@ -46,12 +46,12 @@ def main():
   for reservation in ec2_reservations:
     ec2_instances.extend(reservation.instances)
   ec2_instances_ids = [ec2_instance.id for ec2_instance in  ec2_instances]
-  
+
   # Remove referenced but terminated instances
   for instance in ec2_instances:
     if instance.update() == cloudera.aws.ec2.InstanceState.RUNNING:
       datetime_launch = cloudera.aws.ec2.launch_time_datetime(instance)
       if datetime.datetime.now() - datetime_launch  > datetime.timedelta(int(options.age)):
         verbose_print('Instance %s'%(instance.id))
-      
+
 main()

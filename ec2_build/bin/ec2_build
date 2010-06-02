@@ -20,7 +20,7 @@ __usage = """
                           would normally happen
 
    --packages | -p <pkg>  Select package(s) to build may be listed multiple times
-   --build_id <build_id>  Override the default build id 
+   --build_id <build_id>  Override the default build id
 """
 
 class TimeoutException(Exception):
@@ -30,7 +30,7 @@ class TimeoutException(Exception):
 #
 # DEBIAN_DISTROS: lenny, hardy, intrepid, jaunty, etc
 # DEBIAN_SUITES: stable, testing
-# SUITE: $DEBIAN_DISTRO-$DEBIAN_SUITE, $DEBIAN_DISTRO-testing 
+# SUITE: $DEBIAN_DISTRO-$DEBIAN_SUITE, $DEBIAN_DISTRO-testing
 # CDH_RELEASE: cdh1, cdh2
 # CODENAME: $DEBIAN_DISTRO-$CDH_RELEASE
 # RELEASE: a build with version info hadoop-0.20_0.20.0+69+desktop.49-1cdh~intrepid-cdh2_i386
@@ -92,7 +92,7 @@ class Options:
     # Bucket to store source RPMs/debs in
     self.S3_BUCKET = 'ec2-build'
     self.BUILD_ID = "%s-%s" % (USERNAME, datetime.datetime.now().strftime("%Y%m%d_%H%M%S"))
-    self.EC2_KEY_NAME = USERNAME 
+    self.EC2_KEY_NAME = USERNAME
     self.EC2_GROUPS=['cloudera', USERNAME ]
     self.BUILD_MACHINES = DEFAULT_BUILD_MACHINES
     self.CDH_RELEASE=DEFAULT_CDH_RELEASE

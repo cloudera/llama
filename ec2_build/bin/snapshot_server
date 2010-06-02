@@ -15,7 +15,7 @@ def snapshot_volume(vol_id):
   volume = EC2.get_all_volumes(volume_ids=vol_id)[0]
   snap_id = volume.create_snapshot()
   return(snap_id)
-  
+
 
 def main(args):
   usage = "usage: %prog <vol_id> "
@@ -29,7 +29,7 @@ def main(args):
 
   snap_id = snapshot_volume(args[0])
   print("New snap_id created: %s" %snap_id)
-  
+
 
 if __name__ == "__main__":
   main(sys.argv)

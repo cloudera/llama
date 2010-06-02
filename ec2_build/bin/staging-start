@@ -70,7 +70,7 @@ def update_archive(build, key_file, hostname, passphrase):
 
   # Set up instance
   archive.connect(hostname, key_file)
-  archive.copy_scripts(hostname, key_file)  
+  archive.copy_scripts(hostname, key_file)
   archive.install_packages()
 
   # Set up gpg-agent
@@ -104,13 +104,13 @@ def main():
   op.add_option('--snapshot',
             help="Snapshot to base staging from")
 
-  default_sec_group_desc = 'Open HTTP for Cloudera and SSH for everyone' 
+  default_sec_group_desc = 'Open HTTP for Cloudera and SSH for everyone'
   op.add_option('-i','--security-group-desc',
      default=default_sec_group_desc,
      help="Override the default security group Description")
 
   default_sec_group_name = 'Build-Artifact-%s' % time.strftime('%Y%m%d_%H%M%S',time.gmtime())
-  op.add_option('-g','--security-group-name', 
+  op.add_option('-g','--security-group-name',
     default=default_sec_group_name,
    help="Override the default security group name")
 
@@ -118,7 +118,7 @@ def main():
   op.add_option('-a','--ami', default=ami,
     help="The alternative ami to boot: %s"  % ami)
 
-  default_s3_bucket = 'cloudera-freezer' 
+  default_s3_bucket = 'cloudera-freezer'
   op.add_option('-s','--s3-bucket',
     default=default_s3_bucket,
     help="S3 bucket where the build is located")
@@ -184,9 +184,9 @@ def main():
   verbose_print("Waiting for the address to be effectively associated...")
   time.sleep(2*60)
   update_archive(options.build, options.key_file, eip.public_ip, passphrase)
-  
+
   if options.promote:
-    # Make this archive become the official one 
+    # Make this archive become the official one
     archiveManager.promote(instance, eip.public_ip)
 
 main()

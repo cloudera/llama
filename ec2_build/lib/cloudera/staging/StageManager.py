@@ -9,7 +9,7 @@ class StageManager:
   '''
   Class used for managing staging servers
   '''
-  
+
   # Amazon SDB domain
   STAGE_MANAGER_DOMAIN = "StageManagerDomain"
 
@@ -27,7 +27,7 @@ class StageManager:
 
   def __init__(self):
     """
-    Initialize connections to Amazon services  
+    Initialize connections to Amazon services
     """
 
     self.sdb_connection = boto.sdb.connection.SDBConnection()
@@ -39,11 +39,11 @@ class StageManager:
     Delete domain and recreate a blank one
 	 Note: All data will be lost and unrecoverable. Be cautious
     """
-      
+
     # First step: Delete data and domain if it exists
     if self.sdb_connection.lookup(StageManager.STAGE_MANAGER_DOMAIN):
       self.sdb_connection.delete_domain(StageManager.STAGE_MANAGER_DOMAIN)
-  
+
     # Second step: Recreate domain
     self.sdb_connection.create_domain(StageManager.STAGE_MANAGER_DOMAIN)
 
@@ -114,7 +114,7 @@ class StageManager:
     @param instance_id Instance id as a string
     @return Bool Whether the operation has succeeded or not
     """
-    
+
     return self.sdb_connection.delete_attributes(StageManager.STAGE_MANAGER_DOMAIN,
                                   instance_id,
                                   None) # All attributes are to be deleted
@@ -132,4 +132,4 @@ class StageManager:
                           "select " + StageManager.ATTRIBUTE_INSTANCE_ID + " from " + StageManager.STAGE_MANAGER_DOMAIN + ' where user="' + user + '"')
 
     return map(lambda item: item[StageManager.ATTRIBUTE_INSTANCE_ID], result)
-    
+

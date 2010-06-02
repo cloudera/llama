@@ -30,7 +30,7 @@ def main():
   eipManager = cloudera.staging.ElasticIpManager.ElasticIpManager()
   stageManager = cloudera.staging.StageManager.StageManager()
 
-  
+
   # Clean up dead instances
 
   # get all registered instances in StageManager
@@ -42,7 +42,7 @@ def main():
   for reservation in ec2_reservations:
     ec2_instances.extend(reservation.instances)
   ec2_instances_ids = [ec2_instance.id for ec2_instance in  ec2_instances]
-  
+
   # Remove non-referenced instances
   for instance in instances_ids:
     if not instance in ec2_instances_ids:
@@ -54,5 +54,5 @@ def main():
     if instance.update() == cloudera.aws.ec2.InstanceState.TERMINATED:
       verbose_print('Removing %s'%(instance.id))
       stageManager.delete_instance(instance.id)
-      
+
 main()

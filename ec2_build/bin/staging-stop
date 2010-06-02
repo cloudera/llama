@@ -55,7 +55,7 @@ def main():
   while(instance.update() != 'terminated'):
     print "Waiting for the instance to terminate. Current state is [%s]"%(instance.state)
     time.sleep(5)
-  
+
   if volumes:
     volume = volumes[0]
     if not volume:

@@ -43,5 +43,5 @@ def main():
       dns = options.hostname
 
     eipManager.add_ip(options.ip, dns)
-  
+
 main()

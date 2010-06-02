@@ -139,7 +139,7 @@ def cleanup_security_group(ec2_connection, security_group_name):
   @param ec2_connection Connection to EC2
   @param security_group_name Security group name
   '''
-  
+
   if not security_group_name:
     return
 

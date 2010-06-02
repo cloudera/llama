@@ -33,11 +33,11 @@ class ElasticIpManager:
     Delete domain and recreate a blank one
 	 Note: All data will be lost and unrecoverable. Be cautious.
     """
-    
+
     # First step: Delete data and domain if it exists
     if self.sdb_connection.lookup(ElasticIpManager.EIMDOMAIN):
       self.sdb_connection.delete_domain(ElasticIpManager.EIMDOMAIN)
-  
+
     # Second step: Recreate domain
     self.sdb_connection.create_domain(ElasticIpManager.EIMDOMAIN)
 
@@ -46,7 +46,7 @@ class ElasticIpManager:
     """
     Get all ips whether they are used or not
     """
-    return self.sdb_connection.select(ElasticIpManager.EIMDOMAIN, 
+    return self.sdb_connection.select(ElasticIpManager.EIMDOMAIN,
                           "select * from " + ElasticIpManager.EIMDOMAIN)
 
 
@@ -54,24 +54,24 @@ class ElasticIpManager:
     """
     Add a new address to the pool of available ones
 
-    @param ip_address IP address 
+    @param ip_address IP address
     @param dns DNS entry associated with ip_address (example: test02.cloudera.com)
     @return Bool Whether the operation has succeeded or not
     """
     return self.sdb_connection.put_attributes(ElasticIpManager.EIMDOMAIN,
-                                ip_address, 
+                                ip_address,
                                 {
                                   ElasticIpManager.ATTRIBUTE_DNS: dns,
                                   ElasticIpManager.ATTRIBUTE_IP: ip_address
-                                }, 
+                                },
                                 True) # Replace
 
-  
+
   def delete_ip(self, ip_address):
     """
     Remove a new address from the pool of available ones
 
-    @param ip_address IP address 
+    @param ip_address IP address
     @return Bool Whether the operation has succeeded or not
     """
     return self.sdb_connection.delete_attributes(ElasticIpManager.EIMDOMAIN, ip_address)
