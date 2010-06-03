@@ -1,0 +1,45 @@
+# Hadoop 0.20.0-based hadoop package
+HADOOP20_NAME=hadoop
+HADOOP20_PKG_NAME=hadoop-0.20
+HADOOP20_BASE_VERSION=0.20.2
+HADOOP20_SOURCE=hadoop-$(HADOOP20_BASE_VERSION)-r916569.tar.gz
+HADOOP20_SOURCE_MD5=1d6bd7ef87ae9a8f603d195a6f9fcfbd
+HADOOP20_SITE=$(CLOUDERA_ARCHIVE)
+HADOOP20_GIT_REPO=$(BASE_DIR)/repos/cdh3/hadoop-0.20
+HADOOP20_BASE_REF=cdh-base-$(HADOOP20_BASE_VERSION)
+HADOOP20_BUILD_REF=HEAD
+HADOOP20_PACKAGE_GIT_REPO=$(BASE_DIR)/repos/cdh3/hadoop-0.20-package
+$(eval $(call PACKAGE,hadoop20,HADOOP20))
+
+# Pig 
+PIG_BASE_VERSION=0.5.0
+PIG_NAME=pig
+PIG_PKG_NAME=hadoop-pig
+PIG_SOURCE=pig-0.5.0.tar.gz
+PIG_GIT_REPO=$(BASE_DIR)/repos/cdh3/pig
+PIG_BASE_REF=cdh-base-$(PIG_BASE_VERSION)
+PIG_BUILD_REF=cdh-$(PIG_BASE_VERSION)
+PIG_PACKAGE_GIT_REPO=$(BASE_DIR)/repos/cdh3/pig-package
+PIG_SITE=$(APACHE_MIRROR)/hadoop/pig/pig-$(PIG_BASE_VERSION)
+$(eval $(call PACKAGE,pig,PIG))
+
+# Hive
+HIVE_NAME=hive
+HIVE_PKG_NAME=hadoop-hive
+HIVE_BASE_VERSION=0.5.0
+HIVE_SOURCE=hive-$(HIVE_BASE_VERSION)-dev.tar.gz
+HIVE_GIT_REPO=$(BASE_DIR)/repos/cdh3/hive
+HIVE_BASE_REF=cdh-base-$(HIVE_BASE_VERSION)
+HIVE_BUILD_REF=cdh-$(HIVE_BASE_VERSION)
+HIVE_PACKAGE_GIT_REPO=$(BASE_DIR)/repos/cdh3/hive-package
+HIVE_SITE=$(APACHE_MIRROR)/hadoop/hive/hive-$(HIVE_BASE_VERSION)/
+$(eval $(call PACKAGE,hive,HIVE))
+
+HIVE_ORIG_SOURCE_DIR=$(HIVE_BUILD_DIR)/source
+HIVE_SOURCE_DIR=$(HIVE_BUILD_DIR)/source/src
+
+$(HIVE_TARGET_PREP):
+	mkdir -p $($(PKG)_SOURCE_DIR)
+	$(BASE_DIR)/tools/setup-package-build $($(PKG)_GIT_REPO) $($(PKG)_BASE_REF) $($(PKG)_BUILD_REF) $(DL_DIR)/$($(PKG)_SOURCE) $(HIVE_BUILD_DIR)/source
+	rsync -av $(HIVE_ORIG_SOURCE_DIR)/cloudera/ $(HIVE_SOURCE_DIR)/cloudera/
+	touch $@

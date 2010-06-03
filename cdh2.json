@@ -1,0 +1,30 @@
+{
+  "default-remote": "origin",
+
+  "remotes":
+    {"origin": { "fetch": "ssh://git@git.sf.cloudera.com/%(name)s.git" },
+     "apache": { "fetch": "ssh://git@git.sf.cloudera.com/apache-%(name)s.git" },
+     "common": { "fetch": "ssh://git@git.sf.cloudera.com/apache-hadoop-common.git" }},
+
+  "projects":
+    {"hadoop-0.18": { "track-branch": "cdh-0.18.3+76", "dir":"repos/cdh2/hadoop-0.18", 
+                      "remotes": ["origin", "apache"],
+                      "remote-project-name": "hadoop" },
+     "hadoop-0.20": { "track-branch": "cdh-0.20.1+169", "dir":"repos/cdh2/hadoop-0.20", 
+                      "remotes": ["origin", "common"],
+                      "remote-project-name": "hadoop" },
+
+     "pig": {"track-branch": "cdh-0.5.0+11", "dir": "repos/cdh2/pig", "remotes": ["origin", "apache"]},
+     "hive": {"track-branch": "cdh-0.4.1+14", "dir": "repos/cdh2/hive", "remotes": ["origin", "apache"]},
+
+     "hadoop-0.18-package": { "track-branch": "CDH2-0.18", "dir": "repos/cdh2/hadoop-0.18-package",
+                              "remote-project-name": "hadoop-package"},
+     "hadoop-0.20-package": { "track-branch": "CDH2-0.20", "dir": "repos/cdh2/hadoop-0.20-package",
+                              "remote-project-name": "hadoop-package"},
+
+     "hive-package": { "track-branch": "CDH2-0.4.0", "dir": "repos/cdh2/hive-package"},
+     "pig-package": { "track-branch": "CDH2-0.5.0", "dir": "repos/cdh2/pig-package"},
+
+     "pristine-tarballs": { "dir": "repos/cdh2/pristine"}
+    }
+}

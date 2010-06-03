@@ -1,0 +1,24 @@
+{
+  "default-remote": "origin",
+  
+  "remotes":
+    {"origin": { "fetch": "ssh://git@git.sf.cloudera.com/%(name)s.git" },
+     "apache": { "fetch": "ssh://git@git.sf.cloudera.com/apache-%(name)s.git" },
+     "common": { "fetch": "ssh://git@git.sf.cloudera.com/apache-hadoop-common.git" }},
+ 
+  "projects":
+  {
+     "hadoop-0.20": { "track-branch": "cdh-0.20.2", "dir":"repos/cdh3/hadoop-0.20", 
+                      "remotes": ["origin", "common"],
+                      "remote-project-name": "hadoop" },
+
+     "pig": {"track-branch": "cdh-0.5.0", "dir": "repos/cdh3/pig", "remotes": ["origin", "apache"]},
+     "hive": {"track-branch": "cdh-0.5.0", "dir": "repos/cdh3/hive", "remotes": ["origin", "apache"]},
+
+     "hadoop-0.20-package": { "track-branch": "CDH2-0.20", "dir": "repos/cdh3/hadoop-0.20-package",
+                              "remote-project-name": "hadoop-package"},
+     
+     "hive-package": { "track-branch": "CDH2-0.4.0", "dir": "repos/cdh3/hive-package"},
+     "pig-package": { "track-branch": "CDH2-0.5.0", "dir": "repos/cdh3/pig-package"}
+    }
+}
