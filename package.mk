@@ -112,8 +112,8 @@ $(2)_RELEASE        ?= 1
 $(2)_FULL_VERSION   := $(shell cd $($(2)_GIT_REPO) && $(BASE_DIR)/tools/branch-tool version)
 $(2)_BUILD_REF      := $(notdir $(shell cd $($(2)_GIT_REPO) && git symbolic-ref --quiet HEAD))
 
-$(2)_BUILD_DIR      = $(BUILD_DIR)/$(1)/$$($(2)_FULL_VERSION)/
-$(2)_OUTPUT_DIR      = $(OUTPUT_DIR)/$(1)
+$(2)_BUILD_DIR      = $(BUILD_DIR)/$(CDH)/$(1)/$$($(2)_FULL_VERSION)/
+$(2)_OUTPUT_DIR      = $(OUTPUT_DIR)/$(CDH)/$(1)
 $(2)_SOURCE_DIR       = $$($(2)_BUILD_DIR)/source
 
 # Download source URL and destination path
