@@ -51,18 +51,14 @@ DEBIAN_DISTROS="lenny hardy jaunty karmic lucid"
 
 ARCHS="i386 amd64"
 
-# Download all the build data
-s3cmd sync s3://$S3_BUCKET/build/$BUILD_ID $BUILD_ID
+BASE_DIR="/tmp"
 
-# Look at the manifest and fetch the source package
-cd $BUILD_ID
-mkdir -p source
-perl -n -a -e '
-if (/deb/) {
-  print "Fetching $F[1]...\n";
-  system("/usr/bin/curl", "-s", "-o", "source/" . $F[1], $F[3]);
-}' manifest.txt
-cd ..
+# Download all the build data
+mkdir -p $BASE_DIR/$BUILD_ID/binary
+mkdir -p $BASE_DIR/$BUILD_ID/source
+
+s3cmd sync s3://$S3_BUCKET/$BUILD_ID/binary $BASE_DIR/$BUILD_ID
+s3cmd sync s3://$S3_BUCKET/$BUILD_ID/source $BASE_DIR/$BUILD_ID
 
 REPREPRO_FLAGS="--export=never --keepunreferenced --ignore=wrongdistribution --basedir $REPO"
 
@@ -71,25 +67,25 @@ for DEBIAN_DISTRO in $DEBIAN_DISTROS ; do
   CODENAME=$DEBIAN_DISTRO-$CDH_RELEASE
 
   # include source package
-  for changefile in $BUILD_ID/source/*changes ; do
+  for changefile in $BASE_DIR/$BUILD_ID/source/*source.changes ; do
       reprepro --ignore=wrongdistribution $REPREPRO_FLAGS include $CODENAME $changefile
   done
   for ARCH in $ARCHS ; do
     BUILD_DIR=$BUILD_ID/deb_${CODENAME}_${ARCH}
     if [ $ARCH = "i386" ]; then
       # On i386, install all built packages
-      for changefile in /tmp/$BUILD_ID/*changes ; do
+      for changefile in $BASE_DIR/$BUILD_ID/*changes ; do
         reprepro $REPREPRO_FLAGS include $CODENAME $changefile
       done
 
       #include all packages
-      for deb in /tmp/$BUILD_ID/binary/deb_${DEBIAN_DISTRO}-${CDH_RELEASE}_${ARCH}/*${DEBIAN_DISTRO}-${CDH_RELEASE}_all.deb ; do
+      for deb in $BASE_DIR/$BUILD_ID/binary/deb_${DEBIAN_DISTRO}-${CDH_RELEASE}_${ARCH}/*${DEBIAN_DISTRO}-${CDH_RELEASE}_all.deb ; do
         reprepro $REPREPRO_FLAGS includedeb $CODENAME $deb
       done
     fi
 
     #include arch specific packages
-    for deb in /tmp/$BUILD_ID/binary/deb_${DEBIAN_DISTRO}-${CDH_RELEASE}_${ARCH}/*${DEBIAN_DISTRO}-${CDH_RELEASE}_${ARCH}.deb ; do
+    for deb in $BASE_DIR/$BUILD_ID/binary/deb_${DEBIAN_DISTRO}-${CDH_RELEASE}_${ARCH}/*${DEBIAN_DISTRO}-${CDH_RELEASE}_${ARCH}.deb ; do
       reprepro $REPREPRO_FLAGS includedeb $CODENAME $deb
     done
   done

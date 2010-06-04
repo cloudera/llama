@@ -137,6 +137,7 @@ class Archive:
     display_message("Cleanup script area:")
     self.execute("rm -rf " + Archive.BASE_DIR + "/apt")
     self.execute("rm -rf " + Archive.BASE_DIR + "/yum")
+    self.execute("rm -rf " + Archive.BASE_DIR + "/ec2_build")
 
     display_message("Copy apt related scripts:")
     subprocess.call(["scp", Archive.SSH_NO_STRICT_HOST_KEY_CHECKING_OPTION, '-i', key_file, '-r', '../../apt', self.username + '@' + host + ':' + Archive.BASE_DIR + '/apt'])
@@ -144,6 +145,8 @@ class Archive:
     display_message("Copy yum related scripts:")
     subprocess.call(["scp", Archive.SSH_NO_STRICT_HOST_KEY_CHECKING_OPTION, '-i', key_file, '-r', '../../yum', self.username + '@' + host + ':' + Archive.BASE_DIR + '/yum'])
 
+    display_message("Copy ec2_build related scripts:")
+    subprocess.call(["scp", Archive.SSH_NO_STRICT_HOST_KEY_CHECKING_OPTION, '-i', key_file, '-r', '../../ec2_build', self.username + '@' + host + ':' + Archive.BASE_DIR + '/ec2_build'])
 
   def install_packages(self):
     """
@@ -221,6 +224,9 @@ class Archive:
     @param build Build to be published
     """
 
+    display_message("Clean up previous builds")
+    self.execute(' sudo rm -rf ' + Archive.BASE_DIR + '/' + build, True)
+
     display_message("Update deb repository")
     self.execute(' sudo -E -u www-data ' + Archive.BASE_DIR + '/apt/update_repo.sh -s cloudera-freezer -b ' + build + ' -c cdh2 -r /var/www/archive_public/debian/', True)
 
@@ -236,20 +242,14 @@ class Archive:
     self.execute(' sudo -E -u www-data ' + Archive.BASE_DIR + '/yum/update_repos.sh -s ' + Archive.BASE_DIR + '/' + build + '/ -c 2 -r /var/www/archive_public/redhat/', True)
 
 
-  def extract_src_archive(self, filename, destination_dir):
+  def finalize_staging(self, build):
+    """
+    Start program to finalize staging.
+    It means copying the tarball, its changelog and docs
 
-    display_message("Extracting source archive (%s)"%(filename))
-    self.execute(' sudo -E -u www-data tar -xzf ' + filename + ' -C ' + destination_dir, True)
+    @param build Build to be published
+    """
 
-
-  def cp_changelog(self, changelog_filename, hadoop_version):
-
-    display_message("Copying changelog %s"%(changelog_filename))
-    self.execute(' sudo -E -u www-data cp ' + changelog_filename + ' /var/www/archive_public/cdh/${CDH_VERSION}/hadoop-${hadoop_version}.CHANGES.txt', True)
-
-
-  def cp_docs(self, docs_dir, hadoop_version):
-
-    display_message("Copying docs %s"%(changelog_filename))
-    self.execute(' sudo -E -u www-data cp -r ' + docs_dir + ' /var/www/archive_public/cdh/${CDH_VERSION}/hadoop-${hadoop_version}/', True)
+    display_message("Finalize staging")
+    self.execute(' sudo -E -u www-data ' + Archive.BASE_DIR + '/ec2_build/bin/finalize-staging.sh -b '+ build + ' -c 2 -r /var/www/archive_public/', True)
 

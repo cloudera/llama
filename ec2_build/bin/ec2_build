@@ -272,6 +272,10 @@ def main():
       'deb': deb_util.find_source_deb_files(os.path.join(options.BUILD_PRODUCTS_DIR, package)),
       'rpm': glob.glob(os.path.join(options.BUILD_PRODUCTS_DIR, package, "*.src.rpm")),
     }
+    sources = glob.glob(os.path.join(options.BUILD_PRODUCTS_DIR, package, "*.tar.gz")),
+    sources = filter(lamda filename: re.match('.*-[\_\d\.\+]+\.tar\.gz$', filename), sources)
+    for arch in ['deb', 'rpm']:
+      package_files[package][arch].extend(sources)
 
   manifest_url = upload_files_and_manifest(options, package_files)
   print manifest_url

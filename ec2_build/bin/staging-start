@@ -83,6 +83,7 @@ def update_archive(build, key_file, hostname, passphrase):
   archive.update_deb_repo(build)
   archive.update_yum_repo(build)
 
+  archive.finalize_staging(build)
 
 def main():
   usage = "usage: %prog  [options] <snap_id> a lot"
