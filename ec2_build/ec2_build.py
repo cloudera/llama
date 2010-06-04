@@ -1,9 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # (c) Copyright 2009 Cloudera, Inc.
 __usage = """
    --bucket | -b <bucket> bucket to dump sources and build products into
                           (default: ec2-build)
-   
+
 
    --key | -k  <key>      SSH key to allow connection to build slave instances
                           (default: current user name)
@@ -24,7 +24,8 @@ __usage = """
 """
 
 class TimeoutException(Exception):
-	pass
+  pass
+
 # Sanity check:
 #
 # DEBIAN_DISTROS: lenny, hardy, intrepid, jaunty, etc
@@ -40,6 +41,7 @@ import glob
 import md5
 from optparse import OptionParser
 import os
+import re
 import sys
 import time
 import deb_util
@@ -48,11 +50,11 @@ from ec2_constants import AMIS, BUILD_INSTANCE_TYPES, DEFAULT_BUILD_MACHINES
 # Expected location of build_[deb,rpm.sh]
 SCRIPT_DIR = os.path.realpath(os.path.dirname(sys.argv[0]))
 
-# Expected localtion of directories with sdebs and srpms
-DEFAULT_BUILD_PRODUCTS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "output"))
-
 # Default codename (needs to be bumped with every CDH release)
 DEFAULT_CDH_RELEASE = 'cdh2'
+
+# Expected localtion of directories with sdebs and srpms
+DEFAULT_BUILD_PRODUCTS_BASE = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "output"))
 
 # User running the script
 try:
@@ -61,7 +63,7 @@ except:
   USERNAME = 'build'
 
 POSSIBLE_PACKAGES = [ 'hadoop18', 'hadoop20', 'pig', 'hive' , 'zookeeper','hbase' ]
-DEFAULT_PACKAGES = ['hadoop18', 'hadoop20']
+DEFAULT_PACKAGES = ['hadoop20']
 # Build ID
 
 # Directory in S3_BUCKET to put files
@@ -81,6 +83,10 @@ BUILD_SCRIPTS = {
   'rpm': BUILD_RPM,
   }
 
+def get_build_product_dir(cdh_release):
+  return os.path.join(DEFAULT_BUILD_PRODUCTS_BASE,
+                      re.match('cdh\d+', cdh_release).group())
+
 class Options:
   def __init__(self):
     # Bucket to store source RPMs/debs in
@@ -90,7 +96,7 @@ class Options:
     self.EC2_GROUPS=['cloudera', USERNAME ]
     self.BUILD_MACHINES = DEFAULT_BUILD_MACHINES
     self.CDH_RELEASE=DEFAULT_CDH_RELEASE
-    self.BUILD_PRODUCTS_DIR=DEFAULT_BUILD_PRODUCTS_DIR
+    self.BUILD_PRODUCTS_DIR=get_build_product_dir(DEFAULT_CDH_RELEASE)
     self.DRY_RUN = False
     self.INTERACTIVE = False
     self.WAIT = False
@@ -159,11 +165,14 @@ def parse_args():
   if opts.timeout:
     ret_opts.TIMEOUT = int(float(opts.timeout)*60)
 
-  if opts.dir:
-    ret_opts.BUILD_PRODUCTS_DIR = opts.dir
-
   if opts.tag:
     ret_opts.CDH_RELEASE = opts.tag
+
+  if opts.dir:
+    ret_opts.BUILD_PRODUCTS_DIR = opts.dir
+  else:
+    ret_opts.BUILD_PRODUCTS_DIR = get_build_product_dir(ret_opts.CDH_RELEASE)
+
 
   return ret_opts
 
