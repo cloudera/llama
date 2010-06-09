@@ -14,6 +14,9 @@ class ArchiveManager:
   # Public IP of archive.cloudera.com
   OFFICIAL_ARCHIVE_IP_ADDRESS = '184.73.164.173'
 
+  # Public IP of nightly.cloudera.com
+  NIGHTLY_ARCHIVE_IP_ADDRESS = '184.73.215.26'
+
 
   def __init__(self, ec2_connection):
     self.ec2_connection = ec2_connection
@@ -96,10 +99,20 @@ class ArchiveManager:
 
       if official_archive_address.instance_id:
 
+        # Will need to untag those marked as previously official
+        previous_official_archives = stageManager.get_all_instances([(stageManager.ATTRIBUTE_STATUS, stageManager.STATUS_PREVIOUSLY_OFFICIAL)])
+
+        # We need to keep track of the previous official archive in case we have to roll back
+        stageManager.tag_instance(official_archive_address.instance_id, stageManager.ATTRIBUTE_STATUS, stageManager.STATUS_PREVIOUSLY_OFFICIAL)
+
         # Case 1: There is already an official archive. Needs to swap addresses and update stage nanager
         verbose_print("Official archive already there. Associating instance %s to ip address %s"%(instance.id, self.OFFICIAL_ARCHIVE_IP_ADDRESS))
         cloudera.aws.ec2.swap_associated_elastic_ips(self.ec2_connection, eip, self.OFFICIAL_ARCHIVE_IP_ADDRESS)
-        stageManager.tag_instance(official_archive_address.instance_id, cloudera.staging.StageManager.StageManager.ATTRIBUTE_STATUS, cloudera.staging.StageManager.StageManager.STATUS_PREVIOUSLY_OFFICIAL)
+
+        # Now we have a new "previous official archive" we can remove the others (normally "There can be only one")
+        for instance_info in previous_official_archives:
+          stageManager.tag_instance(instance_info[stageManager.ATTRIBUTE_INSTANCE_ID], stageManager.ATTRIBUTE_STATUS, stageManager.STATUS_UNOFFICIAL)
+
 
       else:
 

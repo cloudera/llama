@@ -23,6 +23,8 @@ class StageManager:
   STATUS_OFFICIAL = 'official'
   STATUS_UNOFFICIAL = 'unofficial'
   STATUS_PREVIOUSLY_OFFICIAL = 'previously-official'
+  STATUS_NIGHTLY = 'nightly'
+  STATUS_PREVIOUSLY_NIGHTLY = 'previously-nightly'
 
 
   def __init__(self):
@@ -90,13 +92,20 @@ class StageManager:
 
 
 
-  def get_all_instances(self):
+  def get_all_instances(self, attributes=None):
     """
     Get all known staging servers
+
+    @param attributes List of tuple of strings (attribute_name, attribute_value) that each returned instance must match
     """
 
-    return self.sdb_connection.select(StageManager.STAGE_MANAGER_DOMAIN,
-                          "select * from " + StageManager.STAGE_MANAGER_DOMAIN)
+    query = "select * from " + StageManager.STAGE_MANAGER_DOMAIN
+
+    if attributes:
+      query = query + " where "
+      query = query + " and ".join([name + '="' + value + '"' for (name, value)  in attributes])
+
+    return self.sdb_connection.select(StageManager.STAGE_MANAGER_DOMAIN, query)
 
 
   def get_instance(self, instance_id):
