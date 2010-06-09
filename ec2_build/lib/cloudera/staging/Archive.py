@@ -217,7 +217,7 @@ class Archive:
     print line
 
 
-  def update_deb_repo(self, build):
+  def update_deb_repo(self, build, cdh_version):
     """
     Start script to update debian repository
 
@@ -228,10 +228,10 @@ class Archive:
     self.execute(' sudo rm -rf ' + Archive.BASE_DIR + '/' + build, True)
 
     display_message("Update deb repository")
-    self.execute(' sudo -E -u www-data ' + Archive.BASE_DIR + '/apt/update_repo.sh -s cloudera-freezer -b ' + build + ' -c cdh2 -r /var/www/archive_public/debian/', True)
+    self.execute(' sudo -E -u www-data ' + Archive.BASE_DIR + '/apt/update_repo.sh -s cloudera-freezer -b ' + build + ' -c cdh' + cdh_version + ' -r /var/www/archive_public/debian/', True)
 
 
-  def update_yum_repo(self, build):
+  def update_yum_repo(self, build, cdh_version):
     """
     Start script to update red hat repository
 
@@ -239,10 +239,10 @@ class Archive:
     """
 
     display_message("Update yum repository")
-    self.execute(' sudo -E -u www-data ' + Archive.BASE_DIR + '/yum/update_repos.sh -s ' + Archive.BASE_DIR + '/' + build + '/ -c 2 -r /var/www/archive_public/redhat/', True)
+    self.execute(' sudo -E -u www-data ' + Archive.BASE_DIR + '/yum/update_repos.sh -s ' + Archive.BASE_DIR + '/' + build + '/ -c ' + cdh_version + ' -r /var/www/archive_public/redhat/', True)
 
 
-  def finalize_staging(self, build):
+  def finalize_staging(self, build, cdh_version):
     """
     Start program to finalize staging.
     It means copying the tarball, its changelog and docs
@@ -251,5 +251,5 @@ class Archive:
     """
 
     display_message("Finalize staging")
-    self.execute(' sudo -E -u www-data ' + Archive.BASE_DIR + '/ec2_build/bin/finalize-staging.sh -b '+ build + ' -c 2 -r /var/www/archive_public/', True)
+    self.execute(' sudo -E -u www-data ' + Archive.BASE_DIR + '/ec2_build/bin/finalize-staging.sh -b '+ build + ' -c ' + cdh_version + ' -r /var/www/archive_public/', True)
 
