@@ -1,0 +1,111 @@
+#!/usr/bin/env python
+# Copyright (c) 2010 Cloudera, inc.
+# https://wiki.cloudera.com/display/PRODUCT/Staging+step
+
+import sys
+import os, re
+import boto
+import subprocess
+import getpass
+from optparse import OptionParser
+import time
+import cloudera.staging.ElasticIpManager
+import cloudera.staging.StageManager
+import cloudera.staging.Archive
+import cloudera.staging.ArchiveManager
+from cloudera.utils import display_message, verbose_print
+import logging
+
+
+def report_eip(ec2_connection, eipManager):
+  '''
+  Print a report on EIPs
+
+  @param ec2_connection EC2 Connection
+  @param eipManager EIPManager
+  '''
+
+
+  # Get all ips
+  all_ips = eipManager.get_all_ips()
+
+  # Convert them into boto.ec2.address objects
+  eips = ec2_connection.get_all_addresses(addresses= map(lambda ip_info: ip_info[eipManager.ATTRIBUTE_IP], all_ips))
+
+  # Look for instances associated to ip addresses
+  eips_dict = {}
+  for eip in eips:
+    instance_id = eip.instance_id
+    if instance_id == '':
+      instance_id = "N/A"
+
+    eips_dict[eip.public_ip] = instance_id
+
+
+  verbose_print("Total number of eips: " + str(len(all_ips)))
+
+  print
+
+  print "IP address\t\tInstance associated\t\tDNS"
+  print "-----------------------------------------------------------"
+  for ip in all_ips:
+    infos = {}
+    for attr in [eipManager.ATTRIBUTE_IP, eipManager.ATTRIBUTE_DNS]:
+      if attr in ip and not ip[attr] == '':
+        infos[attr] = ip[attr]
+      else:
+        infos[attr] = "N/a"
+    print "%-15s\t\t%-10s\t\t\t%s"%(infos[eipManager.ATTRIBUTE_IP], eips_dict[ip[eipManager.ATTRIBUTE_IP]], infos[eipManager.ATTRIBUTE_DNS])
+
+
+def report_stage(stageManager):
+  '''
+  Print a report on archives
+
+  @param stageManager StageManager
+  '''
+
+  all_instances = stageManager.get_all_instances()
+
+  verbose_print("Total number of instances: " + str(len(all_instances)))
+
+  print
+
+  title = "Instance id\t\tStatus\t\t\tUser\t\t\tSecurity group"
+  print title
+  print "-"*len(title) + "-"*6*8
+  for instance_info in all_instances:
+    info = {}
+    for attr in [stageManager.ATTRIBUTE_INSTANCE_ID, stageManager.ATTRIBUTE_STATUS, stageManager.ATTRIBUTE_USER, stageManager.ATTRIBUTE_SECURITY_GROUP]:
+      if attr in instance_info:
+        info[attr] = instance_info[attr]
+      else:
+        info[attr] = "N/A"
+
+    print "%s\t\t%s\t\t%s\t\t%s"%(info[stageManager.ATTRIBUTE_INSTANCE_ID],
+                                  info[stageManager.ATTRIBUTE_STATUS],
+                                  info[stageManager.ATTRIBUTE_USER],
+                                  info[stageManager.ATTRIBUTE_SECURITY_GROUP])
+
+def main():
+  usage = "usage: %prog  [options]"
+  op = OptionParser(usage=usage)
+
+  (options, args) = op.parse_args()
+
+
+  ec2_connection  = boto.connect_ec2()
+
+  eipManager = cloudera.staging.ElasticIpManager.ElasticIpManager()
+  stageManager = cloudera.staging.StageManager.StageManager()
+
+  display_message("Elastic IP manager:")
+  report_eip(ec2_connection, eipManager)
+
+  print
+  print
+
+  display_message("Stage manager:")
+  report_stage(stageManager)
+
+main()
