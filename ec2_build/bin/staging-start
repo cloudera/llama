@@ -52,7 +52,7 @@ def boot_ami(archiveManager, options):
   return instance, hostname
 
 
-def update_archive(build, key_file, hostname, passphrase, cdh_version):
+def update_archive(build, key_file, hostname, passphrase, cdh_release):
   '''
   Update an archive
 
@@ -80,10 +80,10 @@ def update_archive(build, key_file, hostname, passphrase, cdh_version):
     archive.set_gpg_passphrase(passphrase)
 
   # Update repos
-  archive.update_deb_repo(build, cdh_version)
-  archive.update_yum_repo(build, cdh_version)
+  archive.update_deb_repo(build, cdh_release)
+  archive.update_yum_repo(build, cdh_release)
 
-  archive.finalize_staging(build, cdh_version)
+  archive.finalize_staging(build, cdh_release)
 
 def main():
   usage = "usage: %prog  [options] --snapshot <snapshot id> --key-name <key name> --key-file <key file> --build <build id>"
@@ -96,8 +96,8 @@ def main():
   op.add_option('-k','--key-file',
             help="The key file authorized")
 
-  op.add_option('-c','--cdh-version',
-            help="CDH version")
+  op.add_option('-c','--cdh-release',
+            help="CDH release (ex: cdh2)")
 
   op.add_option('-n','--key-name',
             help="The keyname authorized")
@@ -141,8 +141,8 @@ def main():
   (options, args) = op.parse_args()
 
 
-  if not options.cdh_version:
-    op.error('--cdh-version option is mandatory')
+  if not options.cdh_release:
+    op.error('--cdh-release option is mandatory')
 
   if not options.build:
     op.error('build option is mandatory')
@@ -190,7 +190,7 @@ def main():
 
   verbose_print("Waiting for the address to be effectively associated...")
   time.sleep(2*60)
-  update_archive(options.build, options.key_file, eip.public_ip, passphrase, options.cdh_version)
+  update_archive(options.build, options.key_file, eip.public_ip, passphrase, options.cdh_release)
 
   if options.promote:
     # Make this archive become the official one
