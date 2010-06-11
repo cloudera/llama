@@ -154,6 +154,9 @@ $(1)-sdeb: $(1) $$($(2)_TARGET_SDEB)
 # To make debs, we need to make source packages
 $(1)-deb: $(1)-sdeb $$($(2)_TARGET_DEB)
 
+$(1)-relnotes: $(1)
+	./scripts/relnotes/relnote-gen.sh $$($(2)_OUTPUT_DIR) $$($(2)_GIT_REPO) "$$($(2)_BASE_REF)..HEAD" "CDH $(CDH_VERSION)" "$$($(2)_BASE_VERSION)" "$$($(2)_FULL_VERSION)"
+
 #### 
 # Helper targets -version -help etc
 $(1)-version:

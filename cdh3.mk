@@ -1,3 +1,5 @@
+CDH_VERSION=3
+
 # Hadoop 0.20.0-based hadoop package
 HADOOP20_NAME=hadoop
 HADOOP20_PKG_NAME=hadoop-0.20

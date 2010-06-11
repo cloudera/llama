@@ -1,3 +1,5 @@
+CDH_VERSION=2
+
 # Hadoop 0.18.3-based hadoop package
 HADOOP18_NAME=hadoop
 HADOOP18_PKG_NAME=hadoop-0.18
