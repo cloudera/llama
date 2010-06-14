@@ -89,6 +89,7 @@
   apt-get -y install asciidoc xmlto ruby libopenssl-ruby 
   apt-get -y install fuse-utils autoconf automake libfuse-dev libfuse2
   apt-get -y install subversion maven2
+  apt-get -y remove openjdk*
 
   # Install s3cmd
   pushd /tmp
