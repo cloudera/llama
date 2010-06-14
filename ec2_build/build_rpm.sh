@@ -13,6 +13,7 @@ export PACKAGES
 export S3_BUCKET
 export AWS_ACCESS_KEY_ID
 export AWS_SECRET_ACCESS_KEY
+export MAVEN_VERSION=2.2.1
 
 export ANT_HOME=/usr/local/share/apache-ant-1.7.1
 export PATH=$ANT_HOME/bin:$PATH
@@ -43,6 +44,13 @@ fi
 rm -rf /usr/local/share/apache-forrest-0.8/build/plugins # build fails with this symlink in place, so remove it
 
 yum -y install rpm-build yum-utils zlib-devel gcc gcc-devel gcc-c++ gcc-c++-devel lzo-devel glibc-devel ant ant-nodeps ruby git libtool asciidoc xmlto
+
+pushd /tmp
+wget http://mirror.cloudera.com/apache/maven/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.bz2
+tar xjvf apache-maven-${MAVEN_VERSION}-bin.tar.bz2
+export M2_HOME=`pwd`/apache-maven-${MAVEN_VERSION}/
+export PATH=$PATH:$M2_HOME/bin
+popd
 
 ############# BUILD PACKAGE ####################
 
