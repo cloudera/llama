@@ -34,7 +34,7 @@ def create_volume_from_snapshot(ec2_connection, snap_id, availability_zone, size
   return(ec2_connection.create_volume(size, availability_zone, snapshot=snap_id))
 
 
-def wait_while_booting(instance, wait_interval=5):
+def wait_while_booting(instance, wait_interval=5, logger=None):
   '''
   This function blocks while a given instance is booting
 
@@ -42,14 +42,19 @@ def wait_while_booting(instance, wait_interval=5):
   @param wait_interval How long to wait between each check
   '''
 
+  print_fun = lambda line: verbose_print(line)
+  if logger:
+    print_fun = lambda line: logger.info(line)
+
+
   state = instance.state
-  verbose_print("Image state: %s" %(state))
+  print_fun("Instance state: %s" %(state))
 
   while state != InstanceState.RUNNING:
     time.sleep(wait_interval)
     instance.update()
     state = instance.state
-    verbose_print("Waiting %s...state: %s"%(str(wait_interval), state))
+    print_fun("Waiting for %s seconds ... current state: %s"%(str(wait_interval), state))
 
 
 def swap_associated_elastic_ips(ec2_connection, ip1, ip2):
@@ -146,7 +151,26 @@ def cleanup_security_group(ec2_connection, security_group_name):
   verbose_print("Deleting security group [%s]"%(security_group_name))
   ec2_connection.delete_security_group(security_group_name)
 
+
 def launch_time_datetime(instance):
 
   iso_format = "%Y-%m-%dT%H:%M:%S.%fZ"
   return datetime.datetime.strptime(instance.launch_time, iso_format)
+
+
+# What user shall be used to remote login in any instance
+def user_for_os(os):
+  user_for_os = {
+                  'lucid': 'ubuntu',
+                  'karmic': 'ubuntu',
+                }
+
+  if os in user_for_os:
+    return user_for_os[os]
+  else:
+    return 'root'
+
+
+# What distributions don't have sudo
+def distributions_without_sudo():
+  return ['centos5', 'lenny']

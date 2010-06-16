@@ -1,0 +1,331 @@
+#!/usr/bin/env python
+# Copyright (c) 2010 Cloudera, inc.
+# https://wiki.cloudera.com/display/PRODUCT/Staging+step
+# This script will boot different os as ec2 instances and run a bunch of tests to ensure an archive's sanity
+
+import boto
+import glob
+import logging
+import os
+import subprocess
+import time
+from optparse import OptionParser
+from threading import Thread
+
+import cloudera.aws.ec2
+from ec2_constants import AMIS, BUILD_INSTANCE_TYPES, DEFAULT_BUILD_MACHINES
+
+
+MAIN_LOGGER = 'staging-test'
+DEFAULT_LOGGER_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+class TestRepo(Thread):
+
+  SUDO_CMD = "sudo"
+
+  SCRIPTS_ROOT_DIR = '../test/'
+  LIBRARIES_ROOT_DIR = '../lib'
+
+  # Strict host key checking is deactivated because some instances may reuse the same ip (from a precedent run)
+  # and then scare ssh
+  # ServerAliveInterval is set so as to not loose connection with a quiet and slow remote instance
+  SSH_OPTIONS = ['-o StrictHostKeyChecking=no', '-o ServerAliveInterval=120']
+
+  def __init__ (self, cdh_version, archive, hostname, key_file, build_type, os_distro, arch, instance_id):
+    Thread.__init__(self)
+    self.cdh_version = cdh_version
+    self.archive = archive
+    self.hostname = hostname
+    self.key_file = key_file
+    self.build_type = build_type
+    self.os_distro = os_distro
+    self.arch = arch
+    self.instance_id = instance_id
+    self.scripts_root_dir = self.SCRIPTS_ROOT_DIR
+
+    self.user = cloudera.aws.ec2.user_for_os(self.os_distro)
+
+    self.key_file_option = ['-i', self.key_file]
+    self.returncode = []
+
+
+  def start_logging(self):
+    '''
+    Start logging.
+    Generate log filename and open file handle
+    '''
+
+    filename = 'testing_' + '_'.join([self.build_type, self.os_distro, self.arch]) + '_' + str(time.time()) + '.log'
+    self.log_filename = filename
+    logging.getLogger(MAIN_LOGGER).info("Logging (%s, %s, %s) to file %s"%(self.build_type, self.os_distro, self.arch, filename))
+
+    # Define logger
+    self.logger = logging.getLogger("%s"%('_'.join([self.build_type, self.os_distro, self.arch])))
+
+    # Define a file handler to log output to separate files
+    fh = logging.FileHandler(filename)
+    formatter = logging.Formatter(DEFAULT_LOGGER_FORMAT)
+    fh.setFormatter(formatter)
+    fh.setLevel(logging.INFO)
+    self.logger.addHandler(fh)
+
+    # Set logger level
+    self.logger.setLevel(logging.INFO)
+
+
+  def set_log_level(self, level):
+    '''
+    Set current logging level
+    '''
+
+    if self.logger:
+      self.logger.setLevel(level)
+
+
+  def get_scripts(self):
+    '''
+    Find scripts to be executed
+    '''
+
+    scripts = glob.glob(self.scripts_root_dir + '*')
+    scripts.sort()
+    return scripts
+
+
+  def get_libraries(self):
+    '''
+    Find scripts to be executed
+    '''
+
+    return cloudera.utils.recursive_glob('*', self.LIBRARIES_ROOT_DIR)
+
+
+  def copy(self):
+    '''
+    Copy all needed files, including scripts and libraries
+    '''
+
+    self.copy_libs()
+    self.copy_scripts()
+
+
+  def copy_libs(self):
+    '''
+    Copy scripts to their remote destination
+    '''
+    options = self.SSH_OPTIONS[:]
+    options.append('-r')
+
+    scp = cloudera.utils.SCP(self.user, self.hostname, self.key_file, options)
+    scp.set_logger(self.logger)
+
+    scp.copy(self.LIBRARIES_ROOT_DIR, '~/')
+
+
+  def copy_scripts(self):
+    '''
+    Copy scripts to their remote destination
+    '''
+
+    files_to_copy = self.get_scripts()
+
+    scp = cloudera.utils.SCP(self.user, self.hostname, self.key_file, self.SSH_OPTIONS)
+    scp.set_logger(self.logger)
+
+    for file_to_copy in files_to_copy:
+      self.logger.info("Uploading " + file_to_copy)
+      scp.copy(file_to_copy, '~/')
+
+
+  def execute_scripts(self):
+    '''
+    Execute scripts on remote instance
+    '''
+
+    scripts = self.get_scripts()
+    self.scripts = scripts
+
+    ssh = cloudera.utils.SSH(self.user, self.hostname, self.key_file, self.SSH_OPTIONS)
+    ssh.set_logger(self.logger)
+
+    for script_name in scripts:
+      # Prepare ssh command to be run
+      cmd_remote = '~' + self.user + '/' + script_name.split('/')[-1]
+      if not self.os_distro in cloudera.aws.ec2.distributions_without_sudo() :
+        cmd_remote = self.SUDO_CMD + ' ' + cmd_remote
+
+      # Execute it
+      return_code = ssh.execute(cmd_remote, [self.archive, self.cdh_version])
+
+      # Appened the return code so we can keep track of scripts success/failure
+      self.returncode.append((script_name, return_code))
+      self.logger.info("Return code is %s for %s"%(str(return_code), self.hostname))
+
+    return self.returncode
+
+
+  def run(self):
+    # First: find and copy script
+    self.copy()
+
+    # Second: Execute all of them
+    self.execute_scripts()
+
+
+def start_instances(logger, ec2, build_machines, opts):
+  '''
+  Start all instances specified by build_machines
+
+  @param ec2 EC2 connection
+  @param build_machines list of tuples of (build type, distro, arch)
+  @param opts Option parameters
+  @return list of ec2 instances
+  '''
+
+  instances = []
+  for build_type, os_distro, arch in build_machines:
+
+    ami = AMIS[(os_distro, arch)]
+    image = ec2.get_image(ami)
+    instance_type = BUILD_INSTANCE_TYPES[arch]
+
+    logger.info("Starting %s-%s build slave (%s)..." % (os_distro, arch, ami))
+
+    reservation = image.run(
+        key_name=opts.key,
+        security_groups=[opts.groups],
+        instance_type=instance_type)
+    instance = reservation.instances[0]
+    instance.build_type = build_type
+    instance.os_distro = os_distro
+    instance.arch = arch
+    instances.append(instance)
+  return instances
+
+
+def main():
+
+  # Create logger
+  logger = logging.getLogger(MAIN_LOGGER)
+
+  # Add a stream handler to log output to console
+  ch = logging.StreamHandler()
+  formatter = logging.Formatter(DEFAULT_LOGGER_FORMAT)
+  ch.setFormatter(formatter)
+  logger.addHandler(ch)
+
+  # Set log level to INFO by default
+  logger.setLevel(logging.INFO)
+
+  op = OptionParser()
+  op.add_option('-k', '--key')
+  op.add_option('-f', '--key-file')
+  op.add_option('-g', '--groups')
+  op.add_option('-d', '--debug-level',
+      action="store_true",
+      default=None,
+      help="Increase logging level")
+  op.add_option('-c', '--cdh-version', help="CDH version")
+  op.add_option('-a', '--archive', help="Archive hostname or IP address")
+  op.add_option('--type', action='append')
+  op.add_option('--distro', action='append')
+  op.add_option('--arch', action='append')
+  op.add_option("--timeout", metavar="TIMEOUT", help="Kill off instances if we run for to long in minutes")
+
+  opts, args = op.parse_args()
+
+  if not opts.cdh_version:
+    op.error('--cdh option is mandatory')
+
+  if not opts.archive:
+    op.error('--archive option is mandatory')
+
+  build_machines = DEFAULT_BUILD_MACHINES
+  if opts.arch:
+    build_machines = [(type,distro,arch ) for (type, distro, arch) in build_machines if arch in opts.arch  ]
+
+  if opts.distro:
+    build_machines = [(type,distro,arch ) for (type, distro, arch) in build_machines if distro in opts.distro ]
+
+  if opts.type:
+    build_machines = [(type,distro,arch ) for (type, distro, arch) in build_machines if type in opts.type  ]
+
+  # Connect to EC2
+  ec2 = boto.connect_ec2()
+
+
+  instances = []
+  try:
+
+    # Start all instances
+    instances = start_instances(logger, ec2, build_machines, opts)
+    logger.info("Waiting for instances to boot...")
+
+    # Wait for instances to boot
+    for instance in instances:
+      logger.info("Waiting on (%s, %s, %s) to start..." % (instance.build_type, instance.os_distro, instance.arch))
+      cloudera.aws.ec2.wait_while_booting(instance, logger=logger)
+      logger.info("Booted %s at %s" % (instance.id, instance.dns_name))
+
+    # Wait a little bit so they are ready
+    time.sleep(35)
+    logger.info("All build slaves booted!")
+
+    # Do all the work:
+    # * upload scripts
+    # * run all the scripts
+    testRepos = []
+    for instance in instances:
+      logger.info("Connecting to instance (%s, %s, %s) "%(instance.build_type, instance.os_distro, instance.arch)
+                  + instance.public_dns_name)
+
+      testRepo = TestRepo(opts.cdh_version, opts.archive, instance.public_dns_name, opts.key_file, instance.build_type, instance.os_distro, instance.arch, instance.id)
+      testRepo.start_logging()
+      if opts.debug_level:
+        # Define a stream handler to log output to console when level set to warning (for troubleshooting)
+        formatter = logging.Formatter(DEFAULT_LOGGER_FORMAT)
+        ch = logging.StreamHandler()
+        ch.setFormatter(formatter)
+        ch.setLevel(logging.INFO)
+        testRepo.logger.addHandler(ch)
+
+
+      testRepo.start()
+
+      testRepos.append(testRepo)
+
+
+    # Sort out which repos have failed
+    failed_repo = []
+    for testRepo in testRepos:
+      testRepo.join()
+      logger.info("(%s, %s, %s) is done"%(testRepo.build_type, testRepo.os_distro, testRepo.arch))
+      if testRepo.returncode[-1][1] != 0:
+        failed_repo.append(testRepo)
+
+    # Display successful repos
+    logger.info("Successful repos:")
+    for repo in testRepos:
+      if not repo in failed_repo:
+        logger.info("(%s, %s, %s) succeded. See log file [%s] for more information"
+                    % (repo.build_type, repo.os_distro, repo.arch, repo.log_filename))
+
+    # Display failed repos
+    logger.info("Failed repos:")
+    for repo in failed_repo:
+      logger.info("(%s, %s, %s) failed at test %s  [%i/%i]. See log file [%s] for more information"
+                  % (repo.build_type, repo.os_distro, repo.arch, repo.returncode[-1][0], len(repo.returncode), len(repo.scripts), repo.log_filename))
+
+  except KeyboardInterrupt:
+    print "Interrupting cleaning up old instances"
+
+  finally:
+
+    # In any case we want to shutdown all instances
+    for instance in instances:
+      logger.info("Stopping instance: %s " % instance)
+      instance.stop()
+
+main()
+
+

@@ -42,3 +42,4 @@ DEFAULT_BUILD_MACHINES = [
   ('rpm', 'centos5',  'x86'),
   ('rpm', 'centos5',  'amd64'),
   ]
+
