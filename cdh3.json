@@ -12,7 +12,7 @@
                       "remotes": ["origin", "common"],
                       "remote-project-name": "hadoop" },
 
-     "pig": {"track-branch": "cdh-0.5.0", "dir": "repos/cdh3/pig", "remotes": ["origin", "apache"]},
+     "pig": {"track-branch": "cdh-0.7.0", "dir": "repos/cdh3/pig", "remotes": ["origin", "apache"]},
      "hive": {"track-branch": "cdh-0.5.0", "dir": "repos/cdh3/hive", "remotes": ["origin", "apache"]},
 
      "hadoop-0.20-package": { "track-branch": "CDH2-0.20", "dir": "repos/cdh3/hadoop-0.20-package",

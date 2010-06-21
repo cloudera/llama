@@ -12,10 +12,10 @@ HADOOP20_PACKAGE_GIT_REPO=$(BASE_DIR)/repos/cdh3/hadoop-0.20-package
 $(eval $(call PACKAGE,hadoop20,HADOOP20))
 
 # Pig 
-PIG_BASE_VERSION=0.5.0
+PIG_BASE_VERSION=0.7.0
 PIG_NAME=pig
 PIG_PKG_NAME=hadoop-pig
-PIG_SOURCE=pig-0.5.0.tar.gz
+PIG_SOURCE=pig-0.7.0.tar.gz
 PIG_GIT_REPO=$(BASE_DIR)/repos/cdh3/pig
 PIG_BASE_REF=cdh-base-$(PIG_BASE_VERSION)
 PIG_BUILD_REF=cdh-$(PIG_BASE_VERSION)
