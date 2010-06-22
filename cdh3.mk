@@ -25,6 +25,18 @@ PIG_PACKAGE_GIT_REPO=$(BASE_DIR)/repos/cdh3/pig-package
 PIG_SITE=$(APACHE_MIRROR)/hadoop/pig/pig-$(PIG_BASE_VERSION)
 $(eval $(call PACKAGE,pig,PIG))
 
+# Oozie
+OOZIE_NAME=oozie
+OOZIE_PKG_NAME=oozie
+OOZIE_BASE_VERSION=1.6.2
+OOZIE_SOURCE=oozie-$(OOZIE_BASE_VERSION)-dev.tar.gz
+OOZIE_GIT_REPO=$(BASE_DIR)/repos/cdh3/oozie
+OOZIE_BASE_REF=cdh-base-$(OOZIE_BASE_VERSION)
+OOZIE_BUILD_REF=cdh-$(OOZIE_BASE_VERSION)
+OOZIE_PACKAGE_GIT_REPO=$(BASE_DIR)/repos/cdh3/oozie-package
+OOZIE_SITE=http://monster01.sf.cloudera.com/~arvind/
+$(eval $(call PACKAGE,oozie,OOZIE))
+
 # Hive
 HIVE_NAME=hive
 HIVE_PKG_NAME=hadoop-hive
@@ -45,3 +57,50 @@ $(HIVE_TARGET_PREP):
 	$(BASE_DIR)/tools/setup-package-build $($(PKG)_GIT_REPO) $($(PKG)_BASE_REF) $($(PKG)_BUILD_REF) $(DL_DIR)/$($(PKG)_SOURCE) $(HIVE_BUILD_DIR)/source
 	rsync -av $(HIVE_ORIG_SOURCE_DIR)/cloudera/ $(HIVE_SOURCE_DIR)/cloudera/
 	touch $@
+# HBase
+HBASE_NAME=hbase
+HBASE_PKG_NAME=hadoop-hbase
+HBASE_BASE_VERSION=0.21.0-r0
+HBASE_SOURCE=hbase-$(HBASE_BASE_VERSION).tar.gz
+HBASE_GIT_REPO=$(BASE_DIR)/repos/cdh3/hbase
+HBASE_BASE_REF=cdh-base-$(HBASE_BASE_VERSION)
+HBASE_BUILD_REF=cdh-$(HBASE_BASE_VERSION)
+HBASE_PACKAGE_GIT_REPO=$(BASE_DIR)/repos/cdh3/hbase-package
+HBASE_SITE=http://monster01.sf.cloudera.com/~newalex/
+$(eval $(call PACKAGE,hbase,HBASE))
+
+# ZooKeeper
+ZOOKEEPER_NAME=zookeeper
+ZOOKEEPER_PKG_NAME=hadoop-zookeeper
+ZOOKEEPER_BASE_VERSION=3.3.1
+ZOOKEEPER_SOURCE=zookeeper-$(ZOOKEEPER_BASE_VERSION).tar.gz
+ZOOKEEPER_GIT_REPO=$(BASE_DIR)/repos/cdh3/zookeeper
+ZOOKEEPER_BASE_REF=cdh-base-$(ZOOKEEPER_BASE_VERSION)
+ZOOKEEPER_BUILD_REF=cdh-$(ZOOKEEPER_BASE_VERSION)
+ZOOKEEPER_PACKAGE_GIT_REPO=$(BASE_DIR)/repos/cdh3/zookeeper-package
+ZOOKEEPER_SITE=$(APACHE_MIRROR)/hadoop/zookeeper/zookeeper-$(ZOOKEEPER_BASE_VERSION)
+$(eval $(call PACKAGE,zookeeper,ZOOKEEPER))
+
+# Flume
+FLUME_NAME=flume
+FLUME_PKG_NAME=flume
+FLUME_BASE_VERSION=0.9.9
+FLUME_SOURCE=flume-$(FLUME_BASE_VERSION).tar.gz
+FLUME_GIT_REPO=$(BASE_DIR)/repos/cdh3/flume
+FLUME_BASE_REF=cdh-base-$(FLUME_BASE_VERSION)
+FLUME_BUILD_REF=cdh-$(FLUME_BASE_VERSION)
+FLUME_PACKAGE_GIT_REPO=$(BASE_DIR)/repos/cdh3/flume-package
+FLUME_SITE=http://monster01.sf.cloudera.com/~newalex/
+$(eval $(call PACKAGE,flume,FLUME))
+
+# Sqoop
+SQOOP_NAME=sqoop
+SQOOP_PKG_NAME=sqoop
+SQOOP_BASE_VERSION=1.0.0
+SQOOP_SOURCE=cdh-base-$(SQOOP_BASE_VERSION).tar.gz
+SQOOP_GIT_REPO=$(BASE_DIR)/repos/cdh3/sqoop
+SQOOP_BASE_REF=cdh-base-$(SQOOP_BASE_VERSION)
+SQOOP_BUILD_REF=cdh-$(SQOOP_BASE_VERSION)
+SQOOP_PACKAGE_GIT_REPO=$(BASE_DIR)/repos/cdh3/sqoop-package
+SQOOP_SITE=http://git.sf.cloudera.com/index.cgi/sqoop.git/snapshot/
+$(eval $(call PACKAGE,sqoop,SQOOP))
