@@ -41,8 +41,8 @@ import glob
 import md5
 from optparse import OptionParser
 import os
-import re
 import sys
+import re
 import time
 import deb_util
 from ec2_constants import AMIS, BUILD_INSTANCE_TYPES, DEFAULT_BUILD_MACHINES
@@ -54,7 +54,7 @@ SCRIPT_DIR = os.path.realpath(os.path.dirname(sys.argv[0]))
 DEFAULT_CDH_RELEASE = 'cdh2'
 
 # Expected localtion of directories with sdebs and srpms
-DEFAULT_BUILD_PRODUCTS_BASE = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "output"))
+DEFAULT_BUILD_PRODUCTS_BASE = os.path.abspath(os.path.join(os.path.dirname(__file__), "../..", "output"))
 
 # User running the script
 try:
@@ -88,6 +88,8 @@ def get_build_product_dir(cdh_release):
                       re.match('cdh\d+', cdh_release).group())
 
 class Options:
+
+
   def __init__(self):
     # Bucket to store source RPMs/debs in
     self.S3_BUCKET = 'ec2-build'
@@ -104,6 +106,7 @@ class Options:
     # Default to building hadoop
     self.PACKAGES = DEFAULT_PACKAGES
   pass
+
 
 def parse_args():
   """ Parse command line arguments into globals. """
@@ -176,6 +179,7 @@ def parse_args():
 
   return ret_opts
 
+
 def md5file(filename):
   """ Return the hex digest of a file without loading it all into memory. """
   fh = file(filename)
@@ -188,6 +192,7 @@ def md5file(filename):
   fh.close()
   return digest.hexdigest()
 
+
 def progressbar(bytes_done, total_bytes):
   """ Display a progress bar for boto file upload callback """
   print "Sent % 5d/%d KB" % (bytes_done/1024, total_bytes/1024),
@@ -197,6 +202,7 @@ def progressbar(bytes_done, total_bytes):
   print "[" + ("=" * bar_len) + ">" + (" " * (width - bar_len - 1)) + "]",
   print "\r",
   sys.stdout.flush()
+
 
 def satisfy_in_cache(bucket, path):
   """
@@ -220,6 +226,7 @@ def satisfy_in_cache(bucket, path):
   k = bucket.lookup(s3_cache_path)
 
   return (checksum, k.generate_url(EXPIRATION))
+
 
 def upload_files_and_manifest(options, package_files):
   """
@@ -246,7 +253,6 @@ def upload_files_and_manifest(options, package_files):
       for path in paths:
         (checksum, url) = satisfy_in_cache(bucket, path)
         manifest_list.append(('-'.join([package, package_format]), os.path.basename(path), checksum, url))
-
   manifest = "\n".join(
     ["\t".join(el) for el in manifest_list])
 
@@ -261,6 +267,7 @@ def upload_files_and_manifest(options, package_files):
   else:
     return "<manifest not uploaded - dry run>"
 
+
 def main():
 
   options = parse_args()
@@ -272,10 +279,24 @@ def main():
       'deb': deb_util.find_source_deb_files(os.path.join(options.BUILD_PRODUCTS_DIR, package)),
       'rpm': glob.glob(os.path.join(options.BUILD_PRODUCTS_DIR, package, "*.src.rpm")),
     }
-    sources = glob.glob(os.path.join(options.BUILD_PRODUCTS_DIR, package, "*.tar.gz")),
-    sources = filter(lamda filename: re.match('.*-[\_\d\.\+]+\.tar\.gz$', filename), sources)
+
+    changelog = glob.glob(os.path.join(options.BUILD_PRODUCTS_DIR, package, "*-changes.log"))
+    relnotes = glob.glob(os.path.join(options.BUILD_PRODUCTS_DIR, package, "*.releasenotes.html"))
+
+    sources_all = glob.glob(os.path.join(options.BUILD_PRODUCTS_DIR, package, "*.tar.gz"))
+    sources = []
+    for source in sources_all:
+      sources.append(source)
+    if len(sources) == 0:
+      print "ERROR: No tarball found"
+      sys.exit(-1)
+
+    sources = filter(lambda filename: re.match('.*-[\_\d\.\+]+\.tar\.gz$', filename), sources)
+
     for arch in ['deb', 'rpm']:
       package_files[package][arch].extend(sources)
+      package_files[package][arch].extend(relnotes)
+      package_files[package][arch].extend(changelog)
 
   manifest_url = upload_files_and_manifest(options, package_files)
   print manifest_url
@@ -357,10 +378,11 @@ def main():
         while instance.state != 'terminated':
           if options.TIMEOUT > 0 and counter > options.TIMEOUT:
             raise TimeoutException("Counter Exceeded")
-
+          
           time.sleep(5)
           counter += 5
           instance.update()
+          print "Instance %s has state %s"%(instance.id, instance.state)
         print "   terminated %s" % (instance.id)
   except KeyboardInterrupt:
     print "Interrupting cleaning up old instances"
