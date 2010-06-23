@@ -38,98 +38,6 @@
     add-apt-repository 'deb http://archive.canonical.com/ lucid partner'
   fi
 
-apt-get update
-
-# Some basic tools we need:
-#
-#  devscripts - debian package building scripts
-#  pbuilder - nice util for satisfying build deps
-#  debconf-utils - for dch
-#  liburi-perl - a dependency of one of the above that isn't resolved automatically
-#  build-essential - compilers, etc
-#  dctrl-tools - for dpkg-grepctrl
-
-# Need to do this first so we can set the debconfs before other packages (e.g., postfix)
-# get pulled in
-apt-get -y install debconf-utils
-
-# Mark java license as accepted so that, if it's pulled in by some package, it won't
-# block on user input to accept the sun license (ed: oracle license? haha)
-echo 'sun-java6-bin   shared/accepted-sun-dlj-v1-1    boolean true
-sun-java6-jdk   shared/accepted-sun-dlj-v1-1    boolean true
-sun-java6-jre   shared/accepted-sun-dlj-v1-1    boolean true
-sun-java6-jre   sun-java6-jre/stopthread        boolean true
-sun-java6-jre   sun-java6-jre/jcepolicy note
-sun-java6-bin   shared/present-sun-dlj-v1-1     note
-sun-java6-jdk   shared/present-sun-dlj-v1-1     note
-sun-java6-jre   shared/present-sun-dlj-v1-1     note
-postfix  postfix/main_mailer_type  select  Local only
-postfix  postfix/root_address  string
-postfix  postfix/rfc1035_violation  boolean  false
-postfix  postfix/retry_upgrade_warning boolean
-# Install postfix despite an unsupported kernel?
-postfix  postfix/kernel_version_warning  boolean
-postfix  postfix/mydomain_warning  boolean
-postfix  postfix/mynetworks  string  127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128
-postfix  postfix/not_configured  error
-postfix  postfix/mailbox_limit string 0
-postfix  postfix/relayhost string
-postfix  postfix/procmail  boolean false
-postfix  postfix/bad_recipient_delimiter error
-postfix  postfix/protocols select  all
-postfix  postfix/mailname  string  dontcare
-postfix  postfix/tlsmgr_upgrade_warning  boolean
-postfix  postfix/recipient_delim  string +
-postfix  postfix/main_mailer_type  select  Local only
-postfix  postfix/destinations  string  localhost
-postfix  postfix/chattr  boolean  false
-' | debconf-set-selections
-
-apt-get -y install devscripts pbuilder liburi-perl build-essential dctrl-tools
-apt-get -y install asciidoc xmlto libopenssl-ruby automake autoconf
-
-# Install s3cmd
-pushd /tmp
-  wget http://s3.amazonaws.com/ServEdge_pub/s3sync/s3sync.tar.gz
-  tar xzvf s3sync.tar.gz
-  export S3CMD=`pwd`/s3sync/s3cmd.rb
-popd
-
-############################## DOWNLOAD ##############################
-
-eval `dpkg-architecture` # set DEB_* variables
-
-for PACKAGE in $PACKAGES; do
-
-  echo $PACKAGE
-
-  mkdir /tmp/$BUILD_ID
-  pushd /tmp/$BUILD_ID
-
-  # fetch deb parts of manifest
-  curl -s $MANIFEST_URL | grep ^$PACKAGE > manifest.txt
-
-  # download all the files
-  perl -n -a -e "
-  if (/^$PACKAGE-deb/) {
-    print \"Fetching \$F[1]...\\n\";
-    system(\"/usr/bin/curl\", \"-s\", \"-o\", \$F[1], \$F[3]);
-  }" manifest.txt
-
-############################## BUILD ##############################
-
-  # Unpack source package
-  dpkg-source -x *dsc
-
-  pushd `find . -maxdepth 1 -type d | grep -vx .`
-
-  /usr/lib/pbuilder/pbuilder-satisfydepends
-
-  if [ ! -z "$CODENAME" ]; then
-    CODENAMETAG="~$CODENAME"
->>>>>>> a852276... KITCHEN-307. Clean up merge issue and trailing spaces
-  fi
-
   apt-get update
 
   # Some basic tools we need:
@@ -181,7 +89,7 @@ for PACKAGE in $PACKAGES; do
   apt-get -y install asciidoc xmlto ruby libopenssl-ruby 
   apt-get -y install fuse-utils autoconf automake libfuse-dev libfuse2
   apt-get -y install subversion maven2
-  apt-get -y remove openjdk*
+  apt-get -y remove openjdk* || /bin/true
 
   # Install s3cmd
   pushd /tmp
@@ -219,6 +127,7 @@ for PACKAGE in $PACKAGES; do
     pushd `find . -maxdepth 1 -type d | grep -vx .`
 
     /usr/lib/pbuilder/pbuilder-satisfydepends
+  apt-get -y remove openjdk* || /bin/true
 
     if [ ! -z "$CODENAME" ]; then
       CODENAMETAG="~$CODENAME"
@@ -235,6 +144,7 @@ for PACKAGE in $PACKAGES; do
     fi
 
     debuild -uc -us $DEBUILD_FLAG
+  apt-get -y remove openjdk* || /bin/true
 
     popd 
 
