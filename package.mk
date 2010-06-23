@@ -58,8 +58,8 @@ $(BUILD_DIR)/%/.srpm:
 # Make binary RPMs
 $(BUILD_DIR)/%/.rpm: SRCRPM=$($(PKG)_OUTPUT_DIR)/$($(PKG)_PKG_NAME)-$($(PKG)_FULL_VERSION)-$($(PKG)_RELEASE).src.rpm
 $(BUILD_DIR)/%/.rpm:
-	rpmbuild --rebuild $(SRCRPM)
-	rpmbuild --rebuild --target noarch $(SRCRPM)
+	rpmbuild --define "_topdir $(PKG_BUILD_DIR)/rpm/topdir" --rebuild $(SRCRPM)
+	rpmbuild --define "_topdir $(PKG_BUILD_DIR)/rpm/topdir" --rebuild --target noarch $(SRCRPM)
 	touch $@
 
 # Make source DEBs
