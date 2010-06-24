@@ -57,16 +57,17 @@ $(HIVE_TARGET_PREP):
 	$(BASE_DIR)/tools/setup-package-build $($(PKG)_GIT_REPO) $($(PKG)_BASE_REF) $($(PKG)_BUILD_REF) $(DL_DIR)/$($(PKG)_SOURCE) $(HIVE_BUILD_DIR)/source
 	rsync -av $(HIVE_ORIG_SOURCE_DIR)/cloudera/ $(HIVE_SOURCE_DIR)/cloudera/
 	touch $@
+
 # HBase
 HBASE_NAME=hbase
 HBASE_PKG_NAME=hadoop-hbase
-HBASE_BASE_VERSION=0.21.0-r0
+HBASE_BASE_VERSION=0.89.20100621
 HBASE_SOURCE=hbase-$(HBASE_BASE_VERSION).tar.gz
 HBASE_GIT_REPO=$(BASE_DIR)/repos/cdh3/hbase
 HBASE_BASE_REF=cdh-base-$(HBASE_BASE_VERSION)
 HBASE_BUILD_REF=cdh-$(HBASE_BASE_VERSION)
 HBASE_PACKAGE_GIT_REPO=$(BASE_DIR)/repos/cdh3/hbase-package
-HBASE_SITE=http://monster01.sf.cloudera.com/~newalex/
+HBASE_SITE=http://monster01.sf.cloudera.com/~chad/
 $(eval $(call PACKAGE,hbase,HBASE))
 
 # ZooKeeper
