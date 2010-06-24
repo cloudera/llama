@@ -15,6 +15,7 @@
   fi
 
 {
+  export OOZIE_SKIP_TEST_EXEC=true
 
   ##SUBSTITUTE_VARS##
   export AWS_ACCESS_KEY_ID

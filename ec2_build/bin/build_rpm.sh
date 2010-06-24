@@ -15,6 +15,8 @@ export AWS_ACCESS_KEY_ID
 export AWS_SECRET_ACCESS_KEY
 export MAVEN_VERSION=2.2.1
 
+export OOZIE_SKIP_TEST_EXEC=true
+
 export ANT_HOME=/usr/local/share/apache-ant-1.7.1
 export PATH=$ANT_HOME/bin:$PATH
 
