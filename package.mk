@@ -167,7 +167,7 @@ $(1)-help:
 	@echo "    $(1)  [$(1)-version, $(1)-srpm, $(1)-sdeb, $(1)-info]"
 
 $(1)-clean: 
-	-rm -rf $(BUILD_DIR)/$(1)
+	-rm -rf $(BUILD_DIR)/$(CDH)/$(1)
 
 $(1)-info:
 	@echo "Info for package $(1)"
