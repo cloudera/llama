@@ -19,14 +19,16 @@ export ANT_HOME=/usr/local/share/apache-ant-1.7.1
 export PATH=$ANT_HOME/bin:$PATH
 
 export JAVA5_HOME=/usr/java/jdk1.5.0_18
-export JAVA32_HOME=/usr/java/jdk1.6.0_14_i386
-export JAVA_HOME=$JAVA32_HOME
 
 export ARCH=$(uname -i)
 
 if [ "$ARCH" == "x64_86" ]; then
   export JAVA64_HOME=/usr/java/jdk1.6.0_14
+  export JAVA32_HOME=/usr/java/jdk1.6.0_14_i386
   export JAVA_HOME=$JAVA64_HOME
+else
+  export JAVA32_HOME=/usr/java/jdk1.6.0_14
+  export JAVA_HOME=$JAVA32_HOME
 fi
 
 export FORREST_HOME=/usr/local/share/apache-forrest-0.8
@@ -43,7 +45,20 @@ fi
 
 rm -rf /usr/local/share/apache-forrest-0.8/build/plugins # build fails with this symlink in place, so remove it
 
-yum -y install rpm-build yum-utils zlib-devel gcc gcc-devel gcc-c++ gcc-c++-devel lzo-devel glibc-devel ant ant-nodeps ruby git libtool asciidoc xmlto
+# pick a smart mirror
+yum -y install yum-fastestmirror
+
+yum -y install rpm-build yum-utils zlib-devel gcc gcc-devel gcc-c++ gcc-c++-devel lzo-devel glibc-devel ruby git libtool asciidoc xmlto boost-devel python-devel libevent-devel automake flex bison
+
+pushd /tmp
+  wget http://download.nextag.com/apache/incubator/thrift/0.2.0-incubating/thrift-0.2.0-incubating.tar.gz
+  tar zxvf thrift-0.2.0-incubating.tar.gz
+  pushd thrift-0.2.0
+    ./configure --without-ruby
+    make
+    make install
+  popd
+popd
 
 pushd /tmp
 wget http://mirror.cloudera.com/apache/maven/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.bz2

@@ -90,6 +90,21 @@
   apt-get -y install fuse-utils autoconf automake libfuse-dev libfuse2
   apt-get -y install subversion maven2
   apt-get -y remove openjdk* || /bin/true
+  apt-get -y install libboost-dev libevent-dev python-dev pkg-config libtool flex bison
+
+  # install thrift
+  pushd /tmp
+    wget http://download.nextag.com/apache/incubator/thrift/0.2.0-incubating/thrift-0.2.0-incubating.tar.gz
+    tar zxvf thrift-0.2.0-incubating.tar.gz
+    pushd thrift-0.2.0
+      ./configure --without-ruby
+      make
+      make install
+    popd
+  popd
+
+  # thrift needs libtool but it breaks hadoop so delete it
+  apt-get -y remove --purge libtool
 
   # Install s3cmd
   pushd /tmp
