@@ -62,7 +62,7 @@ try:
 except:
   USERNAME = 'build'
 
-POSSIBLE_PACKAGES = [ 'hadoop18', 'hadoop20', 'pig', 'hive' , 'zookeeper','hbase' ]
+POSSIBLE_PACKAGES = [ 'hadoop18', 'hadoop20', 'pig', 'hive' , 'zookeeper','hbase', 'sqoop', 'flume' ]
 DEFAULT_PACKAGES = ['hadoop20']
 # Build ID
 
