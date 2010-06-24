@@ -142,7 +142,7 @@
     pushd `find . -maxdepth 1 -type d | grep -vx .`
 
     /usr/lib/pbuilder/pbuilder-satisfydepends
-  apt-get -y remove openjdk* || /bin/true
+    apt-get -y remove openjdk* || /bin/true
 
     if [ ! -z "$CODENAME" ]; then
       CODENAMETAG="~$CODENAME"
@@ -159,7 +159,7 @@
     fi
 
     debuild -uc -us $DEBUILD_FLAG
-  apt-get -y remove openjdk* || /bin/true
+    apt-get -y remove openjdk* || /bin/true
 
     popd 
 
