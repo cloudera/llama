@@ -78,6 +78,7 @@ $(BUILD_DIR)/%/.sdeb:
 	    $($(PKG)_BASE_REF) \
 	    $($(PKG)_BUILD_REF) \
 	    $($(PKG)_PKG_NAME) \
+	    $($(PKG)_RELEASE) \
 	    debian/changelog && \
 	  dpkg-buildpackage -uc -us -sa -S
 	for file in $($(PKG)_PKG_NAME)_$(PKG_FULL_VERSION)-$($(PKG)_RELEASE).dsc \
