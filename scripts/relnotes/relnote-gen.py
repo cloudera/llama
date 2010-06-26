@@ -52,7 +52,8 @@ def getJiraDOM(jira):
 def parseJiras(commitLog):
     """ Parse jiras and add them to the dictionary """
 
-    jiraReg = r"^\w{7} (HADOOP|HDFS|MAPREDUCE)[- ](\d+)"
+    # A git object identifier is 40 chars
+    jiraReg = r"^\w{40} (HADOOP|HDFS|MAPREDUCE)[- ](\d+)"
     for m in re.finditer(jiraReg, commitLog, re.M):
         proj = m.group(1)
         num  = m.group(2)

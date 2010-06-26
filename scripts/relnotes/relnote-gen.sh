@@ -27,7 +27,7 @@ function relnote_gen {
   local relnote_file=$gen_dir/$6.releasenotes.html
   echo "pushd $2 >& /dev/null"
   pushd $2 >& /dev/null
-  git log --pretty=oneline --abbrev-commit --no-color $3 > $commit_log
+  git log --pretty=oneline --no-color $3 > $commit_log
   popd >& /dev/null
   python ./scripts/relnotes/relnote-gen.py -l $commit_log -r "$4" -a $5 -c $6 > $relnote_file
 }
