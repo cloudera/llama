@@ -4,7 +4,8 @@
   "remotes":
     {"origin": { "fetch": "ssh://git@git.sf.cloudera.com/%(name)s.git" },
      "apache": { "fetch": "ssh://git@git.sf.cloudera.com/apache-%(name)s.git" },
-     "common": { "fetch": "ssh://git@git.sf.cloudera.com/apache-hadoop-common.git" }},
+     "common": { "fetch": "ssh://git@git.sf.cloudera.com/apache-hadoop-common.git" },
+     "yahoo": { "fetch": "ssh://git@git.sf.cloudera.com/yahoo-%(name)s.git" }},
  
   "projects":
   {
@@ -18,7 +19,7 @@
      "hbase": {"track-branch": "cdh-0.89.20100621", "dir": "repos/cdh3/hbase", "remotes": ["origin","apache"]},
      "zookeeper": {"track-branch": "cdh-3.3.1", "dir": "repos/cdh3/zookeeper", "remotes": ["origin", "apache"]},
      "sqoop": {"track-branch": "cdh-1.0.0", "dir": "repos/cdh3/sqoop", "remotes": ["origin"]},
-     "oozie": {"track-branch": "cdh-1.6.2", "dir": "repos/cdh3/oozie", "remotes": ["origin"]},
+     "oozie": {"track-branch": "cdh-1.6.2", "dir": "repos/cdh3/oozie", "remotes": ["origin", "yahoo"]},
 
      "hadoop-0.20-package": { "track-branch": "cdh3", "dir": "repos/cdh3/hadoop-0.20-package",
                               "remote-project-name": "hadoop-package"},
@@ -28,7 +29,8 @@
      "hbase-package": { "track-branch": "cdh3", "dir": "repos/cdh3/hbase-package"},
      "sqoop-package": { "track-branch": "cdh3", "dir": "repos/cdh3/sqoop-package"},
      "flume-package": { "track-branch": "cdh3", "dir": "repos/cdh3/flume-package"},
+     "zookeeper-package": { "track-branch": "cdh3", "dir": "repos/cdh3/zookeeper-package"},
      "oozie-package": { "track-branch": "cdh3", "dir": "repos/cdh3/oozie-package"},
-     "zookeeper-package": { "track-branch": "cdh3", "dir": "repos/cdh3/zookeeper-package"}
+     "oozie-client-package": { "track-branch": "cdh-1.6.2", "dir": "repos/cdh3/oozie-client-package"}
     }
 }
