@@ -85,13 +85,13 @@ $(eval $(call PACKAGE,zookeeper,ZOOKEEPER))
 # Flume
 FLUME_NAME=flume
 FLUME_PKG_NAME=flume
-FLUME_BASE_VERSION=0.9.9
-FLUME_SOURCE=flume-$(FLUME_BASE_VERSION).tar.gz
+FLUME_BASE_VERSION=0.9.0
+FLUME_SOURCE=cdh-base-$(FLUME_BASE_VERSION).tar.gz
 FLUME_GIT_REPO=$(BASE_DIR)/repos/cdh3/flume
 FLUME_BASE_REF=cdh-base-$(FLUME_BASE_VERSION)
 FLUME_BUILD_REF=cdh-$(FLUME_BASE_VERSION)
 FLUME_PACKAGE_GIT_REPO=$(BASE_DIR)/repos/cdh3/flume-package
-FLUME_SITE=http://monster01.sf.cloudera.com/~newalex/
+FLUME_SITE=http://git.sf.cloudera.com/index.cgi/flume.git/snapshot/
 $(eval $(call PACKAGE,flume,FLUME))
 
 # Sqoop
