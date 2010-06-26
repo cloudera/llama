@@ -13,7 +13,6 @@ export PACKAGES
 export S3_BUCKET
 export AWS_ACCESS_KEY_ID
 export AWS_SECRET_ACCESS_KEY
-export MAVEN_VERSION=2.2.1
 
 export OOZIE_SKIP_TEST_EXEC=true
 
@@ -53,7 +52,7 @@ yum -y install yum-fastestmirror
 yum -y install rpm-build yum-utils zlib-devel gcc gcc-devel gcc-c++ gcc-c++-devel lzo-devel glibc-devel ruby git libtool asciidoc xmlto boost-devel python-devel libevent-devel automake flex bison
 
 pushd /tmp
-  wget http://download.nextag.com/apache/incubator/thrift/0.2.0-incubating/thrift-0.2.0-incubating.tar.gz
+  wget http://www.ibiblio.org/pub/mirrors/apache/incubator/thrift/0.2.0-incubating/thrift-0.2.0-incubating.tar.gz
   tar zxvf thrift-0.2.0-incubating.tar.gz
   pushd thrift-0.2.0
     ./configure --without-ruby
@@ -63,11 +62,11 @@ pushd /tmp
 popd
 
 pushd /tmp
-wget http://mirror.cloudera.com/apache/maven/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.bz2
-tar xjvf apache-maven-${MAVEN_VERSION}-bin.tar.bz2
-export M2_HOME=`pwd`/apache-maven-${MAVEN_VERSION}/
-export PATH=$PATH:$M2_HOME/bin
+  wget http://www.ibiblio.org/pub/mirrors/apache/maven/binaries/apache-maven-2.2.1-bin.tar.gz
+  tar zxvf apache-maven-*tar.gz
+  ln -s /tmp/apache-maven-2.2.1/bin/mvn /usr/bin/mvn
 popd
+
 
 ############# BUILD PACKAGE ####################
 

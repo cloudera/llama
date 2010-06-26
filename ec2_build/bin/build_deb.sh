@@ -52,6 +52,7 @@
 
   # Need to do this first so we can set the debconfs before other packages (e.g., postfix)
   # get pulled in
+  apt-get update
   apt-get -y install debconf-utils 
 
   # Mark java license as accepted so that, if it's pulled in by some package, it won't
@@ -89,13 +90,18 @@
   apt-get -y install devscripts pbuilder liburi-perl build-essential dctrl-tools 
   apt-get -y install asciidoc xmlto ruby libopenssl-ruby 
   apt-get -y install fuse-utils autoconf automake libfuse-dev libfuse2
-  apt-get -y install subversion maven2
-  apt-get -y remove openjdk* || /bin/true
+  apt-get -y install subversion sun-java6-jdk
   apt-get -y install libboost-dev libevent-dev python-dev pkg-config libtool flex bison
+
+  pushd /tmp
+    wget http://www.ibiblio.org/pub/mirrors/apache/maven/binaries/apache-maven-2.2.1-bin.tar.gz
+    tar zxvf apache-maven-*tar.gz
+    ln -s /tmp/apache-maven-2.2.1/bin/mvn /usr/bin/mvn
+popd
 
   # install thrift
   pushd /tmp
-    wget http://download.nextag.com/apache/incubator/thrift/0.2.0-incubating/thrift-0.2.0-incubating.tar.gz
+    wget http://www.ibiblio.org/pub/mirrors/apache/incubator/thrift/0.2.0-incubating/thrift-0.2.0-incubating.tar.gz 
     tar zxvf thrift-0.2.0-incubating.tar.gz
     pushd thrift-0.2.0
       ./configure --without-ruby
@@ -143,7 +149,7 @@
     pushd `find . -maxdepth 1 -type d | grep -vx .`
 
     /usr/lib/pbuilder/pbuilder-satisfydepends
-    apt-get -y remove openjdk* || /bin/true
+    apt-get -y remove openjdk* maven2 || /bin/true
 
     if [ ! -z "$CODENAME" ]; then
       CODENAMETAG="~$CODENAME"
@@ -160,7 +166,7 @@
     fi
 
     debuild -uc -us $DEBUILD_FLAG
-    apt-get -y remove openjdk* || /bin/true
+    apt-get -y remove openjdk* maven2 || /bin/true
 
     popd 
 
