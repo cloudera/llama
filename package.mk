@@ -50,7 +50,8 @@ $(BUILD_DIR)/%/.srpm:
 	  $(PKG_BUILD_DIR)/rpm/topdir/INSTALL \
 	  $(PKG_BUILD_DIR)/rpm/topdir \
 	  $($(PKG)_BASE_VERSION) \
-	  $(PKG_FULL_VERSION)
+	  $(PKG_FULL_VERSION) \
+	  $($(PKG)_RELEASE)
 	cp $(PKG_BUILD_DIR)/rpm/topdir/SRPMS/$($(PKG)_PKG_NAME)-$($(PKG)_FULL_VERSION)-$($(PKG)_RELEASE).src.rpm \
 	   $($(PKG)_OUTPUT_DIR)
 	touch $@
