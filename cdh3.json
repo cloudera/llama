@@ -31,6 +31,6 @@
      "flume-package": { "track-branch": "cdh3", "dir": "repos/cdh3/flume-package"},
      "zookeeper-package": { "track-branch": "cdh3", "dir": "repos/cdh3/zookeeper-package"},
      "oozie-package": { "track-branch": "cdh3", "dir": "repos/cdh3/oozie-package"},
-     "oozie-client-package": { "track-branch": "cdh-1.6.2", "dir": "repos/cdh3/oozie-client-package"}
+     "oozie-client-package": { "track-branch": "cdh3", "dir": "repos/cdh3/oozie-client-package"}
     }
 }
