@@ -13,6 +13,7 @@ __usage = """
                           (default: cloudera, <username>)
 
    --dir | -d <dir>       Build products directory where we find source debs and rpms
+   --tag | -t <release>   Choose CDH release (eg 'cdh2' or 'cdh3')
    --type <rpm|deb>       Only rebuild RPMs/debs
    --distro <distro>      Only build on given distro (eg centos5)
    --arch <arch>          Only build slaves of given arch (eg amd64)
