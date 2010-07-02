@@ -95,6 +95,7 @@ class Archive:
     self.ssh = paramiko.SSHClient()
     self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     key = paramiko.RSAKey.from_private_key_file(key_file)
+    print "CONNECTING: host: %s; user: %s; key: %s"%(hostname, username, key_file)
     self.ssh.connect(hostname=hostname, username=username, pkey=key)
 
 
@@ -228,7 +229,7 @@ class Archive:
     self.execute(' sudo rm -rf ' + Archive.BASE_DIR + '/' + build, True)
 
     display_message("Update deb repository")
-    self.execute(' sudo -E -u www-data ' + Archive.BASE_DIR + '/apt/update_repo.sh -s cloudera-freezer -b ' + build + ' -c ' + cdh_release + ' -r /var/www/archive_public/debian/', True)
+    self.execute(' sudo -E -u www-data ' + Archive.BASE_DIR + '/apt/update_repo.sh -s cloudera-freezer -b ' + build + ' -c cdh' + cdh_release + ' -r /var/www/archive_public/debian/', True)
 
 
   def update_yum_repo(self, build, cdh_release):
