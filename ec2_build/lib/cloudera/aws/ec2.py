@@ -6,7 +6,7 @@ import time
 import boto.exception
 
 # Time to wait after requesting the EIP association for being effective
-EIP_ASSOCIATION_TIME = 2*60 # in seconds
+EIP_ASSOCIATION_TIME = 4*60 # in seconds
 
 
 # An EC@ instance can be in different states
@@ -17,6 +17,14 @@ class InstanceState:
   TERMINATED = 'terminated'
   STOPPING   = 'stopping'
   STOPPED    = 'stopped'
+
+
+def wait_for_eip_association_ready():
+  '''
+  Until we find a better way to check if an eip is effectively associated
+  we will just sleep for EIP_ASSOCIATION_TIME
+  '''
+  time.sleep(EIP_ASSOCIATION_TIME)
 
 
 def create_volume_from_snapshot(ec2_connection, snap_id, availability_zone, size=None):
@@ -76,12 +84,12 @@ def swap_associated_elastic_ips(ec2_connection, ip1, ip2):
   # Dissociate addresses from their instances
   ec2_connection.disassociate_address(eip1.public_ip)
   ec2_connection.disassociate_address(eip2.public_ip)
-  time.sleep(EIP_ASSOCIATION_TIME)
+  wait_for_eip_association_ready()
 
   # Re-associate them
   ec2_connection.associate_address(instance_id1, eip2.public_ip)
   ec2_connection.associate_address(instance_id2, eip1.public_ip)
-  time.sleep(EIP_ASSOCIATION_TIME)
+  wait_for_eip_association_ready()
 
 
 def data_volume_for_instance(instance, volumes_names):
