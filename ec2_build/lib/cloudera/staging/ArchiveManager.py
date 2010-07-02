@@ -20,9 +20,9 @@ class ArchiveManager:
 
   def __init__(self, ec2_connection):
     self.ec2_connection = ec2_connection
+    self.EC2_IPS_GROUP = ec2_connection.get_all_security_groups(['EC2-IPS'])[0]
 
-
-  def launch_server(self, security_group, volume, key_name, ami = DEFAULT_AMI):
+  def launch_server(self, security_groups, volume, key_name, ami = DEFAULT_AMI):
     '''
     This launches a new instance attaches a volume and security group to it
 
@@ -36,9 +36,10 @@ class ArchiveManager:
     if not ami:
       ami = ArchiveManager.DEFAULT_AMI
 
+    groups = [self.EC2_IPS_GROUP]
     image = self.ec2_connection.get_all_images(image_ids=ami)[0]
     verbose_print("Launching server with image: %s" %image)
-    reservation = image.run(key_name = key_name, security_groups = [security_group])
+    reservation = image.run(key_name = key_name, security_groups = groups.extend(security_groups), placement=self.DEFAULT_AVAILABILITY_ZONE)
     instance = reservation.instances[0]
     cloudera.aws.ec2.wait_while_booting(instance)
     msg = "Attaching vol: %s to mount: %s" %(volume, ArchiveManager.DEFAULT_ARCHIVE_VOLUME_MOUNT)
@@ -78,7 +79,7 @@ class ArchiveManager:
 
     security_group = self.create_security_group(security_group_name, security_group_desc)
     volume = cloudera.aws.ec2.create_volume_from_snapshot(self.ec2_connection, snapshot, ArchiveManager.DEFAULT_AVAILABILITY_ZONE)
-    instance = self.launch_server(security_group, volume, key_name, ami)
+    instance = self.launch_server([security_group], volume, key_name, ami)
     return instance
 
 
