@@ -11,9 +11,11 @@ if [ ! -e "/etc/redhat-release" ]; then
   exit 0
 fi
 
-yum search hadoop-pig
-yum -y install hadoop-pig
-yum -y remove hadoop-pig
+PACKAGES="oozie"
+
+yum search $PACKAGES
+yum  -y install $PACKAGES
+yum  -y remove $PACKAGES
 
 echo "Done."
 exit 0

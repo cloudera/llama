@@ -13,6 +13,16 @@ fi
 
 yum search flume flume-master flume-node
 yum  -y install flume flume-master flume-node
+/etc/init.d/flume-master restart
+/etc/init.d/flume-node restart
+yum  -y remove flume flume-master flume-node
+
+yum  -y install flume flume-master flume-node
+/etc/init.d/flume-master restart
+/etc/init.d/flume-node restart
+/etc/init.d/flume-master stop
+/etc/init.d/flume-node stop
+yum  -y remove flume flume-master flume-node
 
 echo "Done."
 exit 0

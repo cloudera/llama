@@ -13,6 +13,8 @@ fi
 
 yum search sqoop
 yum  -y install sqoop
+sqoop-version
+yum  -y remove sqoop
 
 echo "Done."
 exit 0

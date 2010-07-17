@@ -25,6 +25,7 @@ class TestRepo(Thread):
 
   SCRIPTS_ROOT_DIR = '../test/'
   LIBRARIES_ROOT_DIR = '../lib'
+  DESTINATION_LIBRARIES_ROOT_DIR = '/tmp/'
 
   # Strict host key checking is deactivated because some instances may reuse the same ip (from a precedent run)
   # and then scare ssh
@@ -119,7 +120,7 @@ class TestRepo(Thread):
     scp = cloudera.utils.SCP(self.user, self.hostname, self.key_file, options)
     scp.set_logger(self.logger)
 
-    scp.copy(self.LIBRARIES_ROOT_DIR, '~/')
+    scp.copy(self.LIBRARIES_ROOT_DIR, self.DESTINATION_LIBRARIES_ROOT_DIR)
 
 
   def copy_scripts(self):
@@ -151,6 +152,7 @@ class TestRepo(Thread):
     for script_name in scripts:
       # Prepare ssh command to be run
       cmd_remote = '~' + self.user + '/' + script_name.split('/')[-1]
+      cmd_remote =  'PYTHONPATH="' + self.DESTINATION_LIBRARIES_ROOT_DIR + 'lib/" '  + cmd_remote
       if not self.os_distro in cloudera.aws.ec2.distributions_without_sudo() :
         cmd_remote = self.SUDO_CMD + ' ' + cmd_remote
 

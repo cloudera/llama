@@ -42,7 +42,7 @@ apt-get update
 
 # Need to do this first so we can set the debconfs before other packages (e.g., postfix)
 # get pulled in
-apt-get -y install debconf-utils
+apt-get -y install debconf-utils python-apt
 
 # Mark java license as accepted so that, if it's pulled in by some package, it won't
 # block on user input to accept the sun license (ed: oracle license? haha)

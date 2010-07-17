@@ -19,6 +19,8 @@ fi
 
 apt-cache search sqoop
 apt-get install -y sqoop
+sqoop-version
+apt-get remove -y sqoop
 
 echo "Done."
 exit 0

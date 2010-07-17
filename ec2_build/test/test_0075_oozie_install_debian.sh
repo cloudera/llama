@@ -17,9 +17,11 @@ if [ ! -e "/etc/debian_version" ]; then
   exit 0
 fi
 
-apt-cache search hadoop-pig
-apt-get install -y hadoop-pig
-apt-get remove -y hadoop-pig
+PACKAGES="oozie"
+
+apt-cache search $PACKAGES
+apt-get install -y $PACKAGES
+apt-get remove -y $PACKAGES
 
 echo "Done."
 exit 0

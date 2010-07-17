@@ -17,8 +17,15 @@ if [ ! -e "/etc/debian_version" ]; then
   exit 0
 fi
 
-apt-cache search hadoop-hive python-hive hadoop-hive-webinterface
-apt-get install -y hadoop-hive python-hive hadoop-hive-webinterface
+apt-cache search hadoop-hive python-hive
+apt-get install -y hadoop-hive python-hive
+/etc/init.d/hive-hwi restart
+apt-get remove -y hadoop-hive python-hive
+
+apt-get install -y hadoop-hive python-hive
+/etc/init.d/hive-hwi restart
+/etc/init.d/hive-hwi stop
+apt-get remove -y hadoop-hive python-hive
 
 echo "Done."
 exit 0

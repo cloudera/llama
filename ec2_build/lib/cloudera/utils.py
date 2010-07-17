@@ -10,6 +10,29 @@ class Constants:
   CLOUDERA_NETWORK = '38.102.147.0/24'
 
 
+def simple_exec(command, env=None):
+  '''
+  Execute a command and returns its output
+
+  @param command Command to execute. This is a list including the actual command and its parameters
+  @return Result of stdout as a string
+  '''
+  return subprocess.Popen(command, stdout=subprocess.PIPE, env=env).communicate()[0]
+
+
+def simple_exec2(command, env=None):
+  '''
+  Execute a command and returns its output along with its return code
+
+  @param command Command to execute. This is a list including the actual command and its parameters
+  @return Tuple of (return code, stdout as a string)
+  '''
+
+  p = subprocess.Popen(command, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, env=env)
+  p.wait()
+
+  return (p.returncode, p.stdout)
+
 
 def verbose_print(msg='', verbose=True, stream=sys.stdout):
   '''

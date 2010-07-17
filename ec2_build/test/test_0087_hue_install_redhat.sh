@@ -11,9 +11,12 @@ if [ ! -e "/etc/redhat-release" ]; then
   exit 0
 fi
 
-yum search hadoop-pig
-yum -y install hadoop-pig
-yum -y remove hadoop-pig
+PACKAGES="hue-common hue-about hue-beeswax hue-filebrowser hue-help hue-jobbrowser hue-jobsub hue-plugins hue-proxy hue-useradmin"
+
+yum search $PACKAGES
+yum  -y install $PACKAGES
+
+yum  -y remove $PACKAGES
 
 echo "Done."
 exit 0

@@ -13,6 +13,13 @@ fi
 
 yum search hadoop-zookeeper hadoop-zookeeper-server
 yum  -y install hadoop-zookeeper hadoop-zookeeper-server
+/etc/init.d/hadoop-zookeeper restart
+yum  -y remove hadoop-zookeeper hadoop-zookeeper-server
+
+yum  -y install hadoop-zookeeper hadoop-zookeeper-server
+/etc/init.d/hadoop-zookeeper restart
+/etc/init.d/hadoop-zookeeper stop
+yum  -y remove hadoop-zookeeper hadoop-zookeeper-server
 
 echo "Done."
 exit 0

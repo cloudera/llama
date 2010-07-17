@@ -19,6 +19,18 @@ fi
 
 apt-cache search flume flume-master flume-node
 apt-get install -y flume flume-master flume-node
+/etc/init.d/flume-master restart
+/etc/init.d/flume-node restart
+apt-get remove -y flume flume-master flume-node
+
+
+apt-cache search flume flume-master flume-node
+apt-get install -y flume flume-master flume-node
+/etc/init.d/flume-master restart
+/etc/init.d/flume-node restart
+/etc/init.d/flume-master stop
+/etc/init.d/flume-node stop
+apt-get remove -y flume flume-master flume-node
 
 echo "Done."
 exit 0

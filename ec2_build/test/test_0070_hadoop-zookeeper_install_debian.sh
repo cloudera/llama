@@ -19,6 +19,13 @@ fi
 
 apt-cache search hadoop-zookeeper hadoop-zookeeper-server
 apt-get install -y hadoop-zookeeper hadoop-zookeeper-server
+#/etc/init.d/hadoop-zookeeper restart
+apt-get remove -y hadoop-zookeeper hadoop-zookeeper-server
+
+apt-get install -y hadoop-zookeeper hadoop-zookeeper-server
+#/etc/init.d/hadoop-zookeeper restart
+#/etc/init.d/hadoop-zookeeper stop
+apt-get remove -y hadoop-zookeeper hadoop-zookeeper-server
 
 echo "Done."
 exit 0

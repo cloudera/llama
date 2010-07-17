@@ -11,8 +11,15 @@ if [ ! -e "/etc/redhat-release" ]; then
   exit 0
 fi
 
-yum search hadoop-hive-webinterface hadoop-hive 
-yum  -y install hadoop-hive-webinterface hadoop-hive
+yum search hadoop-hive-webinterface hadoop-hive
+yum -y install hadoop-hive-webinterface hadoop-hive
+/etc/init.d/hive-hwi restart
+yum -y remove hadoop-hive-webinterface hadoop-hive
+
+yum -y install hadoop-hive-webinterface hadoop-hive
+/etc/init.d/hive-hwi restart
+/etc/init.d/hive-hwi stop
+yum -y remove hadoop-hive-webinterface hadoop-hive
 
 echo "Done."
 exit 0
