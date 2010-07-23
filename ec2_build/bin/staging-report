@@ -47,7 +47,18 @@ def report_eip(ec2_connection, eipManager):
   print
 
   print "IP address\t\tInstance associated\t\tDNS"
-  print "-----------------------------------------------------------"
+  print "-------------------------------------------------------------------------------"
+
+  format = "%-15s\t\t%-10s\t\t\t%s"
+
+  # Print official archive.cloudera.com
+  print format % (cloudera.staging.ArchiveManager.ArchiveManager.OFFICIAL_ARCHIVE_IP_ADDRESS,
+                  ec2_connection.get_all_addresses([cloudera.staging.ArchiveManager.ArchiveManager.OFFICIAL_ARCHIVE_IP_ADDRESS])[0].instance_id,
+                  'archive.cloudera.com')
+  print format % (cloudera.staging.ArchiveManager.ArchiveManager.NIGHTLY_ARCHIVE_IP_ADDRESS,
+                  ec2_connection.get_all_addresses([cloudera.staging.ArchiveManager.ArchiveManager.NIGHTLY_ARCHIVE_IP_ADDRESS])[0].instance_id,
+                  'nightly.cloudera.com')
+  print "-------------------------------------------------------------------------------"
   for ip in all_ips:
     infos = {}
     for attr in [eipManager.ATTRIBUTE_IP, eipManager.ATTRIBUTE_DNS]:
@@ -55,7 +66,7 @@ def report_eip(ec2_connection, eipManager):
         infos[attr] = ip[attr]
       else:
         infos[attr] = "N/a"
-    print "%-15s\t\t%-10s\t\t\t%s"%(infos[eipManager.ATTRIBUTE_IP], eips_dict[ip[eipManager.ATTRIBUTE_IP]], infos[eipManager.ATTRIBUTE_DNS])
+    print format%(infos[eipManager.ATTRIBUTE_IP], eips_dict[ip[eipManager.ATTRIBUTE_IP]], infos[eipManager.ATTRIBUTE_DNS])
 
 
 def report_stage(stageManager):

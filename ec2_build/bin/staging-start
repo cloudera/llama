@@ -14,7 +14,7 @@ import cloudera.staging.StageManager
 import cloudera.staging.Archive
 import cloudera.staging.ArchiveManager
 import cloudera.aws.ec2
-from cloudera.utils import display_message, verbose_print
+from cloudera.utils import display_message, verbose_print, confirm_user_action
 import logging
 
 
@@ -161,6 +161,9 @@ def main():
   #XXX reprepo seems to insist on signing packages. Haven't found a work around yet
   if not options.gpg_sign:
     op.error('Staging without signing packages is not supported yet. Please add the option --gpg-sign')
+
+  if options.promote:
+    cloudera.utils.confirm_user_action("You are about to replace and deploy a new official archive.cloudera.com.")
 
   # Get pass phrase first so user doesn't have to wait
   passphrase = None

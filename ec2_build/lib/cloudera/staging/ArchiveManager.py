@@ -12,7 +12,7 @@ class ArchiveManager:
   DEFAULT_AMI = 'ami-3397795a'
 
   # Public IP of archive.cloudera.com
-  OFFICIAL_ARCHIVE_IP_ADDRESS = '184.73.164.173'
+  OFFICIAL_ARCHIVE_IP_ADDRESS = '184.73.170.21'
 
   # Public IP of nightly.cloudera.com
   NIGHTLY_ARCHIVE_IP_ADDRESS = '184.73.215.26'

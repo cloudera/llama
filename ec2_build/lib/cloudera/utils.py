@@ -1,6 +1,7 @@
 # Copyright (c) 2010 Cloudera, inc.
 import fnmatch
 import os
+import platform
 import subprocess
 import sys
 
@@ -9,24 +10,49 @@ class Constants:
   # Cloudera network
   CLOUDERA_NETWORK = '38.102.147.0/24'
 
+  # OS using sudo for root operations
+  OS_USING_SUDO = ['ubuntu']
 
-def simple_exec(command, env=None):
+
+def needs_sudo():
+  (os, release_version, release_name) = platform.dist()
+  os = os.lower()
+
+  if os in Constants.OS_USING_SUDO:
+    return True
+
+  return False
+
+
+def simple_exec(command, env=None, as_root=False):
   '''
   Execute a command and returns its output
 
   @param command Command to execute. This is a list including the actual command and its parameters
   @return Result of stdout as a string
   '''
-  return subprocess.Popen(command, stdout=subprocess.PIPE, env=env).communicate()[0]
+
+  if as_root and needs_sudo():
+    command.insert(0, 'sudo ')
+  command = ['/bin/bash', '-c'] + [' '.join(command)]
+  print ("Executing: " + str(command))
+
+  return subprocess.Popen(command, stdout=subprocess.PIPE, shell=False, env=env).communicate()[0]
 
 
-def simple_exec2(command, env=None):
+def simple_exec2(command, env=None, as_root=False):
   '''
   Execute a command and returns its output along with its return code
 
   @param command Command to execute. This is a list including the actual command and its parameters
   @return Tuple of (return code, stdout as a string)
   '''
+
+  if as_root and needs_sudo():
+    command.insert(0, 'sudo ')
+
+  command = ['/bin/sh', '-c'] + [' '.join(command)]
+  print ("Executing: " + str(command))
 
   p = subprocess.Popen(command, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, env=env)
   p.wait()
@@ -46,7 +72,6 @@ def verbose_print(msg='', verbose=True, stream=sys.stdout):
     stream.write(msg + "\n")
 
 
-
 def display_message(msg, verbose=True, stream=sys.stdout):
   '''
   Nicely format a message in order to make it distinct from random logging
@@ -56,6 +81,21 @@ def display_message(msg, verbose=True, stream=sys.stdout):
   '''
 
   verbose_print("\n"+ msg + "\n" + "=" * len(msg) + "\n", verbose, stream=stream)
+
+
+def confirm_user_action(message):
+  verbose_print(message)
+  reply = raw_input("Are you sure? [Yes/No]: ")
+  reply = reply.lower()
+
+  while reply != 'yes' and reply != 'no':
+    reply = raw_input("Please answer Yes or No: ")
+    reply = reply.lower()
+
+  if reply == 'yes':
+    return True
+  else:
+    return False
 
 
 def recursive_glob(pattern, root=os.curdir):
@@ -159,7 +199,7 @@ class SSH:
   SSH_CMD = "ssh"
 
 
-  def __init__(self, username, host, key=None, options=[]):
+  def __init__(self, username, host, key=None, options=()):
     '''
     Constructor
 
