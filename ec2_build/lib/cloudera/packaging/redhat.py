@@ -1,8 +1,12 @@
+# Copyright (c) 2010 Cloudera, inc.
 import cloudera.packaging.packaging
 import yum
 
 
 class YumPackage(cloudera.packaging.packaging.Package):
+    '''
+    See L{cloudera.packaging.debian.AptPackage} for documentation
+    '''
 
     def __init__(self, yum_package):
       self.yum_package = yum_package
@@ -16,7 +20,11 @@ class YumPackage(cloudera.packaging.packaging.Package):
     def version(self):
       return self.yum_package.printVer()
 
+
 class YumPackageManager(cloudera.packaging.packaging.PackageManager, yum.YumBase):
+    '''
+    See L{cloudera.packaging.debian.AptPackageManager} for documentation
+    '''
 
     def __init__(self):
       pass

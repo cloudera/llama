@@ -1,85 +1,5 @@
+# Copyright (c) 2010 Cloudera, inc.
 import platform
-
-class Package:
-  '''
-  Interface for a package
-  '''
-
-  def __init__(self):
-    pass
-
-  def files(self):
-    '''
-    Return the list of files installed
-    '''
-    raise Exception("Not implemented")
-
-
-  def name(self):
-    '''
-    Return package name
-    @return Package name
-    '''
-    raise Exception("Not implemented")
-
-
-  def is_installed(self):
-    '''
-    Return Boolean whether this package is installed or not
-    @return Boolean whether this package is installed or not
-    '''
-    raise Exception("Not implemented")
-
-
-  def version(self):
-    '''
-    Return Version
-    @return Version
-    '''
-    raise Exception("Not implemented")
-
-
-
-
-
-
-class PackageManager:
-    '''
-    Interface for a package manager
-    '''
-
-    def __init__(self):
-      pass
-
-    def search_from_name(self, package_name):
-      '''
-      @param package_name Package to look for
-      @return List of Package
-      '''
-      raise Exception("Not implemented")
-
-
-    def install(self, packages):
-      '''
-      @param packages List of packages
-      '''
-      raise Exception("Not implemented")
-
-
-    def uninstall(self, packages):
-      '''
-      @param packages List of packages
-      '''
-      raise Exception("Not implemented")
-
-
-    def is_package_installed(self, pkg_name):
-      '''
-      @param pkg_name Package name
-      @return Boolean. True if installed. False otherwise (or zero ore more than one package found)
-      '''
-      raise Exception("Not implemented")
-
 
 
 class PackageManagerFactory:
@@ -129,7 +49,6 @@ class PackageManagerFactory:
 
       import cloudera.packaging.debian_cmdline
       return cloudera.packaging.debian_cmdline.AptPackageManager()
-
 
 
     def create_package_manager(self):

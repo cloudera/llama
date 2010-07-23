@@ -35,7 +35,6 @@ def simple_exec(command, env=None, as_root=False):
   if as_root and needs_sudo():
     command.insert(0, 'sudo ')
   command = ['/bin/bash', '-c'] + [' '.join(command)]
-  print ("Executing: " + str(command))
 
   return subprocess.Popen(command, stdout=subprocess.PIPE, shell=False, env=env).communicate()[0]
 
@@ -52,7 +51,6 @@ def simple_exec2(command, env=None, as_root=False):
     command.insert(0, 'sudo ')
 
   command = ['/bin/sh', '-c'] + [' '.join(command)]
-  print ("Executing: " + str(command))
 
   p = subprocess.Popen(command, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, env=env)
   p.wait()

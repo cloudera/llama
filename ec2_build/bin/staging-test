@@ -25,7 +25,7 @@ class TestRepo(Thread):
 
   SCRIPTS_ROOT_DIR = '../test/'
   LIBRARIES_ROOT_DIR = '../lib'
-  DESTINATION_LIBRARIES_ROOT_DIR = '/tmp/'
+  DESTINATION_LIBRARIES_ROOT_DIR = '/tmp/staging-libs/'
 
   # Strict host key checking is deactivated because some instances may reuse the same ip (from a precedent run)
   # and then scare ssh
@@ -110,10 +110,29 @@ class TestRepo(Thread):
     self.copy_scripts()
 
 
+  def create_destination_dir_for_libs(self):
+    '''
+    Create a destination directory for libraries
+    '''
+
+    ssh = cloudera.utils.SSH(self.user, self.hostname, self.key_file, self.SSH_OPTIONS)
+    ssh.set_logger(self.logger)
+
+    cmd_remote = self.SUDO_CMD
+    cmd_remote = cmd_remote + ' mkdir ' + self.DESTINATION_LIBRARIES_ROOT_DIR
+
+    return_code = ssh.execute(cmd_remote)
+    if return_code:
+      raise Exception("Couldn't create " + self.DESTINATION_LIBRARIES_ROOT_DIR)
+
+
   def copy_libs(self):
     '''
     Copy scripts to their remote destination
     '''
+
+    self.create_destination_dir_for_libs()
+
     options = self.SSH_OPTIONS[:]
     options.append('-r')
 
@@ -145,14 +164,10 @@ class TestRepo(Thread):
 
     scripts = self.get_scripts()
     self.scripts = scripts
-
-    ssh = cloudera.utils.SSH(self.user, self.hostname, self.key_file, self.SSH_OPTIONS)
-    ssh.set_logger(self.logger)
-
     for script_name in scripts:
       # Prepare ssh command to be run
-      cmd_remote = '~' + self.user + '/' + script_name.split('/')[-1]
-      cmd_remote =  'PYTHONPATH="' + self.DESTINATION_LIBRARIES_ROOT_DIR + 'lib/" '  + cmd_remote
+      cmd_remote = 'PYTHONPATH="' + self.DESTINATION_LIBRARIES_ROOT_DIR + 'lib/" ' \
+                     + '~' + self.user + '/' + script_name.split('/')[-1]
       if not self.os_distro in cloudera.aws.ec2.distributions_without_sudo() :
         cmd_remote = self.SUDO_CMD + ' ' + cmd_remote
 

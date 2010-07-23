@@ -1,9 +1,13 @@
+# Copyright (c) 2010 Cloudera, inc.
 import cloudera.packaging.packaging
 import cloudera.utils
 import subprocess
 
 
 class AptPackage(cloudera.packaging.packaging.Package):
+    '''
+    See L{cloudera.packaging.debian.AptPackage} for documentation
+    '''
 
     def __init__(self, name):
       self.pkg_name = name
@@ -22,6 +26,9 @@ class AptPackage(cloudera.packaging.packaging.Package):
 
 
 class AptPackageManager(cloudera.packaging.packaging.PackageManager):
+    '''
+    See L{cloudera.packaging.debian.AptPackageManager} for documentation
+    '''
 
     DEBIAN_NON_INTERACTIVE_FRONTEND = "DEBIAN_FRONTEND=noninteractive"
 
@@ -34,12 +41,14 @@ class AptPackageManager(cloudera.packaging.packaging.PackageManager):
       listing = cloudera.utils.simple_exec(["apt-cache", "search", package_name]).split("\n")
       packages = []
       for line in listing:
+        name_desc = line.split(" - ", 1)
 
-        (name, sep, desc) = line.partition(" - ")
+        if len(name_desc) > 1:
+          (name, desc) = name_desc
 
-        if name == package_name:
-          package = AptPackage(name)
-          packages.append(package)
+          if name == package_name:
+            package = AptPackage(name)
+            packages.append(package)
 
       return packages
 
@@ -62,6 +71,12 @@ class AptPackageManager(cloudera.packaging.packaging.PackageManager):
 
     def is_package_installed(self, pkg_name):
 
-      result = cloudera.utils.simple_exec(["dpkg-query", "-W", "-f", "${Status}", pkg_name])
+      (rc, result) = cloudera.utils.simple_exec2(["dpkg-query", "-W", "-f", "'${Status}'", pkg_name])
+      line = ''.join([output for output in result])
 
-      return result == "install ok installed"
+      if line == "install ok installed":
+        return True
+      elif line == "purge ok not-installed":
+        return False
+      else:
+        return None

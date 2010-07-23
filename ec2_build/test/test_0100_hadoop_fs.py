@@ -8,7 +8,12 @@ import cloudera.utils
 
 class hadoop_fs(unittest.TestCase):
 
-  PACKAGE_HADOOP_NAMES = ['hadoop-0.20.noarch', 'hadoop-0.20-conf-pseudo.noarch', 'hadoop-0.20-datanode.noarch', 'hadoop-0.20-docs.noarch', 'hadoop-0.20-jobtracker.noarch', 'hadoop-0.20-libhdfs', 'hadoop-0.20-namenode.noarch', 'hadoop-0.20-native', 'hadoop-0.20-pipes', 'hadoop-0.20-secondarynamenode.noarch', 'hadoop-0.20-tasktracker.noarch']
+  PACKAGE_HADOOP_NAMES = ['hadoop-0.20.noarch', 'hadoop-0.20-conf-pseudo.noarch',
+                          'hadoop-0.20-datanode.noarch', 'hadoop-0.20-docs.noarch',
+                          'hadoop-0.20-jobtracker.noarch', 'hadoop-0.20-libhdfs',
+                          'hadoop-0.20-namenode.noarch', 'hadoop-0.20-native',
+                          'hadoop-0.20-pipes', 'hadoop-0.20-secondarynamenode.noarch',
+                          'hadoop-0.20-tasktracker.noarch']
 
   def setUp(self):
     packageManagerFactory = PackageManagerFactory()

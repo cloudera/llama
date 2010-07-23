@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# (c) Copyright 2010 Cloudera, Inc.
 import os, subprocess
 import paramiko
 from optparse import OptionParser
