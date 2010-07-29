@@ -14,6 +14,7 @@ import cloudera.staging.StageManager
 import cloudera.staging.Archive
 import cloudera.staging.ArchiveManager
 from cloudera.utils import display_message, verbose_print
+from cloudera.constants import OFFICIAL_ARCHIVE_IP_ADDRESS, NIGHTLY_ARCHIVE_IP_ADDRESS
 import logging
 
 
@@ -52,11 +53,11 @@ def report_eip(ec2_connection, eipManager):
   format = "%-15s\t\t%-10s\t\t\t%s"
 
   # Print official archive.cloudera.com
-  print format % (cloudera.staging.ArchiveManager.ArchiveManager.OFFICIAL_ARCHIVE_IP_ADDRESS,
-                  ec2_connection.get_all_addresses([cloudera.staging.ArchiveManager.ArchiveManager.OFFICIAL_ARCHIVE_IP_ADDRESS])[0].instance_id,
+  print format % (OFFICIAL_ARCHIVE_IP_ADDRESS,
+                  ec2_connection.get_all_addresses([OFFICIAL_ARCHIVE_IP_ADDRESS])[0].instance_id,
                   'archive.cloudera.com')
-  print format % (cloudera.staging.ArchiveManager.ArchiveManager.NIGHTLY_ARCHIVE_IP_ADDRESS,
-                  ec2_connection.get_all_addresses([cloudera.staging.ArchiveManager.ArchiveManager.NIGHTLY_ARCHIVE_IP_ADDRESS])[0].instance_id,
+  print format % (NIGHTLY_ARCHIVE_IP_ADDRESS,
+                  ec2_connection.get_all_addresses([NIGHTLY_ARCHIVE_IP_ADDRESS])[0].instance_id,
                   'nightly.cloudera.com')
   print "-------------------------------------------------------------------------------"
   for ip in all_ips:

@@ -1,9 +1,12 @@
 # Copyright (c) 2010 Cloudera, inc.
 
-from cloudera.utils import verbose_print
+import cloudera.constants
 import cloudera.utils
 import cloudera.aws.ec2
 import cloudera.staging.StageManager
+
+from cloudera.utils import verbose_print
+from cloudera.constants import OFFICIAL_ARCHIVE_IP_ADDRESS, NIGHTLY_ARCHIVE_IP_ADDRESS
 
 class ArchiveManager:
 
@@ -11,11 +14,6 @@ class ArchiveManager:
   DEFAULT_ARCHIVE_VOLUME_MOUNT = '/dev/sdb'
   DEFAULT_AMI = 'ami-3397795a'
 
-  # Public IP of archive.cloudera.com
-  OFFICIAL_ARCHIVE_IP_ADDRESS = '184.73.170.21'
-
-  # Public IP of nightly.cloudera.com
-  NIGHTLY_ARCHIVE_IP_ADDRESS = '184.73.215.26'
 
 
   def __init__(self, ec2_connection):
@@ -60,7 +58,7 @@ class ArchiveManager:
     verbose_print("Creating Security Group %s " % security_group_name)
     sec_group = self.ec2_connection.create_security_group(security_group_name, security_group_desc)
     #TODO make this more restrictive/accurate It might make sense to make it a config file.
-    sec_group.authorize('tcp', 80, 80, cloudera.utils.Constants.CLOUDERA_NETWORK)
+    sec_group.authorize('tcp', 80, 80, cloudera.constants.CLOUDERA_NETWORK)
     sec_group.authorize('tcp', 22, 22, '0.0.0.0/0')
     return sec_group
 
@@ -91,7 +89,7 @@ class ArchiveManager:
     @param eip Current elastic IP used by the instance to be promoted
     '''
 
-    official_archives_addresses = self.ec2_connection.get_all_addresses([self.OFFICIAL_ARCHIVE_IP_ADDRESS])
+    official_archives_addresses = self.ec2_connection.get_all_addresses([OFFICIAL_ARCHIVE_IP_ADDRESS])
 
     if len(official_archives_addresses) > 0:
 
@@ -107,8 +105,8 @@ class ArchiveManager:
         stageManager.tag_instance(official_archive_address.instance_id, stageManager.ATTRIBUTE_STATUS, stageManager.STATUS_PREVIOUSLY_OFFICIAL)
 
         # Case 1: There is already an official archive. Needs to swap addresses and update stage nanager
-        verbose_print("Official archive already there. Associating instance %s to ip address %s"%(instance.id, self.OFFICIAL_ARCHIVE_IP_ADDRESS))
-        cloudera.aws.ec2.swap_associated_elastic_ips(self.ec2_connection, eip, self.OFFICIAL_ARCHIVE_IP_ADDRESS)
+        verbose_print("Official archive already there. Associating instance %s to ip address %s"%(instance.id, OFFICIAL_ARCHIVE_IP_ADDRESS))
+        cloudera.aws.ec2.swap_associated_elastic_ips(self.ec2_connection, eip, OFFICIAL_ARCHIVE_IP_ADDRESS)
 
         # Now we have a new "previous official archive" we can remove the others (normally "There can be only one")
         for instance_info in previous_official_archives:
@@ -118,9 +116,9 @@ class ArchiveManager:
       else:
 
         # Case 2: There is no official archive
-        verbose_print("No official archive on. Associating instance %s to ip address %s"%(instance.id, self.OFFICIAL_ARCHIVE_IP_ADDRESS))
+        verbose_print("No official archive on. Associating instance %s to ip address %s"%(instance.id, OFFICIAL_ARCHIVE_IP_ADDRESS))
         self.ec2_connection.disassociate_address(eip)
-        self.ec2_connection.associate_address(instance.id, self.OFFICIAL_ARCHIVE_IP_ADDRESS)
+        self.ec2_connection.associate_address(instance.id, OFFICIAL_ARCHIVE_IP_ADDRESS)
 
       stageManager.tag_instance(instance.id, cloudera.staging.StageManager.StageManager.ATTRIBUTE_STATUS, cloudera.staging.StageManager.StageManager.STATUS_OFFICIAL)
 

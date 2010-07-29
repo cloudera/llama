@@ -5,23 +5,27 @@ import platform
 import subprocess
 import sys
 
-class Constants:
-
-  # Cloudera network
-  CLOUDERA_NETWORK = '38.102.147.0/24'
-
-  # OS using sudo for root operations
-  OS_USING_SUDO = ['ubuntu']
-
+import cloudera.constants
 
 def needs_sudo():
   (os, release_version, release_name) = platform.dist()
   os = os.lower()
 
-  if os in Constants.OS_USING_SUDO:
+  if os in cloudera.constants.OS_USING_SUDO:
     return True
 
   return False
+
+
+def gpg_key_fingerprint(system):
+  '''
+  Returns the GPG fingerprint of the key being used to sign packagings for a given system
+
+  @param system System for which we need the gpg key fingerprint
+  @return The gpg key fingerprint
+  '''
+
+  return cloudera.constants.GPG_KEY_FINGERPRINT_FOR_REPOSITORY_KIND[system]
 
 
 def simple_exec(command, env=None, as_root=False):

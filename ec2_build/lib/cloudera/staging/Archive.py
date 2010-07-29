@@ -15,6 +15,7 @@ import sys
 import time
 import tarfile
 
+from cloudera.constants import RepositoryType
 from cloudera.utils import display_message, verbose_print
 from optparse import OptionParser
 
@@ -55,6 +56,7 @@ skip_existing = False
 use_https = True
 verbosity = WARNING"""
 
+
 # To be renamed ArchiveController ?
 class Archive:
 
@@ -64,7 +66,8 @@ class Archive:
   # Username to use for log in. ubuntu ami only allow ubuntu user
   USERNAME = 'ubuntu'
 
-  GPG_ENV_VARIABLE = "GNUPGHOME=" + BASE_DIR + "/apt/gpg-home/"
+  GPG_ENV_VARIABLE_APT = "GNUPGHOME=" + BASE_DIR + "/apt/gpg-home/"
+  GPG_ENV_VARIABLE_YUM = "GNUPGHOME=" + BASE_DIR + "/yum/gnupg/"
 
   # Since we
   SSH_NO_STRICT_HOST_KEY_CHECKING_OPTION = '-o StrictHostKeyChecking=no'
@@ -76,9 +79,15 @@ class Archive:
   def __init__(self):
 
     # List of environment variables to use
-    self.env = [Archive.GPG_ENV_VARIABLE]
+    self.env = []
+    self.gpg_env_home = []
+    self.gpg_env = []
+    self.passphrase = {}
 
     self.username= Archive.USERNAME
+
+  def get_env(self):
+    return ' '.join(self.env + self.gpg_env_home + self.gpg_env)
 
 
   def connect(self, hostname, key_file, username = USERNAME):
@@ -99,7 +108,7 @@ class Archive:
     self.ssh.connect(hostname=hostname, username=username, pkey=key)
 
 
-  def execute(self, cmd, redirect_stdout_to_stderr=False):
+  def execute(self, cmd, redirect_stdout_to_stderr=False, prepend_env=True):
     """
     Execute a remote command and print stdout and stderr to screen
 
@@ -107,7 +116,10 @@ class Archive:
     @redirect_stdout_to_stderr Redirect stderr to stdout
     """
 
-    executed_cmd = " ".join(self.env) + " " + cmd
+    executed_cmd = cmd
+
+    if prepend_env:
+      executed_cmd = self.get_env() + " " + executed_cmd
 
     if redirect_stdout_to_stderr:
       executed_cmd = executed_cmd + ' 2>&1'
@@ -169,47 +181,69 @@ class Archive:
     self.execute('echo "' + s3_config_content + '" > /home/' + self.username + '/.s3cfg')
 
 
-  def get_gpg_env(self):
+  def get_gpg_info_path(self, system):
+    if system == RepositoryType.APT:
+      return Archive.BASE_DIR + '/.gpg-agent-info.apt'
+    elif system == RepositoryType.YUM:
+      return Archive.BASE_DIR + '/.gpg-agent-info.yum'
+    else:
+      raise Exception("Unknown system: %s"(str(system)))
+
+  def get_gpg_env(self, system):
     """
     Retrieve gpg environment variable used for contacting gpg-agent
     and adds it to the global list of environment variables
     """
 
     display_message("Retrieve GPG environment variable")
-    stdin, stdout, stderr = self.ssh.exec_command('cat ' + Archive.BASE_DIR + '/.gpg-agent-info')
-    lines = [line for line in stdout]
-    line =  "".join(lines)
-    gpg_env = line.strip()
+    stdin, stdout, stderr = self.ssh.exec_command('cat ' + self.get_gpg_info_path(system))
+    lines = [line.strip() for line in stdout]
 
-    self.env.append(gpg_env)
+    self.gpg_env = lines
+
+    # Sets gpg home dir
+    if system == RepositoryType.APT:
+      self.gpg_env_home = [self.GPG_ENV_VARIABLE_APT]
+    elif system == RepositoryType.YUM:
+      self.gpg_env_home = [self.GPG_ENV_VARIABLE_YUM]
 
 
-  def start_gpg(self):
+  def setup_gpg(self):
     """
-    Start gpg-agent
+    Stetup gpg directories
     """
 
     # user www-data needs access to our gpg home
-    display_message("Setup gpg home directory")
-    self.execute('chmod -R 777 ' + Archive.BASE_DIR + '/apt/gpg-home/')
+    for directory in [Archive.BASE_DIR + '/apt/gpg-home/', Archive.BASE_DIR + '/yum/gnupg']:
+      display_message("Setup gpg home directory for " + directory)
+      self.execute('chmod -R 777 ' + directory)
+
+
+  def start_gpg(self, system):
+    """
+    Start gpg-agent
+    """
 
     # Start gpg-agent
     # XXX Do not redirect stdout to stderr when starting gpg-agent.
     # Some weird issues would block the connection
     # Seems to be related to tty
     display_message("Start gpg-agent")
-    self.execute('sudo -E -u www-data gpg-agent --daemon  --write-env-file "' + Archive.BASE_DIR + '/.gpg-agent-info" --homedir ' + Archive.BASE_DIR + '/apt/gpg-home/ --allow-preset-passphrase')
+    self.execute('sudo -E -u www-data gpg-agent --daemon  --write-env-file "' + self.get_gpg_info_path(system) + '" --homedir ' + Archive.BASE_DIR + '/apt/gpg-home/ --allow-preset-passphrase', prepend_env=False)
 
 
-  def set_gpg_passphrase(self, passphrase):
+  def set_gpg_passphrase(self, fingerprint, passphrase):
     """
     Set GPG passphrase
 
+    @param fingerprint gpg key fingerprint
     @param passphrase Passphrase
     """
 
+    self.passphrase[fingerprint] = passphrase
+
     display_message("Set gpg passphrase")
-    stdin, stdout, stderr = self.ssh.exec_command( ' sudo -E -u www-data ' + " ".join(self.env) + " " + '/usr/lib/gnupg2/gpg-preset-passphrase -v  --preset F36A89E33CC1BD0F71079007327574EE02A818DD')
+    stdin, stdout, stderr = self.ssh.exec_command( ' sudo -E -u www-data ' + self.get_env() + " " + '/usr/lib/gnupg2/gpg-preset-passphrase -v  --preset ' + fingerprint)
     stdin.write(passphrase)
     stdin.close()
     lines = [line for line in stdout]
@@ -239,10 +273,15 @@ class Archive:
     @param build Build to be published
     """
 
+    # Update .rpmmacros with maintenair gpg key name
+    self.execute(' sudo -E -u www-data ' + ' echo "%_gpg_name              ' + cloudera.constants.YUM_MAINTENER_GPG_KEY + '" >> ~/.rpmmacros', True)
+
+
+    # Update repositories
     cdh_version = re.match('cdh(\d+)', cdh_release).group(1)
 
     display_message("Update yum repository")
-    self.execute(' sudo -E -u www-data ' + Archive.BASE_DIR + '/yum/update_repos.sh -s ' + Archive.BASE_DIR + '/' + build + '/ -c ' + cdh_version + ' -r /var/www/archive_public/redhat/', True)
+    self.execute(' sudo -E -u www-data ' + Archive.BASE_DIR + '/yum/update_repos.sh -s ' + Archive.BASE_DIR + '/' + build + '/ -c ' + cdh_version + ' -r /var/www/archive_public/redhat/' + ' -p' + self.passphrase[cloudera.constants.GPG_KEY_FINGERPRINT_FOR_REPOSITORY_KIND[RepositoryType.YUM]], True)
 
 
   def finalize_staging(self, build, cdh_release):
@@ -257,4 +296,13 @@ class Archive:
 
     display_message("Finalize staging")
     self.execute(' sudo -E -u www-data ' + Archive.BASE_DIR + '/ec2_build/bin/finalize-staging.sh -b '+ build + ' -c ' + cdh_version + ' -r /var/www/archive_public/', True)
+
+  def clean_up(self):
+    """
+    Clean up left over files such as our gpg keys.
+    """
+
+    display_message("Remove gpg keys")
+    for gpg_homedir in ['/apt/gpg-home', '/yum/gnupg']:
+      self.execute(' sudo rm -rf ' + Archive.BASE_DIR + gpg_homedir)
 

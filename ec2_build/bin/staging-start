@@ -14,6 +14,7 @@ import cloudera.staging.StageManager
 import cloudera.staging.Archive
 import cloudera.staging.ArchiveManager
 import cloudera.aws.ec2
+from cloudera.constants import RepositoryType
 from cloudera.utils import display_message, verbose_print, confirm_user_action
 import logging
 
@@ -53,14 +54,15 @@ def boot_ami(archiveManager, options):
   return instance, hostname
 
 
-def update_archive(build, key_file, hostname, passphrase, cdh_release):
+def update_archive(build, key_file, hostname, passphrase_apt, passphrase_yum, cdh_release):
   '''
   Update an archive
 
   @param build Build to de staged
   @param key_file SSH private key filename
   @param hostname Hostname of the archive
-  @param passphrase Passphrase used for signing packages
+  @param passphrase_apt Passphrase used for signing packages in the Apt repository
+  @param passphrase_yum Passphrase used for signing packages in the Yum repository
   '''
 
   display_message("Update newly started instance")
@@ -73,18 +75,31 @@ def update_archive(build, key_file, hostname, passphrase, cdh_release):
   archive.connect(hostname, key_file)
   archive.copy_scripts(hostname, key_file)
   archive.install_packages()
+  archive.setup_gpg()
 
-  # Set up gpg-agent
-  if passphrase:
-    archive.start_gpg()
-    archive.get_gpg_env()
-    archive.set_gpg_passphrase(passphrase)
+  # Set up gpg-agent for Apt repos
+  if passphrase_apt:
+    apt_fingerprint = cloudera.utils.gpg_key_fingerprint(RepositoryType.APT)
+    archive.start_gpg(RepositoryType.APT)
+    archive.get_gpg_env(RepositoryType.APT)
+    archive.set_gpg_passphrase(apt_fingerprint, passphrase_apt)
 
-  # Update repos
+  # Update Apt repos
   archive.update_deb_repo(build, cdh_release)
+
+  # Set up gpg-agent for Yum repos
+  if passphrase_yum:
+    yum_fingerprint = cloudera.utils.gpg_key_fingerprint(RepositoryType.YUM)
+    archive.start_gpg(RepositoryType.YUM)
+    archive.get_gpg_env(RepositoryType.YUM)
+    archive.set_gpg_passphrase(yum_fingerprint, passphrase_yum)
+
+  # Update Yum repos
   archive.update_yum_repo(build, cdh_release)
 
+  # Finalize staging
   archive.finalize_staging(build, cdh_release)
+  archive.clean_up()
 
 def main():
   usage = "usage: %prog  [options] --snapshot <snapshot id> --key-name <key name> --key-file <key file> --build <build id>"
@@ -166,9 +181,11 @@ def main():
     cloudera.utils.confirm_user_action("You are about to replace and deploy a new official archive.cloudera.com.")
 
   # Get pass phrase first so user doesn't have to wait
-  passphrase = None
+  passphrase_apt = None
+  passphrase_yum = None
   if options.gpg_sign:
-    passphrase = getpass.getpass("Please, enter gpg passphrase:")
+    passphrase_apt = getpass.getpass("Please, enter gpg passphrase for Apt repository: ")
+    passphrase_yum = getpass.getpass("Please, enter gpg passphrase for Yum repository: ")
 
 
   ec2_connection  = boto.connect_ec2()
@@ -194,7 +211,7 @@ def main():
 
   verbose_print("Waiting for the address to be effectively associated...")
   cloudera.aws.ec2.wait_for_eip_association_ready()
-  update_archive(options.build, options.key_file, eip.public_ip, passphrase, options.cdh_release)
+  update_archive(options.build, options.key_file, eip.public_ip, passphrase_apt, passphrase_yum, options.cdh_release)
 
   if options.promote:
     # Make this archive become the official one
