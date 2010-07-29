@@ -29,7 +29,7 @@ function relnote_gen {
   pushd $2 >& /dev/null
   git log --pretty=oneline --no-color $3 > $commit_log
   popd >& /dev/null
-  python ./scripts/relnotes/relnote-gen.py -l $commit_log -r "$4" -a $5 -c $6 > $relnote_file
+  python ./tools/relnotes/relnote-gen.py -l $commit_log -r "$4" -a $5 -c $6 > $relnote_file
 }
 
 relnote_gen $1 $2 $3 "$4" $5 $6
