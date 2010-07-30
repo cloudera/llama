@@ -1,0 +1,308 @@
+#!/usr/bin/env python
+# Copyright (c) 2010 Cloudera, inc.
+# https://wiki.cloudera.com/display/PRODUCT/Staging+step
+
+import boto
+import datetime
+import getpass
+import logging
+import os, re
+import subprocess
+import sys
+import time
+from optparse import OptionParser
+
+import cloudera.aws.ec2
+import cloudera.staging.ElasticIpManager
+import cloudera.staging.StageManager
+import cloudera.staging.Archive
+import cloudera.staging.ArchiveManager
+from cloudera.utils import display_message, verbose_print
+from cloudera.constants import RepositoryType
+
+
+class ErrorEncountered(Exception):
+  pass
+
+
+def get_build_name():
+  '''
+  Generate a build name with a timestamp
+  @return Generated build name
+  '''
+  return 'nightly_' + datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + '_'
+
+
+def make_cdh(product_names, version='2'):
+  '''
+  Call make for the given products
+  @param product_names Array of product names such as pig or hive
+  @param version CDH version to build for
+  @return Return code
+  '''
+  # We always build hadoop
+  products = ['hadoop20', 'hadoop20-deb', 'hadoop20-srpm', 'hadoop20-relnotes']
+  for product_name in product_names:
+    products.append(product_name)
+    for suffix in ['-deb', '-srpm']:
+      products.append(product_name + suffix)
+
+  display_message("Crepo sync CDH" + version)
+  crepo_returncode = subprocess.Popen(['crepo', '-m', '../../cdh' + version + '.json', 'sync']).wait()
+  if crepo_returncode != 0:
+    raise ErrorEncountered("Crepo failed to sync repositories")
+
+  display_message("Make CDH" + version)
+  p = subprocess.Popen(['make', 'CDH=cdh'+version] + products, cwd='../../')
+  return p.wait()
+
+
+def build_cdh(product_names, key_name, version='2', build_name_base = ''):
+  '''
+  Call ec2build to build our products for various platforms
+  @param product_names Product names to be built
+  @param key_name EC2 key name
+  @param version CDH version to build for
+  @param build_name_base Build name base
+  @return build name
+  '''
+  buildname = build_name_base + version
+
+  products = ['-p', 'hadoop20']
+  for product_name in product_names:
+    products = products + ['-p', product_name]
+  command = ['./ec2_build', '-w', '-k', key_name, '--tag', 'cdh'+version, '--build_id', buildname]
+  p = subprocess.Popen(command + products)
+  p.wait()
+  if p.returncode != 0:
+    raise ErrorEncountered("Could not build CDH")
+
+  return buildname
+
+def freeze_cdh(version='2', build_name_base = ''):
+  '''
+  Freeze cdh build
+  @param version CDH version to build for
+  @param build_name_base Build name base
+  @return build name
+  '''
+  buildname = build_name_base + version
+  p = subprocess.Popen(['./freezer', buildname, buildname])
+  freezer_returncode = p.wait()
+
+  if freezer_returncode != 0:
+    raise ErrorEncountered("Could not freeze build")
+
+  return buildname
+
+
+def get_free_eip(eipManager):
+  '''
+  Get a free Elastic IP
+  '''
+
+  return eipManager.get_first_available_ip()
+
+
+def boot_ami(archiveManager, options):
+  '''
+  Boot a new AMI
+
+  @return Return a tuple (Instance, Hostname)
+  '''
+
+  display_message("Boot AMI")
+
+  instance = archiveManager.kickOff(options.snapshot, options.security_group_name, options.security_group_desc, options.key_name, options.ami)
+
+  if not instance:
+    raise ErrorEncountered("Couldn't boot ami")
+
+  hostname = instance.public_dns_name
+  if not hostname:
+    raise ErrorEncountered("Couldn't grab the hostname of the newly started instance")
+
+  return instance, hostname
+
+
+def update_archive(build, key_file, hostname, passphrase_apt, passphrase_yum, cdh_version):
+  '''
+  Update an archive
+
+  @param build Build to de staged
+  @param key_file SSH private key filename
+  @param hostname Hostname of the archive
+  @param passphrase Passphrase used for signing packages
+  '''
+
+  display_message("Update newly started instance")
+  logHandler = logging.StreamHandler()
+  logging.getLogger("paramiko.transport").addHandler(logHandler)
+
+  archive = cloudera.staging.Archive.Archive()
+
+  # Set up instance
+  archive.connect(hostname, key_file)
+  archive.copy_scripts(hostname, key_file)
+  archive.install_packages()
+  archive.setup_gpg()
+
+  # Set up gpg-agent for Apt repos
+  if passphrase_apt:
+    apt_fingerprint = cloudera.utils.gpg_key_fingerprint(RepositoryType.APT)
+    archive.start_gpg(RepositoryType.APT)
+    archive.get_gpg_env(RepositoryType.APT)
+    archive.set_gpg_passphrase(apt_fingerprint, passphrase_apt)
+
+  # Update Apt repos
+  archive.update_deb_repo(build, cdh_version)
+
+  # Set up gpg-agent for Yum repos
+  if passphrase_yum:
+    yum_fingerprint = cloudera.utils.gpg_key_fingerprint(RepositoryType.YUM)
+    archive.start_gpg(RepositoryType.YUM)
+    archive.get_gpg_env(RepositoryType.YUM)
+    archive.set_gpg_passphrase(yum_fingerprint, passphrase_yum)
+
+  # Update Yum repos
+  archive.update_yum_repo(build, cdh_version)
+
+  # Finalize staging
+  archive.finalize_staging(build, cdh_version)
+  archive.clean_up()
+
+
+def main():
+  usage = "usage: %prog  [options] <snap_id> a lot"
+  op = OptionParser(usage=usage)
+  op.add_option('-d', '--dry-run',
+              action="store_true",
+              default=False,
+              help="Dont do anything just pretend")
+
+  op.add_option('-c','--cdh-version',
+            help="CDH version")
+
+  op.add_option('-k','--key-file',
+            help="The key file authorized")
+
+  op.add_option('-n','--key-name',
+            help="The keyname authorized")
+
+  default_build_name = get_build_name()
+  op.add_option('-b','--build',
+            default=default_build_name,
+            help="The build to deploy")
+
+  op.add_option('--snapshot',
+            help="Snapshot to base staging from")
+
+  default_sec_group_desc = 'Open HTTP for Cloudera and SSH for everyone'
+  op.add_option('-i','--security-group-desc',
+     default=default_sec_group_desc,
+     help="Override the default security group Description")
+
+  default_sec_group_name = 'Build-Artifact-%s' % time.strftime('%Y%m%d_%H%M%S',time.gmtime())
+  op.add_option('-g','--security-group-name',
+    default=default_sec_group_name,
+   help="Override the default security group name")
+
+  ami = cloudera.staging.ArchiveManager.ArchiveManager.DEFAULT_AMI
+  op.add_option('-a','--ami', default=ami,
+    help="The alternative ami to boot: %s"  % ami)
+
+  default_product_names = []
+  op.add_option('--product-names',
+    default=default_product_names,
+    action='append',
+    help="Products to be built (ex: pig, hive, oozie, hbase)")
+
+  default_s3_bucket = 'cloudera-freezer'
+  op.add_option('-s','--s3-bucket',
+    default=default_s3_bucket,
+    help="S3 bucket where the build is located")
+
+  op.add_option('--gpg-sign',
+      action="store_true",
+      default=None,
+      help="Sign deployed packages")
+
+  op.add_option('-p', '--promote',
+      action="store_true",
+      default=False,
+      help="Promote instance as official archive")
+
+
+  (options, args) = op.parse_args()
+
+
+  if not options.cdh_version:
+    op.error('--cdh-version option is mandatory')
+
+  if not options.build:
+    op.error('build option is mandatory')
+
+  if not options.snapshot:
+    op.error('snapshot option is mandatory')
+
+  if not options.key_file:
+    op.error('key-file option is mandatory')
+
+  if not options.key_name:
+    op.error('key-file option is mandatory')
+
+  product_names = options.product_names
+
+  #XXX reprepo seems to insist on signing packages. Haven't found a work around yet
+  if not options.gpg_sign:
+    op.error('Staging without signing packages is not supported yet. Please add the option --gpg-sign')
+
+  # Get pass phrase first so user doesn't have to wait
+  passphrase_apt = None
+  passphrase_yum = None
+  if options.gpg_sign:
+    passphrase_apt = getpass.getpass("Please, enter gpg passphrase for Apt repository: ")
+    passphrase_yum = getpass.getpass("Please, enter gpg passphrase for Yum repository: ")
+
+  ec2_connection  = boto.connect_ec2()
+
+  eipManager = cloudera.staging.ElasticIpManager.ElasticIpManager()
+  stageManager = cloudera.staging.StageManager.StageManager()
+  archiveManager = cloudera.staging.ArchiveManager.ArchiveManager(ec2_connection)
+
+  build_names = []
+  for version in ['3']:
+    if make_cdh(product_names, version) != 0:
+      raise ErrorEncountered("Couldn't build product")
+
+    build_names.append((version, build_cdh(product_names, options.key_name, version, options.build)))
+    freeze_cdh(version, options.build)
+
+  eip = get_free_eip(eipManager)
+
+  if not eip:
+    raise ErrorEncountered("No Elastic IP available")
+  display_message("Free IP address found: %s"%(eip.public_ip))
+
+  # Boot an instance
+  instance, hostname =  boot_ami(archiveManager, options)
+
+  display_message("Updating records about instance id and elastic ip address")
+  stageManager.add_instance(instance_id=instance.id, user=getpass.getuser(), security_group=options.security_group_name)
+
+  display_message("Associating IP with instance: %s -> %s" % (eip.public_ip, instance.id))
+  ec2_connection.associate_address(instance.id, eip.public_ip)
+
+  verbose_print("Waiting for the address to be effectively associated...")
+  cloudera.aws.ec2.wait_for_eip_association_ready():
+  for (version, build_name) in build_names:
+    update_archive(build_name, options.key_file, eip.public_ip, passphrase_apt, passphrase_yum, options.cdh_version)
+
+  if options.promote:
+    # Make this archive become the official one
+    old_nightly = archiveManager.promote_nightly(instance, eip.public_ip)
+    if old_nightly:
+      old_nightly_instance = cloudera.aws.ec2.instance_for_instance_id(ec2_connection, old_nightly)
+      archiveManager.tear_down_archive(old_nightly_instance)
+
+main()

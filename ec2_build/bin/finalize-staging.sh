@@ -37,30 +37,33 @@ if [ -z "$BUILD_ID" ] || [ -z "$CDH_RELEASE" ] || [ -z "$REPO" ]; then
   usage
 fi
 
-
 BASE_DIR="/tmp"
-
-ARCHIVE=`find $BASE_DIR/$BUILD_ID/source/  -regextype posix-extended   -regex '.*[[:digit:]]+\.tar\.gz'`
-
-ARCHIVE_NAME=`echo "$ARCHIVE" | sed -e 's/.tar.gz//'`
-ARCHIVE_NAME=`echo "$ARCHIVE_NAME" | sed -e 's/.*\///'`
-
 DESTINATION_DIR="$REPO/cdh/$CDH_RELEASE"
 
-# Copy archive file
-cp $ARCHIVE $DESTINATION_DIR/
+ARCHIVES=`find $BASE_DIR/$BUILD_ID/source/  -regextype posix-extended   -regex '.*[[:digit:]]+\.tar\.gz'`
 
-# Clean up location where archive is going to be uncompressed
-rm -rf $BASE_DIR/$ARCHIVE_NAME
-tar -xzf $ARCHIVE -C $BASE_DIR
+for ARCHIVE in $ARCHIVES; do
+  ARCHIVE_NAME=`echo "$ARCHIVE" | sed -e 's/.tar.gz//'`
+  ARCHIVE_NAME=`echo "$ARCHIVE_NAME" | sed -e 's/.*\///'`
 
-# Extract Change file
-cp $BASE_DIR/$ARCHIVE_NAME/CHANGES.txt  $DESTINATION_DIR/$ARCHIVE_NAME.CHANGES.txt
+  # Copy archive file
+  cp $ARCHIVE $DESTINATION_DIR/
 
-# Create directory for docs
-mkdir -p  $DESTINATION_DIR/$ARCHIVE_NAME/
+  # Clean up location where archive is going to be uncompressed
+  rm -rf $BASE_DIR/$ARCHIVE_NAME
+  tar -xzf $ARCHIVE -C $BASE_DIR
 
-# Copy docs directory
-cp -r $BASE_DIR/$ARCHIVE_NAME/docs/*  $DESTINATION_DIR/$ARCHIVE_NAME/
- 
+  # Extract Change file
+  CHANGE_FILE=$BASE_DIR/$ARCHIVE_NAME/CHANGES.txt
+  if [ -x $CHANGE_FILE ]; then
+    cp $CHANGE_FILE  $DESTINATION_DIR/$ARCHIVE_NAME.CHANGES.txt
+  fi
+
+  # Create directory for docs
+  mkdir -p  $DESTINATION_DIR/$ARCHIVE_NAME/
+
+  # Copy docs directory
+  cp -r $BASE_DIR/$ARCHIVE_NAME/docs/*  $DESTINATION_DIR/$ARCHIVE_NAME/
+done
+
 echo done

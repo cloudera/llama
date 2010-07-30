@@ -107,6 +107,7 @@ class Archive:
     print "CONNECTING: host: %s; user: %s; key: %s"%(hostname, username, key_file)
     self.ssh.connect(hostname=hostname, username=username, pkey=key)
 
+    self.ssh.get_transport().set_keepalive(120)
 
   def execute(self, cmd, redirect_stdout_to_stderr=False, prepend_env=True):
     """
@@ -266,7 +267,7 @@ class Archive:
     self.execute(' sudo -E -u www-data ' + Archive.BASE_DIR + '/apt/update_repo.sh -s cloudera-freezer -b ' + build + ' -c cdh' + cdh_release + ' -r /var/www/archive_public/debian/', True)
 
 
-  def update_yum_repo(self, build, cdh_release):
+  def update_yum_repo(self, build, cdh_version):
     """
     Start script to update red hat repository
 
@@ -276,23 +277,18 @@ class Archive:
     # Update .rpmmacros with maintenair gpg key name
     self.execute(' sudo -E -u www-data ' + ' echo "%_gpg_name              ' + cloudera.constants.YUM_MAINTENER_GPG_KEY + '" >> ~/.rpmmacros', True)
 
-
     # Update repositories
-    cdh_version = re.match('cdh(\d+)', cdh_release).group(1)
-
     display_message("Update yum repository")
     self.execute(' sudo -E -u www-data ' + Archive.BASE_DIR + '/yum/update_repos.sh -s ' + Archive.BASE_DIR + '/' + build + '/ -c ' + cdh_version + ' -r /var/www/archive_public/redhat/' + ' -p' + self.passphrase[cloudera.constants.GPG_KEY_FINGERPRINT_FOR_REPOSITORY_KIND[RepositoryType.YUM]], True)
 
 
-  def finalize_staging(self, build, cdh_release):
+  def finalize_staging(self, build, cdh_version):
     """
     Start program to finalize staging.
     It means copying the tarball, its changelog and docs
 
     @param build Build to be published
     """
-
-    cdh_version = re.match('cdh(\d+)', cdh_release).group(1)
 
     display_message("Finalize staging")
     self.execute(' sudo -E -u www-data ' + Archive.BASE_DIR + '/ec2_build/bin/finalize-staging.sh -b '+ build + ' -c ' + cdh_version + ' -r /var/www/archive_public/', True)

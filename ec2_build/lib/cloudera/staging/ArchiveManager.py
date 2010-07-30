@@ -4,8 +4,9 @@ import cloudera.constants
 import cloudera.utils
 import cloudera.aws.ec2
 import cloudera.staging.StageManager
+import time
 
-from cloudera.utils import verbose_print
+from cloudera.utils import display_message, verbose_print
 from cloudera.constants import OFFICIAL_ARCHIVE_IP_ADDRESS, NIGHTLY_ARCHIVE_IP_ADDRESS
 
 class ArchiveManager:
@@ -126,3 +127,65 @@ class ArchiveManager:
       verbose_print("Couldn't find any record of the official archive ip address")
 
 
+  def tear_down_archive(self, instance):
+    stageManager = cloudera.staging.StageManager.StageManager()
+    volumes = cloudera.aws.ec2.data_volume_for_instance(instance, [cloudera.staging.ArchiveManager.ArchiveManager.DEFAULT_ARCHIVE_VOLUME_MOUNT])
+    instance_info = stageManager.get_instance(instance.id)
+
+    display_message("Terminating instance %s"%(instance.id))
+    self.ec2_connection.terminate_instances([instance.id])
+    while(instance.update() != 'terminated'):
+      print "Waiting for the instance to terminate. Current state is [%s]"%(instance.state)
+      time.sleep(5)
+
+    if volumes:
+      volume = volumes[0]
+      if not volume:
+        print "Couldn't find volume"
+      else:
+        display_message("Deleting volume %s"%(volume.volume_id))
+        cloudera.aws.ec2.throw_away_volume(self.ec2_connection, volume)
+    else:
+      print "No volume found"
+
+
+    cloudera.aws.ec2.cleanup_security_group(self.ec2_connection, instance_info[cloudera.staging.StageManager.StageManager.ATTRIBUTE_SECURITY_GROUP])
+
+    stageManager.delete_instance(instance.id)
+
+
+  def promote_nightly(self, instance, eip):
+    '''
+    Promote an already staged archive to be the official one (archive.cloudera.com)
+
+    @param instance Instance to promote
+    @param eip Current elastic IP used by the instance to be promoted
+    '''
+
+    nightly_archives_addresses = self.ec2_connection.get_all_addresses([NIGHTLY_ARCHIVE_IP_ADDRESS])
+    replaced_archive = None
+
+    if len(nightly_archives_addresses) > 0:
+
+      nightly_archive_address = nightly_archives_addresses[0]
+      stageManager = cloudera.staging.StageManager.StageManager()
+
+      if nightly_archive_address.instance_id:
+        current_nightly = nightly_archive_address.instance_id
+
+        # Case 1: There is already a nightly archive. Needs to deassociate addresses and update stage nanager
+        verbose_print("Official archive already there. Associating instance %s to ip address %s"%(instance.id, NIGHTLY_ARCHIVE_IP_ADDRESS))
+        cloudera.aws.ec2.swap_associated_elastic_ips(self.ec2_connection, eip, NIGHTLY_ARCHIVE_IP_ADDRESS)
+
+        replaced_archive = current_nightly
+
+      else:
+
+        # Case 2: There is no official archive
+        verbose_print("No official archive on. Associating instance %s to ip address %s"%(instance.id, NIGHTLY_ARCHIVE_IP_ADDRESS))
+        self.ec2_connection.associate_address(instance.id, NIGHTLY_ARCHIVE_IP_ADDRESS)
+
+    else:
+      verbose_print("Couldn't find any record of the nightly archive ip address")
+
+    return replaced_archive

@@ -39,35 +39,13 @@ def main():
   # EC2 connection
   ec2_connection  = boto.connect_ec2()
 
-  eipManager = cloudera.staging.ElasticIpManager.ElasticIpManager()
-  stageManager = cloudera.staging.StageManager.StageManager()
+  archiveManager = cloudera.staging.ArchiveManager.ArchiveManager(ec2_connection)
 
   instance = cloudera.aws.ec2.instance_for_instance_id(ec2_connection, options.instance)
   if not instance:
     print "Couldn't find instance"
     sys.exit(-1)
 
-  volumes = cloudera.aws.ec2.data_volume_for_instance(instance, [cloudera.staging.ArchiveManager.ArchiveManager.DEFAULT_ARCHIVE_VOLUME_MOUNT])
-  instance_info = stageManager.get_instance(instance.id)
+  archiveManager.tear_down_archive(instance)
 
-  display_message("Terminating instance %s"%(instance.id))
-  ec2_connection.terminate_instances([instance.id])
-  while(instance.update() != 'terminated'):
-    print "Waiting for the instance to terminate. Current state is [%s]"%(instance.state)
-    time.sleep(5)
-
-  if volumes:
-    volume = volumes[0]
-    if not volume:
-      print "Couldn't find volume"
-    else:
-      display_message("Deleting volume %s"%(volume.volume_id))
-      cloudera.aws.ec2.throw_away_volume(ec2_connection, volume)
-  else:
-    print "No volume found"
-
-
-  cloudera.aws.ec2.cleanup_security_group(ec2_connection, instance_info[cloudera.staging.StageManager.StageManager.ATTRIBUTE_SECURITY_GROUP])
-
-  stageManager.delete_instance(instance.id)
 main()
