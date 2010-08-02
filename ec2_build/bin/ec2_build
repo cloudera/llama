@@ -96,6 +96,7 @@ class Options:
     self.S3_BUCKET = 'ec2-build'
     self.BUILD_ID = "%s-%s" % (USERNAME, datetime.datetime.now().strftime("%Y%m%d_%H%M%S"))
     self.EC2_KEY_NAME = USERNAME
+    self.EMAIL_ADDRESS = "%s@cloudera.com" % (USERNAME)
     self.EC2_GROUPS=['cloudera', USERNAME ]
     self.BUILD_MACHINES = DEFAULT_BUILD_MACHINES
     self.CDH_RELEASE=DEFAULT_CDH_RELEASE
@@ -117,6 +118,7 @@ def parse_args():
   op = OptionParser(usage = __usage)
   op.add_option('-b', '--bucket')
   op.add_option('-k', '--key')
+  op.add_option('-e', '--email')
   op.add_option('-g', '--groups')
   op.add_option('-d', '--dir')
   op.add_option('-t', '--tag')
@@ -162,6 +164,9 @@ def parse_args():
 
   if opts.key:
     ret_opts.EC2_KEY_NAME = opts.key
+
+  if opts.email:
+    ret_opts.EMAIL_ADDRESS = opts.email
 
   if opts.packages:
     ret_opts.PACKAGES = opts.packages
@@ -314,6 +319,7 @@ def main():
     subs = {
       'build_id': options.BUILD_ID,
       'username': USERNAME,
+      'email_address': options.EMAIL_ADDRESS,
       'os_distro': os_distro,
       'cdh_release': options.CDH_RELEASE,
       'interactive': str(options.INTERACTIVE),
@@ -331,6 +337,7 @@ def main():
       CDH_RELEASE='%(cdh_release)s'
       INTERACTIVE='%(interactive)s'
       BUILD_USER='%(username)s'
+      EMAIL_ADDRESS='%(email_address)s'
       CODENAME='%(os_distro)s-%(cdh_release)s'
       MANIFEST_URL='%(manifest_url)s'
       PACKAGES='%(packages)s'

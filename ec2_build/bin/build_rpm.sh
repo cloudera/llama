@@ -1,6 +1,5 @@
 #!/bin/sh -x
 # (c) Copyright 2009 Cloudera, Inc.
-set -e
 
 ##SUBSTITUTE_VARS##
 export BUILD_ID
@@ -15,62 +14,78 @@ export AWS_ACCESS_KEY_ID
 export AWS_SECRET_ACCESS_KEY
 
 export OOZIE_SKIP_TEST_EXEC=true
-
-export ANT_HOME=/usr/local/share/apache-ant-1.7.1
-export PATH=$ANT_HOME/bin:$PATH
-
-export JAVA5_HOME=/usr/java/jdk1.5.0_18
-
 export ARCH=$(uname -i)
 
-if [ "$ARCH" == "x64_86" ]; then
-  export JAVA64_HOME=/usr/java/jdk1.6.0_14
-  export JAVA32_HOME=/usr/java/jdk1.6.0_14_i386
-  export JAVA_HOME=$JAVA64_HOME
-else
-  export JAVA32_HOME=/usr/java/jdk1.6.0_14
-  export JAVA_HOME=$JAVA32_HOME
-fi
-
-export FORREST_HOME=/usr/local/share/apache-forrest-0.8
-
-chmod a+w "$FORREST_HOME"
+cat > $HOME/.s3cfg << EOF
+[default]
+access_key = $AWS_ACCESS_KEY_ID
+acl_public = False
+bucket_location = US
+debug_syncmatch = False
+default_mime_type = binary/octet-stream
+delete_removed = False
+dry_run = False
+encrypt = False
+force = False
+gpg_command = /usr/bin/gpg
+gpg_decrypt = %(gpg_command)s -d --verbose --no-use-agent --batch --yes --passphrase-fd %(passphrase_fd)s -o %(output_file)s %(input_file)s
+gpg_encrypt = %(gpg_command)s -c --verbose --no-use-agent --batch --yes --passphrase-fd %(passphrase_fd)s -o %(output_file)s %(input_file)s
+gpg_passphrase = 
+guess_mime_type = False
+host_base = s3.amazonaws.com
+host_bucket = %(bucket)s.s3.amazonaws.com
+human_readable_sizes = False
+preserve_attrs = True
+proxy_host = 
+proxy_port = 0
+recv_chunk = 4096
+secret_key = $AWS_SECRET_ACCESS_KEY
+send_chunk = 4096
+simpledb_host = sdb.amazonaws.com
+use_https = False
+verbosity = WARNING
+EOF
 
 function copy_logs_s3 {
-      s3cmd.rb put $S3_BUCKET:build/$BUILD_ID/${CODENAME}-${ARCH}-user.log /tmp/log.txt x-amz-acl:public-read
+      s3cmd put /var/log/user.txt s3://$S3_BUCKET/build/$BUILD_ID/${CODENAME}-${ARCH}-user.log 
+}
+
+function send_email {
+  PACKAGE=$1
+  TARGET_ARCH=$2
+
+  TMPFILE=$(mktemp)
+  TIME=$(date)
+  HOST=$(hostname)
+  cat > $TMPFILE << EOF
+From: build@cloudera.com
+To: $EMAIL_ADDRESS
+Subject: $BUILD_ID $PACKAGE rpms failed for $TARGET_ARCH
+
+The failure happened at $TIME on $HOST.
+
+Check s3://$S3_BUCKET/build/$BUILD_ID/${CODENAME}-${TARGET_ARCH}-user.log for details
+
+EOF
+
+  cat $TMPFILE | sendmail -t
+  rm -f $TMPFILE
 }
 
 if [ "x$INTERACTIVE" == "xFalse" ]; then
   trap "copy_logs_s3; hostname -f | grep -q internal && shutdown -h now;" INT TERM EXIT
 fi
 
-rm -rf /usr/local/share/apache-forrest-0.8/build/plugins # build fails with this symlink in place, so remove it
+source /opt/toolchain/toolchain.sh
 
-# pick a smart mirror
-yum -y install yum-fastestmirror
-
-yum -y install rpm-build yum-utils zlib-devel gcc gcc-devel gcc-c++ gcc-c++-devel lzo-devel glibc-devel ruby git libtool asciidoc xmlto boost-devel python-devel libevent-devel automake flex bison
-
-pushd /tmp
-  wget http://www.ibiblio.org/pub/mirrors/apache/incubator/thrift/0.2.0-incubating/thrift-0.2.0-incubating.tar.gz
-  tar zxvf thrift-0.2.0-incubating.tar.gz
-  pushd thrift-0.2.0
-    ./configure --without-ruby
-    make
-    make install
-  popd
-popd
-
-pushd /tmp
-  wget http://www.ibiblio.org/pub/mirrors/apache/maven/binaries/apache-maven-2.2.1-bin.tar.gz
-  tar zxvf apache-maven-*tar.gz
-  ln -s /tmp/apache-maven-2.2.1/bin/mvn /usr/bin/mvn
-popd
-
-
+{
 ############# BUILD PACKAGE ####################
 
 for PACKAGE in $PACKAGES; do
+
+  echo "========================"
+  echo "Building $PACKAGE"
+  echo "========================"
 
   mkdir /tmp/$BUILD_ID
   pushd /tmp/$BUILD_ID
@@ -98,6 +113,10 @@ for PACKAGE in $PACKAGES; do
     rm -Rf /tmp/buildroot
     mkdir /tmp/buildroot
     rpmbuild --define "_topdir /tmp/topdir" --buildroot /tmp/buildroot --target $TARGET_ARCH --rebuild *src.rpm
+
+    if [ $? -ne 0 ]; then
+      send_email $PACKAGE $TARGET_ARCH
+    fi
   done
 
   ############################## UPLOAD ##############################
@@ -105,7 +124,7 @@ for PACKAGE in $PACKAGES; do
   for arch_dir in /tmp/topdir/RPMS/*  ; do
     TARGET_ARCH=$(basename $arch_dir)
     for f in $arch_dir/*.rpm ; do
-        s3cmd.rb put $S3_BUCKET:build/$BUILD_ID/rpm_${CODENAME}_${ARCH}/$(basename $f) $f x-amz-acl:public-read
+        s3cmd put $f s3://$S3_BUCKET/build/$BUILD_ID/rpm_${CODENAME}_${ARCH}/$(basename $f) 
     done
   done
 
@@ -115,6 +134,7 @@ for PACKAGE in $PACKAGES; do
   rm -rf /tmp/$BUILD_ID
 
 done
+} 2>&1 | tee /var/log/user.log
 
 # Untrap, we're shutting down directly from here so the exit trap probably won't
 # have time to do anything

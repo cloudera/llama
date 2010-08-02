@@ -1,14 +1,34 @@
 #!/bin/bash -x
 # (c) Copyright 2009 Cloudera, Inc.
 
-
-  set -e
-
   function copy_logs_s3 {
     if [ -e $S3CMD ]; then
         $S3CMD put $S3_BUCKET:build/$BUILD_ID/deb_${CODENAME}_${DEB_HOST_ARCH}/user.log /var/log/user.log x-amz-acl:public-read
     fi
   }
+
+  function send_email {
+    PACKAGE=$1
+    TARGET_ARCH=$2
+
+    TMPFILE=$(mktemp)
+    TIME=$(date)
+    HOST=$(hostname)
+    cat > $TMPFILE << EOF
+From: build@cloudera.com
+To: $EMAIL_ADDRESS
+Subject: $BUILD_ID $PACKAGE rpms failed for $TARGET_ARCH
+
+The failure happened at $TIME on $HOST.
+
+Check $S3_BUCKET:build/$BUILD_ID/deb_${CODENAME}_${DEB_HOST_ARCH}/user.log for details
+
+EOF
+
+    cat $TMPFILE | sendmail -t
+    rm -f $TMPFILE
+  }
+
 
   if [ "x$INTERACTIVE" == "xFalse" ]; then
     trap "copy_logs_s3; hostname -f | grep -q internal && shutdown -h now;" INT TERM EXIT
@@ -92,6 +112,7 @@
   apt-get -y install fuse-utils autoconf automake libfuse-dev libfuse2
   apt-get -y install subversion sun-java6-jdk
   apt-get -y install libboost-dev libevent-dev python-dev pkg-config libtool flex bison
+  apt-get -y install sendmail
 
   pushd /tmp
     wget http://www.ibiblio.org/pub/mirrors/apache/maven/binaries/apache-maven-2.2.1-bin.tar.gz
@@ -126,7 +147,9 @@ popd
 
   for PACKAGE in $PACKAGES; do
 
-    echo $PACKAGE
+    echo "========================"
+    echo "Building $PACKAGE"
+    echo "========================"
 
     mkdir /tmp/$BUILD_ID
     pushd /tmp/$BUILD_ID
@@ -166,6 +189,11 @@ popd
     fi
 
     debuild -uc -us $DEBUILD_FLAG
+
+    if [ $? -ne 0 ]; then
+      send_email $PACKAGE $DEB_HOST_ARCH
+    fi
+
     apt-get -y remove openjdk* maven2 || /bin/true
 
     popd 
