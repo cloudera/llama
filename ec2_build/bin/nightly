@@ -294,7 +294,7 @@ def main():
   ec2_connection.associate_address(instance.id, eip.public_ip)
 
   verbose_print("Waiting for the address to be effectively associated...")
-  cloudera.aws.ec2.wait_for_eip_association_ready():
+  cloudera.aws.ec2.wait_for_eip_association_ready()
   for (version, build_name) in build_names:
     update_archive(build_name, options.key_file, eip.public_ip, passphrase_apt, passphrase_yum, options.cdh_version)
 
