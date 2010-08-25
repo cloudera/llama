@@ -118,8 +118,7 @@ class TestRepo(Thread):
     ssh = cloudera.utils.SSH(self.user, self.hostname, self.key_file, self.SSH_OPTIONS)
     ssh.set_logger(self.logger)
 
-    cmd_remote = self.SUDO_CMD
-    cmd_remote = cmd_remote + ' mkdir ' + self.DESTINATION_LIBRARIES_ROOT_DIR
+    cmd_remote = ' mkdir ' + self.DESTINATION_LIBRARIES_ROOT_DIR
 
     return_code = ssh.execute(cmd_remote)
     if return_code:
@@ -130,7 +129,6 @@ class TestRepo(Thread):
     '''
     Copy scripts to their remote destination
     '''
-
     self.create_destination_dir_for_libs()
 
     options = self.SSH_OPTIONS[:]
@@ -164,6 +162,9 @@ class TestRepo(Thread):
 
     scripts = self.get_scripts()
     self.scripts = scripts
+    ssh = cloudera.utils.SSH(self.user, self.hostname, self.key_file, self.SSH_OPTIONS)
+    ssh.set_logger(self.logger)
+
     for script_name in scripts:
       # Prepare ssh command to be run
       cmd_remote = 'PYTHONPATH="' + self.DESTINATION_LIBRARIES_ROOT_DIR + 'lib/" ' \
@@ -182,6 +183,9 @@ class TestRepo(Thread):
 
 
   def run(self):
+
+    self.logger.info("Starting thread for (%s, %s, %s)"%(self.build_type, self.os_distro, self.arch))
+
     # First: find and copy script
     self.copy()
 

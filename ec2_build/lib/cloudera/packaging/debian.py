@@ -4,7 +4,7 @@ import cloudera.packaging.packaging
 import apt
 
 
-class AptPackage(cloudera.packaging.packaging.Package):
+class AptPackage:
   '''
   Apt package
   '''
@@ -36,7 +36,37 @@ class AptPackage(cloudera.packaging.packaging.Package):
     return self.package.installedVersion
 
 
-class AptPackageManager(cloudera.packaging.packaging.PackageManager):
+  def current_architecture(self):
+    '''
+    Return current architecture
+    @return Current architecture
+    '''
+    (rc, output) = cloudera.utils.simple_exec2(["uname", "-m"])
+    str = ''.join([line for line in output])
+    return str.strip()
+
+
+  def set_preferred_arch(self, arch):
+    '''
+    Set preferred architecture
+    @param arch Preferred architecture
+    '''
+
+    if arch == 'current':
+      arch = self.current_architecture()
+
+    self.preferred_arch = arch
+
+
+  def is_installed(self)
+    '''
+    Check if the package is already installed
+    @return Boolean indicateing whether it is isntalled or not
+    '''
+    return self.package.is_installed
+
+
+class AptPackageManager:
     '''
     Package manager for Apt platform
     '''

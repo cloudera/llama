@@ -4,7 +4,7 @@ import cloudera.utils
 import subprocess
 
 
-class YumPackage(cloudera.packaging.packaging.Package):
+class YumPackage:
     '''
     See L{cloudera.packaging.debian.AptPackage} for documentation
     '''
@@ -36,7 +36,7 @@ class YumPackage(cloudera.packaging.packaging.Package):
       self.preferred_arch = arch
 
 
-class YumPackageManager(cloudera.packaging.packaging.PackageManager):
+class YumPackageManager:
     '''
     See L{cloudera.packaging.debian.AptPackageManager} for documentation
     '''

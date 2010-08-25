@@ -58,12 +58,14 @@ def wait_while_booting(instance, wait_interval=5, logger=None):
   state = instance.state
   print_fun("Instance state: %s" %(state))
 
-  while state != InstanceState.RUNNING:
+  while state == InstanceState.PENDING:
     time.sleep(wait_interval)
     instance.update()
     state = instance.state
     print_fun("Waiting for %s seconds ... current state: %s"%(str(wait_interval), state))
 
+  if state != InstanceState.RUNNING:
+    raise Exception("Couldn't boot instance %s"%(instance.id))
 
 def swap_associated_elastic_ips(ec2_connection, ip1, ip2):
   '''

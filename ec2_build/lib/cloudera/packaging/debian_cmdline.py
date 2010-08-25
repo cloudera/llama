@@ -4,7 +4,7 @@ import cloudera.utils
 import subprocess
 
 
-class AptPackage(cloudera.packaging.packaging.Package):
+class AptPackage:
     '''
     See L{cloudera.packaging.debian.AptPackage} for documentation
     '''
@@ -25,7 +25,21 @@ class AptPackage(cloudera.packaging.packaging.Package):
       return cloudera.utils.simple_exec(["dpkg-query", "-W", "-f", "${Version}", pkg_name])
 
 
-class AptPackageManager(cloudera.packaging.packaging.PackageManager):
+    def current_architecture(self):
+      (rc, output) = cloudera.utils.simple_exec2(["uname", "-m"])
+      str = ''.join([line for line in output])
+      return str.strip()
+
+
+    def set_preferred_arch(self, arch):
+
+      if arch == 'current':
+        arch = self.current_architecture()
+
+      self.preferred_arch = arch
+
+
+class AptPackageManager:
     '''
     See L{cloudera.packaging.debian.AptPackageManager} for documentation
     '''

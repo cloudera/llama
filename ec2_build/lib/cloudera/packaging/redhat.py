@@ -3,7 +3,7 @@ import cloudera.packaging.packaging
 import yum
 
 
-class YumPackage(cloudera.packaging.packaging.Package):
+class YumPackage:
     '''
     See L{cloudera.packaging.debian.AptPackage} for documentation
     '''
@@ -11,17 +11,34 @@ class YumPackage(cloudera.packaging.packaging.Package):
     def __init__(self, yum_package):
       self.yum_package = yum_package
 
+
     def name(self):
       return self.yum_package.name
 
+
     def files(self):
       return self.yum_package.files
+
 
     def version(self):
       return self.yum_package.printVer()
 
 
-class YumPackageManager(cloudera.packaging.packaging.PackageManager, yum.YumBase):
+    def current_architecture(self):
+      (rc, output) = cloudera.utils.simple_exec2(["uname", "-m"])
+      str = ''.join([line for line in output])
+      return str.strip()
+
+
+    def set_preferred_arch(self, arch):
+
+      if arch == 'current':
+        arch = self.current_architecture()
+
+      self.preferred_arch = arch
+
+
+class YumPackageManager:
     '''
     See L{cloudera.packaging.debian.AptPackageManager} for documentation
     '''
