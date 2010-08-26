@@ -121,7 +121,7 @@ def throw_away_volume(ec2_connection, volume):
   @param volume Volume to be deleted
   '''
 
-# Maybe None
+  # Maybe None
   if not volume:
     return
 
