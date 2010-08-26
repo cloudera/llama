@@ -8,6 +8,10 @@ import sys
 import cloudera.constants
 
 def needs_sudo():
+  '''
+  Check if current execution environnement needs to use sudo for privileged operations
+  @return Boolean
+  '''
   (os, release_version, release_name) = platform.dist()
   os = os.lower()
 
