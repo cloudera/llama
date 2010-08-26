@@ -110,7 +110,7 @@ $(eval $(call PACKAGE,flume,FLUME))
 # Sqoop
 SQOOP_NAME=sqoop
 SQOOP_PKG_NAME=sqoop
-SQOOP_BASE_VERSION=1.0.0
+SQOOP_BASE_VERSION=1.1.0
 SQOOP_SOURCE=cdh-base-$(SQOOP_BASE_VERSION).tar.gz
 SQOOP_GIT_REPO=$(BASE_DIR)/repos/cdh3/sqoop
 SQOOP_BASE_REF=cdh-base-$(SQOOP_BASE_VERSION)
@@ -118,3 +118,7 @@ SQOOP_BUILD_REF=cdh-$(SQOOP_BASE_VERSION)
 SQOOP_PACKAGE_GIT_REPO=$(BASE_DIR)/repos/cdh3/sqoop-package
 SQOOP_SITE=http://git.sf.cloudera.com/index.cgi/sqoop.git/snapshot/
 $(eval $(call PACKAGE,sqoop,SQOOP))
+sqoop-relnotes: sqoop
+	cd $(SQOOP_GIT_REPO) && ant relnotes -Dversion=$(SQOOP_FULL_VERSION) \
+		-Dbuild.relnotes.dir=$(SQOOP_OUTPUT_DIR)
+

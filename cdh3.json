@@ -18,7 +18,7 @@
      "flume": {"track-branch": "cdh-0.9.0", "dir": "repos/cdh3/flume", "remotes": ["origin"]},
      "hbase": {"track-branch": "cdh-0.89.20100621", "dir": "repos/cdh3/hbase", "remotes": ["origin","apache"]},
      "zookeeper": {"track-branch": "cdh-3.3.1", "dir": "repos/cdh3/zookeeper", "remotes": ["origin", "apache"]},
-     "sqoop": {"track-branch": "cdh-1.0.0", "dir": "repos/cdh3/sqoop", "remotes": ["origin"]},
+     "sqoop": {"track-branch": "cdh-1.1.0", "dir": "repos/cdh3/sqoop", "remotes": ["origin"]},
      "oozie": {"track-branch": "cdh-1.6.2", "dir": "repos/cdh3/oozie", "remotes": ["origin", "yahoo"]},
 
      "hadoop-0.20-package": { "track-branch": "cdh3", "dir": "repos/cdh3/hadoop-0.20-package",
