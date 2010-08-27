@@ -21,6 +21,7 @@ class ArchiveManager:
     self.ec2_connection = ec2_connection
     self.EC2_IPS_GROUP = ec2_connection.get_all_security_groups(['EC2-IPS'])[0]
 
+
   def launch_server(self, security_groups, volume, key_name, ami = DEFAULT_AMI):
     '''
     This launches a new instance attaches a volume and security group to it
