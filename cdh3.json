@@ -24,8 +24,8 @@
      "hadoop-0.20-package": { "track-branch": "cdh3", "dir": "repos/cdh3/hadoop-0.20-package",
                               "remote-project-name": "hadoop-package"},
      
-     "hive-package": { "track-branch": "CDH2-0.4.0", "dir": "repos/cdh3/hive-package"},
-     "pig-package": { "track-branch": "CDH2-0.5.0", "dir": "repos/cdh3/pig-package"},
+     "hive-package": { "track-branch": "CDH3-0.5.0", "dir": "repos/cdh3/hive-package"},
+     "pig-package": { "track-branch": "CDH3-0.7.0", "dir": "repos/cdh3/pig-package"},
      "hbase-package": { "track-branch": "cdh3", "dir": "repos/cdh3/hbase-package"},
      "sqoop-package": { "track-branch": "cdh3", "dir": "repos/cdh3/sqoop-package"},
      "flume-package": { "track-branch": "cdh3", "dir": "repos/cdh3/flume-package"},
