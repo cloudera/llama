@@ -41,6 +41,7 @@ $(eval $(call PACKAGE,pig,PIG))
 
 # Hive
 HIVE_NAME=hive
+HIVE_RELEASE=2
 HIVE_PKG_NAME=hadoop-hive
 HIVE_BASE_VERSION=0.4.1
 HIVE_SOURCE=hive-$(HIVE_BASE_VERSION)-dev.tar.gz
