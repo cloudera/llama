@@ -17,13 +17,13 @@
      "pig": {"track-branch": "cdh-0.5.0+11", "dir": "repos/cdh2/pig", "remotes": ["origin", "apache"]},
      "hive": {"track-branch": "cdh-0.4.1+14", "dir": "repos/cdh2/hive", "remotes": ["origin", "apache"]},
 
-     "hadoop-0.18-package": { "track-branch": "CDH2-0.18", "dir": "repos/cdh2/hadoop-0.18-package",
+     "hadoop-0.18-package": { "track-branch": "cdh2-0.18", "dir": "repos/cdh2/hadoop-0.18-package",
                               "remote-project-name": "hadoop-package"},
-     "hadoop-0.20-package": { "track-branch": "CDH2-0.20", "dir": "repos/cdh2/hadoop-0.20-package",
+     "hadoop-0.20-package": { "track-branch": "cdh2-0.20", "dir": "repos/cdh2/hadoop-0.20-package",
                               "remote-project-name": "hadoop-package"},
 
-     "hive-package": { "track-branch": "CDH2-0.4.0", "dir": "repos/cdh2/hive-package"},
-     "pig-package": { "track-branch": "CDH2-0.5.0", "dir": "repos/cdh2/pig-package"},
+     "hive-package": { "track-branch": "cdh2-0.4.0", "dir": "repos/cdh2/hive-package"},
+     "pig-package": { "track-branch": "cdh2-0.5.0", "dir": "repos/cdh2/pig-package"},
 
      "pristine-tarballs": { "dir": "repos/cdh2/pristine"}
     }
