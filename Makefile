@@ -73,4 +73,4 @@ srpm: $(TARGETS_SRPM)
 sdeb: $(TARGETS_SDEB)
 
 .DEFAULT_GOAL:= help
-.PHONY: realclean clean package-help help-header packages all world help tgz srpm sdeb
+.PHONY: realclean clean distclean package-help help-header packages all world help tgz srpm sdeb
