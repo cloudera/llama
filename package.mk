@@ -166,7 +166,8 @@ $(1)-version:
 	@echo "Full: $$($(2)_FULL_VERSION)"
 
 $(1)-help:
-	@echo "    $(1)  [$(1)-version, $(1)-srpm, $(1)-sdeb, $(1)-info]"
+	@echo "    $(1)  [$(1)-version, $(1)-info, $(1)-srpm, $(1)-rpm,"
+	@echo "           $(1)-sdeb, $(1)-deb]"
 
 $(1)-clean: 
 	-rm -rf $(BUILD_DIR)/$(CDH)/$(1)
