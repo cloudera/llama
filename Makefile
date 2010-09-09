@@ -2,6 +2,7 @@ BASE_DIR  :=$(shell pwd)
 BUILD_DIR ?=$(BASE_DIR)/build
 DL_DIR    ?=$(BASE_DIR)/dl
 OUTPUT_DIR?=$(BASE_DIR)/output
+REPO_DIR  ?=$(BASE_DIR)/repos
 CONFIG    ?=$(BASE_DIR)/config.mk
 CDH       ?=cdh2
 CDH_MAKEFILE:=$(CDH).mk
@@ -63,6 +64,9 @@ clean: $(TARGETS_CLEAN)
 realclean: clean
 	-rm -rf $(OUTPUT_DIR)
 	-rm -rf $(DL_DIR)
+
+distclean: realclean
+	-rm -rf $(REPO_DIR)
 
 srpm: $(TARGETS_SRPM)
 
