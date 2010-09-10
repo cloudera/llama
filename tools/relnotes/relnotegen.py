@@ -14,6 +14,8 @@ import sys
 from urllib import urlopen
 from xml.etree import ElementTree
 from relnotehtml import printRelNotes
+from utils import getJiraIssueXMLURL, getJiraList
+
 
 #
 #  Maps the project type and jira type to a list of pairs where
@@ -44,16 +46,16 @@ def addJira(proj, jiraType, jira, summary):
 
 
 def getJiraDOM(jira):
-  xml = urlopen("http://issues.apache.org/jira/si/jira.issueviews:"+\
-                "issue-xml/%s/%s.xml" % (jira, jira))
-  return ElementTree.parse(xml)
+  url = getJiraIssueXMLURL(jira)
+  return ElementTree.parse(urlopen(url))
 
 
 def parseJiras(commitLog):
     """ Parse jiras and add them to the dictionary """
 
     # A git object identifier is 40 chars
-    jiraReg = r"^\w{40} (HADOOP|HDFS|MAPREDUCE)[- ](\d+)"
+    jiras = "|".join(getJiraList())
+    jiraReg = r"^\w{40} ("+jiras+")[- ](\d+)"
     for m in re.finditer(jiraReg, commitLog, re.M):
         proj = m.group(1)
         num  = m.group(2)

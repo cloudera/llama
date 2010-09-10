@@ -3,6 +3,7 @@
 #
 
 import cgi
+from utils import getJiraIssueURL
 
 def printHeader(cdhReleaseVersion, baseVersion, cdhHadoopVersion):
     print """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
@@ -43,12 +44,14 @@ def printProject(jiraDict, proj, projName):
     typeDict = jiraDict[proj]
     jiraTypes = typeDict.keys()
     jiraTypes.sort()
+
     for jt in jiraTypes:
         print "<h4>"+jt+"</h4>"
         print "<ul>"
         for (jira, summary) in typeDict[jt]:
-            print "<li>[<a href='https://issues.apache.org/jira/browse/"+\
-                  jira+"'>"+jira+"</a>] - "+cgi.escape(summary)+"</li>"
+            url = getJiraIssueURL(jira)
+            summary = cgi.escape(summary)
+            print "<li>[<a href='"+url+"'>"+jira+"</a>] - "+summary+"</li>"
         print "</ul>"
 
 
@@ -58,6 +61,7 @@ def printRelNotes(cdhReleaseVersion, baseVersion, cdhHadoopVersion, jiraDict):
        jiraDict["HDFS"]["Bug"] = [("HDFS-127","Fix a bug")]
     """
     printHeader(cdhReleaseVersion, baseVersion, cdhHadoopVersion)
+    printProject(jiraDict, "DISTRO", "CDH")
     printProject(jiraDict, "HADOOP", "Common")
     printProject(jiraDict, "HDFS", "HDFS")
     printProject(jiraDict, "MAPREDUCE", "MapReduce")
