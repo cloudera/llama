@@ -42,7 +42,9 @@ def addJira(proj, jiraType, jira, summary):
     global jiraDict
     projDict = jiraDict.setdefault(proj, {})
     jiras = projDict.setdefault(jiraType, [])
-    jiras.append((jira, summary))
+    p = (jira, summary)
+    if p not in jiras:
+      jiras.append(p)
 
 
 def getJiraDOM(jira):
