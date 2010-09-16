@@ -51,10 +51,13 @@ tgz: packages
 
 help-header:
 	@echo "    $(CDH) targets:"
-	@echo "    all     (all TGZs/SRPMS/SDEBS)"
-	@echo "    tgz     (all Source TGZs)"
-	@echo "    srpm    (all SRPMs)"
-	@echo "    sdeb    (all SDEBs)"
+	@echo "    all       (all TGZs/SRPMS/SDEBS)"
+	@echo "    tgz       (all Source TGZs)"
+	@echo "    srpm      (all SRPMs)"
+	@echo "    sdeb      (all SDEBs)"
+	@echo "    clean     (remove build dir)"
+	@echo "    realclean (also remove output and download dirs)"
+	@echo "    distclean (also remove the repo dir)"
 
 package-help: help-header $(TARGETS_HELP)
 
