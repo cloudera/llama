@@ -17,7 +17,7 @@
     cat > $TMPFILE << EOF
 From: build@cloudera.com
 To: $EMAIL_ADDRESS
-Subject: $BUILD_ID $PACKAGE rpms failed for $TARGET_ARCH
+Subject: $BUILD_ID $PACKAGE debs failed for $TARGET_ARCH
 
 The failure happened at $TIME on $HOST.
 
