@@ -28,26 +28,14 @@ $(eval $(call PACKAGE,pig,PIG))
 # Oozie
 OOZIE_NAME=oozie
 OOZIE_PKG_NAME=oozie
-OOZIE_BASE_VERSION=1.6.2
-OOZIE_SOURCE=cdh-base-$(OOZIE_BASE_VERSION).tar.gz 
+OOZIE_BASE_VERSION=2.2.0
+OOZIE_SOURCE=cdh-base-$(OOZIE_BASE_VERSION).tar.gz
 OOZIE_GIT_REPO=$(REPO_DIR)/cdh3/oozie
 OOZIE_BASE_REF=cdh-base-$(OOZIE_BASE_VERSION)
 OOZIE_BUILD_REF=cdh-$(OOZIE_BASE_VERSION)
 OOZIE_PACKAGE_GIT_REPO=$(REPO_DIR)/cdh3/oozie-package
 OOZIE_SITE=http://git.sf.cloudera.com/index.cgi/oozie.git/snapshot
 $(eval $(call PACKAGE,oozie,OOZIE))
-
-# Oozie-client
-OOZIE-CLIENT_NAME=oozie-client
-OOZIE-CLIENT_PKG_NAME=oozie-client
-OOZIE-CLIENT_BASE_VERSION=1.6.2
-OOZIE-CLIENT_SOURCE=cdh-base-$(OOZIE-CLIENT_BASE_VERSION).tar.gz 
-OOZIE-CLIENT_GIT_REPO=$(REPO_DIR)/cdh3/oozie
-OOZIE-CLIENT_BASE_REF=cdh-base-$(OOZIE-CLIENT_BASE_VERSION)
-OOZIE-CLIENT_BUILD_REF=cdh-$(OOZIE-CLIENT_BASE_VERSION)
-OOZIE-CLIENT_PACKAGE_GIT_REPO=$(REPO_DIR)/cdh3/oozie-client-package
-OOZIE-CLIENT_SITE=http://git.sf.cloudera.com/index.cgi/oozie.git/snapshot
-$(eval $(call PACKAGE,oozie-client,OOZIE-CLIENT))
 
 # Hive
 HIVE_NAME=hive
