@@ -20,6 +20,7 @@
      "zookeeper": {"track-branch": "cdh-3.3.1", "dir": "repos/cdh3/zookeeper", "remotes": ["origin", "apache"]},
      "sqoop": {"track-branch": "cdh-1.1.0", "dir": "repos/cdh3/sqoop", "remotes": ["origin"]},
      "oozie": {"track-branch": "cdh-2.2.1", "dir": "repos/cdh3/oozie", "remotes": ["origin"]},
+     "whirr": {"track-branch": "cdh-0.1.0", "dir": "repos/cdh3/whirr", "remotes": ["origin", "apache"]},
 
      "hadoop-0.20-package": { "track-branch": "cdh3", "dir": "repos/cdh3/hadoop-0.20-package",
                               "remote-project-name": "hadoop-package"},
@@ -30,6 +31,7 @@
      "sqoop-package": { "track-branch": "cdh3", "dir": "repos/cdh3/sqoop-package"},
      "flume-package": { "track-branch": "cdh3", "dir": "repos/cdh3/flume-package"},
      "zookeeper-package": { "track-branch": "cdh3", "dir": "repos/cdh3/zookeeper-package"},
-     "oozie-package": { "track-branch": "cdh3", "dir": "repos/cdh3/oozie-package"}
+     "oozie-package": { "track-branch": "cdh3", "dir": "repos/cdh3/oozie-package"},
+     "whirr-package": { "track-branch": "cdh3", "dir": "repos/cdh3/whirr-package"}
     }
 }

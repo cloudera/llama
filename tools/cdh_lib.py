@@ -97,6 +97,8 @@ def cdh_get_version(rev):
 class Test(unittest.TestCase):
   def testAncestor(self):
     self.assertEquals(cdh_ancestor_branch('cdh-0.18.3'), 'cdh-base-0.18.3')
-    self.assertEquals(cdh_ancestor_branch('cdh-0.18.3+3'), 'cdh-0.18.3')
-    self.assertEquals(cdh_ancestor_branch('cdh-0.18.3+3.4'), 'cdh-0.18.3+3')
-    self.assertEquals(cdh_ancestor_branch('cdh-0.20.1'), 'cdh-base-0.20.1')
+    self.assertEquals(cdh_ancestor_branch('cdh-0.18.3+3'), 'origin/cdh-0.18.3')
+    self.assertEquals(cdh_ancestor_branch('cdh-0.18.3+3.4'), 'origin/cdh-0.18.3+3')
+    self.assertEquals(cdh_ancestor_branch('cdh-0.20.1'), 'cdh-base-0.20.1')    
+if __name__ == '__main__':
+    unittest.main()

@@ -118,3 +118,14 @@ sqoop-relnotes: sqoop
 	cd $(SQOOP_GIT_REPO) && ant relnotes -Dversion=$(SQOOP_FULL_VERSION) \
 		-Dbuild.relnotes.dir=$(SQOOP_OUTPUT_DIR)
 
+# Whirr
+WHIRR_NAME=whirr
+WHIRR_PKG_NAME=whirr
+WHIRR_BASE_VERSION=0.1.0
+WHIRR_SOURCE=whirr-$(WHIRR_BASE_VERSION)-incubating-src.tar.gz
+WHIRR_GIT_REPO=$(BASE_DIR)/repos/cdh3/whirr
+WHIRR_BASE_REF=cdh-base-$(WHIRR_BASE_VERSION)
+WHIRR_BUILD_REF=cdh-$(WHIRR_BASE_VERSION)
+WHIRR_PACKAGE_GIT_REPO=$(BASE_DIR)/repos/cdh3/whirr-package
+WHIRR_SITE=$(APACHE_MIRROR)/incubator/whirr
+$(eval $(call PACKAGE,whirr,WHIRR))
