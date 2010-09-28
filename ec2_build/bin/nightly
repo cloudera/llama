@@ -189,10 +189,10 @@ def main():
   op.add_option('-n','--key-name',
             help="The keyname authorized")
 
-  op.add_option(,'--passphrase-apt',
+  op.add_option('--passphrase-apt',
             help="Passphrase used for APT packages")
 
-  op.add_option(,'--passphrase-yum',
+  op.add_option('--passphrase-yum',
             help="Passphrase used for YUM packages")
 
   default_build_name = get_build_name()
