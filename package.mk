@@ -3,7 +3,7 @@
 # Download 
 $(BUILD_DIR)/%/.download:
 	mkdir -p $(@D)
-	[ -f $($(PKG)_DOWNLOAD_DST) ] || (cd $(DL_DIR) && curl -# -O $($(PKG)_DOWNLOAD_URL))
+	[ -f $($(PKG)_DOWNLOAD_DST) ] || (cd $(DL_DIR) && curl -# -L -o $($(PKG)_TARBALL_DST) $($(PKG)_DOWNLOAD_URL))
 	touch $@
 
 # Prep
@@ -119,8 +119,8 @@ $(2)_OUTPUT_DIR      = $(OUTPUT_DIR)/$(CDH)/$(1)
 $(2)_SOURCE_DIR       = $$($(2)_BUILD_DIR)/source
 
 # Download source URL and destination path
-$(2)_DOWNLOAD_URL = $($(2)_SITE)/$($(2)_SOURCE)
-$(2)_DOWNLOAD_DST = $(DL_DIR)/$($(2)_SOURCE)
+$(2)_DOWNLOAD_URL = $($(2)_SITE)/$($(2)_TARBALL_SRC)
+$(2)_DOWNLOAD_DST = $(DL_DIR)/$($(2)_TARBALL_DST)
 
 # Define the file stamps
 $(2)_TARGET_DL       = $$($(2)_BUILD_DIR)/.download
