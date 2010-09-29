@@ -59,7 +59,7 @@ HIVE_SOURCE_DIR=$(HIVE_BUILD_DIR)/source/src
 
 $(HIVE_TARGET_PREP):
 	mkdir -p $($(PKG)_SOURCE_DIR)
-	$(BASE_DIR)/tools/setup-package-build $($(PKG)_GIT_REPO) $($(PKG)_BASE_REF) $($(PKG)_BUILD_REF) $(DL_DIR)/$($(PKG)_SOURCE) $(HIVE_BUILD_DIR)/source
+	$(BASE_DIR)/tools/setup-package-build $($(PKG)_GIT_REPO) $($(PKG)_BASE_REF) $($(PKG)_BUILD_REF) $(DL_DIR)/$($(PKG)_DOWNLOAD_DST) $(HIVE_BUILD_DIR)/source
 	rsync -av $(HIVE_ORIG_SOURCE_DIR)/cloudera/ $(HIVE_SOURCE_DIR)/cloudera/
 	touch $@
 
