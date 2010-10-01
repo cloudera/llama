@@ -66,14 +66,14 @@ $(HIVE_TARGET_PREP):
 # HBase
 HBASE_NAME=hbase
 HBASE_PKG_NAME=hadoop-hbase
-HBASE_BASE_VERSION=0.89.20100621
+HBASE_BASE_VERSION=0.89.20100924
 HBASE_TARBALL_DST=hbase-$(HBASE_BASE_VERSION)-src.tar.gz
 HBASE_TARBALL_SRC=$(HBASE_TARBALL_DST)
 HBASE_GIT_REPO=$(REPO_DIR)/cdh3/hbase
 HBASE_BASE_REF=cdh-base-$(HBASE_BASE_VERSION)
 HBASE_BUILD_REF=cdh-$(HBASE_BASE_VERSION)
 HBASE_PACKAGE_GIT_REPO=$(REPO_DIR)/cdh3/hbase-package
-HBASE_SITE=http://people.apache.org/~todd/hbase-0.89.20100621.rc0/
+HBASE_SITE=http://people.apache.org/~jdcryans/hbase-0.89.20100924-candidate-1/
 $(eval $(call PACKAGE,hbase,HBASE))
 
 # ZooKeeper
