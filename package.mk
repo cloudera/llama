@@ -1,4 +1,5 @@
 # Implicit targets
+SHELL := /bin/bash
 
 # Download 
 $(BUILD_DIR)/%/.download:
