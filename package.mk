@@ -42,8 +42,7 @@ $(BUILD_DIR)/%/.srpm:
 	-rm -rf $(PKG_BUILD_DIR)/rpm/
 	mkdir -p $(PKG_BUILD_DIR)/rpm/
 	cp -r $($(PKG)_PACKAGE_GIT_REPO)/rpm/topdir $(PKG_BUILD_DIR)/rpm
-	mkdir -p $(PKG_BUILD_DIR)/rpm/topdir/INSTALL
-	mkdir -p $(PKG_BUILD_DIR)/rpm/topdir/SOURCES
+	mkdir -p $(PKG_BUILD_DIR)/rpm/topdir/{INSTALL,SOURCES,BUILD}
 	cp $($(PKG)_OUTPUT_DIR)/$($(PKG)_NAME)-$($(PKG)_FULL_VERSION).tar.gz $(PKG_BUILD_DIR)/rpm/topdir/SOURCES
 	$($(PKG)_PACKAGE_GIT_REPO)/rpm/create_rpms \
 	  $($(PKG)_NAME) \
