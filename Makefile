@@ -54,7 +54,9 @@ help-header:
 	@echo "    all       (all TGZs/SRPMS/SDEBS)"
 	@echo "    tgz       (all Source TGZs)"
 	@echo "    srpm      (all SRPMs)"
+	@echo "    rpm       (all RPMs)"
 	@echo "    sdeb      (all SDEBs)"
+	@echo "    deb       (all DEBs)"
 	@echo "    clean     (remove build dir)"
 	@echo "    realclean (also remove output and download dirs)"
 	@echo "    distclean (also remove the repo dir)"
@@ -73,7 +75,11 @@ distclean: realclean
 
 srpm: $(TARGETS_SRPM)
 
+rpm: $(TARGETS_RPM)
+
 sdeb: $(TARGETS_SDEB)
+
+deb: $(TARGETS_DEB)
 
 .DEFAULT_GOAL:= help
 .PHONY: realclean clean distclean package-help help-header packages all world help tgz srpm sdeb

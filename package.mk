@@ -208,5 +208,7 @@ TARGETS += $(1)
 TARGETS_HELP += $(1)-help
 TARGETS_CLEAN += $(1)-clean
 TARGETS_SRPM += $(1)-srpm
+TARGETS_RPM += $(1)-rpm
 TARGETS_SDEB += $(1)-sdeb
+TARGETS_DEB += $(1)-deb
 endef
