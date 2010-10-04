@@ -78,6 +78,8 @@ fi
 
 source /opt/toolchain/toolchain.sh
 
+yum install -y openssl-devel
+
 {
 ############# BUILD PACKAGE ####################
 
