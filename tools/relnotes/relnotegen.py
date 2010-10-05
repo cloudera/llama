@@ -13,6 +13,7 @@ import sys
 
 from urllib import urlopen
 from xml.etree import ElementTree
+from xml.parsers.expat import ExpatError
 from relnotehtml import printRelNotes
 from utils import getJiraIssueXMLURL, getJiraList
 
@@ -48,8 +49,23 @@ def addJira(proj, jiraType, jira, summary):
 
 
 def getJiraDOM(jira):
-  url = getJiraIssueXMLURL(jira)
-  return ElementTree.parse(urlopen(url))
+  """ Get the DOM for the given JIRA. Retries if the request was
+  ill-formatted (intermittent failure) and bails if there was
+  an error parsing the response (invalid jira).
+  """
+
+  dom = None
+  while dom is None:
+    try:
+      xml = urlopen(getJiraIssueXMLURL(jira)).read()
+      if -1 != xml.find("<title>400 Bad Request</title>"):
+        print >> sys.stderr, "ERROR. Retry %s" % (jira)
+        continue
+      dom = ElementTree.fromstring(xml)
+    except ExpatError as e:
+      print >> sys.stderr, "ERROR. Skip %s (%s)" % (jira, e)
+      return None
+  return dom
 
 
 def parseJiras(commitLog):
@@ -62,13 +78,17 @@ def parseJiras(commitLog):
         proj = m.group(1)
         num  = m.group(2)
         jira = proj+"-"+num
-        doc = getJiraDOM(jira)
-        summary = doc.find('./channel/item/summary').text
-        jiraType = doc.find('./channel/item/type').text
+        dom = getJiraDOM(jira)
+        if dom is None:
+          continue
+        summary = dom.find('./channel/item/summary').text
+        jiraType = dom.find('./channel/item/type').text
         # For Sub-tasks use the type of the parent jira
         if jiraType == "Sub-task":
-          p = getJiraDOM(doc.find('./channel/item/parent').text)
+          p = getJiraDOM(dom.find('./channel/item/parent').text)
           jiraType = p.find('./channel/item/type').text
+        # Progress tick
+        print >> sys.stderr, ".",
         addJira(proj, jiraType, jira, summary)
 
 
