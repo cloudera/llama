@@ -28,6 +28,7 @@ $(BUILD_DIR)/%/.patch:
 # Build
 $(BUILD_DIR)/%/.build: 
 	/usr/bin/env \
+	  -u DISPLAY \
 	  JAVA32_HOME=$(JAVA32_HOME) \
 	  JAVA64_HOME=$(JAVA64_HOME) \
 	  JAVA5_HOME=$(JAVA5_HOME) \
