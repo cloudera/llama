@@ -58,7 +58,7 @@ class AptPackage:
     self.preferred_arch = arch
 
 
-  def is_installed(self)
+  def is_installed(self):
     '''
     Check if the package is already installed
     @return Boolean indicateing whether it is isntalled or not
