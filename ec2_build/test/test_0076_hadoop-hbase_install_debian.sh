@@ -21,18 +21,18 @@ PACKAGES="hadoop-hbase hadoop-hbase-master hadoop-hbase-regionserver hadoop-hbas
 
 apt-cache search $PACKAGES
 apt-get install -y $PACKAGES
-/etc/init.d/haddop-hbase-master restart
-/etc/init.d/haddop-hbase-regionserver restart
-/etc/init.d/haddop-hbase-thrift restart
+/etc/init.d/hadoop-hbase-master restart
+/etc/init.d/hadoop-hbase-regionserver restart
+/etc/init.d/hadoop-hbase-thrift restart
 apt-get remove -y $PACKAGES
 
 apt-get install -y $PACKAGES
-/etc/init.d/haddop-hbase-master restart
-/etc/init.d/haddop-hbase-regionserver restart
-/etc/init.d/haddop-hbase-thrift restart
-/etc/init.d/haddop-hbase-master stop
-/etc/init.d/haddop-hbase-regionserver stop
-/etc/init.d/haddop-hbase-thrift stop
+/etc/init.d/hadoop-hbase-master restart
+/etc/init.d/hadoop-hbase-regionserver restart
+/etc/init.d/hadoop-hbase-thrift restart
+/etc/init.d/hadoop-hbase-master stop
+/etc/init.d/hadoop-hbase-regionserver stop
+/etc/init.d/hadoop-hbase-thrift stop
 apt-get remove -y $PACKAGES
 
 echo "Done."

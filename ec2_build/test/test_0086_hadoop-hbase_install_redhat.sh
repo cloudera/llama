@@ -15,24 +15,24 @@ PACKAGES="hadoop-hbase hadoop-hbase-master hadoop-hbase-regionserver hadoop-hbas
 
 yum search $PACKAGES
 yum  -y install $PACKAGES
-/etc/init.d/haddop-hbase-master restart
-/etc/init.d/haddop-hbase-regionserver restart
-/etc/init.d/haddop-hbase-thrift restart
+/etc/init.d/hadoop-hbase-master restart
+/etc/init.d/hadoop-hbase-regionserver restart
+/etc/init.d/hadoop-hbase-thrift restart
 yum  -y remove $PACKAGES
 
 yum  -y install $PACKAGES
-/etc/init.d/haddop-hbase-master stop
-/etc/init.d/haddop-hbase-regionserver stop
-/etc/init.d/haddop-hbase-thrift stop
+/etc/init.d/hadoop-hbase-master stop
+/etc/init.d/hadoop-hbase-regionserver stop
+/etc/init.d/hadoop-hbase-thrift stop
 yum  -y remove $PACKAGES
 
 yum  -y install $PACKAGES
-/etc/init.d/haddop-hbase-master restart
-/etc/init.d/haddop-hbase-regionserver restart
-/etc/init.d/haddop-hbase-thrift restart
-/etc/init.d/haddop-hbase-master stop
-/etc/init.d/haddop-hbase-regionserver stop
-/etc/init.d/haddop-hbase-thrift stop
+/etc/init.d/hadoop-hbase-master restart
+/etc/init.d/hadoop-hbase-regionserver restart
+/etc/init.d/hadoop-hbase-thrift restart
+/etc/init.d/hadoop-hbase-master stop
+/etc/init.d/hadoop-hbase-regionserver stop
+/etc/init.d/hadoop-hbase-thrift stop
 yum  -y remove $PACKAGES
 echo "Done."
 exit 0
