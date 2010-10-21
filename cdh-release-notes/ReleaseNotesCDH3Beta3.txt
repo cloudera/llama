@@ -160,6 +160,11 @@
    Users of the LZO compression libraries must upgrade to 0.4.6 or
    above from http://github.com/toddlipcon/hadoop-lzo
 
+   - Due to a regression bug in CDH3b3 (HDFS-1464) users who run a
+   SecondaryNameNode on a separate machine than the NameNode must configure
+   "dfs.secondary.http.address". Please see:
+   https://groups.google.com/a/cloudera.org/group/cdh-user/browse_thread/thread/e27c2d368ad3668c
+
    == What's up next ==
 
    While we're done adding major new features for CDH3, we expect to
