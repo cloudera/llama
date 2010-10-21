@@ -1,0 +1,177 @@
+      Cloudera's Distribution for Hadoop (CDH) 3 Beta 3 Released
+
+   Cloudera is happy to announce that we have released beta 3 of
+   version 3 of our Distribution for Hadoop (CDH3 beta 3).
+
+   == Core Hadoop, HDFS, and MapReduce ==
+
+   As one of the primary contributors and largest production users of
+   the Apache Hadoop project, Yahoo! publishes the source tree for the
+   version of Hadoop that they run on their production clusters.  We
+   are excited to announce that we have merged Yahoo's source tree
+   into CDH3 beta 3. This merge brings many improvements developed at
+   Yahoo! into CDH, including improvements for MapReduce scalability
+   on 1000+-node clusters and several new tools for benchmarking and
+   testing Hadoop. The largest new feature, though, is the
+   introduction of a strong authentication system based on
+   Kerberos. Kerberos is an industry-standard authentication system
+   supported both by completely open source software like MIT Kerberos
+   as well as by common enterprise authentication systems like
+   Microsoft Active Directory. The integration of Kerberos
+   authentication into CDH enables enterprises to use their existing
+   authentication infrastructure to manage user identities, and allows
+   more sensitive data to be stored and analyzed within a cluster.
+
+   Some new authorization features have also been added to CDH in this
+   release. For example, if the security features are enabled,
+   MapReduce jobs can specify access control lists (ACLs) that specify
+   which users and groups may view job details or prematurely kill the
+   job. Additionally, the tasks of MapReduce jobs may now run as the
+   UNIX user who submitted them, improving the ability to isolate
+   resources and protect confidentiality of intermediate data and
+   logs. In addition to integrating these new features into the core
+   of CDH, we have also updated the rest of the components of CDH to
+   operate in an authenticated environment.
+
+   The work to integrate these new security features across the
+   distribution is still continuing -- we are currently aware of
+   several places in which the current implementation is incomplete
+   and vulnerable to certain exploits, and will fix these exploits
+   before we declare CDH3 stable. We are also hard at work on a
+   comprehensive guide that will detail setup instructions and best
+   practices for operating a secured Hadoop cluster. If you have
+   security requirements at your business, we hope you will find this
+   beta release useful as a preview of what's to come.
+
+   Of course, CDH3 beta 3 also contains several bug fixes and
+   improvements based on our experiences deploying clusters for
+   customers with a wide range of use cases. Please check the
+   component release notes for the full list.
+
+
+   == New Component Versions ==
+
+   Beta 3 updates many components to new upstream version numbers:
+
+   HBase: Updated from 0.89.20100621 to 0.89.20100924. This new
+   release mainly improves stability and performance for demanding
+   workloads.
+
+   Sqoop: Updated from 1.0.0 to 1.1.1. This new release includes
+   numerous improvements and bug fixes, as well as new support for
+   import from SQL queries, incremental import, and external plug-in
+   support for integration with common enterprise systems.
+
+   Oozie: Updated from 1.6.2 to 2.2.1. Oozie now includes new
+   coordinator features, integration with Hadoop Security, job
+   submission support via HTTP, and the crontab-like ability to run
+   workflows at regular scheduled frequencies or when data becomes
+   available in HDFS.
+
+   Hue: Updated from 1.0 to 1.1. Hue now includes support for running
+   against secured Hadoop, as well as a number of new features in the
+   Hue SDK.
+
+   Flume: Updated from 0.9.0 to 0.9.1. This release primarily improves
+   stability and robustness, and also adds some more tools for
+   operators to inspect and debug issues.
+
+
+   == Whirr ==
+
+   We are happy to include Apache Whirr as the newest member of the
+   CDH family. Whirr is a tool for quickly starting and managing
+   clusters running on cloud services like Amazon EC2. Stay tuned for
+   an upcoming post with more information about Whirr.
+
+
+   == Upgrading ==
+
+   Since this update changes the on-disk format for HDFS as well as
+   introduces new unix users and groups, you will need to take some
+   extra steps when upgrading. Please see the CDH documentation for
+   the full instructions on how to upgrade an existing cluster to this
+   release.
+
+   Here are a few things you need to be aware of when upgrading:
+
+   Packaging:
+
+   - When using packages, the daemons now run as "hdfs" or "mapred"
+   rather than the "hadoop" user. Upon install, the packages will
+   rename the "hadoop" user to "hdfs", and add an additional user
+   "mapred". You will have to manually change ownership and/or
+   permissions on certain directories after install - please see the
+   upgrade docs linked above for more information. If you have
+   made system configuration changes (eg bumped ulimit) for these
+   users you must edit those configurations to refer to the new user
+   names.
+
+   - This release changes the wire format for Hadoop's RPC mechanism.
+   Thus, you must upgrade any existing hadoop client software at the
+   same time as you upgrade the server.  
+
+   - The init scripts such as /etc/init.d/hadoop-0.20-namenode are no
+   longer included in the "hadoop-0.20" package. They have been moved
+   to the hadoop-0.20-<daemon type> packages.
+
+   - A new package hadoop-0.20-sbin has been added, which includes the
+   native binaries necessary for running Hadoop in a secured mode.
+
+   - Flume now defaults to storing its writeahead logs in
+   /tmp/flume-<username>/agent instead of /tmp/flume. If you have not
+   configured an alternate path, and are using Flume for critical
+   data, please rename /tmp/flume to /tmp/flume-flume when upgrading
+
+
+   Authentication and Authorization:
+
+   - This release removes the "hadoop.job.ugi" parameter which
+   previously allowed client software to "spoof" its username and
+   groups when connecting to a Hadoop cluster. Please see the "secure
+   impersonation" document in the docs/ directory for information on
+   how to act on behalf of other users in this new release.
+
+   - The UnixUserGroupInformation class has been removed. Please see
+   the new methods in UserGroupInformation, or contact the cdh-user
+   list if you need assistance upgrading applications that previously
+   used this functionality.
+
+   - This release moves group resolution to the server side - the
+   group membership on a client machine is no longer used when
+   performing authorization checks on HDFS. Thus, any users accessing
+   HDFS should have user accounts on the NameNode machine with the
+   appropriate groups configured.
+
+
+   Security:
+
+   - Please be aware that, although the basic security features have
+   been integrated, work on Hadoop security is not yet complete. In
+   particular, there is at least one known exploit which we are
+   currently addressing, and some components where authentication
+   integration has not yet been finished. We do not yet recommend that
+   you deploy Hadoop in a secured mode for production clusters --
+   please consider this release a preview of the security features.
+
+   Other notes:
+
+   - CDH3b3 is incompatible with versions of hadoop-lzo < 0.4.6.
+   Users of the LZO compression libraries must upgrade to 0.4.6 or
+   above from http://github.com/toddlipcon/hadoop-lzo
+
+   == What's up next ==
+
+   While we're done adding major new features for CDH3, we expect to
+   do at least one more beta release before declaring it stable for
+   critical production use. Here's a sneak peak of what's to come:
+
+   - New upstream versions of some components, including Hive 0.6.0,
+   Pig 0.8.0, and HBase 0.90.
+
+   - Further integration of security features, including improved
+   authentication support for Hive, ACLs for Fair Scheduler Pools,
+   SPNEGO support for Oozie, and easier deployment.
+
+   - Further bug fixes based on our experiences deploying beta 3 in QA
+   and in the field.
