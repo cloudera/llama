@@ -53,8 +53,9 @@ def make_cdh(product_names, version='2'):
     raise ErrorEncountered("Crepo failed to sync repositories")
 
   display_message("Make CDH" + version)
-  p = subprocess.Popen(['make', 'CDH=cdh'+version] + products, cwd='../../')
-  return p.wait()
+  for product in products:
+    p = subprocess.Popen(['make', 'CDH=cdh'+version] + product, cwd='../../')
+    p.wait()
 
 
 def build_cdh(product_names, key_name, version='2', build_name_base = ''):
@@ -281,8 +282,7 @@ def main():
 
   build_names = []
   for version in ['3']:
-    if make_cdh(product_names, version) != 0:
-      raise ErrorEncountered("Couldn't build product")
+    make_cdh(product_names, version)
 
     build_names.append((version, build_cdh(product_names, options.key_name, version, options.build)))
     freeze_cdh(version, options.build)
