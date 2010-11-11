@@ -16,6 +16,8 @@ export AWS_SECRET_ACCESS_KEY
 export OOZIE_SKIP_TEST_EXEC=true
 export ARCH=$(uname -i)
 
+export LOG_FILE=/var/log/user.log
+
 cat > $HOME/.s3cfg << EOF
 [default]
 access_key = $AWS_ACCESS_KEY_ID
@@ -47,7 +49,7 @@ verbosity = WARNING
 EOF
 
 function copy_logs_s3 {
-      s3cmd put /var/log/user.txt s3://$S3_BUCKET/build/$BUILD_ID/${CODENAME}-${ARCH}-user.log 
+      s3cmd put $LOG_FILE s3://$S3_BUCKET/build/$BUILD_ID/${CODENAME}-${ARCH}-user.log
 }
 
 function send_email {
@@ -136,7 +138,7 @@ for PACKAGE in $PACKAGES; do
   rm -rf /tmp/$BUILD_ID
 
 done
-} 2>&1 | tee /var/log/user.log
+} 2>&1 | tee $LOG_FILE
 
 # Untrap, we're shutting down directly from here so the exit trap probably won't
 # have time to do anything
