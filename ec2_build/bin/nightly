@@ -54,7 +54,7 @@ def make_cdh(product_names, version='2'):
 
   display_message("Make CDH" + version)
   for product in products:
-    p = subprocess.Popen(['make', 'CDH=cdh'+version] + product, cwd='../../')
+    p = subprocess.Popen(['make', 'CDH=cdh'+version, product], cwd='../../')
     p.wait()
 
 
