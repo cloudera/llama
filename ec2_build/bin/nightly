@@ -6,7 +6,6 @@ import boto
 import datetime
 import getpass
 import logging
-import os, re
 import subprocess
 import sys
 import time
@@ -21,7 +20,10 @@ from cloudera.utils import display_message, verbose_print
 from cloudera.constants import RepositoryType
 
 
+TIMEOUT = 240
+FREEZER_SCRIPT = './freezer'
 class ErrorEncountered(Exception):
+  ''' A null exception wrapper '''
   pass
 
 
@@ -30,7 +32,8 @@ def get_build_name():
   Generate a build name with a timestamp
   @return Generated build name
   '''
-  return 'nightly_' + datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + '_'
+  build_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") 
+  return 'nightly_%s_' % (build_time, )
 
 
 def make_cdh(product_names, version='2'):
@@ -48,7 +51,9 @@ def make_cdh(product_names, version='2'):
       products.append(product_name + suffix)
 
   display_message("Crepo sync CDH" + version)
-  crepo_returncode = subprocess.Popen(['crepo', '-m', '../../cdh' + version + '.json', 'sync']).wait()
+  crepo_sync_cmd = ['crepo', '-m', '../../cdh' + version + '.json', 'sync']
+  crepo_returncode = subprocess.Popen(crepo_sync_cmd).wait()
+
   if crepo_returncode != 0:
     raise ErrorEncountered("Crepo failed to sync repositories")
 
@@ -58,7 +63,11 @@ def make_cdh(product_names, version='2'):
     p.wait()
 
 
-def build_cdh(product_names, key_name, version='2', build_name_base = ''):
+def build_cdh(product_names,
+		build_bucket,
+		key_name,
+		version='2',
+		build_name_base = ''):
   '''
   Call ec2build to build our products for various platforms
   @param product_names Product names to be built
@@ -72,7 +81,14 @@ def build_cdh(product_names, key_name, version='2', build_name_base = ''):
   products = ['-p', 'hadoop20']
   for product_name in product_names:
     products = products + ['-p', product_name]
-  command = ['./ec2_build', '-w', '-k', key_name, '--tag', 'cdh'+version, '--build_id', buildname]
+  command = ['./ec2_build',
+       '-w',
+       '-k', key_name,
+       '-b', build_bucket,
+       '--tag', 'cdh'+version,
+       '--timeout', TIMEOUT,
+       '--build_id', buildname]
+
   p = subprocess.Popen(command + products)
   p.wait()
   if p.returncode != 0:
@@ -80,7 +96,10 @@ def build_cdh(product_names, key_name, version='2', build_name_base = ''):
 
   return buildname
 
-def freeze_cdh(version='2', build_name_base = ''):
+def freeze_cdh(build_bucket,
+		cloudera_freezer,
+		version='2',
+		build_name_base = ''):
   '''
   Freeze cdh build
   @param version CDH version to build for
@@ -88,7 +107,10 @@ def freeze_cdh(version='2', build_name_base = ''):
   @return build name
   '''
   buildname = build_name_base + version
-  p = subprocess.Popen(['./freezer', buildname, buildname])
+  p = subprocess.Popen([FREEZER_SCRIPT, buildname, buildname,
+		  '-b' , build_bucket,
+		  '-f' , cloudera_freezer])
+
   freezer_returncode = p.wait()
 
   if freezer_returncode != 0:
@@ -97,15 +119,34 @@ def freeze_cdh(version='2', build_name_base = ''):
   return buildname
 
 
-def get_free_eip(eipManager):
+def freeze_hue(cloudera_freezer, version='3', build_name_base = ''):
+  '''
+  Freeze hue build Which is currently superate
+  @param version CDH version to build for
+  @param build_name_base Build name base
+  @return build name
+  '''
+  buildname = build_name_base + version
+  hue_bucket = 'hue-build'
+  freezer_cmd = [FREEZER_SCRIPT, '-b', hue_bucket, '-f', cloudera_freezer]
+  p = subprocess.Popen(freezer_cmd + [buildname, buildname])
+  freezer_returncode = p.wait()
+
+  if freezer_returncode != 0:
+    sys.stderr.write("ERROR: Could not freeze hue\n")
+
+  return buildname
+
+
+def get_free_eip(eip_manager):
   '''
   Get a free Elastic IP
   '''
 
-  return eipManager.get_first_available_ip()
+  return eip_manager.get_first_available_ip()
 
 
-def boot_ami(archiveManager, options):
+def boot_ami(archive_manager, options):
   '''
   Boot a new AMI
 
@@ -114,19 +155,28 @@ def boot_ami(archiveManager, options):
 
   display_message("Boot AMI")
 
-  instance = archiveManager.kickOff(options.snapshot, options.security_group_name, options.security_group_desc, options.key_name, options.ami)
+  instance = archive_manager.kickOff(options.snapshot,
+		  options.security_group_name,
+		  options.security_group_desc,
+		  options.key_name,
+		  options.ami)
 
   if not instance:
     raise ErrorEncountered("Couldn't boot ami")
 
   hostname = instance.public_dns_name
   if not hostname:
-    raise ErrorEncountered("Couldn't grab the hostname of the newly started instance")
+    raise ErrorEncountered("Unknown hostname for newly started instance")
 
   return instance, hostname
 
 
-def update_archive(build, key_file, hostname, passphrase_apt, passphrase_yum, cdh_version):
+def update_archive(build,
+		key_file,
+		hostname,
+		passphrase_apt,
+		passphrase_yum,
+		cdh_version):
   '''
   Update an archive
 
@@ -137,8 +187,8 @@ def update_archive(build, key_file, hostname, passphrase_apt, passphrase_yum, cd
   '''
 
   display_message("Update newly started instance")
-  logHandler = logging.StreamHandler()
-  logging.getLogger("paramiko.transport").addHandler(logHandler)
+  log_handler = logging.StreamHandler()
+  logging.getLogger("paramiko.transport").addHandler(log_handler)
 
   archive = cloudera.staging.Archive.Archive()
 
@@ -174,6 +224,7 @@ def update_archive(build, key_file, hostname, passphrase_apt, passphrase_yum, cd
 
 
 def main():
+  ''' Main loop '''
   usage = "usage: %prog  [options] <snap_id> a lot"
   op = OptionParser(usage=usage)
   op.add_option('-d', '--dry-run',
@@ -181,13 +232,13 @@ def main():
               default=False,
               help="Dont do anything just pretend")
 
-  op.add_option('-c','--cdh-version',
+  op.add_option('-c', '--cdh-version',
             help="CDH version")
 
-  op.add_option('-k','--key-file',
+  op.add_option('-k', '--key-file',
             help="The key file authorized")
 
-  op.add_option('-n','--key-name',
+  op.add_option('-n', '--key-name',
             help="The keyname authorized")
 
   op.add_option('--passphrase-apt',
@@ -196,8 +247,16 @@ def main():
   op.add_option('--passphrase-yum',
             help="Passphrase used for YUM packages")
 
+  op.add_option('--build-bucket',
+            default='ec2-build',
+            help="Where we should drop the build")
+
+  op.add_option('--freezer-bucket',
+            default='cloudera-freezer',
+            help="An alternative Cloudera, inc. freezer bucket")
+
   default_build_name = get_build_name()
-  op.add_option('-b','--build',
+  op.add_option('-b', '--build',
             default=default_build_name,
             help="The build to deploy")
 
@@ -205,17 +264,19 @@ def main():
             help="Snapshot to base staging from")
 
   default_sec_group_desc = 'Open HTTP for Cloudera and SSH for everyone'
-  op.add_option('-i','--security-group-desc',
+  op.add_option('-i', '--security-group-desc',
      default=default_sec_group_desc,
      help="Override the default security group Description")
 
-  default_sec_group_name = 'Build-Artifact-%s' % time.strftime('%Y%m%d_%H%M%S',time.gmtime())
-  op.add_option('-g','--security-group-name',
-    default=default_sec_group_name,
-   help="Override the default security group name")
+  build_time = time.strftime('%Y%m%d_%H%M%S', time.gmtime())
+  default_sec_group_name = 'Build-Artifact-%s' % (build_time, )
+  op.add_option('-g',
+		  '--security-group-name',
+		  default=default_sec_group_name,
+		  help="Override the default security group name")
 
   ami = cloudera.staging.ArchiveManager.ArchiveManager.DEFAULT_AMI
-  op.add_option('-a','--ami', default=ami,
+  op.add_option('-a', '--ami', default=ami,
     help="The alternative ami to boot: %s"  % ami)
 
   default_product_names = []
@@ -223,11 +284,6 @@ def main():
     default=default_product_names,
     action='append',
     help="Products to be built (ex: pig, hive, oozie, hbase)")
-
-  default_s3_bucket = 'cloudera-freezer'
-  op.add_option('-s','--s3-bucket',
-    default=default_s3_bucket,
-    help="S3 bucket where the build is located")
 
   op.add_option('--gpg-sign',
       action="store_true",
@@ -239,9 +295,7 @@ def main():
       default=False,
       help="Promote instance as official archive")
 
-
   (options, args) = op.parse_args()
-
 
   if not options.cdh_version:
     op.error('--cdh-version option is mandatory')
@@ -260,7 +314,8 @@ def main():
 
   product_names = options.product_names
 
-  #XXX reprepo seems to insist on signing packages. Haven't found a work around yet
+  # XXX reprepo seems to insist on signing packages. 
+  # Haven't found a work around yet
   if not options.gpg_sign:
     op.error('Staging without signing packages is not supported yet. Please add the option --gpg-sign')
 
@@ -269,35 +324,52 @@ def main():
   passphrase_yum = options.passphrase_yum
 
   if options.gpg_sign:
+    prompt = "Please, enter gpg passphrase for %s repository: "
     if not passphrase_apt:
-      passphrase_apt = getpass.getpass("Please, enter gpg passphrase for Apt repository: ")
+      passphrase_apt = getpass.getpass(prompt % ("Apt",))
+
     if not passphrase_yum:
-      passphrase_yum = getpass.getpass("Please, enter gpg passphrase for Yum repository: ")
+      passphrase_apt = getpass.getpass(prompt % ("Yum",))
 
   ec2_connection  = boto.connect_ec2()
 
-  eipManager = cloudera.staging.ElasticIpManager.ElasticIpManager()
-  stageManager = cloudera.staging.StageManager.StageManager()
-  archiveManager = cloudera.staging.ArchiveManager.ArchiveManager(ec2_connection)
+  eip_manager = cloudera.staging.ElasticIpManager.ElasticIpManager()
+  stage_manager = cloudera.staging.StageManager.StageManager()
+  archive_manager = cloudera.staging.ArchiveManager.ArchiveManager(ec2_connection)
+
 
   build_names = []
   for version in ['3']:
     make_cdh(product_names, version)
 
-    build_names.append((version, build_cdh(product_names, options.key_name, version, options.build)))
-    freeze_cdh(version, options.build)
+    build_cdh_prompt = build_cdh(product_names,
+		    options.build_bucket,
+		    options.key_name,
+		    version,
+		    options.build)
 
-  eip = get_free_eip(eipManager)
+    build_names.append((version, build_cdh_prompt))
+    freeze_cdh(options.build_bucket,
+		    options.freezer_bucket,
+		    version,
+		    options.build)
+    if version == 3:
+      freeze_hue(options.freezer_bucket, 3, options.build)
+
+  eip = get_free_eip(eip_manager)
+
 
   if not eip:
     raise ErrorEncountered("No Elastic IP available")
   display_message("Free IP address found: %s"%(eip.public_ip))
 
   # Boot an instance
-  instance, hostname =  boot_ami(archiveManager, options)
+  instance, hostname =  boot_ami(archive_manager, options)
+
 
   display_message("Updating records about instance id and elastic ip address")
-  stageManager.add_instance(instance_id=instance.id, user=getpass.getuser(), security_group=options.security_group_name)
+  stage_manager.add_instance(instance_id=instance.id, user=getpass.getuser(), security_group=options.security_group_name)
+
 
   display_message("Associating IP with instance: %s -> %s" % (eip.public_ip, instance.id))
   ec2_connection.associate_address(instance.id, eip.public_ip)
@@ -305,13 +377,20 @@ def main():
   verbose_print("Waiting for the address to be effectively associated...")
   cloudera.aws.ec2.wait_for_eip_association_ready()
   for (version, build_name) in build_names:
-    update_archive(build_name, options.key_file, eip.public_ip, passphrase_apt, passphrase_yum, options.cdh_version)
+    update_archive(build_name,
+		    options.key_file,
+		    eip.public_ip,
+		    passphrase_apt,
+		    passphrase_yum,
+		    options.cdh_version)
 
   if options.promote:
     # Make this archive become the official one
-    old_nightly = archiveManager.promote_nightly(instance, eip.public_ip)
+    old_nightly = archive_manager.promote_nightly(instance, eip.public_ip)
+
     if old_nightly:
       old_nightly_instance = cloudera.aws.ec2.instance_for_instance_id(ec2_connection, old_nightly)
-      archiveManager.tear_down_archive(old_nightly_instance)
+      archive_manager.tear_down_archive(old_nightly_instance)
+
 
 main()
