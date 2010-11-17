@@ -20,7 +20,7 @@ from cloudera.utils import display_message, verbose_print
 from cloudera.constants import RepositoryType
 
 
-TIMEOUT = 240
+TIMEOUT = '240'
 FREEZER_SCRIPT = './freezer'
 class ErrorEncountered(Exception):
   ''' A null exception wrapper '''
