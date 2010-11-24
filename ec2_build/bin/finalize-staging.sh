@@ -46,6 +46,8 @@ for ARCHIVE in $ARCHIVES; do
   ARCHIVE_NAME=`echo "$ARCHIVE" | sed -e 's/.tar.gz//'`
   ARCHIVE_NAME=`echo "$ARCHIVE_NAME" | sed -e 's/.*\///'`
 
+  PACKAGE_NAME=`echo "$ARCHIVE_NAME" | sed -e 's/-.*//'`
+
   # Copy archive file
   cp $ARCHIVE $DESTINATION_DIR/
 
@@ -64,6 +66,15 @@ for ARCHIVE in $ARCHIVES; do
 
   # Copy docs directory
   cp -r $BASE_DIR/$ARCHIVE_NAME/docs/*  $DESTINATION_DIR/$ARCHIVE_NAME/
+
+  # Remove general symlink to the project doc
+  rm $DESTINATION_DIR/$PACKAGE_NAME
+
+  # Create a new symlink to the new documentation
+  pushd $DESTINATION_DIR
+    ln -s $ARCHIVE_NAME $PACKAGE_NAME
+  popd
+
 done
 
 echo done
