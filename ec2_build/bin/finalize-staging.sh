@@ -68,7 +68,7 @@ for ARCHIVE in $ARCHIVES; do
   cp -r $BASE_DIR/$ARCHIVE_NAME/docs/*  $DESTINATION_DIR/$ARCHIVE_NAME/
 
   # Remove general symlink to the project doc
-  rm $DESTINATION_DIR/$PACKAGE_NAME
+  rm -f $DESTINATION_DIR/$PACKAGE_NAME
 
   # Create a new symlink to the new documentation
   pushd $DESTINATION_DIR

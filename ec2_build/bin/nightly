@@ -10,13 +10,14 @@ import subprocess
 import sys
 import time
 from optparse import OptionParser
+from sets import Set
 
 import cloudera.aws.ec2
 import cloudera.staging.ElasticIpManager
 import cloudera.staging.StageManager
 import cloudera.staging.Archive
 import cloudera.staging.ArchiveManager
-from cloudera.utils import display_message, verbose_print
+from cloudera.utils import display_message, verbose_print, make_target_to_product_name
 from cloudera.constants import RepositoryType
 
 
@@ -57,11 +58,20 @@ def make_cdh(product_names, version='2'):
   if crepo_returncode != 0:
     raise ErrorEncountered("Crepo failed to sync repositories")
 
+  failed_products = Set()
   display_message("Make CDH" + version)
   for product in products:
     p = subprocess.Popen(['make', 'CDH=cdh'+version, product], cwd='../../')
     p.wait()
 
+    if p.returncode != 0:
+      # product is a Makefile target such as zookeeper-srpm, so we need to
+      # extract the real product name
+      original_product_name = make_target_to_product_name(product)
+      failed_products.add(original_product_name)
+
+  # Returns a list of failed products
+  return [product for products in failed_products]
 
 def build_cdh(product_names,
 		build_bucket,
@@ -81,6 +91,7 @@ def build_cdh(product_names,
   products = ['-p', 'hadoop20']
   for product_name in product_names:
     products = products + ['-p', product_name]
+
   command = ['./ec2_build',
        '-w',
        '-k', key_name,
@@ -340,7 +351,11 @@ def main():
 
   build_names = []
   for version in ['3']:
-    make_cdh(product_names, version)
+    failed_products = make_cdh(product_names, version)
+
+    # failed_products will contain all the targets for a given products, including the product name
+    # For example flume as well as flume-srpm and flume-sdeb
+    product_names = [product_name for product_name in product_names if not product_name in failed_products]
 
     build_cdh_prompt = build_cdh(product_names,
 		    options.build_bucket,
@@ -392,5 +407,7 @@ def main():
       old_nightly_instance = cloudera.aws.ec2.instance_for_instance_id(ec2_connection, old_nightly)
       archive_manager.tear_down_archive(old_nightly_instance)
 
+  if failed_products:
+    display_message("The following products failed to build: %s" % (str(failed_products)))
 
 main()

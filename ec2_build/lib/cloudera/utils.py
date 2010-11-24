@@ -2,6 +2,7 @@
 import fnmatch
 import os
 import platform
+import re
 import subprocess
 import sys
 
@@ -275,3 +276,17 @@ class SSH:
     self.log("Return code is %s for %s"%(str(p.returncode), self.host))
     return p.returncode
 
+
+def make_target_to_product_name(target):
+  '''
+  Take one target from our Makefile and returns its product name.
+  Example: flume-srpm -> flume
+
+  @param target Target to parse (ex: hadoop20-relnotes)
+  @return The product it belongs to (ex: hadoop20)
+  '''
+
+  TARGET_TO_PRODUCT_NAME_REGEXP='\-s?((rpm)|(deb)|(relnotes))'
+  original_product_name = re.sub(TARGET_TO_PRODUCT_NAME_REGEXP, '', target)
+
+  return original_product_name
