@@ -96,7 +96,10 @@ $(BUILD_DIR)/%/.deb:
 	cd $($(PKG)_OUTPUT_DIR) && \
 		dpkg-source -x $(SRCDEB) && \
 		cd $($(PKG)_PKG_NAME)-$(PKG_FULL_VERSION) && \
-			debuild -uc -us -b 
+			debuild \
+				--preserve-envvar PATH --preserve-envvar JAVA32_HOME --preserve-envvar JAVA64_HOME \
+				--preserve-envvar JAVA5_HOME --preserve-envvar FORREST_HOME --preserve-envvar MAVEN3_HOME \
+				-uc -us -b
 
 # Package make function
 # $1 is the target prefix, $2 is the variable prefix
