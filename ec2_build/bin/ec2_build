@@ -396,12 +396,12 @@ def main():
     print "Interrupting cleaning up old instances"
     for instance in instances:
       print "Stopping instance: %s " % instance
-      instance.stop()
+      instance.terminate()
   except TimeoutException:
     print "Interrupting cleaning up old instances"
     for instance in instances:
       print "Stopping instance: %s " % instance
-      instance.stop()
+      instance.terminate()
 
 if __name__ == "__main__":
   main()

@@ -345,7 +345,7 @@ def main():
     # In any case we want to shutdown all instances
     for instance in instances:
       logger.info("Stopping instance: %s " % instance)
-      instance.stop()
+      instance.terminate()
 
 main()
 
