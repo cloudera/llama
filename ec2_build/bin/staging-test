@@ -162,7 +162,9 @@ class TestRepo(Thread):
 
     scripts = self.get_scripts()
     self.scripts = scripts
-    ssh = cloudera.utils.SSH(self.user, self.hostname, self.key_file, self.SSH_OPTIONS)
+    options = list(self.SSH_OPTIONS)
+    options.append('-ttt')
+    ssh = cloudera.utils.SSH(self.user, self.hostname, self.key_file, options)
     ssh.set_logger(self.logger)
 
     for script_name in scripts:
