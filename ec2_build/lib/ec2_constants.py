@@ -33,8 +33,6 @@ DEFAULT_BUILD_MACHINES = [
   ('deb', 'lucid', 'amd64'),
   ('deb', 'karmic', 'x86'),
   ('deb', 'karmic', 'amd64'),
-  ('deb', 'jaunty', 'x86'),
-  ('deb', 'jaunty', 'amd64'),
   ('deb', 'hardy',    'x86'),
   ('deb', 'hardy',    'amd64'),
   ('deb', 'lenny',    'x86'),
