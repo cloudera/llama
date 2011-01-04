@@ -13,7 +13,7 @@
                       "remotes": ["origin", "common"],
                       "remote-project-name": "hadoop" },
 
-     "pig": {"track-branch": "cdh-0.7.0", "dir": "repos/cdh3/pig", "remotes": ["origin", "apache"]},
+     "pig": {"track-branch": "cdh-0.8.0", "dir": "repos/cdh3/pig", "remotes": ["origin", "apache"]},
      "hive": {"track-branch": "cdh-0.6.0", "dir": "repos/cdh3/hive", "remotes": ["origin", "apache"]},
      "flume": {"track-branch": "cdh-0.9.2", "dir": "repos/cdh3/flume", "remotes": ["origin"]},
      "hbase": {"track-branch": "cdh-0.89.20100924", "dir": "repos/cdh3/hbase", "remotes": ["origin","apache"]},
