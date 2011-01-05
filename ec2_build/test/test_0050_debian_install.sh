@@ -85,7 +85,8 @@ echo deb http://${CDH_REPO_HOST}/debian $(lsb_release -c -s)-cdh${CDH_REPO_VERSI
 apt-get update
 
 apt-cache search hadoop
-apt-get install -y hadoop hadoop-0.20-conf-pseudo hadoop-0.20-datanode hadoop-0.20-doc hadoop-0.20-jobtracker hadoop-0.20-namenode hadoop-0.20-native hadoop-0.20-pipes hadoop-0.20-secondarynamenode hadoop-0.20-tasktracker
+apt-get install -y hadoop hadoop-0.20-conf-pseudo hadoop-0.20-datanode hadoop-0.20-doc hadoop-0.20-jobtracker hadoop-0.20-namenode hadoop-0.20-native hadoop-0.20-pipes hadoop-0.20-secondarynamenode hadoop-0.20-tasktracker hadoop-0.20-source hadoop-0.20-debuginfo hadoop-0.20-sbin
+
 
 echo "Done."
 exit 0

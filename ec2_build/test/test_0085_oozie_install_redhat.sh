@@ -11,7 +11,7 @@ if [ ! -e "/etc/redhat-release" ]; then
   exit 0
 fi
 
-PACKAGES="oozie"
+PACKAGES="oozie oozie-client"
 
 yum search $PACKAGES
 yum  -y install $PACKAGES

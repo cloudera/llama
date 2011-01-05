@@ -19,7 +19,7 @@ gpgcheck = 0" > /etc/yum.repos.d/cloudera-cdh${CDH_REPO_VERSION}.repo
 
 
 yum search hadoop
-yum  -y install  hadoop-0.20.noarch hadoop-0.20-conf-pseudo.noarch hadoop-0.20-datanode.noarch hadoop-0.20-docs.noarch hadoop-0.20-jobtracker.noarch hadoop-0.20-libhdfs hadoop-0.20-namenode.noarch hadoop-0.20-native hadoop-0.20-pipes hadoop-0.20-secondarynamenode.noarch hadoop-0.20-tasktracker.noarch
+yum  -y install  hadoop-0.20.noarch hadoop-0.20-conf-pseudo.noarch hadoop-0.20-datanode.noarch hadoop-0.20-docs.noarch hadoop-0.20-jobtracker.noarch hadoop-0.20-libhdfs hadoop-0.20-namenode.noarch hadoop-0.20-native hadoop-0.20-pipes hadoop-0.20-secondarynamenode.noarch hadoop-0.20-tasktracker.noarch hadoop-0.20-source hadoop-0.20-debuginfo hadoop-0.20-sbin
 
 echo "Done."
 exit 0

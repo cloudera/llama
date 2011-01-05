@@ -17,10 +17,10 @@ if [ ! -e "/etc/debian_version" ]; then
   exit 0
 fi
 
-apt-cache search sqoop
-apt-get install -y sqoop
+apt-cache search sqoop sqoop-metastore
+apt-get install -y sqoop sqoop-metastore
 sqoop-version
-apt-get remove -y sqoop
+apt-get remove -y sqoop sqoop-metastore
 
 echo "Done."
 exit 0

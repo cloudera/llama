@@ -17,7 +17,7 @@ if [ ! -e "/etc/debian_version" ]; then
   exit 0
 fi
 
-PACKAGES="oozie"
+PACKAGES="oozie oozie-client"
 
 apt-cache search $PACKAGES
 apt-get install -y $PACKAGES

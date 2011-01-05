@@ -12,9 +12,9 @@ if [ ! -e "/etc/redhat-release" ]; then
 fi
 
 yum search sqoop
-yum  -y install sqoop
+yum  -y install sqoop sqoop-metastore
 sqoop-version
-yum  -y remove sqoop
+yum  -y remove sqoop sqoop-metastore
 
 echo "Done."
 exit 0
