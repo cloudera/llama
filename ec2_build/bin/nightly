@@ -45,10 +45,10 @@ def make_cdh(product_names, version='2'):
   @return Return code
   '''
   # We always build hadoop
-  products = ['hadoop20', 'hadoop20-deb', 'hadoop20-srpm', 'hadoop20-relnotes']
+  products = ['hadoop20', 'hadoop20-sdeb', 'hadoop20-srpm', 'hadoop20-relnotes']
   for product_name in product_names:
     products.append(product_name)
-    for suffix in ['-deb', '-srpm']:
+    for suffix in ['-sdeb', '-srpm']:
       products.append(product_name + suffix)
 
   display_message("Crepo sync CDH" + version)
