@@ -253,7 +253,7 @@ class Archive:
     print line
 
 
-  def update_deb_repo(self, build, cdh_release):
+  def update_deb_repo(self, build, cdh_release, freezer_bucket):
     """
     Start script to update debian repository
 
@@ -264,7 +264,7 @@ class Archive:
     self.execute(' sudo rm -rf ' + Archive.BASE_DIR + '/' + build, True)
 
     display_message("Update deb repository")
-    self.execute(' sudo -E -u www-data ' + Archive.BASE_DIR + '/apt/update_repo.sh -s cloudera-freezer -b ' + build + ' -c cdh' + cdh_release + ' -r /var/www/archive_public/debian/', True)
+    self.execute(' sudo -E -u www-data ' + Archive.BASE_DIR + '/apt/update_repo.sh -s ' + freezer_bucket + ' -b ' + build + ' -c cdh' + cdh_release + ' -r /var/www/archive_public/debian/', True)
 
 
   def update_yum_repo(self, build, cdh_version):

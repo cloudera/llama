@@ -54,7 +54,7 @@ def boot_ami(archiveManager, options):
   return instance, hostname
 
 
-def update_archive(build, key_file, hostname, passphrase_apt, passphrase_yum, cdh_release):
+def update_archive(build, key_file, hostname, passphrase_apt, passphrase_yum, cdh_release, freezer_bucket):
   '''
   Update an archive
 
@@ -85,7 +85,7 @@ def update_archive(build, key_file, hostname, passphrase_apt, passphrase_yum, cd
     archive.set_gpg_passphrase(apt_fingerprint, passphrase_apt)
 
   # Update Apt repos
-  archive.update_deb_repo(build, cdh_release)
+  archive.update_deb_repo(build, cdh_release, freezer_bucket)
 
   # Set up gpg-agent for Yum repos
   if passphrase_yum:
@@ -211,7 +211,7 @@ def main():
 
   verbose_print("Waiting for the address to be effectively associated...")
   cloudera.aws.ec2.wait_for_eip_association_ready()
-  update_archive(options.build, options.key_file, eip.public_ip, passphrase_apt, passphrase_yum, options.cdh_release)
+  update_archive(options.build, options.key_file, eip.public_ip, passphrase_apt, passphrase_yum, options.cdh_release, options.s3_bucket)
 
   if options.promote:
     # Make this archive become the official one

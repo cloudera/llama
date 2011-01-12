@@ -187,7 +187,8 @@ def update_archive(build,
 		hostname,
 		passphrase_apt,
 		passphrase_yum,
-		cdh_version):
+		cdh_version,
+		freezer_bucket):
   '''
   Update an archive
 
@@ -217,7 +218,7 @@ def update_archive(build,
     archive.set_gpg_passphrase(apt_fingerprint, passphrase_apt)
 
   # Update Apt repos
-  archive.update_deb_repo(build, cdh_version)
+  archive.update_deb_repo(build, cdh_version, freezer_bucket)
 
   # Set up gpg-agent for Yum repos
   if passphrase_yum:
@@ -397,7 +398,8 @@ def main():
 		    eip.public_ip,
 		    passphrase_apt,
 		    passphrase_yum,
-		    options.cdh_version)
+		    options.cdh_version,
+		    options.freezer_bucket)
 
   if options.promote:
     # Make this archive become the official one

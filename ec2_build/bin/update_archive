@@ -17,6 +17,9 @@ def main():
               default=False,
               help="Dont do anything just pretend")
 
+  op.add_option('-c','--cdh-release',
+            help="CDH release (ex: cdh2)")
+
   op.add_option('-k','--key-file',
             help="The keyname authorized")
 
@@ -40,6 +43,9 @@ def main():
 
   if not options.build:
     op.error('build option is mandatory')
+
+  if not options.cdh_release:
+    op.error('cdh-release option is mandatory')
 
   if not options.key_file:
     op.error('key file option is mandatory')
@@ -70,8 +76,8 @@ def main():
     archive.set_gpg_passphrase(passphrase)
 
   # Update repos
-  archive.update_deb_repo(options.build)
-  archive.update_yum_repo(options.build)
+  archive.update_deb_repo(options.build, options.cdh_release, options.s3_bucket)
+  archive.update_yum_repo(options.build, options.cdh_release)
 
 
 main()
