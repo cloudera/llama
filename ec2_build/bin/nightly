@@ -37,11 +37,12 @@ def get_build_name():
   return 'nightly_%s_' % (build_time, )
 
 
-def make_cdh(product_names, version='2'):
+def make_cdh(product_names, version='2', maven_deploy_flag="deploy"):
   '''
   Call make for the given products
   @param product_names Array of product names such as pig or hive
   @param version CDH version to build for
+  @param Maven deploy flag - either "deploy" or "".
   @return Return code
   '''
   # We always build hadoop
@@ -61,7 +62,7 @@ def make_cdh(product_names, version='2'):
   failed_products = Set()
   display_message("Make CDH" + version)
   for product in products:
-    p = subprocess.Popen(['make', 'CDH=cdh'+version, product], cwd='../../')
+    p = subprocess.Popen(['make', 'CDH=cdh'+version, 'DO_MAVEN_DEPLOY='+maven_deploy_flag, product], cwd='../../')
     p.wait()
 
     if p.returncode != 0:
@@ -307,6 +308,11 @@ def main():
       default=False,
       help="Promote instance as official archive")
 
+  op.add_option('--no-maven-deploy',
+      action="store_true",
+      default=False,
+      help="Skip deploy of Maven artifacts to repository.cloudera.com")
+
   (options, args) = op.parse_args()
 
   if not options.cdh_version:
@@ -343,6 +349,11 @@ def main():
     if not passphrase_yum:
       passphrase_apt = getpass.getpass(prompt % ("Yum",))
 
+  # If --no-maven-deploy was given, set maven_deploy_flag to "" - otherwise, set it to "deploy".
+  maven_deploy_flag = "deploy"
+  if options.no_maven_deploy:
+    maven_deploy_flag = ""
+
   ec2_connection  = boto.connect_ec2()
 
   eip_manager = cloudera.staging.ElasticIpManager.ElasticIpManager()
@@ -352,7 +363,7 @@ def main():
 
   build_names = []
   for version in ['3']:
-    failed_products = make_cdh(product_names, version)
+    failed_products = make_cdh(product_names, version, maven_deploy_flag)
 
     # failed_products will contain all the targets for a given products, including the product name
     # For example flume as well as flume-srpm and flume-sdeb
