@@ -1,0 +1,13 @@
+{
+  "default-remote": "origin",
+  
+  "remotes":
+    {"origin": { "fetch": "ssh://git@git.sf.cloudera.com/%(name)s.git" },
+     "github": { "fetch": "ssh://git@github.sf.cloudera.com/philipl/%(name)s.git" }},
+ 
+  "projects":
+  {
+     "cmf": {"track-branch": "cdh-0.1", "dir": "repos/cmf/cmf"},
+     "cmf-package": { "track-branch": "master", "dir": "repos/cmf/cmf-package", "remotes": ["github"]}
+  }
+}
