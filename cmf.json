@@ -3,7 +3,7 @@
   
   "remotes":
     {"origin": { "fetch": "ssh://git@git.sf.cloudera.com/%(name)s.git" },
-     "github": { "fetch": "git://github.sf.cloudera.com/philipl/%(name)s.git" }},
+     "github": { "fetch": "git://github.sf.cloudera.com/Starship/%(name)s.git" }},
  
   "projects":
   {
