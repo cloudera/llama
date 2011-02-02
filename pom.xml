@@ -51,7 +51,7 @@ TODO: need license header
     <cdh.hive.version>0.6.0-CDH3B4-SNAPSHOT</cdh.hive.version>
     <cdh.oozie.version>2.3.0-CDH3B4-SNAPSHOT</cdh.oozie.version>
     <cdh.whirr.version>0.3.0-CDH3B4-SNAPSHOT</cdh.whirr.version>
-    <cdh.flume.version>0.9.2-CDH3B4-SNAPSHOT</cdh.flume.version>
+    <cdh.flume.version>0.9.3-CDH3B4-SNAPSHOT</cdh.flume.version>
     
   </properties>
   
