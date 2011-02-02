@@ -122,12 +122,12 @@ sqoop-relnotes: sqoop
 # Whirr
 WHIRR_NAME=whirr
 WHIRR_PKG_NAME=whirr
-WHIRR_BASE_VERSION=0.1.0
+WHIRR_BASE_VERSION=0.3.0
 WHIRR_TARBALL_DST=whirr-$(WHIRR_BASE_VERSION)-incubating-src.tar.gz
 WHIRR_TARBALL_SRC=$(WHIRR_TARBALL_DST)
 WHIRR_GIT_REPO=$(BASE_DIR)/repos/cdh3/whirr
 WHIRR_BASE_REF=cdh-base-$(WHIRR_BASE_VERSION)
 WHIRR_BUILD_REF=cdh-$(WHIRR_BASE_VERSION)
 WHIRR_PACKAGE_GIT_REPO=$(BASE_DIR)/repos/cdh3/whirr-package
-WHIRR_SITE=$(APACHE_MIRROR)/incubator/whirr
+WHIRR_SITE=$(APACHE_MIRROR)/incubator/whirr/whirr-$(WHIRR_BASE_VERSION)-incubating/
 $(eval $(call PACKAGE,whirr,WHIRR))
