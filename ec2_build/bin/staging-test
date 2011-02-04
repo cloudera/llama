@@ -13,7 +13,7 @@ from optparse import OptionParser
 from threading import Thread
 
 import cloudera.aws.ec2
-from ec2_constants import AMIS, BUILD_INSTANCE_TYPES, DEFAULT_BUILD_MACHINES
+from ec2_constants import AMIS, TEST_AMIS, BUILD_INSTANCE_TYPES, DEFAULT_BUILD_MACHINES
 
 
 MAIN_LOGGER = 'staging-test'
@@ -209,6 +209,12 @@ def start_instances(logger, ec2, build_machines, opts):
   for build_type, os_distro, arch in build_machines:
 
     ami = AMIS[(os_distro, arch)]
+
+    # We don't have a full list of test amis
+    # So we only overshadow build amis whenever we have an equivalent test ami
+    if (os_distro, arch) in TEST_AMIS:
+      ami = TEST_AMIS[(os_distro, arch)]
+
     image = ec2.get_image(ami)
     instance_type = BUILD_INSTANCE_TYPES[arch]
 

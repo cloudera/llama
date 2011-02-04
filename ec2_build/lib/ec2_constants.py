@@ -20,6 +20,11 @@ AMIS={
   ('centos5', 'amd64'):  'ami-96d53eff',
   }
 
+TEST_AMIS = {
+  ('centos5', 'x86'):    'ami-76f0061f',
+  ('centos5', 'amd64'):  'ami-74f0061d',
+  }
+
 # What kind of instances should be started to run the various builds
 BUILD_INSTANCE_TYPES = {
   'x86':   'm1.small',

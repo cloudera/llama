@@ -15,6 +15,7 @@ class ArchiveManager:
   DEFAULT_ARCHIVE_VOLUME_MOUNT = '/dev/sdb'
   DEFAULT_AMI = 'ami-3397795a'
 
+  NIGHTLY_AMI = 'ami-ee03f387'
 
 
   def __init__(self, ec2_connection):
@@ -42,9 +43,12 @@ class ArchiveManager:
     reservation = image.run(key_name = key_name, security_groups = groups.extend(security_groups), placement=self.DEFAULT_AVAILABILITY_ZONE)
     instance = reservation.instances[0]
     cloudera.aws.ec2.wait_while_booting(instance)
-    msg = "Attaching vol: %s to mount: %s" %(volume, ArchiveManager.DEFAULT_ARCHIVE_VOLUME_MOUNT)
-    verbose_print(msg)
-    volume.attach(instance.id, ArchiveManager.DEFAULT_ARCHIVE_VOLUME_MOUNT)
+
+    if ami == ArchiveManager.DEFAULT_AMI:
+      msg = "Attaching vol: %s to mount: %s" %(volume, ArchiveManager.DEFAULT_ARCHIVE_VOLUME_MOUNT)
+      verbose_print(msg)
+      volume.attach(instance.id, ArchiveManager.DEFAULT_ARCHIVE_VOLUME_MOUNT)
+
     return instance
 
 
