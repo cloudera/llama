@@ -1,0 +1,41 @@
+#!/bin/sh -x
+
+if [ "$#" -ne "7" ]; then
+  echo "Invalid number of arguments: $#"
+  echo "$0 package buildroot topdir hadoop_version cloudera_version package_version release_version"
+  exit 1
+fi
+
+set -e
+
+package=$1
+buildroot=$2
+topdir=$3
+hadoop_version=$4
+cloudera_version=$5
+package_version=$6
+release_version=$7
+
+specdir="$topdir/SPECS"
+
+# This rpmbuild command simply builds the source package. Since we aren't actually
+# compiling anything, we can safely use --nodeps. When it comes time to actually
+# build the binary package, we take dependencies into account properly.
+# This also enables rpmbuild to run properly on debian.
+rpmbuild="rpmbuild --define \"_topdir $topdir\" -bs --nodeps --buildroot=$buildroot"
+
+spec=$package.spec
+cp $specdir/$spec.in $specdir/$spec
+# HADOOP_VERSION corresponds to $(PKG)_BASE_VERSION
+sed -i -e "s|@HADOOP_VERSION@|$hadoop_version|" $specdir/$spec
+# CLOUDERA_VERSION corresponds to $(PKG)_FULL_VERSION, and is used in the Maven
+# artifact, build directories, etc.
+sed -i -e "s|@CLOUDERA_VERSION@|$cloudera_version|" $specdir/$spec
+# PACKAGE_VERSION corresponds to $(PKG)_PKG_VERSION, the version used in the
+# Debian and RPM packages.
+sed -i -e "s|@PACKAGE_VERSION@|$package_version|" $specdir/$spec
+# RELEASE_VERSION corresponds to the Release value in packages - as of now
+# (Jan 27 2011) that is always 1.
+sed -i -e "s|@RELEASE_VERSION@|$release_version|" $specdir/$spec
+
+eval $rpmbuild $specdir/$package.spec

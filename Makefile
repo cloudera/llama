@@ -46,7 +46,7 @@ help: package-help
 all: srpm sdeb tgz
 world: all
 
-packages: $(TARGETS)
+packages: install-pom $(TARGETS)
 tgz: packages
 
 help-header:
@@ -73,13 +73,16 @@ realclean: clean
 distclean: realclean
 	-rm -rf $(REPO_DIR)
 
-srpm: $(TARGETS_SRPM)
+srpm: install-pom $(TARGETS_SRPM)
 
-rpm: $(TARGETS_RPM)
+rpm: install-pom $(TARGETS_RPM)
 
-sdeb: $(TARGETS_SDEB)
+sdeb: install-pom $(TARGETS_SDEB)
 
-deb: $(TARGETS_DEB)
+deb: install-pom $(TARGETS_DEB)
+
+install-pom:
+	mvn -N install $(DO_MAVEN_DEPLOY)
 
 .DEFAULT_GOAL:= help
 .PHONY: realclean clean distclean package-help help-header packages all world help tgz srpm sdeb

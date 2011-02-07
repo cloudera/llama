@@ -15,7 +15,8 @@ $(BUILD_DIR)/%/.prep:
 	  $($(PKG)_BASE_REF) \
 	  $($(PKG)_BUILD_REF) \
 	  $($(PKG)_DOWNLOAD_DST) \
-	  $($(PKG)_SOURCE_DIR)
+	  $($(PKG)_SOURCE_DIR) \
+	  $($(PKG)_FULL_VERSION)
 	touch $@
 
 # Patch
@@ -46,19 +47,20 @@ $(BUILD_DIR)/%/.srpm:
 	cp -r $($(PKG)_PACKAGE_GIT_REPO)/rpm/topdir $(PKG_BUILD_DIR)/rpm
 	mkdir -p $(PKG_BUILD_DIR)/rpm/topdir/{INSTALL,SOURCES,BUILD}
 	cp $($(PKG)_OUTPUT_DIR)/$($(PKG)_NAME)-$($(PKG)_FULL_VERSION).tar.gz $(PKG_BUILD_DIR)/rpm/topdir/SOURCES
-	$($(PKG)_PACKAGE_GIT_REPO)/rpm/create_rpms \
+	$(BASE_DIR)/tools/create_rpms \
 	  $($(PKG)_NAME) \
 	  $(PKG_BUILD_DIR)/rpm/topdir/INSTALL \
 	  $(PKG_BUILD_DIR)/rpm/topdir \
 	  $($(PKG)_BASE_VERSION) \
 	  $(PKG_FULL_VERSION) \
-	  $($(PKG)_RELEASE)
-	cp $(PKG_BUILD_DIR)/rpm/topdir/SRPMS/$($(PKG)_PKG_NAME)-$($(PKG)_FULL_VERSION)-$($(PKG)_RELEASE).src.rpm \
+	  $($(PKG)_PKG_VERSION) \
+	  $($(PKG)_RELEASE) 
+	cp $(PKG_BUILD_DIR)/rpm/topdir/SRPMS/$($(PKG)_PKG_NAME)-$($(PKG)_PKG_VERSION)-$($(PKG)_RELEASE).src.rpm \
 	   $($(PKG)_OUTPUT_DIR)
 	touch $@
 
 # Make binary RPMs
-$(BUILD_DIR)/%/.rpm: SRCRPM=$($(PKG)_OUTPUT_DIR)/$($(PKG)_PKG_NAME)-$($(PKG)_FULL_VERSION)-$($(PKG)_RELEASE).src.rpm
+$(BUILD_DIR)/%/.rpm: SRCRPM=$($(PKG)_OUTPUT_DIR)/$($(PKG)_PKG_NAME)-$($(PKG)_PKG_VERSION)-$($(PKG)_RELEASE).src.rpm
 $(BUILD_DIR)/%/.rpm:
 	rpmbuild --define "_topdir $(PKG_BUILD_DIR)/rpm/topdir" --rebuild $(SRCRPM)
 	rpmbuild --define "_topdir $(PKG_BUILD_DIR)/rpm/topdir" --rebuild --target noarch $(SRCRPM)
@@ -69,10 +71,11 @@ $(BUILD_DIR)/%/.sdeb:
 	-rm -rf $(PKG_BUILD_DIR)/deb/
 	mkdir -p $(PKG_BUILD_DIR)/deb/
 	cp $($(PKG)_OUTPUT_DIR)/$($(PKG)_NAME)-$(PKG_FULL_VERSION).tar.gz \
-	  $(PKG_BUILD_DIR)/deb/$($(PKG)_PKG_NAME)_$(PKG_FULL_VERSION).orig.tar.gz
+	  $(PKG_BUILD_DIR)/deb/$($(PKG)_PKG_NAME)_$(PKG_PKG_VERSION).orig.tar.gz
 	cd $(PKG_BUILD_DIR)/deb && \
-	  tar -xvf $($(PKG)_PKG_NAME)_$(PKG_FULL_VERSION).orig.tar.gz && \
-	  cd $($(PKG)_NAME)-$(PKG_FULL_VERSION) && \
+	  tar -xvf $($(PKG)_PKG_NAME)_$(PKG_PKG_VERSION).orig.tar.gz && \
+	  mv $($(PKG)_NAME)-$(PKG_FULL_VERSION) $($(PKG)_NAME)-$(PKG_PKG_VERSION)
+	  cd $(PKG_BUILD_DIR)/deb/$($(PKG)_NAME)-$(PKG_PKG_VERSION) && \
 	  cp -r $($(PKG)_PACKAGE_GIT_REPO)/deb/debian.$($(PKG)_NAME) debian && \
 	  find debian -name "*.[ex,EX,~]" | xargs rm -f && \
 	  $(BASE_DIR)/tools/generate-debian-changelog \
@@ -81,21 +84,22 @@ $(BUILD_DIR)/%/.sdeb:
 	    $($(PKG)_BUILD_REF) \
 	    $($(PKG)_PKG_NAME) \
 	    $($(PKG)_RELEASE) \
-	    debian/changelog && \
+	    debian/changelog \
+	    $($(PKG)_PKG_VERSION) && \
 	  dpkg-buildpackage -uc -us -sa -S
-	for file in $($(PKG)_PKG_NAME)_$(PKG_FULL_VERSION)-$($(PKG)_RELEASE).dsc \
-                    $($(PKG)_PKG_NAME)_$(PKG_FULL_VERSION)-$($(PKG)_RELEASE).diff.gz \
-                    $($(PKG)_PKG_NAME)_$(PKG_FULL_VERSION)-$($(PKG)_RELEASE)_source.changes \
-                    $($(PKG)_PKG_NAME)_$(PKG_FULL_VERSION).orig.tar.gz ; \
+	for file in $($(PKG)_PKG_NAME)_$(PKG_PKG_VERSION)-$($(PKG)_RELEASE).dsc \
+                    $($(PKG)_PKG_NAME)_$(PKG_PKG_VERSION)-$($(PKG)_RELEASE).diff.gz \
+                    $($(PKG)_PKG_NAME)_$(PKG_PKG_VERSION)-$($(PKG)_RELEASE)_source.changes \
+                    $($(PKG)_PKG_NAME)_$(PKG_PKG_VERSION).orig.tar.gz ; \
             do cp $(PKG_BUILD_DIR)/deb/$$file $($(PKG)_OUTPUT_DIR); \
         done
 	touch $@
 
-$(BUILD_DIR)/%/.deb: SRCDEB=$($(PKG)_PKG_NAME)_$($(PKG)_FULL_VERSION)-$($(PKG)_RELEASE).dsc
+$(BUILD_DIR)/%/.deb: SRCDEB=$($(PKG)_PKG_NAME)_$($(PKG)_PKG_VERSION)-$($(PKG)_RELEASE).dsc
 $(BUILD_DIR)/%/.deb:
 	cd $($(PKG)_OUTPUT_DIR) && \
 		dpkg-source -x $(SRCDEB) && \
-		cd $($(PKG)_PKG_NAME)-$(PKG_FULL_VERSION) && \
+		cd $($(PKG)_PKG_NAME)-$(PKG_PKG_VERSION) && \
 			debuild \
 				--preserve-envvar PATH --preserve-envvar JAVA32_HOME --preserve-envvar JAVA64_HOME \
 				--preserve-envvar JAVA5_HOME --preserve-envvar FORREST_HOME --preserve-envvar MAVEN3_HOME \
@@ -115,7 +119,9 @@ $(2)_PKG_NAME       ?= $$($(2)_NAME)
 $(2)_RELEASE        ?= 1
 
 # Calculate the full version based on the git patches
-$(2)_FULL_VERSION   := $(shell cd $($(2)_GIT_REPO) && $(BASE_DIR)/tools/branch-tool version)
+$(2)_FULL_VERSION   = $$($(2)_BASE_VERSION)-CDH3B4-SNAPSHOT
+$(2)_PKG_VERSION   := $(shell cd $($(2)_GIT_REPO) && $(BASE_DIR)/tools/branch-tool version)
+#$(2)_PKG_VERSION   := $$($(2)_BASE_VERSION).CDH3B4
 $(2)_BUILD_REF      := $(notdir $(shell cd $($(2)_GIT_REPO) && git symbolic-ref --quiet HEAD))
 
 $(2)_BUILD_DIR      = $(BUILD_DIR)/$(CDH)/$(1)/$$($(2)_FULL_VERSION)/
@@ -161,7 +167,7 @@ $(1)-sdeb: $(1) $$($(2)_TARGET_SDEB)
 $(1)-deb: $(1)-sdeb $$($(2)_TARGET_DEB)
 
 $(1)-relnotes: $(1)
-	./tools/relnotes/relnote-gen.sh $$($(2)_OUTPUT_DIR) $$($(2)_GIT_REPO) "$$($(2)_BASE_REF)..HEAD" "CDH $(CDH_VERSION)" "$$($(2)_BASE_VERSION)" "$(1)-$$($(2)_FULL_VERSION)"
+	./tools/relnotes/relnote-gen.sh $$($(2)_OUTPUT_DIR) $$($(2)_GIT_REPO) "$$($(2)_BASE_REF)..HEAD" "CDH $(CDH_VERSION)" "$$($(2)_BASE_VERSION)" "$(1)-$$($(2)_PKG_VERSION)"
 
 #### 
 # Helper targets -version -help etc
@@ -201,10 +207,12 @@ $(1)-info:
 # Implicit rules with PKG variable
 $$($(2)_TARGET_DL):       PKG=$(2)
 $$($(2)_TARGET_PREP):     PKG=$(2)
+$$($(2)_TARGET_PREP):     PKG_FULL_VERSION=$$($(2)_FULL_VERSION)
 $$($(2)_TARGET_PATCH):    PKG=$(2)
 $$($(2)_TARGET_BUILD):    PKG=$(2)
 $$($(2)_TARGET_RPM) $$($(2)_TARGET_SRPM) $$($(2)_TARGET_SDEB) $$($(2)_TARGET_DEB): PKG=$(2)
 $$($(2)_TARGET_RPM) $$($(2)_TARGET_SRPM) $$($(2)_TARGET_SDEB) $$($(2)_TARGET_DEB): PKG_FULL_VERSION=$$($(2)_FULL_VERSION)
+$$($(2)_TARGET_RPM) $$($(2)_TARGET_SRPM) $$($(2)_TARGET_SDEB) $$($(2)_TARGET_DEB): PKG_PKG_VERSION=$$($(2)_PKG_VERSION)
 $$($(2)_TARGET_RPM) $$($(2)_TARGET_SRPM) $$($(2)_TARGET_SDEB) $$($(2)_TARGET_DEB): PKG_SOURCE_DIR=$$($(2)_SOURCE_DIR)
 $$($(2)_TARGET_RPM) $$($(2)_TARGET_SRPM) $$($(2)_TARGET_SDEB) $$($(2)_TARGET_DEB): PKG_BUILD_DIR=$$($(2)_BUILD_DIR)
 

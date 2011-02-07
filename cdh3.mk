@@ -14,6 +14,32 @@ HADOOP20_BUILD_REF=HEAD
 HADOOP20_PACKAGE_GIT_REPO=$(REPO_DIR)/cdh3/hadoop-0.20-package
 $(eval $(call PACKAGE,hadoop20,HADOOP20))
 
+# ZooKeeper
+ZOOKEEPER_NAME=zookeeper
+ZOOKEEPER_PKG_NAME=hadoop-zookeeper
+ZOOKEEPER_BASE_VERSION=3.3.1
+ZOOKEEPER_TARBALL_DST=zookeeper-$(ZOOKEEPER_BASE_VERSION).tar.gz
+ZOOKEEPER_TARBALL_SRC=$(ZOOKEEPER_TARBALL_DST)
+ZOOKEEPER_GIT_REPO=$(REPO_DIR)/cdh3/zookeeper
+ZOOKEEPER_BASE_REF=cdh-base-$(ZOOKEEPER_BASE_VERSION)
+ZOOKEEPER_BUILD_REF=cdh-$(ZOOKEEPER_BASE_VERSION)
+ZOOKEEPER_PACKAGE_GIT_REPO=$(REPO_DIR)/cdh3/zookeeper-package
+ZOOKEEPER_SITE=$(APACHE_MIRROR)/hadoop/zookeeper/zookeeper-$(ZOOKEEPER_BASE_VERSION)
+$(eval $(call PACKAGE,zookeeper,ZOOKEEPER))
+
+# HBase
+HBASE_NAME=hbase
+HBASE_PKG_NAME=hadoop-hbase
+HBASE_BASE_VERSION=0.90.0
+HBASE_TARBALL_DST=hbase-$(HBASE_BASE_VERSION).tar.gz
+HBASE_TARBALL_SRC=$(HBASE_TARBALL_DST)
+HBASE_GIT_REPO=$(REPO_DIR)/cdh3/hbase
+HBASE_BASE_REF=cdh-base-$(HBASE_BASE_VERSION)
+HBASE_BUILD_REF=cdh-$(HBASE_BASE_VERSION)
+HBASE_PACKAGE_GIT_REPO=$(REPO_DIR)/cdh3/hbase-package
+HBASE_SITE=$(APACHE_MIRROR)/hbase/hbase-$(HBASE_BASE_VERSION)
+$(eval $(call PACKAGE,hbase,HBASE))
+
 # Pig 
 PIG_BASE_VERSION=0.8.0
 PIG_NAME=pig
@@ -26,20 +52,6 @@ PIG_BUILD_REF=cdh-$(PIG_BASE_VERSION)
 PIG_PACKAGE_GIT_REPO=$(REPO_DIR)/cdh3/pig-package
 PIG_SITE=$(APACHE_MIRROR)/pig/pig-$(PIG_BASE_VERSION)
 $(eval $(call PACKAGE,pig,PIG))
-
-# Oozie
-OOZIE_NAME=oozie
-OOZIE_PKG_NAME=oozie
-OOZIE_BASE_VERSION=2.3.0
-OOZIE_TARBALL_DST=oozie-2.3.0.tar.gz
-#OOZIE_TARBALL_SRC=oozie-2.3.0
-OOZIE_TARBALL_SRC=7cfc9a8e7a5e36cd9fa76da03c8689ae8b9cc933
-OOZIE_GIT_REPO=$(REPO_DIR)/cdh3/oozie
-OOZIE_BASE_REF=cdh-base-$(OOZIE_BASE_VERSION)
-OOZIE_BUILD_REF=cdh-$(OOZIE_BASE_VERSION)
-OOZIE_PACKAGE_GIT_REPO=$(REPO_DIR)/cdh3/oozie-package
-OOZIE_SITE=http://github.com/yahoo/oozie/tarball
-$(eval $(call PACKAGE,oozie,OOZIE))
 
 # Hive
 HIVE_NAME=hive
@@ -60,48 +72,15 @@ HIVE_SOURCE_DIR=$(HIVE_BUILD_DIR)/source/src
 
 $(HIVE_TARGET_PREP):
 	mkdir -p $($(PKG)_SOURCE_DIR)
-	$(BASE_DIR)/tools/setup-package-build $($(PKG)_GIT_REPO) $($(PKG)_BASE_REF) $($(PKG)_BUILD_REF) $($(PKG)_DOWNLOAD_DST) $(HIVE_BUILD_DIR)/source
+	$(BASE_DIR)/tools/setup-package-build \
+	  $($(PKG)_GIT_REPO) \
+	  $($(PKG)_BASE_REF) \
+	  $($(PKG)_BUILD_REF) \
+	  $($(PKG)_DOWNLOAD_DST) \
+	  $(HIVE_BUILD_DIR)/source \
+	  $($(PKG)_FULL_VERSION)
 	rsync -av $(HIVE_ORIG_SOURCE_DIR)/cloudera/ $(HIVE_SOURCE_DIR)/cloudera/
 	touch $@
-
-# HBase
-HBASE_NAME=hbase
-HBASE_PKG_NAME=hadoop-hbase
-HBASE_BASE_VERSION=0.89.20100924
-HBASE_TARBALL_DST=hbase-$(HBASE_BASE_VERSION)-src.tar.gz
-HBASE_TARBALL_SRC=$(HBASE_TARBALL_DST)
-HBASE_GIT_REPO=$(REPO_DIR)/cdh3/hbase
-HBASE_BASE_REF=cdh-base-$(HBASE_BASE_VERSION)
-HBASE_BUILD_REF=cdh-$(HBASE_BASE_VERSION)
-HBASE_PACKAGE_GIT_REPO=$(REPO_DIR)/cdh3/hbase-package
-HBASE_SITE=http://people.apache.org/~jdcryans/hbase-0.89.20100924-candidate-1/
-$(eval $(call PACKAGE,hbase,HBASE))
-
-# ZooKeeper
-ZOOKEEPER_NAME=zookeeper
-ZOOKEEPER_PKG_NAME=hadoop-zookeeper
-ZOOKEEPER_BASE_VERSION=3.3.2
-ZOOKEEPER_TARBALL_DST=zookeeper-$(ZOOKEEPER_BASE_VERSION).tar.gz
-ZOOKEEPER_TARBALL_SRC=$(ZOOKEEPER_TARBALL_DST)
-ZOOKEEPER_GIT_REPO=$(REPO_DIR)/cdh3/zookeeper
-ZOOKEEPER_BASE_REF=cdh-base-$(ZOOKEEPER_BASE_VERSION)
-ZOOKEEPER_BUILD_REF=cdh-$(ZOOKEEPER_BASE_VERSION)
-ZOOKEEPER_PACKAGE_GIT_REPO=$(REPO_DIR)/cdh3/zookeeper-package
-ZOOKEEPER_SITE=$(APACHE_MIRROR)/hadoop/zookeeper/zookeeper-$(ZOOKEEPER_BASE_VERSION)
-$(eval $(call PACKAGE,zookeeper,ZOOKEEPER))
-
-# Flume
-FLUME_NAME=flume
-FLUME_PKG_NAME=flume
-FLUME_BASE_VERSION=0.9.2
-FLUME_TARBALL_DST=cdh-base-$(FLUME_BASE_VERSION).tar.gz
-FLUME_TARBALL_SRC=$(FLUME_TARBALL_DST)
-FLUME_GIT_REPO=$(REPO_DIR)/cdh3/flume
-FLUME_BASE_REF=cdh-base-$(FLUME_BASE_VERSION)
-FLUME_BUILD_REF=cdh-$(FLUME_BASE_VERSION)
-FLUME_PACKAGE_GIT_REPO=$(REPO_DIR)/cdh3/flume-package
-FLUME_SITE=http://git.sf.cloudera.com/index.cgi/flume.git/snapshot/
-$(eval $(call PACKAGE,flume,FLUME))
 
 # Sqoop
 SQOOP_NAME=sqoop
@@ -119,6 +98,20 @@ sqoop-relnotes: sqoop
 	cd $(SQOOP_GIT_REPO) && ant relnotes -Dversion=$(SQOOP_FULL_VERSION) \
 		-Dbuild.relnotes.dir=$(SQOOP_OUTPUT_DIR)
 
+# Oozie
+OOZIE_NAME=oozie
+OOZIE_PKG_NAME=oozie
+OOZIE_BASE_VERSION=2.3.0
+OOZIE_TARBALL_DST=oozie-2.3.0.tar.gz
+#OOZIE_TARBALL_SRC=oozie-2.3.0
+OOZIE_TARBALL_SRC=7cfc9a8e7a5e36cd9fa76da03c8689ae8b9cc933
+OOZIE_GIT_REPO=$(REPO_DIR)/cdh3/oozie
+OOZIE_BASE_REF=cdh-base-$(OOZIE_BASE_VERSION)
+OOZIE_BUILD_REF=cdh-$(OOZIE_BASE_VERSION)
+OOZIE_PACKAGE_GIT_REPO=$(REPO_DIR)/cdh3/oozie-package
+OOZIE_SITE=http://github.com/yahoo/oozie/tarball
+$(eval $(call PACKAGE,oozie,OOZIE))
+
 # Whirr
 WHIRR_NAME=whirr
 WHIRR_PKG_NAME=whirr
@@ -131,3 +124,28 @@ WHIRR_BUILD_REF=cdh-$(WHIRR_BASE_VERSION)
 WHIRR_PACKAGE_GIT_REPO=$(BASE_DIR)/repos/cdh3/whirr-package
 WHIRR_SITE=$(APACHE_MIRROR)/incubator/whirr/whirr-$(WHIRR_BASE_VERSION)-incubating/
 $(eval $(call PACKAGE,whirr,WHIRR))
+
+$(WHIRR_TARGET_PREP):
+	mkdir -p $($(PKG)_SOURCE_DIR)
+	$(BASE_DIR)/tools/setup-package-build \
+	  $($(PKG)_GIT_REPO) \
+	  $($(PKG)_BASE_REF) \
+	  $($(PKG)_BUILD_REF) \
+	  $($(PKG)_DOWNLOAD_DST) \
+	  $($(PKG)_SOURCE_DIR) \
+	  $($(PKG)_FULL_VERSION)
+	cp $(WHIRR_GIT_REPO)/cloudera/base.gitignore $(WHIRR_SOURCE_DIR)/.gitignore
+	touch $@
+
+# Flume
+FLUME_NAME=flume
+FLUME_PKG_NAME=flume
+FLUME_BASE_VERSION=0.9.2
+FLUME_TARBALL_DST=cdh-base-$(FLUME_BASE_VERSION).tar.gz
+FLUME_TARBALL_SRC=$(FLUME_TARBALL_DST)
+FLUME_GIT_REPO=$(REPO_DIR)/cdh3/flume
+FLUME_BASE_REF=cdh-base-$(FLUME_BASE_VERSION)
+FLUME_BUILD_REF=cdh-$(FLUME_BASE_VERSION)
+FLUME_PACKAGE_GIT_REPO=$(REPO_DIR)/cdh3/flume-package
+FLUME_SITE=http://git.sf.cloudera.com/index.cgi/flume.git/snapshot/
+$(eval $(call PACKAGE,flume,FLUME))

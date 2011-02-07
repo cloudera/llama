@@ -48,7 +48,7 @@ def parse_person(p):
 
 def main(args):
   prog_name = os.path.basename(args[0])
-  repo, base_ref, build_ref, package_name, package_version, dst_path = args[1:]
+  repo, base_ref, build_ref, package_name, package_version, dst_path, release_version = args[1:]
 
   out_file = dst_path == '-' and sys.stdout or file(dst_path, "w")
 
@@ -60,7 +60,7 @@ def main(args):
     commit_hash = entry['commit']
     print >>sys.stderr, "[%s] generating changelog entry for %s" % \
           (prog_name, commit_hash)
-    version = debianize_version(cdh_get_version(commit_hash), package_version)
+    version = debianize_version(release_version, package_version)
 
     committer_name, committer_email, commit_time, commit_tz = parse_person(entry['committer'])
     author_name, author_email, author_time, author_tz = parse_person(entry['author'])

@@ -2,8 +2,8 @@
 set -e
 TOOLS_DIR=$(readlink -f $(dirname $0))
 
-if [ $# -ne 5 ]; then
-  echo usage: $0 git-repo base-branch build-branch pristine-tgz build-dir
+if [ $# -ne 6 ]; then
+  echo usage: $0 git-repo base-branch build-branch pristine-tgz build-dir version
   exit 1
 fi
 
@@ -13,7 +13,7 @@ BASE_BRANCH=$2
 BUILD_BRANCH=$3
 PRISTINE_TGZ=$4
 BUILD_DIR=$5
-
+VERSION=$6
 
 # Check inputs
 if [ ! -d $GIT_REPO -o ! -d $GIT_REPO/.git ]; then
@@ -39,4 +39,4 @@ PRISTINE_NAME=${TGZ_BN%.tar.gz}
 tar  --strip-components 1 -xf $PRISTINE_TGZ -C $BUILD_DIR
 
 # Make our cloudera dir inside
-$TOOLS_DIR/create-cloudera-dir $GIT_REPO $BASE_BRANCH $BUILD_BRANCH $BUILD_DIR/cloudera
+$TOOLS_DIR/create-cloudera-dir $GIT_REPO $BASE_BRANCH $BUILD_BRANCH $BUILD_DIR/cloudera $VERSION

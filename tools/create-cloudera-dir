@@ -10,6 +10,7 @@ GIT_REPO=$1
 BASE_BRANCH=$2
 BUILD_BRANCH=$3
 TARGET_DIR=$4
+VERSION=$5
 
 CLOUDERA_DIR=$TARGET_DIR
 rm -Rf $CLOUDERA_DIR
@@ -28,4 +29,4 @@ for tool in $TOOLS_DIR/redist/* ; do
 done
 
 # Setup build.properties file for ant
-$TOOLS_DIR/generate-build-properties $GIT_REPO $BASE_BRANCH $BUILD_BRANCH $CLOUDERA_DIR/build.properties
+$TOOLS_DIR/generate-build-properties $GIT_REPO $BASE_BRANCH $BUILD_BRANCH $CLOUDERA_DIR/build.properties $VERSION
