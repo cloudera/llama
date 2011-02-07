@@ -85,4 +85,4 @@ install-pom:
 	mvn -N install $(DO_MAVEN_DEPLOY)
 
 .DEFAULT_GOAL:= help
-.PHONY: realclean clean distclean package-help help-header packages all world help tgz srpm sdeb
+.PHONY: realclean clean distclean package-help help-header packages all world help tgz srpm sdeb install-pom
