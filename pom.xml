@@ -26,6 +26,7 @@ TODO: need license header
   </organization>
   
   <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <!-- Used for MVN+ANT integration via maven-antrun-plugin -->
     <mvn.cmd>mvn</mvn.cmd>
     <ant.cmd>ant</ant.cmd>
