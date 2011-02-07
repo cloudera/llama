@@ -135,14 +135,14 @@ TODO: need license header
 
   <!-- These module locations assume you have already run crepo sync. -->
   <modules>
-    <module>repos/cdh3/hadoop-0.20/cloudera/maven</module>
-    <module>repos/cdh3/zookeeper/cloudera/maven</module>
-    <module>repos/cdh3/hbase/cloudera/maven</module>
-    <module>repos/cdh3/pig/cloudera/maven</module>
-    <module>repos/cdh3/hive/cloudera/maven</module>
-    <module>repos/cdh3/sqoop/cloudera/maven</module>
-    <module>repos/cdh3/oozie/cloudera/maven</module>
-    <module>repos/cdh3/whirr/cloudera/maven</module>
+    <module>repos/cdh3/hadoop-0.20/cloudera/maven-packaging</module>
+    <module>repos/cdh3/zookeeper/cloudera/maven-packaging</module>
+    <module>repos/cdh3/hbase/cloudera/maven-packaging</module>
+    <module>repos/cdh3/pig/cloudera/maven-packaging</module>
+    <module>repos/cdh3/hive/cloudera/maven-packaging</module>
+    <module>repos/cdh3/sqoop/cloudera/maven-packaging</module>
+    <module>repos/cdh3/oozie/cloudera/maven-packaging</module>
+    <module>repos/cdh3/whirr/cloudera/maven-packaging</module>
   </modules>
   
   <dependencyManagement>
