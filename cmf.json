@@ -7,7 +7,7 @@
  
   "projects":
   {
-     "cmf": {"track-branch": "cdh-packaging-test", "dir": "repos/cmf/cmf"},
+     "cmf": {"track-branch": "cdh-1.0_SNAPSHOT", "dir": "repos/cmf/cmf"},
      "cmf-package": { "track-branch": "master", "dir": "repos/cmf/cmf-package", "remotes": ["github"]}
   }
 }
