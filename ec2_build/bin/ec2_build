@@ -297,7 +297,7 @@ def main():
       print "ERROR: No tarball found"
       sys.exit(-1)
 
-    sources = filter(lambda filename: re.match('.*-[\_\d\.\+]+\.tar\.gz$', filename), sources)
+    sources = filter(lambda filename: re.match('^.*-CDH[0-9BU]+(?:-SNAPSHOT)?\.tar\.gz$', filename), sources)
 
     for arch in ['deb', 'rpm']:
       package_files[package][arch].extend(sources)
