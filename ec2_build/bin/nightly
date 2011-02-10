@@ -165,7 +165,7 @@ def boot_ami(archive_manager, options):
   @return Return a tuple (Instance, Hostname)
   '''
 
-  display_message("Boot AMI")
+  display_message("Boot AMI: %s" % options.ami)
 
   instance = archive_manager.kickOff(options.snapshot,
 		  options.security_group_name,
@@ -320,9 +320,6 @@ def main():
 
   if not options.build:
     op.error('build option is mandatory')
-
-  if not options.snapshot:
-    op.error('snapshot option is mandatory')
 
   if not options.key_file:
     op.error('key-file option is mandatory')

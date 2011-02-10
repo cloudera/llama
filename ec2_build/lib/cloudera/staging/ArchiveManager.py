@@ -4,6 +4,7 @@ import cloudera.constants
 import cloudera.utils
 import cloudera.aws.ec2
 import cloudera.staging.StageManager
+import sys
 import time
 
 from cloudera.utils import display_message, verbose_print
@@ -15,7 +16,7 @@ class ArchiveManager:
   DEFAULT_ARCHIVE_VOLUME_MOUNT = '/dev/sdb'
   DEFAULT_AMI = 'ami-3397795a'
 
-  NIGHTLY_AMI = 'ami-ee03f387'
+  NIGHTLY_AMI = 'ami-0cb34065'
 
 
   def __init__(self, ec2_connection):
@@ -38,7 +39,13 @@ class ArchiveManager:
       ami = ArchiveManager.DEFAULT_AMI
 
     groups = [self.EC2_IPS_GROUP]
-    image = self.ec2_connection.get_all_images(image_ids=ami)[0]
+    verbose_print("Looking for ami: %s" %ami)
+    images = self.ec2_connection.get_all_images(image_ids=ami)
+    if not images:
+      verbose_print("Could not find AMI")
+      sys.exit(-1)
+
+    image = images[0]
     verbose_print("Launching server with image: %s" %image)
     reservation = image.run(key_name = key_name, security_groups = groups.extend(security_groups), placement=self.DEFAULT_AVAILABILITY_ZONE)
     instance = reservation.instances[0]
@@ -82,7 +89,9 @@ class ArchiveManager:
     '''
 
     security_group = self.create_security_group(security_group_name, security_group_desc)
-    volume = cloudera.aws.ec2.create_volume_from_snapshot(self.ec2_connection, snapshot, ArchiveManager.DEFAULT_AVAILABILITY_ZONE)
+    volume = None
+    if snapshot:
+      volume = cloudera.aws.ec2.create_volume_from_snapshot(self.ec2_connection, snapshot, ArchiveManager.DEFAULT_AVAILABILITY_ZONE)
     instance = self.launch_server([security_group], volume, key_name, ami)
     return instance
 
