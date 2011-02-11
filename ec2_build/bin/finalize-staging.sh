@@ -40,7 +40,7 @@ fi
 BASE_DIR="/tmp"
 DESTINATION_DIR="$REPO/cdh/$CDH_RELEASE"
 
-ARCHIVES=`find $BASE_DIR/$BUILD_ID/source/  -regextype posix-extended   -regex '.*[[:digit:]]+\.tar\.gz'`
+ARCHIVES=`find $BASE_DIR/$BUILD_ID/source/  -regextype posix-extended   -iregex '.*CDH[[:digit:]BU]+(-SNAPSHOT)?\.tar\.gz'`
 
 for ARCHIVE in $ARCHIVES; do
   ARCHIVE_NAME=`echo "$ARCHIVE" | sed -e 's/.tar.gz//'`
