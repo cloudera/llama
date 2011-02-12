@@ -163,7 +163,8 @@ class ArchiveManager:
       print "No volume found"
 
 
-    cloudera.aws.ec2.cleanup_security_group(self.ec2_connection, instance_info[cloudera.staging.StageManager.StageManager.ATTRIBUTE_SECURITY_GROUP])
+    if cloudera.staging.StageManager.StageManager.ATTRIBUTE_SECURITY_GROUP in instance_info:
+		cloudera.aws.ec2.cleanup_security_group(self.ec2_connection, instance_info[cloudera.staging.StageManager.StageManager.ATTRIBUTE_SECURITY_GROUP])
 
     stageManager.delete_instance(instance.id)
 
