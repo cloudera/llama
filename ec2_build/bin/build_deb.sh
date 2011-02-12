@@ -58,6 +58,10 @@ EOF
     sed -i 's/universe/universe multiverse/' /etc/apt/sources.list
     add-apt-repository 'deb http://archive.canonical.com/ lucid partner'
   fi
+  if [ $(lsb_release -c -s) == "maverick" ]; then
+    sed -i 's/universe/universe multiverse/' /etc/apt/sources.list
+    add-apt-repository 'deb http://archive.canonical.com/ maverick partner'
+  fi
 
   apt-get update
 

@@ -5,6 +5,8 @@ AMIS={
 # Alestic ubuntu/debian AMIs
   ('lucid', 'x86'):      'ami-2d4aa444',
   ('lucid', 'amd64'):    'ami-fd4aa494',
+  ('maverick', 'x86'):   'ami-a6f504cf',
+  ('maverick', 'amd64'): 'ami-08f40561',
   ('karmic', 'x86'):     'ami-1515f67c',
   ('karmic', 'amd64'):   'ami-ab15f6c2',
   ('jaunty', 'x86'):     'ami-0d729464',
@@ -36,12 +38,8 @@ BUILD_INSTANCE_TYPES = {
 DEFAULT_BUILD_MACHINES = [
   ('deb', 'lucid', 'x86'),
   ('deb', 'lucid', 'amd64'),
-  ('deb', 'karmic', 'x86'),
-  ('deb', 'karmic', 'amd64'),
-  ('deb', 'hardy',    'x86'),
-  ('deb', 'hardy',    'amd64'),
-  ('deb', 'lenny',    'x86'),
-  ('deb', 'lenny',    'amd64'),
+  ('deb', 'maverick', 'x86'),
+  ('deb', 'maverick', 'amd64'),
   ('rpm', 'centos5',  'x86'),
   ('rpm', 'centos5',  'amd64'),
   ]
