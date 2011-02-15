@@ -5,6 +5,30 @@
 
    == Core Hadoop, HDFS, and MapReduce ==
 
+   As the final beta in the CDH3 series, the major changes in this release
+   have focused on stability, security, and scalability.
+
+   Stability and bug fixes:
+
+   CDH3 beta 4 fixes several important bugs in both MapReduce and HDFS based
+   on our experiences deploying CDH3 in production environments as well as
+   important backports from the upstream Apache project. We have also included
+   several improvements that ease the diagnosis of configuration problems
+   and simplify the configuration of permissions for local storage directories.
+
+   Security:
+
+   CDH3 beta 4 includes a fix for one major security vulnerability that was
+   known in beta 3. We encourage users running in a secured environment to
+   upgrade as soon as possible.
+
+   Scalability:
+
+   CDH3 beta 4 merges many of the scalability improvements contributed by
+   Yahoo! in their 0.20.100 branch of Apache Hadoop. This includes a reduction
+   in the amount of memory required by the NameNode, improvements to MapReduce
+   scheduling throughput, and more scalable RPC servers.
+
 
    == New Component Versions ==
 
@@ -31,16 +55,13 @@
 
    == Upgrading ==
 
+   *** If you are upgrading from a release of CDH prior to CDH3 beta 3, please
+   be sure to read the release notes for that release as well as those
+   for CDH3 beta 4.
 
-   Here are a few things you need to be aware of when upgrading:
-
-   Packaging:
-
-   Authentication and Authorization:
-
-   Security:
-
-   Other notes / incompatibilities / known issues:
+   - This release changes the wire format for Hadoop's RPC mechanism.
+   Thus, you must upgrade any existing hadoop client software at the
+   same time as you upgrade the server.
 
    == What's up next ==
 
