@@ -8,10 +8,26 @@
 
    == New Component Versions ==
 
-   Beta 4 updates many components to new upstream version numbers:
+   Beta 4 updates several components to new upstream version numbers:
 
+   HBase: Updated from 0.89.20100924 to 0.90.1. This new release continues
+   to focus on stability, but also includes a few important performance
+   improvements and an experimental feature to reduce the frequency of
+   length garbage collection pauses.
 
+   ZooKeeper: Updated from 3.3.1 to 3.3.2
 
+   Flume: Updated from 0.9.0 to 0.9.3
+
+   Pig: Updated from 0.7.0 to 0.8.0
+
+   Hive: Updated from 0.5.0 to 0.6.0 - TODO - 0.7.0?
+
+   Sqoop: Updated from 1.1.0 to 1.2.0
+
+   Oozie: Updated from 2.2.1 to 2.3.0
+
+   Whirr: Updated from 0.1.0 to 0.3.0
 
    == Upgrading ==
 
