@@ -54,6 +54,10 @@
    Whirr: Updated from 0.1.0 to 0.3.0. This release includes support for Apache
    HBase, improvements in startup time, and recipes for common configurations.
 
+   Hue: Updated from 1.1 to 1.2. The 1.2.0 is a minor release, largely
+   focused on bug fixes and compatibility with the release of Cloudera's
+   Distribution for Hadoop 3, beta 4.
+
    == Upgrading ==
 
    *** If you are upgrading from a release of CDH prior to CDH3 beta 3, please
