@@ -1,0 +1,30 @@
+      Cloudera's Distribution for Hadoop (CDH) 3 Beta 4 Released
+
+   Cloudera is happy to announce that we have released beta 4 of
+   version 3 of our Distribution for Hadoop (CDH3 beta 4).
+
+   == Core Hadoop, HDFS, and MapReduce ==
+
+
+   == New Component Versions ==
+
+   Beta 4 updates many components to new upstream version numbers:
+
+
+
+
+   == Upgrading ==
+
+
+   Here are a few things you need to be aware of when upgrading:
+
+   Packaging:
+
+   Authentication and Authorization:
+
+   Security:
+
+   Other notes / incompatibilities / known issues:
+
+   == What's up next ==
+
