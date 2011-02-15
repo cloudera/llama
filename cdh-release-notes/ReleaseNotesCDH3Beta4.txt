@@ -51,7 +51,8 @@
 
    Oozie: Updated from 2.2.1 to 2.3.0
 
-   Whirr: Updated from 0.1.0 to 0.3.0
+   Whirr: Updated from 0.1.0 to 0.3.0. This release includes support for Apache
+   HBase, improvements in startup time, and recipes for common configurations.
 
    == Upgrading ==
 
