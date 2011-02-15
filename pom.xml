@@ -821,7 +821,7 @@ TODO: need license header
       <dependency>
         <groupId>org.datanucleus</groupId>
         <artifactId>datanucleus-enhancer</artifactId>
-        <version>1.1.2</version>
+        <version>2.0.3</version>
         <exclusions>
           <exclusion>
             <groupId>asm</groupId>
@@ -832,7 +832,7 @@ TODO: need license header
       <dependency>
         <groupId>org.datanucleus</groupId>
         <artifactId>datanucleus-rdbms</artifactId>
-        <version>1.1.2</version>
+        <version>2.0.3</version>
       </dependency>
       <dependency>
         <groupId>org.apache.velocity</groupId>
@@ -873,12 +873,12 @@ TODO: need license header
       <dependency>
         <groupId>javax.jdo</groupId>
         <artifactId>jdo2-api</artifactId>
-        <version>2.3-pre-cdh</version>
+        <version>2.3-ec</version>
       </dependency>
       <dependency>
         <groupId>org.datanucleus</groupId>
         <artifactId>datanucleus-core</artifactId>
-        <version>1.1.2-cdh</version>
+        <version>2.0.3</version>
       </dependency>
       
       <!-- Oozie -->
