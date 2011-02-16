@@ -33,13 +33,19 @@ change can be found in the cloudera/patches directory in the release tarball.
          'cdhProjectName' : cdhProjectName }
 
 
-def printFooter():
+def printFooter(jiraCount):
+
+    if not jiraCount:
+        print "No patches have been applied that are not in the upstream version."
+
     print "</body>"
     print "</html>"
 
 
 def printProject(jiraDict, proj, projName):
     """Print the HTML for an individual project"""
+
+    jiraCount = 0
 
     try:
         typeDict = jiraDict[proj]
@@ -55,10 +61,13 @@ def printProject(jiraDict, proj, projName):
                 url = getJiraIssueURL(jira)
                 summary = cgi.escape(summary)
                 print "<li>[<a href='"+url+"'>"+jira+"</a>] - "+summary+"</li>"
+                jiraCount += 1
             print "</ul>"
     except KeyError:
         # No tickets of this key
-        return
+        pass
+
+    return jiraCount
 
 
 def printRelNotes(cdhReleaseVersion, baseVersion, cdhProjectVersion,
@@ -67,15 +76,17 @@ def printRelNotes(cdhReleaseVersion, baseVersion, cdhProjectVersion,
        jiraDict[proj][jiraType] = list of (jira, summary) pairs, eg
        jiraDict["HDFS"]["Bug"] = [("HDFS-127","Fix a bug")]
     """
+    jiraCount = 0
+
     printHeader(cdhReleaseVersion, baseVersion, cdhProjectVersion, cdhProjectName)
-    printProject(jiraDict, "DISTRO", "CDH")
-    printProject(jiraDict, "HADOOP", "Common")
-    printProject(jiraDict, "HDFS", "HDFS")
-    printProject(jiraDict, "MAPREDUCE", "MapReduce")
-    printProject(jiraDict, "ZOOKEEPER", "Zookeeper")
-    printProject(jiraDict, "PIG", "Pig")
-    printProject(jiraDict, "HBASE", "HBase")
-    printProject(jiraDict, "HIVE", "Hive")
-    printProject(jiraDict, "OOZIE", "Oozie")
-    printProject(jiraDict, "WHIRR", "Whirr")
-    printFooter()
+    jiraCount += printProject(jiraDict, "DISTRO", "CDH")
+    jiraCount += printProject(jiraDict, "HADOOP", "Common")
+    jiraCount += printProject(jiraDict, "HDFS", "HDFS")
+    jiraCount += printProject(jiraDict, "MAPREDUCE", "MapReduce")
+    jiraCount += printProject(jiraDict, "ZOOKEEPER", "Zookeeper")
+    jiraCount += printProject(jiraDict, "PIG", "Pig")
+    jiraCount += printProject(jiraDict, "HBASE", "HBase")
+    jiraCount += printProject(jiraDict, "HIVE", "Hive")
+    jiraCount += printProject(jiraDict, "OOZIE", "Oozie")
+    jiraCount += printProject(jiraDict, "WHIRR", "Whirr")
+    printFooter(jiraCount)
