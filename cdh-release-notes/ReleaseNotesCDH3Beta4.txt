@@ -49,7 +49,12 @@
 
    Sqoop: Updated from 1.1.0 to 1.2.0
 
-   Oozie: Updated from 2.2.1 to 2.3.0
+   Oozie: Updated from 2.2.1 to 2.3.0. This release includes several usability 
+   improvements and bug fixes. New features include Oozie sharelib and Oozie
+   HTTP Kerberos authentication. Oozie sharelib bundles Hadoop streaming, Pig,
+   Hive and Sqoop JARs simplifying workflow application deployment. Oozie HTTP
+   Kerberos authentication provides secure authentication for Oozie clients and
+   the Oozie web-console. Oozie examples have been rewritten making them simpler.
 
    Whirr: Updated from 0.1.0 to 0.3.0. This release includes support for Apache
    HBase, improvements in startup time, and recipes for common configurations.
