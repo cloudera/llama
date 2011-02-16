@@ -11,7 +11,7 @@ REQUIRED_DIRS = $(BUILD_DIR) $(DL_DIR) $(OUTPUT_DIR)
 _MKDIRS :=$(shell for d in $(REQUIRED_DIRS); \
   do                               \
     [ -d $$d ] || mkdir -p $$d;  \
-  done) 
+  done)
 
 TARGETS:=
 TARGETS_HELP:=
@@ -57,6 +57,7 @@ help-header:
 	@echo "    rpm       (all RPMs)"
 	@echo "    sdeb      (all SDEBs)"
 	@echo "    deb       (all DEBs)"
+	@echo "    relnotes  (all relnotes)"
 	@echo "    clean     (remove build dir)"
 	@echo "    realclean (also remove output and download dirs)"
 	@echo "    distclean (also remove the repo dir)"
@@ -81,8 +82,10 @@ sdeb: install-pom $(TARGETS_SDEB)
 
 deb: install-pom $(TARGETS_DEB)
 
+relnotes: $(TARGETS_RELNOTES)
+
 install-pom:
 	mvn -N install $(DO_MAVEN_DEPLOY)
 
 .DEFAULT_GOAL:= help
-.PHONY: realclean clean distclean package-help help-header packages all world help tgz srpm sdeb install-pom
+.PHONY: realclean clean distclean package-help help-header packages all world help tgz srpm sdeb install-pom relnotes

@@ -19,17 +19,21 @@
 # $2 git source directory
 # $3 git range specification to generate notes for
 # $4 Release version eg "CDH 2"
-# $5 Base Hadoop verion eg "0.20.1"
-# $6 CDH Hadoop version eg "hadoop-0.20.1+169.56"
+# $5 Base Project verion eg "0.20.1"
+# $6 CDH Project version eg "hadoop-0.20.1+169.56"
+# $7 CDH Project Name ed "Apache Hadoop"
 function relnote_gen {
   local gen_dir=$1
   local commit_log=$gen_dir/$6-changes.log
   local relnote_file=$gen_dir/$6.releasenotes.html
   echo "pushd $2 >& /dev/null"
+  if [ ! -d $gen_dir ]; then
+    mkdir -p $gen_dir
+  fi
   pushd $2 >& /dev/null
   git log --pretty=oneline --no-color $3 > $commit_log
   popd >& /dev/null
-  python ./tools/relnotes/relnotegen.py -l $commit_log -r "$4" -a $5 -c $6 > $relnote_file
+  python ./tools/relnotes/relnotegen.py -l $commit_log -r "$4" -a $5 -c $6 -n "$7" > $relnote_file
 }
 
-relnote_gen $1 $2 $3 "$4" $5 $6
+relnote_gen $1 $2 $3 "$4" $5 $6 "$7"

@@ -1,7 +1,7 @@
 # Implicit targets
 SHELL := /bin/bash
 
-# Download 
+# Download
 $(BUILD_DIR)/%/.download:
 	mkdir -p $(@D)
 	[ -f $($(PKG)_DOWNLOAD_DST) ] || (cd $(DL_DIR) && curl -# -L -o $($(PKG)_TARBALL_DST) $($(PKG)_DOWNLOAD_URL))
@@ -27,7 +27,7 @@ $(BUILD_DIR)/%/.patch:
 	touch $@
 
 # Build
-$(BUILD_DIR)/%/.build: 
+$(BUILD_DIR)/%/.build:
 	/usr/bin/env \
 	  -u DISPLAY \
 	  JAVA32_HOME=$(JAVA32_HOME) \
@@ -54,7 +54,7 @@ $(BUILD_DIR)/%/.srpm:
 	  $($(PKG)_BASE_VERSION) \
 	  $(PKG_FULL_VERSION) \
 	  $($(PKG)_PKG_VERSION) \
-	  $($(PKG)_RELEASE) 
+	  $($(PKG)_RELEASE)
 	cp $(PKG_BUILD_DIR)/rpm/topdir/SRPMS/$($(PKG)_PKG_NAME)-$($(PKG)_PKG_VERSION)-$($(PKG)_RELEASE).src.rpm \
 	   $($(PKG)_OUTPUT_DIR)
 	touch $@
@@ -105,6 +105,19 @@ $(BUILD_DIR)/%/.deb:
 				--preserve-envvar JAVA5_HOME --preserve-envvar FORREST_HOME --preserve-envvar MAVEN3_HOME \
 				-uc -us -b
 
+$(BUILD_DIR)/%/.relnotes:  $($(PKG)_OUTPUT_DIR)/$($(PKG)_NAME)-$($(PKG)_PKG_VERSION).releasenotes.html
+$(BUILD_DIR)/%/.relnotes:
+	mkdir -p $(PKG_BUILD_DIR)
+	$(BASE_DIR)/tools/relnotes/relnote-gen.sh \
+		$($(PKG)_OUTPUT_DIR) \
+		$($(PKG)_GIT_REPO) \
+		"$($(PKG)_BASE_REF)..HEAD" \
+		"CDH $(CDH_VERSION)" \
+		"$($(PKG)_BASE_VERSION)" \
+		"$($(PKG)_NAME)-$($(PKG)_PKG_VERSION)" \
+		"$($(PKG)_RELNOTES_NAME)"
+	touch $@
+
 # Package make function
 # $1 is the target prefix, $2 is the variable prefix
 define PACKAGE
@@ -140,16 +153,17 @@ $(2)_TARGET_SRPM     = $$($(2)_BUILD_DIR)/.srpm
 $(2)_TARGET_RPM      = $$($(2)_BUILD_DIR)/.rpm
 $(2)_TARGET_SDEB     = $$($(2)_BUILD_DIR)/.sdeb
 $(2)_TARGET_DEB      = $$($(2)_BUILD_DIR)/.deb
+$(2)_TARGET_RELNOTES = $$($(2)_BUILD_DIR)/.relnotes
 
 # We download target when the source is not in the download directory
-$(1)-download: $$($(2)_TARGET_DL) 
+$(1)-download: $$($(2)_TARGET_DL)
 
 # To prep target, we need to download it first
 $(1)-prep: $(1)-download $$($(2)_TARGET_PREP)
 
 # To patch target, we need to prep it first
 $(1)-patch: $(1)-prep $$($(2)_TARGET_PATCH)
- 
+
 # To build target, we need to patch it first
 $(1): $(1)-patch $$($(2)_TARGET_BUILD) $$($(2)_HOOK_POST_BUILD)
 
@@ -165,10 +179,10 @@ $(1)-sdeb: $(1) $$($(2)_TARGET_SDEB)
 # To make debs, we need to make source packages
 $(1)-deb: $(1)-sdeb $$($(2)_TARGET_DEB)
 
-$(1)-relnotes: $(1)
-	./tools/relnotes/relnote-gen.sh $$($(2)_OUTPUT_DIR) $$($(2)_GIT_REPO) "$$($(2)_BASE_REF)..HEAD" "CDH $(CDH_VERSION)" "$$($(2)_BASE_VERSION)" "$(1)-$$($(2)_PKG_VERSION)"
+# To make the release notes we need to build the target
+$(1)-relnotes: $$($(2)_TARGET_RELNOTES)
 
-#### 
+####
 # Helper targets -version -help etc
 $(1)-version:
 	@echo "Base: $$($(2)_BASE_VERSION)"
@@ -179,7 +193,7 @@ $(1)-help:
 	@echo "           $(1)-srpm, $(1)-rpm]"
 	@echo "           $(1)-sdeb, $(1)-deb]"
 
-$(1)-clean: 
+$(1)-clean:
 	-rm -rf $(BUILD_DIR)/$(CDH)/$(1)
 
 $(1)-info:
@@ -198,7 +212,7 @@ $(1)-info:
 	@echo "Version: $$($(2)_FULL_VERSION)"
 	@echo
 	@echo "Stamp status:"
-	@for mystamp in DL PREP PATCH BUILD SRPM RPM SDEB;\
+	@for mystamp in DL PREP PATCH BUILD SRPM RPM SDEB DEB RELNOTES;\
 	  do echo -n "  $$$$mystamp: " ; \
 	  ([ -f $($(1)_$$$$mystamp) ] && echo present || echo not present) ; \
 	done
@@ -209,17 +223,19 @@ $$($(2)_TARGET_PREP):     PKG=$(2)
 $$($(2)_TARGET_PREP):     PKG_FULL_VERSION=$$($(2)_FULL_VERSION)
 $$($(2)_TARGET_PATCH):    PKG=$(2)
 $$($(2)_TARGET_BUILD):    PKG=$(2)
-$$($(2)_TARGET_RPM) $$($(2)_TARGET_SRPM) $$($(2)_TARGET_SDEB) $$($(2)_TARGET_DEB): PKG=$(2)
-$$($(2)_TARGET_RPM) $$($(2)_TARGET_SRPM) $$($(2)_TARGET_SDEB) $$($(2)_TARGET_DEB): PKG_FULL_VERSION=$$($(2)_FULL_VERSION)
-$$($(2)_TARGET_RPM) $$($(2)_TARGET_SRPM) $$($(2)_TARGET_SDEB) $$($(2)_TARGET_DEB): PKG_PKG_VERSION=$$($(2)_PKG_VERSION)
-$$($(2)_TARGET_RPM) $$($(2)_TARGET_SRPM) $$($(2)_TARGET_SDEB) $$($(2)_TARGET_DEB): PKG_SOURCE_DIR=$$($(2)_SOURCE_DIR)
-$$($(2)_TARGET_RPM) $$($(2)_TARGET_SRPM) $$($(2)_TARGET_SDEB) $$($(2)_TARGET_DEB): PKG_BUILD_DIR=$$($(2)_BUILD_DIR)
+$$($(2)_TARGET_RPM) $$($(2)_TARGET_SRPM) $$($(2)_TARGET_SDEB) $$($(2)_TARGET_DEB) $$($(2)_TARGET_RELNOTES): PKG=$(2)
+$$($(2)_TARGET_RPM) $$($(2)_TARGET_SRPM) $$($(2)_TARGET_SDEB) $$($(2)_TARGET_DEB) $$($(2)_TARGET_RELNOTES): PKG_FULL_VERSION=$$($(2)_FULL_VERSION)
+$$($(2)_TARGET_RPM) $$($(2)_TARGET_SRPM) $$($(2)_TARGET_SDEB) $$($(2)_TARGET_DEB) $$($(2)_TARGET_RELNOTES): PKG_PKG_VERSION=$$($(2)_PKG_VERSION)
+$$($(2)_TARGET_RPM) $$($(2)_TARGET_SRPM) $$($(2)_TARGET_SDEB) $$($(2)_TARGET_DEB) $$($(2)_TARGET_RELNOTES): PKG_SOURCE_DIR=$$($(2)_SOURCE_DIR)
+$$($(2)_TARGET_RPM) $$($(2)_TARGET_SRPM) $$($(2)_TARGET_SDEB) $$($(2)_TARGET_DEB) $$($(2)_TARGET_RELNOTES): PKG_BUILD_DIR=$$($(2)_BUILD_DIR)
 
-TARGETS += $(1) 
+
+TARGETS += $(1)
 TARGETS_HELP += $(1)-help
 TARGETS_CLEAN += $(1)-clean
 TARGETS_SRPM += $(1)-srpm
 TARGETS_RPM += $(1)-rpm
 TARGETS_SDEB += $(1)-sdeb
 TARGETS_DEB += $(1)-deb
+TARGETS_RELNOTES += $(1)-relnotes
 endef

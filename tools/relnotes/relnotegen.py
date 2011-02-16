@@ -33,7 +33,8 @@ def parse_args():
   parser.add_argument('-l','--commit_log', required=True)
   parser.add_argument('-a','--apache_base_version',required=True)
   parser.add_argument('-r','--cdh_release_version',required=True)
-  parser.add_argument('-c','--cdh_hadoop_version', required=True)
+  parser.add_argument('-c','--cdh_project_version', required=True)
+  parser.add_argument('-n','--cdh_project_name', required=True)
   return parser.parse_args()
 
 
@@ -98,7 +99,8 @@ def main():
     parseJiras(commitLog)
     printRelNotes(args.cdh_release_version,
                   args.apache_base_version,
-                  args.cdh_hadoop_version,
+                  args.cdh_project_version,
+                  args.cdh_project_name,
                   jiraDict)
 
 

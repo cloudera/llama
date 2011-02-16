@@ -2,6 +2,7 @@ CDH_VERSION=3
 
 # Hadoop 0.20.0-based hadoop package
 HADOOP20_NAME=hadoop
+HADOOP20_RELNOTES_NAME=Apache Hadoop
 HADOOP20_PKG_NAME=hadoop-0.20
 HADOOP20_BASE_VERSION=0.20.2
 HADOOP20_TARBALL_DST=hadoop-$(HADOOP20_BASE_VERSION)-r916569.tar.gz
@@ -16,6 +17,7 @@ $(eval $(call PACKAGE,hadoop20,HADOOP20))
 
 # ZooKeeper
 ZOOKEEPER_NAME=zookeeper
+ZOOKEEPER_RELNOTES_NAME=Apache Zookeeper
 ZOOKEEPER_PKG_NAME=hadoop-zookeeper
 ZOOKEEPER_BASE_VERSION=3.3.2
 ZOOKEEPER_TARBALL_DST=zookeeper-$(ZOOKEEPER_BASE_VERSION).tar.gz
@@ -29,6 +31,7 @@ $(eval $(call PACKAGE,zookeeper,ZOOKEEPER))
 
 # HBase
 HBASE_NAME=hbase
+HBASE_RELNOTES_NAME=Apache HBase
 HBASE_PKG_NAME=hadoop-hbase
 HBASE_BASE_VERSION=0.90.1
 HBASE_TARBALL_DST=hbase-$(HBASE_BASE_VERSION).tar.gz
@@ -40,9 +43,10 @@ HBASE_PACKAGE_GIT_REPO=$(REPO_DIR)/cdh3/hbase-package
 HBASE_SITE=$(APACHE_MIRROR)/hbase/hbase-$(HBASE_BASE_VERSION)
 $(eval $(call PACKAGE,hbase,HBASE))
 
-# Pig 
+# Pig
 PIG_BASE_VERSION=0.8.0
 PIG_NAME=pig
+PIG_RELNOTES_NAME=Apache Pig
 PIG_PKG_NAME=hadoop-pig
 PIG_TARBALL_DST=pig-$(PIG_BASE_VERSION).tar.gz
 PIG_TARBALL_SRC=$(PIG_TARBALL_DST)
@@ -55,6 +59,7 @@ $(eval $(call PACKAGE,pig,PIG))
 
 # Hive
 HIVE_NAME=hive
+HIVE_RELNOTES_NAME=Apache Hive
 HIVE_RELEASE=2
 HIVE_PKG_NAME=hadoop-hive
 HIVE_BASE_VERSION=0.6.0
@@ -84,6 +89,7 @@ $(HIVE_TARGET_PREP):
 
 # Sqoop
 SQOOP_NAME=sqoop
+SQOOP_RELNOTES_NAME=Sqoop
 SQOOP_PKG_NAME=sqoop
 SQOOP_BASE_VERSION=1.2.0
 SQOOP_TARBALL_DST=cdh-base-$(SQOOP_BASE_VERSION).tar.gz
@@ -94,12 +100,10 @@ SQOOP_BUILD_REF=cdh-$(SQOOP_BASE_VERSION)
 SQOOP_PACKAGE_GIT_REPO=$(REPO_DIR)/cdh3/sqoop-package
 SQOOP_SITE=http://git.sf.cloudera.com/index.cgi/sqoop.git/snapshot/
 $(eval $(call PACKAGE,sqoop,SQOOP))
-sqoop-relnotes: sqoop
-	cd $(SQOOP_GIT_REPO) && ant relnotes -Dversion=$(SQOOP_FULL_VERSION) \
-		-Dbuild.relnotes.dir=$(SQOOP_OUTPUT_DIR)
 
 # Oozie
 OOZIE_NAME=oozie
+OOZIE_RELNOTES_NAME=Apache Oozie
 OOZIE_PKG_NAME=oozie
 OOZIE_BASE_VERSION=2.3.0
 OOZIE_TARBALL_DST=oozie-2.3.0.tar.gz
@@ -114,6 +118,7 @@ $(eval $(call PACKAGE,oozie,OOZIE))
 
 # Whirr
 WHIRR_NAME=whirr
+WHIRR_RELNOTES_NAME=Apache Whirr
 WHIRR_PKG_NAME=whirr
 WHIRR_BASE_VERSION=0.3.0
 WHIRR_TARBALL_DST=whirr-$(WHIRR_BASE_VERSION)-incubating-src.tar.gz
@@ -139,6 +144,7 @@ $(WHIRR_TARGET_PREP):
 
 # Flume
 FLUME_NAME=flume
+FLUME_RELNOTES_NAME=Flume
 FLUME_PKG_NAME=flume
 FLUME_BASE_VERSION=0.9.3
 FLUME_TARBALL_DST=cdh-base-$(FLUME_BASE_VERSION).tar.gz
