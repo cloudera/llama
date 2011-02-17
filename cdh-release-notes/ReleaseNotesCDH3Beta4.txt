@@ -43,13 +43,21 @@
    addresses several important bugs, including two fixes for connection
    cleanup in clients, and one server side thread leak.
 
-   Flume: Updated from 0.9.0 to 0.9.3
+   Flume: Updated from 0.9.1 to 0.9.3. This release broadens support to
+   include Flume nodes on Windows machines, exposes in-depth metric
+   information via a JSON interface, improves performance of tail and exec
+   sources, enables support for Apache Avro based RPCs, and patches
+   issues related to multi-master configurations, output format plugins
+   and manual failover chains.
 
    Pig: Updated from 0.7.0 to 0.8.0
 
    Hive: Updated from 0.5.0 to 0.6.0 - TODO - 0.7.0?
 
-   Sqoop: Updated from 1.1.0 to 1.2.0
+   Sqoop: Updated from 1.1.0 to 1.2.0. This release includes important bug
+   fixes as well as some improvements and new features, including support
+   for Oracle catalog views, the ability to load command line options from
+   configuration files, and several other usability improvements.
 
    Oozie: Updated from 2.2.1 to 2.3.0. This release includes several usability 
    improvements and bug fixes. New features include Oozie sharelib and Oozie
