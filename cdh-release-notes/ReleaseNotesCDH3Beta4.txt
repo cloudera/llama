@@ -50,7 +50,10 @@
    issues related to multi-master configurations, output format plugins
    and manual failover chains.
 
-   Pig: Updated from 0.7.0 to 0.8.0
+   Pig: Updated from 0.7.0 to 0.8.0. This release includes new features such
+   as scalar types, custom partitioners, Python UDFs, a new unit testing
+   framework for Pig scripts, better statistics on Pig jobs, and support
+   for integrating custom MapReduce jobs into a Pig flow.
 
    Hive: Updated from 0.5.0 to 0.6.0 - TODO - 0.7.0?
 
