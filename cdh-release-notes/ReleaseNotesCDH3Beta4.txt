@@ -39,7 +39,9 @@
    improvements and an experimental feature to reduce the frequency of
    length garbage collection pauses.
 
-   ZooKeeper: Updated from 3.3.1 to 3.3.2
+   ZooKeeper: Updated from 3.3.1 to 3.3.2. This is a bug fix release that
+   addresses several important bugs, including two fixes for connection
+   cleanup in clients, and one server side thread leak.
 
    Flume: Updated from 0.9.0 to 0.9.3
 
