@@ -7,6 +7,7 @@ oldcdh=$2
 newcdh=$3
 oldpom=$4
 newpom=$5
+rootdir=$6
 
 lower_version="$(echo ${oldcdh}| tr [A-Z] [a-z])"
 
@@ -19,42 +20,51 @@ do
     find $start_dir -name "*pom.xml" -exec grep -H "${oldpom}-SNAPSHOT" {} \;|cut -f1 -d' '| sed 's/\://'|xargs -I {} perl -p -i -e "s/${oldpom}-SNAPSHOT/${oldpom}/g" {}
 
     if [ "${dir}" = "${start_dir}/oozie" ]; then
-        find $dir/cloudera -name "do-release-build" -exec grep -H "\-${oldcdh}-SNAPSHOT" {} \;|cut -f1 -d' '| sed 's/\://'|xargs -I {} perl -p -i -e "s/\-${oldcdh}-SNAPSHOT/\-${oldcdh}/g" {}
+        perl -p -i -e "s/\-${oldcdh}-SNAPSHOT/\-${oldcdh}/g" $dir/cloudera/do-release-build
     fi
 
     if [ "${dir}" = "${start_dir}/hive" ]; then
-        find $dir/cloudera -name "hive-site.xml" -exec grep -H "\-${oldcdh}-SNAPSHOT" {} \;|cut -f1 -d' '| sed 's/\://'|xargs -I {} perl -p -i -e "s/\-${oldcdh}-SNAPSHOT/\-${oldcdh}/g" {}
+        if [ -e "${dir}/cloudera/hive-site.xml" ]; then
+            perl -p -i -e "s/\-${oldcdh}-SNAPSHOT/\-${oldcdh}/g" $dir/cloudera/hive-site.xml
+        fi
     fi
 
     
     OLD_BRANCH=$(git symbolic-ref --quiet HEAD|sed 's/refs\/heads\///')
-    TAG=${OLD_BRANCH}-${lower_version}-tag
-    NEW_BRANCH=${OLD_BRANCH}-${lower_version}-release
-    (git ls-files -m | xargs git add && git commit -m "CLOUDERA-BUILD. Preparing for ${oldcdh} release.")
+    TAG=${lower_version}-released
+    NEW_BRANCH=${OLD_BRANCH}-${lower_version}-rc
+    (git ls-files -m | xargs git add && git diff --cached --exit-code || git commit -m "CLOUDERA-BUILD. Preparing for ${oldcdh} release.")
     git tag -m "CLOUDERA-BUILD. Tagging for CDH3B4 release." ${TAG}
     git branch ${NEW_BRANCH}
+done
 
+for dir in $start_dir/*
+do
+    cd $dir
     find $start_dir -name "*pom.xml" -exec grep -H "\-${oldcdh}" {} \;|cut -f1 -d' '| sed 's/\://'|xargs -I {} perl -p -i -e "s/\-${oldcdh}/\-${newcdh}-SNAPSHOT/g" {}
     find $start_dir -name "*pom.xml" -exec grep -H "${oldpom}" {} \;|cut -f1 -d' '| sed 's/\://'|xargs -I {} perl -p -i -e "s/${oldpom}/${newpom}-SNAPSHOT/g" {}
 
     if [ "${dir}" = "${start_dir}/oozie" ]; then
-        find $dir/cloudera -name "do-release-build" -exec grep -H "\-${oldcdh}" {} \;|cut -f1 -d' '| sed 's/\://'|xargs -I {} perl -p -i -e "s/\-${oldcdh}/\-${newcdh}-SNAPSHOT/g" {}
+        perl -p -i -e "s/\-${oldcdh}/\-${newcdh}-SNAPSHOT/g" $dir/cloudera/do-release-build
     fi
 
     if [ "${dir}" = "${start_dir}/hive" ]; then
-        find $dir/cloudera -name "hive-site.xml" -exec grep -H "\-${oldcdh}" {} \;|cut -f1 -d' '| sed 's/\://'|xargs -I {} perl -p -i -e "s/\-${oldcdh}/\-${newcdh}-SNAPSHOT/g" {}
+        if [ -e "${dir}/cloudera/hive-site.xml" ]; then
+            perl -p -i -e "s/\-${oldcdh}/\-${newcdh}-SNAPSHOT/g" $dir/cloudera/hive-site.xml
+        fi
     fi
 
-    (git ls-files -m | xargs git add && git commit -m "CLOUDERA-BUILD. Preparing for ${newcdh} development.")
-#    git push origin $OLD_BRANCH
-#    git push origin $TAG
-#    git push origin $NEW_BRANCH
+    (git ls-files -m | xargs git add && git diff --cached --exit-code || git commit -m "CLOUDERA-BUILD. Preparing for ${newcdh} development.")
+    git push origin $OLD_BRANCH
+    git push origin $TAG
+    git push origin $NEW_BRANCH
 done
 
+cd $rootdir
 perl -p -i -e "s/\-${oldcdh}-SNAPSHOT/\-${newcdh}-SNAPSHOT/g" pom.xml
 perl -p -i -e "s/${oldpom}-SNAPSHOT/${newpom}-SNAPSHOT/g" pom.xml
-perl -p -i -e "s/\-${oldcdh}-SNAPSHOT/\-${newcdh}-SNAPSHOT/g" package.mk
+perl -p -i -e "s/${oldcdh}-SNAPSHOT/${newcdh}-SNAPSHOT/g" Makefile
 
-git add pom.xml package.mk
+git add pom.xml Makefile
 git commit -m "CLOUDERA-BUILD. Switching versions for ${newcdh} development."
-#git push origin master
+git push origin master
