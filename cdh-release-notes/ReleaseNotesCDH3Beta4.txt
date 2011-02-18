@@ -22,6 +22,13 @@
    known in beta 3. We encourage users running in a secured environment to
    upgrade as soon as possible.
 
+   HDFS now also includes support for the "sticky bit" as found in POSIX
+   file permissions. When set on a directory, files and directories within
+   that directory may only be deleted or renamed by the item's owner, the
+   directory's owner, or the superuser. We recommend that any directories
+   currently set to mode 777 (eg /tmp/) be chmodded to mode 1777 to include
+   the sticky bit.
+
    Scalability:
 
    CDH3 beta 4 merges many of the scalability improvements contributed by
