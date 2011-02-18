@@ -1,5 +1,7 @@
 build/
-repos
+dl/
+output/
+repos/
 sbuild
 .*~
 *.pyc
