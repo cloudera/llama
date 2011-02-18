@@ -46,9 +46,9 @@ do
     fi
 
     (git ls-files -m | xargs git add && git commit -m "CLOUDERA-BUILD. Preparing for ${newcdh} development.")
-    git push origin $OLD_BRANCH
-    git push origin $TAG
-    git push origin $NEW_BRANCH
+#    git push origin $OLD_BRANCH
+#    git push origin $TAG
+#    git push origin $NEW_BRANCH
 done
 
 perl -p -i -e "s/\-${oldcdh}-SNAPSHOT/\-${newcdh}-SNAPSHOT/g" pom.xml
@@ -57,4 +57,4 @@ perl -p -i -e "s/\-${oldcdh}-SNAPSHOT/\-${newcdh}-SNAPSHOT/g" package.mk
 
 git add pom.xml package.mk
 git commit -m "CLOUDERA-BUILD. Switching versions for ${newcdh} development."
-git push origin master
+#git push origin master
