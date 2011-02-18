@@ -37,7 +37,7 @@ HBASE_GIT_REPO=$(REPO_DIR)/cdh3/hbase
 HBASE_BASE_REF=cdh-base-$(HBASE_BASE_VERSION)
 HBASE_BUILD_REF=cdh-$(HBASE_BASE_VERSION)
 HBASE_PACKAGE_GIT_REPO=$(REPO_DIR)/cdh3/hbase-package
-HBASE_SITE=http://people.apache.org/~todd/hbase-0.90.1.rc1/
+HBASE_SITE=$(APACHE_MIRROR)/hbase/hbase-$(HBASE_BASE_VERSION)
 $(eval $(call PACKAGE,hbase,HBASE))
 
 # Pig 
