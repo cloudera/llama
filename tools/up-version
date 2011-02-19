@@ -41,6 +41,9 @@ done
 for dir in $start_dir/*
 do
     cd $dir
+    OLD_BRANCH=$(git symbolic-ref --quiet HEAD|sed 's/refs\/heads\///')
+    TAG=${lower_version}-released
+    NEW_BRANCH=${OLD_BRANCH}-${lower_version}-rc
     find $start_dir -name "*pom.xml" -exec grep -H "\-${oldcdh}" {} \;|cut -f1 -d' '| sed 's/\://'|xargs -I {} perl -p -i -e "s/\-${oldcdh}/\-${newcdh}-SNAPSHOT/g" {}
     find $start_dir -name "*pom.xml" -exec grep -H "${oldpom}" {} \;|cut -f1 -d' '| sed 's/\://'|xargs -I {} perl -p -i -e "s/${oldpom}/${newpom}-SNAPSHOT/g" {}
 
@@ -55,9 +58,9 @@ do
     fi
 
     (git ls-files -m | xargs git add && git diff --cached --exit-code || git commit -m "CLOUDERA-BUILD. Preparing for ${newcdh} development.")
-    git push origin $OLD_BRANCH
-    git push origin $TAG
-    git push origin $NEW_BRANCH
+    git push origin $OLD_BRANCH:$OLD_BRANCH
+    git push origin $TAG:$TAG
+    git push origin $NEW_BRANCH:$NEW_BRANCH
 done
 
 cd $rootdir
