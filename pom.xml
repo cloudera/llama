@@ -3,7 +3,7 @@
 TODO: need license header
 -->
 <project>
-  <Modelversion>4.0.0</modelVersion>
+  <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.cloudera.cdh</groupId>
   <artifactId>cdh-root</artifactId>
