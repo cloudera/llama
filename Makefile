@@ -34,7 +34,7 @@ $(error Please set FORREST_HOME in $(CONFIG) or environment)
 endif
 
 # Default Apache mirror
-APACHE_MIRROR ?= http://mirror.cloudera.com/apache/
+APACHE_MIRROR ?= http://mirrors.ibiblio.org/apache
 CLOUDERA_ARCHIVE ?= http://archive.cloudera.com/tarballs/
 
 # Include the implicit rules and functions for building packages
