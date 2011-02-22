@@ -1,7 +1,7 @@
    Cloudera's Distribution for Apache Hadoop (CDH) 3 Beta 4 Released
 
-   Cloudera is happy to announce that we have released beta 4 of
-   version 3 of our Distribution for Apache Hadoop (CDH3 beta 4).
+   Cloudera is happy to announce the release of Beta 4 of
+   version 3 of our Distribution for Apache Hadoop (CDH3 Beta 4).
 
    == Core Hadoop, HDFS, and MapReduce ==
 
@@ -10,28 +10,29 @@
 
    Stability and bug fixes:
 
-   CDH3 beta 4 fixes several important bugs in both MapReduce and HDFS based
+   CDH3 Beta 4 fixes several important bugs in both MapReduce and HDFS based
    on our experiences deploying CDH3 in production environments as well as
-   important backports from the upstream Apache project. We have also included
-   several improvements that ease the diagnosis of configuration problems
-   and simplify the configuration of permissions for local storage directories.
+   important backports from the upstream Apache project. This release also 
+   includes several improvements that ease the diagnosis of configuration 
+   problems and simplify the configuration of permissions for local storage 
+   directories.
 
    Security:
 
-   CDH3 beta 4 includes a fix for one major security vulnerability that was
-   known in beta 3. We encourage users running in a secured environment to
-   upgrade as soon as possible.
+   CDH3 Beta 4 includes a fix for one major security vulnerability that was
+   known in Beta 3. Cloudera encourages users running in a secured environment
+   to upgrade as soon as possible.
 
    HDFS now also includes support for the "sticky bit" as found in POSIX
    file permissions. When set on a directory, files and directories within
    that directory may only be deleted or renamed by the item's owner, the
-   directory's owner, or the superuser. We recommend that any directories
-   currently set to mode 777 (eg /tmp/) be chmodded to mode 1777 to include
-   the sticky bit.
+   directory's owner, or the superuser. Cloudera recommends that any 
+   directories currently set to mode 777 (eg /tmp/) be chmodded to mode 1777 
+   to include the sticky bit.
 
    Scalability:
 
-   CDH3 beta 4 merges many of the scalability improvements contributed by
+   CDH3 Beta 4 merges many of the scalability improvements contributed by
    Yahoo! in their 0.20.100 branch of Apache Hadoop. This includes a reduction
    in the amount of memory required by the NameNode, improvements to MapReduce
    scheduling throughput, and more scalable RPC servers.
@@ -39,12 +40,12 @@
 
    == New Component Versions ==
 
-   Beta 4 updates several components to new upstream version numbers:
+   CDH3 Beta 4 updates several components to new upstream version numbers:
 
    HBase: Updated from 0.89.20100924 to 0.90.1. This new release continues
    to focus on stability, but also includes a few important performance
    improvements and an experimental feature to reduce the frequency of
-   length garbage collection pauses.
+   lengthy garbage collection pauses.
 
    ZooKeeper: Updated from 3.3.1 to 3.3.2. This is a bug fix release that
    addresses several important bugs, including two fixes for connection
@@ -86,19 +87,19 @@
 
    Hue: Updated from 1.1 to 1.2. The 1.2.0 is a minor release, largely
    focused on bug fixes and compatibility with the release of Cloudera's
-   Distribution for Apache Hadoop 3, beta 4.
+   Distribution for Apache Hadoop 3, Beta 4.
 
    == Upgrading ==
 
-   *** If you are upgrading from a release of CDH prior to CDH3 beta 3, please
-   be sure to read the release notes for that release as well as those
-   for CDH3 beta 4.
+   *** If you are upgrading from a release of CDH prior to CDH3 Beta 3, please
+   read the release notes for the Beta 3 release as well as those
+   for CDH3 Beta 4.
 
    - This release changes the wire format for Hadoop's RPC mechanism.
    Thus, you must upgrade any existing hadoop client software at the
    same time as you upgrade the server.
 
-   - In CDH3 beta 4 it's important that, if you set mapred.child.ulimit, it
+   - In CDH3 Beta 4 it's important that, if you set mapred.child.ulimit, it
    must be more than 2 times the heap size value set in mapred.child.java.opts. 
    For example, if you set a 1G heap, set mapred.child.ulimit to 2.5GB. Child 
    processes are now guaranteed to fork at least once, and the fork momentarily  
