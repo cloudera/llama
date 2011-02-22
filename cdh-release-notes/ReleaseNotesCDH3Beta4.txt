@@ -1,7 +1,7 @@
-      Cloudera's Distribution for Hadoop (CDH) 3 Beta 4 Released
+   Cloudera's Distribution for Apache Hadoop (CDH) 3 Beta 4 Released
 
    Cloudera is happy to announce that we have released beta 4 of
-   version 3 of our Distribution for Hadoop (CDH3 beta 4).
+   version 3 of our Distribution for Apache Hadoop (CDH3 beta 4).
 
    == Core Hadoop, HDFS, and MapReduce ==
 
@@ -62,7 +62,12 @@
    framework for Pig scripts, better statistics on Pig jobs, and support
    for integrating custom MapReduce jobs into a Pig flow.
 
-   Hive: Updated from 0.5.0 to 0.6.0 - TODO - 0.7.0?
+   Hive: Updated from 0.5.0 to 0.7.0-rc0. This release includes important 
+   bug fixes as well as new features and performance improvements. These 
+   include support for views, multiple databases, and dynamic partitions,
+   automatic merging of small files, new and improved join strategies, storage
+   handlers, support for local execution modes, archiving, and significant
+   improvements to the JDBC driver.
 
    Sqoop: Updated from 1.1.0 to 1.2.0. This release includes important bug
    fixes as well as some improvements and new features, including support
@@ -81,7 +86,7 @@
 
    Hue: Updated from 1.1 to 1.2. The 1.2.0 is a minor release, largely
    focused on bug fixes and compatibility with the release of Cloudera's
-   Distribution for Hadoop 3, beta 4.
+   Distribution for Apache Hadoop 3, beta 4.
 
    == Upgrading ==
 
@@ -93,5 +98,8 @@
    Thus, you must upgrade any existing hadoop client software at the
    same time as you upgrade the server.
 
-   == What's up next ==
-
+   - In CDH3 beta 4 it's important that, if you set mapred.child.ulimit, it
+   must be more than 2 times the heap size value set in mapred.child.java.opts. 
+   For example, if you set a 1G heap, set mapred.child.ulimit to 2.5GB. Child 
+   processes are now guaranteed to fork at least once, and the fork momentarily  
+   requires twice the overhead in virtual memory.    
