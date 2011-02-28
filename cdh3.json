@@ -17,7 +17,7 @@
      "hive": {"track-branch": "cdh-0.7.0", "dir": "repos/cdh3/hive", "remotes": ["origin", "apache"]},
      "flume": {"track-branch": "cdh-0.9.3", "dir": "repos/cdh3/flume", "remotes": ["origin"]},
      "hbase": {"track-branch": "cdh-0.90.1", "dir": "repos/cdh3/hbase", "remotes": ["origin","apache"]},
-     "zookeeper": {"track-branch": "cdh-3.3.2", "dir": "repos/cdh3/zookeeper", "remotes": ["origin", "apache"]},
+     "zookeeper": {"track-branch": "cdh-3.3.3", "dir": "repos/cdh3/zookeeper", "remotes": ["origin", "apache"]},
      "sqoop": {"track-branch": "cdh-1.2.0", "dir": "repos/cdh3/sqoop", "remotes": ["origin"]},
      "oozie": {"track-branch": "cdh-2.3.0", "dir": "repos/cdh3/oozie", "remotes": ["origin"]},
      "whirr": {"track-branch": "cdh-0.3.0", "dir": "repos/cdh3/whirr", "remotes": ["origin", "apache"]},
