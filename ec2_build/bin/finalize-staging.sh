@@ -47,6 +47,8 @@ for ARCHIVE in $ARCHIVES; do
   ARCHIVE_NAME=`echo "$ARCHIVE_NAME" | sed -e 's/.*\///'`
 
   PACKAGE_NAME=`echo "$ARCHIVE_NAME" | sed -e 's/-.*//'`
+  ARCHIVE_FILE=`echo "$ARCHIVE" | sed -e 's/.*\/\([^\/]*\)/\1/'`
+  LATEST_NAME="${PACKAGE_NAME}-latest.tar.gz"
 
   # Copy archive file
   cp $ARCHIVE $DESTINATION_DIR/
@@ -61,18 +63,28 @@ for ARCHIVE in $ARCHIVES; do
     cp $CHANGE_FILE  $DESTINATION_DIR/$ARCHIVE_NAME.CHANGES.txt
   fi
 
-  # Create directory for docs
-  mkdir -p  $DESTINATION_DIR/$ARCHIVE_NAME/
+  # Check for docs directory existence before we try symlinknig etc.
+  if [ -d $BASE_DIR/$ARCHIVE_NAME/docs ]; then
+      # Create directory for docs
+      mkdir -p  $DESTINATION_DIR/$ARCHIVE_NAME/
 
-  # Copy docs directory
-  cp -r $BASE_DIR/$ARCHIVE_NAME/docs/*  $DESTINATION_DIR/$ARCHIVE_NAME/
+      # Copy docs directory
+      cp -r $BASE_DIR/$ARCHIVE_NAME/docs/*  $DESTINATION_DIR/$ARCHIVE_NAME/
 
-  # Remove general symlink to the project doc
-  rm -f $DESTINATION_DIR/$PACKAGE_NAME
+      # Remove general symlink to the project doc
+      rm -f $DESTINATION_DIR/$PACKAGE_NAME
+  fi
 
-  # Create a new symlink to the new documentation
-  pushd $DESTINATION_DIR
-    ln -s $ARCHIVE_NAME $PACKAGE_NAME
+  # Remove latest tarball symlink
+  rm -f $DESTINATION_DIR/$LATEST_NAME
+  
+    pushd $DESTINATION_DIR
+    # Symlink to the latest tarball
+    ln -s $ARCHIVE_FILE $LATEST_NAME
+    # Create a new symlink to the new documentation
+    if [ -d $BASE_DIR/$ARCHIVE_NAME/docs ]; then
+        ln -s $ARCHIVE_NAME $PACKAGE_NAME
+    fi
   popd
 
 done
