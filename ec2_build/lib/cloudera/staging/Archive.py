@@ -181,6 +181,13 @@ class Archive:
                          'secret_key': os.getenv('AWS_SECRET_ACCESS_KEY')}
     self.execute('echo "' + s3_config_content + '" > /home/' + self.username + '/.s3cfg')
 
+    # Also, while we're here, set up /var/www/archive_public to actually be a symlink to /mnt/archive_public.
+    self.execute("sudo mkdir -p /mnt/archive_public", True)
+    self.execute("sudo chown -R www-data:www-data /mnt/archive_public", True)
+    self.execute("sudo rm -rf /var/www/archive_public", True)
+    self.execute("sudo ln -s /mnt/archive_public /var/www/archive_public", True)
+    self.execute("sudo chown -R www-data:www-data /var/www/archive_public", True)
+
 
   def get_gpg_info_path(self, system):
     if system == RepositoryType.APT:
