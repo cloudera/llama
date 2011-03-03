@@ -183,6 +183,7 @@ class Archive:
 
     # Also, while we're here, set up /var/www/archive_public to actually be a symlink to /mnt/archive_public.
     self.execute("sudo mkdir -p /mnt/archive_public", True)
+    self.execute("sudo cp -r /var/www/archive_public/* /mnt/archive_public/", True)
     self.execute("sudo chown -R www-data:www-data /mnt/archive_public", True)
     self.execute("sudo rm -rf /var/www/archive_public", True)
     self.execute("sudo ln -s /mnt/archive_public /var/www/archive_public", True)
