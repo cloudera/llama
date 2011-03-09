@@ -120,7 +120,7 @@ EOF
   apt-get -y install sendmail
 
   pushd /tmp
-    wget http://mirrors.ibiblio.org/pub/mirrors/apache/maven/binaries/apache-maven-3.0.2-bin.tar.gz
+    wget http://archive.apache.org/dist/maven/binaries/apache-maven-3.0.2-bin.tar.gz
     tar zxvf apache-maven-*tar.gz
     ln -s /tmp/apache-maven-3.0.2/bin/mvn /usr/bin/mvn
 popd

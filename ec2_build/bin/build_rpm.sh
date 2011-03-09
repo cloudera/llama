@@ -80,7 +80,7 @@ fi
 
 source /opt/toolchain/toolchain.sh
 pushd /tmp
-    wget http://mirrors.ibiblio.org/pub/mirrors/apache/maven/binaries/apache-maven-3.0.2-bin.tar.gz
+    wget http://archive.apache.org/dist/maven/binaries/apache-maven-3.0.2-bin.tar.gz
     tar zxvf apache-maven-*tar.gz
     export MAVEN_HOME=/tmp/apache-maven-3.0.2
     export PATH=$MAVEN_HOME/bin:$PATH
