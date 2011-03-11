@@ -70,3 +70,12 @@ for ARCH in $ARCHS ; do
 done
 
 createrepo $REPO/cdh/$CDH_RELEASE
+
+pushd $REPO/cdh/$CDH_RELEASE/repodata
+
+for FILE in ./*; do
+  echo "Signing $FILE"
+  gpg --armor --detach-sign --batch --passphrase $PASSPHRASE $FILE
+done
+
+popd
