@@ -9,38 +9,38 @@
 
   "projects":
   {
-     "hadoop-0.20": { "track-branch": "cdh-0.20.2", "dir":"repos/cdh3/hadoop-0.20",
+     "hadoop-0.20": { "track-branch": "cdh-0.20.2+923", "dir":"repos/cdh3/hadoop-0.20",
                       "remotes": ["origin", "common"],
                       "remote-project-name": "hadoop" },
 
-     "pig": {"track-branch": "cdh-0.8.0", "dir": "repos/cdh3/pig", "remotes": ["origin", "apache"]},
-     "hive": {"track-branch": "cdh-0.7.0", "dir": "repos/cdh3/hive", "remotes": ["origin", "apache"]},
-     "flume": {"track-branch": "cdh-0.9.3", "dir": "repos/cdh3/flume", "remotes": ["origin"]},
-     "hbase": {"track-branch": "cdh-0.90.1", "dir": "repos/cdh3/hbase", "remotes": ["origin","apache"]},
-     "zookeeper": {"track-branch": "cdh-3.3.3", "dir": "repos/cdh3/zookeeper", "remotes": ["origin", "apache"]},
-     "sqoop": {"track-branch": "cdh-1.2.0", "dir": "repos/cdh3/sqoop", "remotes": ["origin"]},
-     "oozie": {"track-branch": "cdh-2.3.0", "dir": "repos/cdh3/oozie", "remotes": ["origin"]},
-     "whirr": {"track-branch": "cdh-0.3.0", "dir": "repos/cdh3/whirr", "remotes": ["origin", "apache"]},
+     "pig": {"track-branch": "cdh-0.8.0+20", "dir": "repos/cdh3/pig", "remotes": ["origin", "apache"]},
+     "hive": {"track-branch": "cdh-0.7.0+20", "dir": "repos/cdh3/hive", "remotes": ["origin", "apache"]},
+     "flume": {"track-branch": "cdh-0.9.3+15", "dir": "repos/cdh3/flume", "remotes": ["origin"]},
+     "hbase": {"track-branch": "cdh-0.90.1+15", "dir": "repos/cdh3/hbase", "remotes": ["origin","apache"]},
+     "zookeeper": {"track-branch": "cdh-3.3.3+12", "dir": "repos/cdh3/zookeeper", "remotes": ["origin", "apache"]},
+     "sqoop": {"track-branch": "cdh-1.2.0+24", "dir": "repos/cdh3/sqoop", "remotes": ["origin"]},
+     "oozie": {"track-branch": "cdh-2.3.0+31", "dir": "repos/cdh3/oozie", "remotes": ["origin"]},
+     "whirr": {"track-branch": "cdh-0.3.0+5", "dir": "repos/cdh3/whirr", "remotes": ["origin", "apache"]},
 
-     "hadoop-0.20-package": { "track-branch": "cdh3", "dir": "repos/cdh3/hadoop-0.20-package",
+     "hadoop-0.20-package": { "track-branch": "cdh3u0-rc", "dir": "repos/cdh3/hadoop-0.20-package",
                               "remote-project-name": "hadoop-package",
                               "remotes": ["origin"]},
 
-     "hive-package": { "track-branch": "cdh3", "dir":
+     "hive-package": { "track-branch": "cdh3u0-rc", "dir":
           "repos/cdh3/hive-package", "remotes": ["origin"]},
-     "pig-package": { "track-branch": "cdh3", "dir":
+     "pig-package": { "track-branch": "cdh3u0-rc", "dir":
           "repos/cdh3/pig-package", "remotes": ["origin"]},
-     "hbase-package": { "track-branch": "cdh3", "dir":
+     "hbase-package": { "track-branch": "cdh3u0-rc", "dir":
           "repos/cdh3/hbase-package", "remotes": ["origin"]},
-     "sqoop-package": { "track-branch": "cdh3", "dir":
+     "sqoop-package": { "track-branch": "cdh3u0-rc", "dir":
           "repos/cdh3/sqoop-package", "remotes": ["origin"]},
-     "flume-package": { "track-branch": "cdh3", "dir":
+     "flume-package": { "track-branch": "cdh3u0-rc", "dir":
           "repos/cdh3/flume-package", "remotes": ["origin"]},
-     "zookeeper-package": { "track-branch": "cdh3", "dir":
+     "zookeeper-package": { "track-branch": "cdh3u0-rc", "dir":
           "repos/cdh3/zookeeper-package", "remotes": ["origin"]},
-     "oozie-package": { "track-branch": "cdh3", "dir":
+     "oozie-package": { "track-branch": "cdh3u0-rc", "dir":
           "repos/cdh3/oozie-package", "remotes": ["origin"]},
-     "whirr-package": { "track-branch": "cdh3", "dir":
+     "whirr-package": { "track-branch": "cdh3u0-rc", "dir":
           "repos/cdh3/whirr-package", "remotes": ["origin"]}
     }
 }
