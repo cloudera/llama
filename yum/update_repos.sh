@@ -24,7 +24,7 @@ function usage {
   exit 1
 }
 
-while getopts "s:b:c:r:p:" options; do
+while getopts "s:b:c:r:p:d:" options; do
   case $options in
     s ) S3_BUCKET=$OPTARG;;
     c ) CDH_RELEASE=$OPTARG;;
