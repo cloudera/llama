@@ -25,6 +25,7 @@
 function relnote_gen {
   local gen_dir=$1
   local commit_log=$gen_dir/$6-changes.log
+  local changes_file=$gen_dir/$6-CHANGES.txt
   local relnote_file=$gen_dir/$6.releasenotes.html
   echo "pushd $2 >& /dev/null"
   if [ ! -d $gen_dir ]; then
@@ -32,6 +33,7 @@ function relnote_gen {
   fi
   pushd $2 >& /dev/null
   git log --pretty=oneline --no-color $3 > $commit_log
+  git log --pretty=medium --no-color $3 > $changes_file
   popd >& /dev/null
   python ./tools/relnotes/relnotegen.py -l $commit_log -r "$4" -a $5 -c $6 -n "$7" > $relnote_file
 }
