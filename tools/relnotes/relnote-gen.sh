@@ -25,7 +25,7 @@
 function relnote_gen {
   local gen_dir=$1
   local commit_log=$gen_dir/$6-changes.log
-  local changes_file=$gen_dir/$6-CHANGES.txt
+  local changes_file=$gen_dir/$6.CHANGES.txt
   local relnote_file=$gen_dir/$6.releasenotes.html
   echo "pushd $2 >& /dev/null"
   if [ ! -d $gen_dir ]; then
