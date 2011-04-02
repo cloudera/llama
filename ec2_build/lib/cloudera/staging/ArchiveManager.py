@@ -16,7 +16,7 @@ class ArchiveManager:
   DEFAULT_ARCHIVE_VOLUME_MOUNT = '/dev/sdb'
   DEFAULT_AMI = 'ami-3397795a'
 
-  NIGHTLY_AMI = 'ami-64af5c0d'
+  NIGHTLY_AMI = 'ami-f8cb3691'
 
 
   def __init__(self, ec2_connection):
