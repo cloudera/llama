@@ -63,6 +63,12 @@ EOF
     add-apt-repository 'deb http://archive.canonical.com/ maverick partner'
   fi
 
+  if [ $(lsb_release -c -s) == "squeeze" ]; then
+    SQUEEZE_NON_FREE_REPO="/etc/apt/sources.list.d/sqeeze-non-free.list"
+    echo 'deb http://ftp.debian.org/debian/ squeeze non-free' > $SQUEEZE_NON_FREE_REPO
+    echo 'deb-src http://ftp.debian.org/debian/ squeeze non-free' >> $SQUEEZE_NON_FREE_REPO
+  fi
+
   apt-get update
 
   # Some basic tools we need:

@@ -17,6 +17,8 @@ AMIS={
   ('hardy', 'amd64'):    'ami-1774927e',
   ('lenny', 'x86'):      'ami-1d729474',
   ('lenny', 'amd64'):    'ami-ed749284',
+  ('sqeeze', 'x86'):     'ami-d812efb1',
+  ('sqeeze', 'amd64'):   'ami-c40df0ad',
 # home built centos5 AMIs
   ('centos5', 'x86'):    'ami-6ed43f07',
   ('centos5', 'amd64'):  'ami-96d53eff',
@@ -40,6 +42,8 @@ DEFAULT_BUILD_MACHINES = [
   ('deb', 'lucid', 'amd64'),
   ('deb', 'maverick', 'x86'),
   ('deb', 'maverick', 'amd64'),
+  ('deb', 'sqeeze', 'x86'),
+  ('deb', 'sqeeze', 'amd64'),
   ('rpm', 'centos5',  'x86'),
   ('rpm', 'centos5',  'amd64'),
   ]
