@@ -17,8 +17,8 @@ AMIS={
   ('hardy', 'amd64'):    'ami-1774927e',
   ('lenny', 'x86'):      'ami-1d729474',
   ('lenny', 'amd64'):    'ami-ed749284',
-  ('sqeeze', 'x86'):     'ami-d812efb1',
-  ('sqeeze', 'amd64'):   'ami-c40df0ad',
+  ('squeeze', 'x86'):     'ami-d812efb1',
+  ('squeeze', 'amd64'):   'ami-c40df0ad',
 # home built centos5 AMIs
   ('centos5', 'x86'):    'ami-6ed43f07',
   ('centos5', 'amd64'):  'ami-96d53eff',
@@ -38,12 +38,14 @@ BUILD_INSTANCE_TYPES = {
 # What we actually want to build
 # tuples of (build type, distro, arch)
 DEFAULT_BUILD_MACHINES = [
+  ('deb', 'lenny',    'x86'),
+  ('deb', 'lenny',    'amd64'),
   ('deb', 'lucid', 'x86'),
   ('deb', 'lucid', 'amd64'),
   ('deb', 'maverick', 'x86'),
   ('deb', 'maverick', 'amd64'),
-  ('deb', 'sqeeze', 'x86'),
-  ('deb', 'sqeeze', 'amd64'),
+  ('deb', 'squeeze', 'x86'),
+  ('deb', 'squeeze', 'amd64'),
   ('rpm', 'centos5',  'x86'),
   ('rpm', 'centos5',  'amd64'),
   ]
