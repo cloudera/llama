@@ -2,7 +2,7 @@
   "default-remote": "origin",
 
   "remotes":
-    {"origin": { "fetch": "ssh://git@git.sf.cloudera.com/%(name)s.git" },
+    {"origin": { "fetch": "git://github.sf.cloudera.com/CDH/%(name)s.git" },
      "apache": { "fetch": "ssh://git@git.sf.cloudera.com/apache-%(name)s.git" },
      "common": { "fetch": "ssh://git@git.sf.cloudera.com/apache-hadoop-common.git" },
      "yahoo": { "fetch": "ssh://git@git.sf.cloudera.com/yahoo-%(name)s.git" }},
