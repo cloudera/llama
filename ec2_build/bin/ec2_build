@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # (c) Copyright 2009 Cloudera, Inc.
 __usage = """
-   --bucket | -b <bucket> bucket to dump sources and build products into
-                          (default: ec2-build)
-
-
+   --staging | -s <dir>   Staging directory under /mnt/internalstaging.
+                          (default: cdh3-staging)
+   --staging-host <host>  Host to use for scp'ing resulting bits to staging.
+                          (default: ubuntu64-10-10-slave.hal.cloudera.com)
    --key | -k  <key>      SSH key to allow connection to build slave instances
                           (default: current user name)
 
@@ -29,7 +29,7 @@ class TimeoutException(Exception):
 
 # Sanity check:
 #
-# DEBIAN_DISTROS: lenny, hardy, intrepid, jaunty, etc
+# DEBIAN_DISTROS: lenny, squeeze, etc.
 # DEBIAN_SUITES: stable, testing
 # SUITE: $DEBIAN_DISTRO-$DEBIAN_SUITE, $DEBIAN_DISTRO-testing
 # CDH_RELEASE: cdh1, cdh2
@@ -38,15 +38,22 @@ class TimeoutException(Exception):
 
 import boto
 import datetime
+import logging
 import glob
 import md5
 from optparse import OptionParser
 import os
+import os.path
 import sys
 import re
+import shutil
 import time
 import deb_util
-from ec2_constants import AMIS, BUILD_INSTANCE_TYPES, DEFAULT_BUILD_MACHINES
+import tempfile
+from ec2_constants import AMIS, BUILD_INSTANCE_TYPES, DEFAULT_BUILD_MACHINES, STAGING_ROOT, STAGING_URL_ROOT, INTERIM_STAGING
+from threading import Thread
+import cloudera.utils
+import cloudera.aws.ec2
 
 # Expected location of build_[deb,rpm.sh]
 SCRIPT_DIR = os.path.realpath(os.path.dirname(sys.argv[0]))
@@ -84,6 +91,141 @@ BUILD_SCRIPTS = {
   'rpm': BUILD_RPM,
   }
 
+#XXX Should be in lib/cloudera/constants
+STATIC_SLAVES = {
+	('centos5', 'x86'):    ('root', 'centos32-5-5-slave.hal.cloudera.com',   '../conf/static_vm_key'),
+	('centos5', 'amd64'):  ('root', 'centos64-5-5-slave.hal.cloudera.com',   '../conf/static_vm_key'),
+	('rhel6',   'amd64'):  ('root', 'rhel64-6-0-slave.hal.cloudera.com',     '../conf/static_vm_key'),
+	('sles11',  'amd64'):  ('root', 'sles64-11-slave.hal.cloudera.com',      '../conf/static_vm_key'),
+	('squeeze', 'x86'):    ('root', 'debian32-6-0-slave.hal.cloudera.com',   '../conf/static_vm_key'),
+	('squeeze', 'amd64'):  ('root', 'debian64-6-0-slave.hal.cloudera.com',   '../conf/static_vm_key'),
+	('lucid',   'x86'):    ('root', 'ubuntu32-10-04-slave.hal.cloudera.com', '../conf/static_vm_key'),
+	('lucid',   'amd64'):  ('root', 'ubuntu64-10-04-slave.hal.cloudera.com', '../conf/static_vm_key'),
+	('maverick', 'x86'):   ('root', 'ubuntu32-10-10-slave.hal.cloudera.com', '../conf/static_vm_key'),
+	('maverick', 'amd64'): ('root', 'ubuntu64-10-10-slave.hal.cloudera.com', '../conf/static_vm_key')
+}
+
+#XXX Should be in lib/cloudera/constants
+def user_hostname_key_options(os_distro, arch):
+  return STATIC_SLAVES[(os_distro, arch)]
+
+#XXX Should be in cloudera/utils
+class mylogger:
+  def info(self, message):
+    print message
+
+#XXX Separate module
+class BuildWorker(Thread):
+
+  # Strict host key checking is deactivated because some instances may reuse the same ip (from a precedent run)
+  # and then scare ssh
+  # ServerAliveInterval is set so as to not loose connection with a quiet and slow remote instance
+  # -ttt will force pseudo-tty allocation and avoid some issues where the session would hang because of the lack of tty
+  SSH_OPTIONS = ['-o StrictHostKeyChecking=no', '-o ServerAliveInterval=120']
+
+  # Sudo command
+  SUDO_CMD = 'sudo'
+
+
+  def __init__ (self, build_id, build_type, os_distro, arch, build_script):
+    Thread.__init__(self)
+    self.build_id = build_id
+    self.build_type = build_type
+    self.os_distro = os_distro
+    self.arch = arch
+    self.build_script = build_script
+    self.returncode = None
+
+
+  def start_logging(self):
+    '''
+    Start logging.
+    Generate log filename and open file handle
+    '''
+
+    # Define logger
+    self.logger = logging.getLogger("%s"%('_'.join([self.build_type, self.os_distro, self.arch])))
+
+    # Set logger level
+    self.logger.setLevel(logging.INFO)
+
+    log_handler = logging.StreamHandler()
+
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    log_handler.setFormatter(formatter)
+
+    self.logger.addHandler(log_handler)
+
+
+  def copy_build_script(self, build_script):
+    temp_dir = tempfile.mkdtemp()
+
+    build_script_filename = "%s-%s-%s-%s.sh" % (self.build_id,
+                                                  self.build_type,
+                                                  self.os_distro,
+                                                  self.arch)
+ 
+    build_file_path = os.path.join(temp_dir, build_script_filename)
+
+    build_file = open(build_file_path, 'w')
+    build_file.write(build_script)
+    build_file.close()
+
+
+
+    (user, hostname, key) = user_hostname_key_options(self.os_distro, self.arch)
+    scp = cloudera.utils.SCP(user, hostname, key, self.SSH_OPTIONS)
+    scp.set_logger(self.logger)
+
+    scp.copy(build_file_path, '~/')
+
+    shutil.rmtree(temp_dir)    
+
+    return build_script_filename
+
+ 
+  def do_build(self, build_script):
+    '''
+    Execute scripts on remote instance
+    '''
+
+    build_script_filename = self.copy_build_script(build_script)
+
+    ssh_options = self.SSH_OPTIONS
+    ssh_options.append('-ttt')
+
+    # Setup a ssh connection
+    (user, hostname, key) = user_hostname_key_options(self.os_distro, self.arch)
+    ssh = cloudera.utils.SSH(user, hostname, key, ssh_options)
+    ssh.set_logger(self.logger)
+
+    # Prepare ssh command to be run
+    cmd_remote = ''
+    if not self.os_distro in cloudera.aws.ec2.distributions_without_sudo() :
+      cmd_remote = self.SUDO_CMD + ' ' + cmd_remote
+
+    # Ensure it is executable and then execute it
+    return_code = ssh.execute('chmod', ['u+x', build_script_filename])
+    return_code = ssh.execute(cmd_remote + './' + build_script_filename, [])
+
+    # Third we remove it
+    return_code = ssh.execute('rm', ['-fv', build_script_filename])
+
+    self.returncode = return_code
+
+    return self.returncode
+
+
+  def run(self):
+
+    self.start_logging()
+    self.logger.info("Starting thread for (%s, %s, %s)"%(self.build_type, self.os_distro, self.arch))
+
+    self.do_build(self.build_script)
+
+
+
+
 def get_build_product_dir(cdh_release):
   return os.path.join(DEFAULT_BUILD_PRODUCTS_BASE,
                       re.match('cdh\d+', cdh_release).group())
@@ -93,7 +235,8 @@ class Options:
 
   def __init__(self):
     # Bucket to store source RPMs/debs in
-    self.S3_BUCKET = 'ec2-build'
+    self.STAGING = 'cdh3-build'
+    self.STAGING_HOST = 'ubuntu64-10-10-slave.hal.cloudera.com'
     self.BUILD_ID = "%s-%s" % (USERNAME, datetime.datetime.now().strftime("%Y%m%d_%H%M%S"))
     self.EC2_KEY_NAME = USERNAME
     self.EMAIL_ADDRESS = "%s@cloudera.com" % (USERNAME)
@@ -116,7 +259,9 @@ def parse_args():
   ret_opts = Options()
 
   op = OptionParser(usage = __usage)
-  op.add_option('-b', '--bucket')
+  #  op.add_option('-b', '--bucket')
+  op.add_option('-s', '--staging')
+  op.add_option('--staging-host')
   op.add_option('-k', '--key')
   op.add_option('-e', '--email')
   op.add_option('-g', '--groups')
@@ -156,9 +301,15 @@ def parse_args():
 
   ret_opts.WAIT = opts.wait
 
-  if opts.bucket:
-    ret_opts.S3_BUCKET = opts.bucket
+  #if opts.bucket:
+  #ret_opts.S3_BUCKET = opts.bucket
 
+  if opts.staging:
+    ret_opts.STAGING = opts.staging
+
+  if opts.staging_host:
+    ret_opts.STAGING_HOST = opts.staging_host
+  
   if opts.build_id:
     ret_opts.BUILD_ID = opts.build_id
 
@@ -210,7 +361,7 @@ def progressbar(bytes_done, total_bytes):
   sys.stdout.flush()
 
 
-def satisfy_in_cache(bucket, path):
+def satisfy_in_cache(staging_dir, path):
   """
   Ensure that the file at path 'path' is present in the file cache
   in bucket 'bucket'. Presence is determined by the md5sum of the
@@ -222,16 +373,19 @@ def satisfy_in_cache(bucket, path):
   checksum = md5file(path)
 
   print >>sys.stderr, "Trying to satisfy %s from cache..." % os.path.basename(path)
-  s3_cache_path = "%s/%s" % (FILECACHE_S3, checksum)
-  if not bucket.lookup(s3_cache_path):
-    print >>sys.stderr, "not yet in cache - uploading..."
-    k = bucket.new_key(s3_cache_path)
-    k.set_contents_from_filename(path, cb=progressbar, num_cb=1000)
-    print >>sys.stderr, "done"
+  dest_file = os.path.join(staging_dir, os.path.basename(path))
 
-  k = bucket.lookup(s3_cache_path)
+  if os.path.isfile(dest_file):
+    if md5file(dest_file) != checksum:
+      print >>sys.stderr, "File exists, but with incorrect contents. Recopying."
+      shutil.copy(path, dest_file)
+    else:
+      print >>sys.stderr, "File exists and matches checksum."
+  else:
+    print >>sys.stderr, "File does not exist. Copying."
+    shutil.copy(path, dest_file)
 
-  return (checksum, k.generate_url(EXPIRATION))
+  return (checksum, "%s/%s" % (STAGING_URL_ROOT, os.path.relpath(dest_file, STAGING_ROOT)))
 
 
 def upload_files_and_manifest(options, package_files):
@@ -241,14 +395,18 @@ def upload_files_and_manifest(options, package_files):
 
   @param package_files A dictionary keyed by the package to be build. Each key's value is dictionary keyed for deb|rpm that have lists of files needed to build the package
   """
-  s3 = boto.connect_s3()
-  bucket = s3.lookup(options.S3_BUCKET)
-  if not bucket:
-    error_string = "Unable to lookup bucket %s\n" % str(options.S3_BUCKET)
-    error_string += "This is most likely due to not setting your"
-    error_string += " AWS_SECRET_ACCESS_KEY correctly"
-    raise Exception(error_string)
+  staging_dir = os.path.join(STAGING_ROOT, options.STAGING, options.BUILD_ID, "source")
 
+  if not os.path.isdir(staging_dir):
+    try:
+      os.makedirs(staging_dir)
+    except OSError as exc:
+      if exc.errno == errno.EEXIST:
+        pass
+      else:
+        print "Unable to create staging directory %s:" % (staging_dir, )
+        raise
+      
   build_dir = os.path.join("build", options.BUILD_ID)
 
   manifest_list = []
@@ -257,19 +415,18 @@ def upload_files_and_manifest(options, package_files):
     files = package_files[package]
     for package_format, paths in files.iteritems():
       for path in paths:
-        (checksum, url) = satisfy_in_cache(bucket, path)
+        (checksum, url) = satisfy_in_cache(staging_dir, path)
         manifest_list.append(('-'.join([package, package_format]), os.path.basename(path), checksum, url))
   manifest = "\n".join(
     ["\t".join(el) for el in manifest_list])
 
   if not options.DRY_RUN:
-    man_key = bucket.new_key('%s/manifest.txt' % build_dir)
-    man_key.set_contents_from_string(
-      manifest,
-      headers={'Content-Type': 'text/plain'})
-    man_key.set_acl('public-read')
+    man_path = os.path.join(STAGING_ROOT, options.STAGING, options.BUILD_ID, "manifest.txt")
+    man_file = open(man_path, 'w')
+    man_file.write(manifest)
+    man_file.close()
 
-    return man_key.generate_url(EXPIRATION)
+    return "%s/%s" % (STAGING_URL_ROOT, os.path.relpath(man_path, STAGING_ROOT))
   else:
     return "<manifest not uploaded - dry run>"
 
@@ -306,13 +463,12 @@ def main():
 
   manifest_url = upload_files_and_manifest(options, package_files)
   print manifest_url
+  time.sleep(35)
 
   ec2 = boto.connect_ec2()
 
   instances = []
   for build_type, os_distro, arch in options.BUILD_MACHINES:
-    ami = AMIS[(os_distro, arch)]
-    image = ec2.get_image(ami)
     instance_type = BUILD_INSTANCE_TYPES[arch]
     start_script = BUILD_SCRIPTS[build_type]
 
@@ -325,7 +481,10 @@ def main():
       'interactive': str(options.INTERACTIVE),
       'manifest_url': manifest_url,
       'packages': ' '.join(options.PACKAGES),
-      's3_bucket': options.S3_BUCKET,
+      'staging': os.path.join(STAGING_ROOT, options.STAGING),
+      'staging_url': "%s/%s" % (STAGING_URL_ROOT, options.STAGING, ),
+      'staging_host': options.STAGING_HOST,
+      'interim_staging': INTERIM_STAGING,
       'aws_access_key_id': ec2.aws_access_key_id,
       'aws_secret_access_key': ec2.aws_secret_access_key,
       }
@@ -341,57 +500,42 @@ def main():
       CODENAME='%(os_distro)s-%(cdh_release)s'
       MANIFEST_URL='%(manifest_url)s'
       PACKAGES='%(packages)s'
-      S3_BUCKET='%(s3_bucket)s'
+      STAGING='%(staging)s'
+      STAGING_URL='%(staging_url)s'
+      STAGING_HOST='%(staging_host)s'
+      INTERIM_STAGING='%(interim_staging)s'
       AWS_ACCESS_KEY_ID='%(aws_access_key_id)s'
       AWS_SECRET_ACCESS_KEY='%(aws_secret_access_key)s'
       """ % subs)
 
-    print "Starting %s-%s build slave (%s)..." % (os_distro, arch, ami)
+    print "Connecting %s-%s build slave..." % (os_distro, arch)
     if not options.DRY_RUN:
-      reservation = image.run(
-        key_name=options.EC2_KEY_NAME,
-        security_groups=options.EC2_GROUPS,
-        user_data=subbed_script,
-        instance_type=instance_type)
-      instances.append(reservation.instances[0])
+      worker = BuildWorker(options.BUILD_ID,
+                            build_type,
+                            os_distro,
+                            arch,
+                            subbed_script)
+      worker.start()
+
+      instances.append(worker)
+      #reservation = image.run(
+      #  key_name=options.EC2_KEY_NAME,
+      #  security_groups=options.EC2_GROUPS,
+  #      user_data=subbed_script,
+   #     instance_type=instance_type)
     else:
       print "   [dry run: not starting]"
   try:
-    print "Waiting for instances to boot..."
+    print "Waiting for instances to terminate..."
 
     for instance in instances:
-      instance.update()
-      while instance.state != 'running':
-        print "   waiting on %s to start..." % instance.id
-        time.sleep(5)
-        instance.update()
-      print "   Booted %s at %s" % (instance.id, instance.dns_name)
+      instance.join()
 
-    print "All build slaves booted!"
-    print
-    print "To killall: "
-    print "  ec2-terminate-instances %s" % (" ".join([i.id for i in instances]))
-    print
-    print "Expect results at s3://%s/build/%s/" % (options.S3_BUCKET, options.BUILD_ID)
-    print "To update apt repo after build is finished:"
-    print "  update_repo.sh %s %s" % (options.S3_BUCKET, options.BUILD_ID)
+    print "Instances have terminated..."
+    #    print "Expect results at s3://%s/build/%s/" % (options.S3_BUCKET, options.BUILD_ID)
+    #print "To update apt repo after build is finished:"
+    #print "  update_repo.sh %s %s" % (options.S3_BUCKET, options.BUILD_ID)
 
-    if options.WAIT:
-      print "Waiting for instances to terminate..."
-
-      counter = 0
-      for instance in instances:
-        instance.update()
-        #this can be improved by timout based on launchTime instead of counter.
-        while instance.state != 'terminated':
-          if options.TIMEOUT > 0 and counter > options.TIMEOUT:
-            raise TimeoutException("Counter Exceeded")
-          
-          time.sleep(5)
-          counter += 5
-          instance.update()
-          print "Instance %s has state %s"%(instance.id, instance.state)
-        print "   terminated %s" % (instance.id)
   except KeyboardInterrupt:
     print "Interrupting cleaning up old instances"
     for instance in instances:

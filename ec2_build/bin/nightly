@@ -9,6 +9,7 @@ import logging
 import subprocess
 import sys
 import time
+import os.path
 from optparse import OptionParser
 from sets import Set
 
@@ -19,6 +20,7 @@ import cloudera.staging.Archive
 import cloudera.staging.ArchiveManager
 from cloudera.utils import display_message, verbose_print, make_target_to_product_name
 from cloudera.constants import RepositoryType
+from ec2_constants import STAGING_ROOT, STAGING_URL_ROOT, INTERIM_STAGING
 
 
 TIMEOUT = '240'
@@ -80,7 +82,7 @@ def make_cdh(product_names, version='2', maven_staging=False, maven_deploy_flag=
   return [product for products in failed_products]
 
 def build_cdh(product_names,
-		build_bucket,
+		staging,
 		key_name,
 		version='2',
 		build_name_base = ''):
@@ -101,7 +103,7 @@ def build_cdh(product_names,
   command = ['./ec2_build',
        '-w',
        '-k', key_name,
-       '-b', build_bucket,
+       '-s', staging,
        '--tag', 'cdh'+version,
        '--timeout', TIMEOUT,
        '--build_id', buildname]
@@ -189,6 +191,7 @@ def boot_ami(archive_manager, options):
 
 
 def update_archive(build,
+                   staging,
 		key_file,
 		hostname,
 		passphrase_apt,
@@ -212,7 +215,8 @@ def update_archive(build,
 
   # Set up instance
   archive.connect(hostname, key_file)
-  archive.copy_scripts(hostname, key_file)
+  archive.copy_scripts(hostname, key_file, os.path.join(STAGING_ROOT, staging, build),
+                       build, INTERIM_STAGING)
   archive.install_packages()
   archive.setup_gpg()
 
@@ -264,6 +268,10 @@ def main():
 
   op.add_option('--passphrase-yum',
             help="Passphrase used for YUM packages")
+
+  op.add_option('--staging',
+                default='cdh3-staging',
+                help="Directory in staging area to use.")
 
   op.add_option('--build-bucket',
             default='ec2-build',
@@ -378,18 +386,12 @@ def main():
     product_names = [product_name for product_name in product_names if not product_name in failed_products]
 
     build_cdh_prompt = build_cdh(product_names,
-		    options.build_bucket,
+		    options.staging,
 		    options.key_name,
 		    version,
 		    options.build)
 
     build_names.append((version, build_cdh_prompt))
-    freeze_cdh(options.build_bucket,
-		    options.freezer_bucket,
-		    version,
-		    options.build)
-    if version == 3:
-      freeze_hue(options.freezer_bucket, 3, options.build)
 
   eip = get_free_eip(eip_manager)
 
@@ -413,7 +415,8 @@ def main():
   cloudera.aws.ec2.wait_for_eip_association_ready()
   for (version, build_name) in build_names:
     update_archive(build_name,
-		    options.key_file,
+                   options.staging,
+                   options.key_file,
 		    eip.public_ip,
 		    passphrase_apt,
 		    passphrase_yum,

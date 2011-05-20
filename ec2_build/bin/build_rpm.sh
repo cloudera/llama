@@ -9,7 +9,9 @@ export BUILD_USER
 export CODENAME
 export MANIFEST_URL
 export PACKAGES
-export S3_BUCKET
+export STAGING
+export STAGING_URL
+export STAGING_HOST
 export AWS_ACCESS_KEY_ID
 export AWS_SECRET_ACCESS_KEY
 
@@ -49,7 +51,9 @@ verbosity = WARNING
 EOF
 
 function copy_logs_s3 {
-      s3cmd put $LOG_FILE s3://$S3_BUCKET/build/$BUILD_ID/${CODENAME}-${ARCH}-user.log
+      ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i /root/.ssh/static_vm_key root@${STAGING_HOST} "mkdir -p ${INTERIM_STAGING}/$BUILD_ID/binary/rpm_${CODENAME}_${ARCH}"
+      scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i /root/.ssh/static_vm_key /var/log/user.log root@${STAGING_HOST}:${INTERIM_STAGING}/$BUILD_ID/rpm_${CODENAME}_${ARCH} 
+#      s3cmd put $LOG_FILE s3://$S3_BUCKET/build/$BUILD_ID/${CODENAME}-${ARCH}-user.log
 }
 
 function send_email {
@@ -78,13 +82,7 @@ if [ "x$INTERACTIVE" == "xFalse" ]; then
   trap "copy_logs_s3; hostname -f | grep -q internal && shutdown -h now;" INT TERM EXIT
 fi
 
-source /opt/toolchain/toolchain.sh
-pushd /tmp
-    wget http://archive.apache.org/dist/maven/binaries/apache-maven-3.0.2-bin.tar.gz
-    tar zxvf apache-maven-*tar.gz
-    export MAVEN_HOME=/tmp/apache-maven-3.0.2
-    export PATH=$MAVEN_HOME/bin:$PATH
-popd
+source /mnt/toolchain/toolchain.sh
 
 yum install -y openssl-devel
 
@@ -130,11 +128,14 @@ for PACKAGE in $PACKAGES; do
   done
 
   ############################## UPLOAD ##############################
+  ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i /root/.ssh/static_vm_key root@${STAGING_HOST} "mkdir -p ${INTERIM_STAGING}/$BUILD_ID/binary/rpm_${CODENAME}_${ARCH}"
 
   for arch_dir in /tmp/topdir/RPMS/*  ; do
-    TARGET_ARCH=$(basename $arch_dir)
+      TARGET_ARCH=$(basename $arch_dir)
     for f in $arch_dir/*.rpm ; do
-        s3cmd put $f s3://$S3_BUCKET/build/$BUILD_ID/rpm_${CODENAME}_${ARCH}/$(basename $f) 
+        scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i /root/.ssh/static_vm_key $f \
+            root@${STAGING_HOST}:${INTERIM_STAGING}/$BUILD_ID/binary/rpm_${CODENAME}_${ARCH}/$(basename $f) 
+#        /usr/bin/s3cmd put $f s3://$S3_BUCKET/build/$BUILD_ID/rpm_${CODENAME}_${ARCH}/$(basename $f) 
     done
   done
 
@@ -156,4 +157,4 @@ copy_logs_s3
 
 # If we're running on S3, shutdown the node
 # (do the check so you can test elsewhere)
-hostname -f | grep -q internal && shutdown -h now
+#hostname -f | grep -q internal && shutdown -h now

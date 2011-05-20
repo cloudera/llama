@@ -54,11 +54,11 @@ ARCHS="i386 amd64"
 BASE_DIR="/tmp"
 
 # Download all the build data
-mkdir -p $BASE_DIR/$BUILD_ID/binary
-mkdir -p $BASE_DIR/$BUILD_ID/source
+#mkdir -p $BASE_DIR/$BUILD_ID/binary
+#mkdir -p $BASE_DIR/$BUILD_ID/source
 
-s3cmd sync s3://$S3_BUCKET/$BUILD_ID/binary $BASE_DIR/$BUILD_ID
-s3cmd sync s3://$S3_BUCKET/$BUILD_ID/source $BASE_DIR/$BUILD_ID
+#s3cmd sync s3://$S3_BUCKET/$BUILD_ID/binary $BASE_DIR/$BUILD_ID
+#s3cmd sync s3://$S3_BUCKET/$BUILD_ID/source $BASE_DIR/$BUILD_ID
 
 REPREPRO_FLAGS="--export=never --keepunreferenced --ignore=wrongdistribution --basedir $REPO"
 

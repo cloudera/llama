@@ -2,9 +2,8 @@
 # (c) Copyright 2009 Cloudera, Inc.
 
   function copy_logs_s3 {
-    if [ -e $S3CMD ]; then
-        $S3CMD put $S3_BUCKET:build/$BUILD_ID/deb_${CODENAME}_${DEB_HOST_ARCH}/user.log /var/log/user.log x-amz-acl:public-read
-    fi
+      ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i /root/.ssh/static_vm_key root@${STAGING_HOST} "mkdir -p ${INTERIM_STAGING/$BUILD_ID/binary/deb_${CODENAME}_${DEB_HOST_ARCH}"
+      scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i /root/.ssh/static_vm_key /var/log/user.log root@${STAGING_HOST}:${INTERIM_STAGING}/$BUILD_ID/deb_${CODENAME}_${DEB_HOST_ARCH} 
   }
 
   function send_email {
@@ -215,8 +214,12 @@ popd
 
     FILES=$(grep-dctrl -n -s Files '' *changes | grep . | awk '{print $5}')
 
+    ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i /root/.ssh/static_vm_key root@${STAGING_HOST} "mkdir -p ${INTERIM_STAGING}/$BUILD_ID/binary/deb_${CODENAME}_${DEB_HOST_ARCH}"
+
     for f in $FILES *changes ; do
-        $S3CMD put $S3_BUCKET:build/$BUILD_ID/deb_${CODENAME}_${DEB_HOST_ARCH}/$(basename $f) $f x-amz-acl:public-read
+        scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i /root/.ssh/static_vm_key $f \
+            root@${STAGING_HOST}:${INTERIM_STAGING}/$BUILD_ID/binary/deb_${CODENAME}_${DEB_HOST_ARCH}/$(basename $f) 
+#        $S3CMD put $S3_BUCKET:build/$BUILD_ID/deb_${CODENAME}_${DEB_HOST_ARCH}/$(basename $f) $f x-amz-acl:public-read
 
     done
 

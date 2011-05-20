@@ -21,16 +21,18 @@ function usage {
   echo "       passphrase: GNU GPG passphrase to sign rpms (rpm --addsign does not support gpg-agent."
   echo "            It must be provided a passphrase through stdin)"
   echo "       distro: GNU/Linux distribution for which these packages are made (e.g., centos5 or sles11)"
+  echo "       archs: The architectures covered for this distro."
   exit 1
 }
 
-while getopts "s:b:c:r:p:d:" options; do
+while getopts "s:b:c:r:p:d:a:" options; do
   case $options in
     s ) S3_BUCKET=$OPTARG;;
     c ) CDH_RELEASE=$OPTARG;;
     r ) REPO=$OPTARG;;
     p ) PASSPHRASE=$OPTARG;;
     d ) DISTRO=$OPTARG;;
+    a ) ARCHS=$OPTARG;;
     h ) usage;;
     \?) usage;;
     * ) usage;;
@@ -48,9 +50,12 @@ if [ -z "$DISTRO" ]; then
 DISTRO="centos5"
 fi
 
+if [ -z "$ARCHS" ]; then
 ARCHS="i386 x86_64"
+fi
 
 echo "*** Copying src rpms ***"
+mkdir -p $REPO/cdh/$CDH_RELEASE/SRPMS/
 for SRPM in $S3_BUCKET/source/*.src.rpm; do
   echo "Signing $SRPM"
   echo $PASSPHRASE | rpm --addsign $SRPM
@@ -58,7 +63,7 @@ for SRPM in $S3_BUCKET/source/*.src.rpm; do
   cp $SRPM $REPO/cdh/$CDH_RELEASE/SRPMS/
 done
 
-mkdir -p $RPM $REPO/cdh/$CDH_RELEASE/RPMS/noarch/
+mkdir -p $REPO/cdh/$CDH_RELEASE/RPMS/noarch/
 for ARCH in $ARCHS ; do
   mkdir -p $REPO/cdh/$CDH_RELEASE/RPMS/$ARCH/
   echo "*** Copying $ARCH rpms ***"
@@ -80,6 +85,10 @@ done
 createrepo $REPO/cdh/$CDH_RELEASE
 
 pushd $REPO/cdh/$CDH_RELEASE/repodata
+
+if [ "$DISTRO" eq "sles11" ]; then
+    cp $REPO/cdh/RPM-GPG-KEY-cloudera repomd.xml.key
+fi
 
 for FILE in ./*; do
   echo "Signing $FILE"

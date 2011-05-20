@@ -18,6 +18,11 @@ import tarfile
 from cloudera.constants import RepositoryType
 from cloudera.utils import display_message, verbose_print
 from optparse import OptionParser
+from ec2_constants import INTERIM_ARCHIVE_HOST
+
+class ErrorEncountered(Exception):
+  ''' A null exception wrapper '''
+  pass
 
 
 # s3cmd configuration file template
@@ -140,7 +145,7 @@ class Archive:
     stderr.close()
 
 
-  def copy_scripts(self, host, key_file):
+  def copy_scripts(self, host, key_file, staging, build_id, interim_staging):
     """
     Copy scripts to update deb and yum repositories
 
@@ -162,6 +167,35 @@ class Archive:
     display_message("Copy ec2_build related scripts:")
     subprocess.call(["scp", Archive.SSH_NO_STRICT_HOST_KEY_CHECKING_OPTION, '-i', key_file, '-r', '../../ec2_build', self.username + '@' + host + ':' + Archive.BASE_DIR + '/ec2_build'])
 
+    display_message("Copy source to %s:" % (INTERIM_ARCHIVE_HOST, ))
+    p = subprocess.Popen(["scp", Archive.SSH_NO_STRICT_HOST_KEY_CHECKING_OPTION, '-i', '../../ec2_build/conf/static_vm_key', '-r', staging, 'root@' + INTERIM_ARCHIVE_HOST + ':' + interim_staging + '/'])
+
+    upload_returncode = p.wait()
+
+    if upload_returncode != 0:
+      raise ErrorEncountered("Could not upload build to interim")
+
+    display_message("Copy bits (now to nightly):")
+    ssh_cmd = "scp %s -i /root/.ssh/nightly_build.pem -r %s %s@%s:%s/%s" % (Archive.SSH_NO_STRICT_HOST_KEY_CHECKING_OPTION,  interim_staging + '/' + build_id, self.username,
+                                                                      host, Archive.BASE_DIR, build_id)
+
+    display_message("ssh cmd: %s" % (ssh_cmd, ))
+
+    temp_ssh = open("/tmp/ssh_cmd", "w")
+    temp_ssh.write(ssh_cmd)
+    temp_ssh.close()
+    subprocess.call(["chmod", "+x", "/tmp/ssh_cmd"]);
+    subprocess.call(["scp", Archive.SSH_NO_STRICT_HOST_KEY_CHECKING_OPTION, '-i', '../../ec2_build/conf/static_vm_key', '/tmp/ssh_cmd', 'root@' + INTERIM_ARCHIVE_HOST + ':/tmp/ssh_cmd'])
+    
+    p2 = subprocess.Popen(["ssh", Archive.SSH_NO_STRICT_HOST_KEY_CHECKING_OPTION, '-i', '../../ec2_build/conf/static_vm_key', 'root@' + INTERIM_ARCHIVE_HOST, '/tmp/ssh_cmd'])
+
+    upload2_returncode = p2.wait()
+
+    if upload2_returncode != 0:
+      raise ErrorEncountered("Could not upload build to real nightly")
+
+    self.execute("sudo chown -R www-data " + Archive.BASE_DIR + "/" + build_id)
+    
   def install_packages(self):
     """
     Update instance and install extra packages needed for the archive deployment
@@ -288,6 +322,8 @@ class Archive:
     # Update repositories
     display_message("Update yum repository")
     self.execute(' sudo -E -u www-data ' + Archive.BASE_DIR + '/yum/update_repos.sh -s ' + Archive.BASE_DIR + '/' + build + '/ -c ' + cdh_version + ' -r /var/www/archive_public/redhat/' + ' -p' + self.passphrase[cloudera.constants.GPG_KEY_FINGERPRINT_FOR_REPOSITORY_KIND[RepositoryType.YUM]], True)
+    self.execute(' sudo -E -u www-data ' + Archive.BASE_DIR + '/yum/update_repos.sh -s ' + Archive.BASE_DIR + '/' + build + '/ -c ' + cdh_version + ' -d rhel6 -a x86_64 -r /var/www/archive_public/redhat/6/x86_64/' + ' -p' + self.passphrase[cloudera.constants.GPG_KEY_FINGERPRINT_FOR_REPOSITORY_KIND[RepositoryType.YUM]], True)
+    self.execute(' sudo -E -u www-data ' + Archive.BASE_DIR + '/yum/update_repos.sh -s ' + Archive.BASE_DIR + '/' + build + '/ -c ' + cdh_version + ' -d sles11 -a x86_64 -r /var/www/archive_public/sles/11/x86_64/' + ' -p' + self.passphrase[cloudera.constants.GPG_KEY_FINGERPRINT_FOR_REPOSITORY_KIND[RepositoryType.YUM]], True)
 
 
   def finalize_staging(self, build, cdh_version):

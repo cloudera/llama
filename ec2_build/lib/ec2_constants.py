@@ -48,5 +48,11 @@ DEFAULT_BUILD_MACHINES = [
   ('deb', 'squeeze', 'amd64'),
   ('rpm', 'centos5',  'x86'),
   ('rpm', 'centos5',  'amd64'),
+    ('rpm', 'rhel6', 'amd64'),
+    ('rpm', 'sles11', 'amd64'),
   ]
 
+STAGING_ROOT = '/mnt/internalstaging'
+STAGING_URL_ROOT = 'http://www.sf.cloudera.com/staging'
+INTERIM_ARCHIVE_HOST = 'ubuntu64-10-10-slave.hal.cloudera.com'
+INTERIM_STAGING = '/data/1/staging'
