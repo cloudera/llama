@@ -68,7 +68,7 @@ HADOOP_SNAPPY_GIT_REPO=$(REPO_DIR)/cdh3/hadoop-snappy
 HADOOP_SNAPPY_BASE_REF=cdh-base-$(HADOOP_SNAPPY_BASE_VERSION)
 HADOOP_SNAPPY_BUILD_REF=cdh-$(HADOOP_SNAPPY_BASE_VERSION)
 HADOOP_SNAPPY_PACKAGE_GIT_REPO=$(REPO_DIR)/cdh3/hadoop-snappy-package
-HADOOP_SNAPPY_SITE="http://golden.jenkins.sf.cloudera.com/job/hadoop-snappy-tarball/lastSuccessfulBuild/artifact/"
+HADOOP_SNAPPY_SITE=http://golden.jenkins.sf.cloudera.com/job/hadoop-snappy-tarball/lastSuccessfulBuild/artifact/
 $(eval $(call PACKAGE,hadoop-snappy,HADOOP_SNAPPY))
 
 # Hive
