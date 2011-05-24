@@ -3,9 +3,9 @@
 
   "remotes":
     {"origin": { "fetch": "git://github.sf.cloudera.com/CDH/%(name)s.git" },
-     "apache": { "fetch": "ssh://git@git.sf.cloudera.com/apache-%(name)s.git" },
-     "common": { "fetch": "ssh://git@git.sf.cloudera.com/apache-hadoop-common.git" },
-     "yahoo": { "fetch": "ssh://git@git.sf.cloudera.com/yahoo-%(name)s.git" }},
+     "apache": { "fetch": "git://github.sf.cloudera.com/Mirrors/apache-%(name)s.git" },
+     "common": { "fetch": "git://github.sf.cloudera.com/Mirrors/apache-hadoop-common.git" },
+     "yahoo": { "fetch": "git://github.sf.cloudera.com/Mirrors/yahoo-%(name)s.git" }},
 
   "projects":
   {
