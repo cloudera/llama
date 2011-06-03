@@ -53,14 +53,14 @@ $(BUILD_DIR)/%/.srpm:
 	  $(PKG_BUILD_DIR)/rpm/topdir \
 	  $($(PKG)_BASE_VERSION) \
 	  $(PKG_FULL_VERSION) \
-	  $($(PKG)_PKG_VERSION) \
+	  $($(PKG)_PKG_VERSION)$(CDH_BUILD_STAMP) \
 	  $($(PKG)_RELEASE)
-	cp $(PKG_BUILD_DIR)/rpm/topdir/SRPMS/$($(PKG)_PKG_NAME)-$($(PKG)_PKG_VERSION)-$($(PKG)_RELEASE).src.rpm \
+	cp $(PKG_BUILD_DIR)/rpm/topdir/SRPMS/$($(PKG)_PKG_NAME)-$($(PKG)_PKG_VERSION)$(CDH_BUILD_STAMP)-$($(PKG)_RELEASE).src.rpm \
 	   $($(PKG)_OUTPUT_DIR)
 	touch $@
 
 # Make binary RPMs
-$(BUILD_DIR)/%/.rpm: SRCRPM=$($(PKG)_OUTPUT_DIR)/$($(PKG)_PKG_NAME)-$($(PKG)_PKG_VERSION)-$($(PKG)_RELEASE).src.rpm
+$(BUILD_DIR)/%/.rpm: SRCRPM=$($(PKG)_OUTPUT_DIR)/$($(PKG)_PKG_NAME)-$($(PKG)_PKG_VERSION)$(CDH_BUILD_STAMP)-$($(PKG)_RELEASE).src.rpm
 $(BUILD_DIR)/%/.rpm:
 	rpmbuild --define "_topdir $(PKG_BUILD_DIR)/rpm/topdir" --rebuild $(SRCRPM)
 	rpmbuild --define "_topdir $(PKG_BUILD_DIR)/rpm/topdir" --rebuild --target noarch $(SRCRPM)
@@ -71,11 +71,11 @@ $(BUILD_DIR)/%/.sdeb:
 	-rm -rf $(PKG_BUILD_DIR)/deb/
 	mkdir -p $(PKG_BUILD_DIR)/deb/
 	cp $($(PKG)_OUTPUT_DIR)/$($(PKG)_NAME)-$(PKG_FULL_VERSION).tar.gz \
-	  $(PKG_BUILD_DIR)/deb/$($(PKG)_PKG_NAME)_$(PKG_PKG_VERSION).orig.tar.gz
+	  $(PKG_BUILD_DIR)/deb/$($(PKG)_PKG_NAME)_$(PKG_PKG_VERSION)$(CDH_BUILD_STAMP).orig.tar.gz
 	cd $(PKG_BUILD_DIR)/deb && \
-	  tar -xvf $($(PKG)_PKG_NAME)_$(PKG_PKG_VERSION).orig.tar.gz && \
-	  mv $($(PKG)_NAME)-$(PKG_FULL_VERSION) $($(PKG)_NAME)-$(PKG_PKG_VERSION)
-	  cd $(PKG_BUILD_DIR)/deb/$($(PKG)_NAME)-$(PKG_PKG_VERSION) && \
+	  tar -xvf $($(PKG)_PKG_NAME)_$(PKG_PKG_VERSION)$(CDH_BUILD_STAMP).orig.tar.gz && \
+	  mv $($(PKG)_NAME)-$(PKG_FULL_VERSION) $($(PKG)_NAME)-$(PKG_PKG_VERSION)$(CDH_BUILD_STAMP)
+	  cd $(PKG_BUILD_DIR)/deb/$($(PKG)_NAME)-$(PKG_PKG_VERSION)$(CDH_BUILD_STAMP) && \
 	  cp -r $($(PKG)_PACKAGE_GIT_REPO)/deb/debian.$($(PKG)_NAME) debian && \
 	  find debian -name "*.[ex,EX,~]" | xargs rm -f && \
 	  $(BASE_DIR)/tools/generate-debian-changelog \
@@ -85,21 +85,21 @@ $(BUILD_DIR)/%/.sdeb:
 	    $($(PKG)_PKG_NAME) \
 	    $($(PKG)_RELEASE) \
 	    debian/changelog \
-	    $($(PKG)_PKG_VERSION) && \
+	    $($(PKG)_PKG_VERSION)$(CDH_BUILD_STAMP) && \
 	  dpkg-buildpackage -uc -us -sa -S
-	for file in $($(PKG)_PKG_NAME)_$(PKG_PKG_VERSION)-$($(PKG)_RELEASE).dsc \
-                    $($(PKG)_PKG_NAME)_$(PKG_PKG_VERSION)-$($(PKG)_RELEASE).diff.gz \
-                    $($(PKG)_PKG_NAME)_$(PKG_PKG_VERSION)-$($(PKG)_RELEASE)_source.changes \
-                    $($(PKG)_PKG_NAME)_$(PKG_PKG_VERSION).orig.tar.gz ; \
+	for file in $($(PKG)_PKG_NAME)_$(PKG_PKG_VERSION)$(CDH_BUILD_STAMP)-$($(PKG)_RELEASE).dsc \
+                    $($(PKG)_PKG_NAME)_$(PKG_PKG_VERSION)$(CDH_BUILD_STAMP)-$($(PKG)_RELEASE).diff.gz \
+                    $($(PKG)_PKG_NAME)_$(PKG_PKG_VERSION)$(CDH_BUILD_STAMP)-$($(PKG)_RELEASE)_source.changes \
+                    $($(PKG)_PKG_NAME)_$(PKG_PKG_VERSION)$(CDH_BUILD_STAMP).orig.tar.gz ; \
             do cp $(PKG_BUILD_DIR)/deb/$$file $($(PKG)_OUTPUT_DIR); \
         done
 	touch $@
 
-$(BUILD_DIR)/%/.deb: SRCDEB=$($(PKG)_PKG_NAME)_$($(PKG)_PKG_VERSION)-$($(PKG)_RELEASE).dsc
+$(BUILD_DIR)/%/.deb: SRCDEB=$($(PKG)_PKG_NAME)_$($(PKG)_PKG_VERSION)$(CDH_BUILD_STAMP)-$($(PKG)_RELEASE).dsc
 $(BUILD_DIR)/%/.deb:
 	cd $($(PKG)_OUTPUT_DIR) && \
 		dpkg-source -x $(SRCDEB) && \
-		cd $($(PKG)_PKG_NAME)-$(PKG_PKG_VERSION) && \
+		cd $($(PKG)_PKG_NAME)-$(PKG_PKG_VERSION)$(CDH_BUILD_STAMP) && \
 			debuild \
 				--preserve-envvar PATH --preserve-envvar JAVA32_HOME --preserve-envvar JAVA64_HOME \
 				--preserve-envvar JAVA5_HOME --preserve-envvar FORREST_HOME --preserve-envvar MAVEN3_HOME \
