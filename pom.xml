@@ -270,6 +270,12 @@ TODO: need license header
         <artifactId>hbase</artifactId>
         <version>${cdh.hbase.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.apache.hbase</groupId>
+        <artifactId>hbase</artifactId>
+        <version>${cdh.hbase.version}</version>
+        <classifier>tests</classifier>
+      </dependency>
       
       <!-- Pig -->
       <dependency>
