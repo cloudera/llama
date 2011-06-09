@@ -142,9 +142,6 @@ popd
     popd
   popd
 
-  # thrift needs libtool but it breaks hadoop so delete it
-  apt-get -y remove --purge libtool
-
   # Install s3cmd
   pushd /tmp
     wget http://s3.amazonaws.com/ServEdge_pub/s3sync/s3sync.tar.gz
