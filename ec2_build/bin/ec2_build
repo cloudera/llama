@@ -99,6 +99,8 @@ STATIC_SLAVES = {
 	('sles11',  'amd64'):  ('root', 'sles64-11-slave.hal.cloudera.com',      '../conf/static_vm_key'),
 	('squeeze', 'x86'):    ('root', 'debian32-6-0-slave.hal.cloudera.com',   '../conf/static_vm_key'),
 	('squeeze', 'amd64'):  ('root', 'debian64-6-0-slave.hal.cloudera.com',   '../conf/static_vm_key'),
+	('lenny', 'x86'):    ('root', 'debian32-5-0-slave.hal.cloudera.com',   '../conf/static_vm_key'),
+	('lenny', 'amd64'):  ('root', 'debian64-5-0-slave.hal.cloudera.com',   '../conf/static_vm_key'),
 	('lucid',   'x86'):    ('root', 'ubuntu32-10-04-slave.hal.cloudera.com', '../conf/static_vm_key'),
 	('lucid',   'amd64'):  ('root', 'ubuntu64-10-04-slave.hal.cloudera.com', '../conf/static_vm_key'),
 	('maverick', 'x86'):   ('root', 'ubuntu32-10-10-slave.hal.cloudera.com', '../conf/static_vm_key'),
