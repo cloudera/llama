@@ -2,7 +2,7 @@
 # (c) Copyright 2009 Cloudera, Inc.
 
   function copy_logs_s3 {
-      ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i /root/.ssh/static_vm_key root@${STAGING_HOST} "mkdir -p ${INTERIM_STAGING/$BUILD_ID/binary/deb_${CODENAME}_${DEB_HOST_ARCH}"
+      ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i /root/.ssh/static_vm_key root@${STAGING_HOST} "mkdir -p ${INTERIM_STAGING}/$BUILD_ID/binary/deb_${CODENAME}_${DEB_HOST_ARCH}"
       scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i /root/.ssh/static_vm_key /var/log/user.log root@${STAGING_HOST}:${INTERIM_STAGING}/$BUILD_ID/deb_${CODENAME}_${DEB_HOST_ARCH} 
   }
 
