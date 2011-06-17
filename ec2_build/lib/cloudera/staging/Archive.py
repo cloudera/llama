@@ -176,8 +176,8 @@ class Archive:
       raise ErrorEncountered("Could not upload build to interim")
 
     display_message("Copy bits (now to nightly):")
-    ssh_cmd = "scp %s -i /root/.ssh/nightly_build.pem -r %s %s@%s:%s/%s" % (Archive.SSH_NO_STRICT_HOST_KEY_CHECKING_OPTION,  interim_staging + '/' + build_id, self.username,
-                                                                      host, Archive.BASE_DIR, build_id)
+    ssh_cmd = "rsync -avz -e 'ssh %s -i /root/.ssh/nightly_build.pem' %s %s@%s:%s" % (Archive.SSH_NO_STRICT_HOST_KEY_CHECKING_OPTION,  interim_staging + '/' + build_id, self.username,
+                                                                      host, Archive.BASE_DIR)
 
     display_message("ssh cmd: %s" % (ssh_cmd, ))
 
