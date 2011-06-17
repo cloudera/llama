@@ -302,8 +302,8 @@ class Archive:
     @param build Build to be published
     """
 
-    display_message("Clean up previous builds")
-    self.execute(' sudo rm -rf ' + Archive.BASE_DIR + '/' + build, True)
+    #display_message("Clean up previous builds")
+    #self.execute(' sudo rm -rf ' + Archive.BASE_DIR + '/' + build, True)
 
     display_message("Update deb repository")
     self.execute(' sudo -E -u www-data ' + Archive.BASE_DIR + '/apt/update_repo.sh -s ' + freezer_bucket + ' -b ' + build + ' -c cdh' + cdh_release + ' -r /var/www/archive_public/debian/', True)
