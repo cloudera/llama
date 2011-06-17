@@ -55,7 +55,7 @@ for ARCHIVE in $ARCHIVES; do
 
   # Clean up location where archive is going to be uncompressed
   rm -rf $BASE_DIR/$ARCHIVE_NAME
-  tar -xzf $ARCHIVE -C $BASE_DIR
+  tar -xmzf $ARCHIVE -C $BASE_DIR
 
   # Extract Change file
   CHANGE_FILE=$BASE_DIR/$ARCHIVE_NAME/CHANGES.txt
