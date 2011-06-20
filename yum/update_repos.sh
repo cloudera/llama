@@ -86,7 +86,7 @@ createrepo $REPO/cdh/$CDH_RELEASE
 
 pushd $REPO/cdh/$CDH_RELEASE/repodata
 
-if [ "$DISTRO" eq "sles11" ]; then
+if [ "$DISTRO" = "sles11" ]; then
     cp $REPO/cdh/RPM-GPG-KEY-cloudera repomd.xml.key
 fi
 

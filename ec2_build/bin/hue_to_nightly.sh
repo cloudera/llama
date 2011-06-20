@@ -15,6 +15,14 @@ sudo cp -r ~ubuntu/gnupg /tmp/yum
 sudo chmod -R 777 /tmp/apt/gpg-home
 sudo chmod -R 777 /tmp/yum/gnupg
 
+# Get the bits out of S3 buckets (copied from apt/update_repo.sh)
+BASE_DIR="/tmp"
+S3_BUCKET="cloudera-hue-freezer"
+mkdir -p $BASE_DIR/$BUILD_ID/binary
+mkdir -p $BASE_DIR/$BUILD_ID/source
+s3cmd sync s3://$S3_BUCKET/$BUILD_ID/binary $BASE_DIR/$BUILD_ID
+s3cmd sync s3://$S3_BUCKET/$BUILD_ID/source $BASE_DIR/$BUILD_ID
+
 # Deb
 sudo -E -u www-data gpg-agent --daemon --write-env-file /tmp/.gpg-agent-info.apt --homedir /tmp/apt/gpg-home/ --allow-preset-passphrase
 sudo -E -u www-data $(cat /tmp/.gpg-agent-info.apt) /usr/lib/gnupg2/gpg-preset-passphrase -v --preset -P D00pSigner F36A89E33CC1BD0F71079007327574EE02A818DD
