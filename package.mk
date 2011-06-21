@@ -4,7 +4,7 @@ SHELL := /bin/bash
 # Download
 $(BUILD_DIR)/%/.download:
 	mkdir -p $(@D)
-	[ -f $($(PKG)_DOWNLOAD_DST) ] || (cd $(DL_DIR) && curl -# -L -o $($(PKG)_TARBALL_DST) $($(PKG)_DOWNLOAD_URL))
+	[ -f $($(PKG)_DOWNLOAD_DST) ] || (cd $(DL_DIR) && curl -k -# -L -o $($(PKG)_TARBALL_DST) $($(PKG)_DOWNLOAD_URL))
 	touch $@
 
 # Prep

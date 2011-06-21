@@ -22,7 +22,6 @@
      "oozie": {"track-branch": "cdh-2.3.0+31", "dir": "repos/cdh3/oozie", "remotes": ["origin"]},
      "whirr": {"track-branch": "cdh-0.3.0+5", "dir": "repos/cdh3/whirr", "remotes": ["origin", "apache"]},
 
-
      "hadoop-0.20-package": { "track-branch": "cdh3", "dir": "repos/cdh3/hadoop-0.20-package",
                               "remote-project-name": "hadoop-package",
                               "remotes": ["origin"]},
