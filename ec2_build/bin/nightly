@@ -383,7 +383,7 @@ def main():
 
 
   if options.push:
-    build_names = product_names
+    build_names = [('3', options.build + '3')]
     versions = []
   else:
     build_names = []
