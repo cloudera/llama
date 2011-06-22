@@ -321,6 +321,11 @@ def main():
       default=False,
       help="Promote instance as official archive")
 
+  op.add_option('-P', '--push',
+      action="store_true",
+      default=False,
+      help="Don't run the build, instead push already built artifacts to an archive")
+
   op.add_option('--maven-staging',
                 action="store_true",
                 default=False,
@@ -377,8 +382,14 @@ def main():
   archive_manager = cloudera.staging.ArchiveManager.ArchiveManager(ec2_connection)
 
 
-  build_names = []
-  for version in ['3']:
+  if options.push:
+    build_names = product_names
+    versions = []
+  else:
+    build_names = []
+    versions = ['3']
+
+  for version in versions:
     failed_products = make_cdh(product_names, version, options.maven_staging, maven_deploy_flag)
 
     # failed_products will contain all the targets for a given products, including the product name
