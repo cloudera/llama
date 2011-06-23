@@ -66,7 +66,7 @@ verbosity = WARNING"""
 class Archive:
 
   # Base directory where all the action is going to be
-  BASE_DIR = '/tmp'
+  BASE_DIR = '/mnt/uploads'
 
   # Username to use for log in. ubuntu ami only allow ubuntu user
   USERNAME = 'ubuntu'
@@ -153,6 +153,10 @@ class Archive:
     @param host destination hostname
     @param key_file SSH private key filename
     """
+
+    display_message("Creating an upload area:")
+    self.execute("sudo mkdir " + Archive.BASE_DIR + " || :")
+    self.execute("sudo chmod 777 " + Archive.BASE_DIR)
 
     display_message("Cleanup script area:")
     self.execute("rm -rf " + Archive.BASE_DIR + "/apt")
