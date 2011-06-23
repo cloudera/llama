@@ -181,8 +181,8 @@ class Archive:
       raise ErrorEncountered("Could not upload build to interim")
 
     display_message("Copy bits (now to nightly):")
-    ssh_cmd = "scp -vvv %s -i /root/.ssh/nightly_build.pem -r %s %s@%s:%s/%s" % (Archive.SSH_NO_STRICT_HOST_KEY_CHECKING_OPTION + ' ' + Archive.SSH_KEEP_ALIVE_OPTIONS,  interim_staging + '/' + build_id, self.username,
-                                                                      host, Archive.BASE_DIR, build_id)
+    ssh_cmd = "rsync -avz -e 'ssh %s -i /root/.ssh/nightly_build.pem' %s %s@%s:%s" % (Archive.SSH_NO_STRICT_HOST_KEY_CHECKING_OPTION,  interim_staging + '/' + build_id, self.username,
+                                                                      host, Archive.BASE_DIR)
 
     display_message("ssh cmd: %s" % (ssh_cmd, ))
 
@@ -192,15 +192,17 @@ class Archive:
     subprocess.call(["chmod", "+x", "/tmp/ssh_cmd"]);
     subprocess.call(["scp", Archive.SSH_NO_STRICT_HOST_KEY_CHECKING_OPTION, '-i', '../../ec2_build/conf/static_vm_key', '/tmp/ssh_cmd', 'root@' + INTERIM_ARCHIVE_HOST + ':/tmp/ssh_cmd'])
     
-    p2 = subprocess.Popen(["ssh", Archive.SSH_NO_STRICT_HOST_KEY_CHECKING_OPTION, '-i', '../../ec2_build/conf/static_vm_key', 'root@' + INTERIM_ARCHIVE_HOST, '/tmp/ssh_cmd'], stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+    upload2_returncode = 1
+    while upload2_returncode != 0:
+      p2 = subprocess.Popen(["ssh", Archive.SSH_NO_STRICT_HOST_KEY_CHECKING_OPTION, '-i', '../../ec2_build/conf/static_vm_key', 'root@' + INTERIM_ARCHIVE_HOST, '/tmp/ssh_cmd'], stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
     
-    upload2_returncode = p2.wait()
+      upload2_returncode = p2.wait()
 
-    for line in p2.stdout:
-      display_message(line[:-1])
+      for line in p2.stdout:
+        display_message(line[:-1])
+   
+      time.sleep(5)
 
-    if upload2_returncode != 0:
-      raise ErrorEncountered("Could not upload build to real nightly")
 
     self.execute("sudo chown -R www-data " + Archive.BASE_DIR + "/" + build_id)
     
