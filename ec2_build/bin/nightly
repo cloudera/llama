@@ -385,6 +385,7 @@ def main():
   if options.push:
     build_names = [('3', options.build + '3')]
     versions = []
+    failed_products = None
   else:
     build_names = []
     versions = ['3']
