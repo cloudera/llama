@@ -50,7 +50,7 @@ for FILE in *; do
 done
 popd
 
-sudo -E -u www-data /bin/bash ~ubuntu/hue-finalize-staging.sh -b $BUILD_ID -c 3 -r /var/www/archive_public/
+sudo -E -u www-data /bin/bash ~ubuntu/hue-finalize-staging.sh -b $BUILD_ID -c 3 -r /var/www/archive_public/ -d $BASE_DIR
 
 # Cleanup
 sudo rm -rf $BASE_DIR/apt/gpg-home
