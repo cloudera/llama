@@ -21,12 +21,13 @@ function usage {
   exit 1
 }
 
-while getopts "s:b:c:r:" options; do
+while getopts "s:b:c:r:d:" options; do
   case $options in
     s ) S3_BUCKET=$OPTARG;;
     b ) BUILD_ID=$OPTARG;;
     c ) CDH_RELEASE=$OPTARG;;
     r ) REPO=$OPTARG;;
+    d ) BASE_DIR=$OPTARG;;
     h ) usage;;
     \?) usage;;
     * ) usage;;
@@ -50,8 +51,6 @@ fi
 DEBIAN_DISTROS="lenny lucid maverick squeeze"
 
 ARCHS="i386 amd64"
-
-BASE_DIR="/tmp"
 
 # Download all the build data
 #mkdir -p $BASE_DIR/$BUILD_ID/binary
