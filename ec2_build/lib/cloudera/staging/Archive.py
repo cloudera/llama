@@ -345,7 +345,8 @@ class Archive:
     """
 
     display_message("Finalize staging")
-    self.execute(' sudo -E -u www-data ' + Archive.BASE_DIR + '/ec2_build/bin/finalize-staging.sh -b '+ build + ' -c ' + cdh_version + ' -r /var/www/archive_public/', True)
+    self.execute(' sudo -E -u www-data ' + Archive.BASE_DIR + '/ec2_build/bin/finalize-staging.sh -b '+ build + ' -c ' + cdh_version + ' -r /var/www/archive_public/'
+                 + ' -d ' + Archive.BASE_DIR, True)
 
   def clean_up(self):
     """

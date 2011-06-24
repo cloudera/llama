@@ -21,11 +21,12 @@ function usage {
   exit 1
 }
 
-while getopts "s:b:c:r:" options; do
+while getopts "s:b:c:r:d:" options; do
   case $options in
     b ) BUILD_ID=$OPTARG;;
     c ) CDH_RELEASE=$OPTARG;;
     r ) REPO=$OPTARG;;
+    d ) BASE_DIR=$OPTARG;;
     h ) usage;;
     \?) usage;;
     * ) usage;;
@@ -37,7 +38,6 @@ if [ -z "$BUILD_ID" ] || [ -z "$CDH_RELEASE" ] || [ -z "$REPO" ]; then
   usage
 fi
 
-BASE_DIR="/tmp"
 DESTINATION_DIR="$REPO/cdh/$CDH_RELEASE"
 
 ARCHIVES=`find $BASE_DIR/$BUILD_ID/source/  -regextype posix-extended   -iregex '.*CDH[[:digit:]BU]+(-SNAPSHOT)?\.tar\.gz'`
