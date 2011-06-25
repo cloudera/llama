@@ -199,6 +199,7 @@ class BuildWorker(Thread):
     # Setup a ssh connection
     (user, hostname, key) = user_hostname_key_options(self.os_distro, self.arch)
     ssh = cloudera.utils.SSH(user, hostname, key, ssh_options)
+    ssh.set_logger(self.logger)
 
     # Prepare ssh command to be run
     cmd_remote = ''
