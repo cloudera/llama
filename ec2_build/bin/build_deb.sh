@@ -49,17 +49,39 @@ EOF
   # The Karmic AMI is from Canonical instead of Alestic. They don't enable multiverse by
   # default. We need multiverse for sun-java6-jdk.
   if [ $(lsb_release -c -s) == "karmic" ]; then
-    sed -i 's/universe/universe multiverse/' /etc/apt/sources.list
+    if ! grep '^deb ' /etc/apt/sources.list | grep -q multiverse; then
+      cat >> /etc/apt/sources.list <<'EOF'
+deb http://us.archive.ubuntu.com/ubuntu/ karmic multiverse
+deb http://us.archive.ubuntu.com/ubuntu/ karmic-updates multiverse
+deb http://security.ubuntu.com/ubuntu/ karmic-security multiverse
+EOF
+    fi
   fi
 
   # Canoncial moved Sun Java into the partner repo. Pull in the multiverse just in case.
   if [ $(lsb_release -c -s) == "lucid" ]; then
-    sed -i 's/universe/universe multiverse/' /etc/apt/sources.list
-    add-apt-repository 'deb http://archive.canonical.com/ lucid partner'
+    if ! grep '^deb ' /etc/apt/sources.list | grep -q multiverse; then
+      cat >> /etc/apt/sources.list <<'EOF'
+deb http://us.archive.ubuntu.com/ubuntu/ lucid multiverse
+deb http://us.archive.ubuntu.com/ubuntu/ lucid-updates multiverse
+deb http://security.ubuntu.com/ubuntu/ lucid-security multiverse
+EOF
+    fi
+    if ! grep '^deb ' /etc/apt/sources.list | grep -q partner; then
+      echo 'deb http://archive.canonical.com/ lucid partner' >> /etc/apt/sources.list
+    fi
   fi
   if [ $(lsb_release -c -s) == "maverick" ]; then
-    sed -i 's/universe/universe multiverse/' /etc/apt/sources.list
-    add-apt-repository 'deb http://archive.canonical.com/ maverick partner'
+    if ! grep '^deb ' /etc/apt/sources.list | grep -q multiverse; then
+      cat >> /etc/apt/sources.list <<'EOF'
+deb http://us.archive.ubuntu.com/ubuntu/ maverick multiverse
+deb http://us.archive.ubuntu.com/ubuntu/ maverick-updates multiverse
+deb http://security.ubuntu.com/ubuntu/ maverick-security multiverse
+EOF
+    fi
+    if ! grep '^deb ' /etc/apt/sources.list | grep -q partner; then
+      echo 'deb http://archive.canonical.com/ maverick partner' >> /etc/apt/sources.list
+    fi
   fi
 
   if [ $(lsb_release -c -s) == "squeeze" ]; then
