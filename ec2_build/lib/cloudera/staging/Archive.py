@@ -317,7 +317,7 @@ class Archive:
 
     display_message("Update deb repository")
     self.execute(' sudo -E -u www-data ' + Archive.BASE_DIR + '/apt/update_repo.sh -s ' + freezer_bucket + ' -b ' + build + ' -c cdh' + cdh_release + ' -r /var/www/archive_public/debian/'
-                 + '-d ' + Archive.BASE_DIR, True)
+                 + ' -d ' + Archive.BASE_DIR, True)
 
 
   def update_yum_repo(self, build, cdh_version):
