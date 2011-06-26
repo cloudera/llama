@@ -28,7 +28,7 @@ sudo -E -u www-data s3cmd sync s3://$S3_BUCKET/$BUILD_ID/source $BASE_DIR/$BUILD
 sudo -E -u www-data gpg-agent --daemon --write-env-file $BASE_DIR/.gpg-agent-info.apt --homedir $BASE_DIR/apt/gpg-home/ --allow-preset-passphrase
 sudo -E -u www-data $(cat $BASE_DIR/.gpg-agent-info.apt) /usr/lib/gnupg2/gpg-preset-passphrase -v --preset -P D00pSigner F36A89E33CC1BD0F71079007327574EE02A818DD
 export GPG_AGENT_CRAP=$(cat $BASE_DIR/.gpg-agent-info.apt)
-sudo -E -u www-data GNUPGHOME=$BASE_DIR/apt/gpg-home/ $GPG_AGENT_CRAP $BASE_DIR/apt/update_repo.sh -s cloudera-hue-freezer -b $BUILD_ID -c cdh3 -r /var/www/archive_public/debian
+sudo -E -u www-data GNUPGHOME=$BASE_DIR/apt/gpg-home/ $GPG_AGENT_CRAP $BASE_DIR/apt/update_repo.sh -s cloudera-hue-freezer -b $BUILD_ID -c cdh3 -r /var/www/archive_public/debian -d $BASE_DIR
 
 # Yum
 sudo -E -u www-data echo "%_gpg_name              Yum Maintainer" >> ~/.rpmmacros
