@@ -21,7 +21,7 @@ function usage {
   exit 1
 }
 
-while getopts "s:b:c:r:" options; do
+while getopts "s:b:c:r:d:" options; do
   case $options in
     b ) BUILD_ID=$OPTARG;;
     c ) CDH_RELEASE=$OPTARG;;
