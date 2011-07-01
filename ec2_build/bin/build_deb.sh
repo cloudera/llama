@@ -170,6 +170,8 @@ popd
     export S3CMD=`pwd`/s3sync/s3cmd.rb
   popd
 
+  source /opt/toolchain/toolchain.sh
+
   ############################## DOWNLOAD ##############################
 
   eval `dpkg-architecture` # set DEB_* variables
