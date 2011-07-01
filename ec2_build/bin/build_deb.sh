@@ -170,7 +170,8 @@ popd
     export S3CMD=`pwd`/s3sync/s3cmd.rb
   popd
 
-  source /opt/toolchain/toolchain.sh
+  [ -f /opt/toolchain/toolchain.sh ] && source /opt/toolchain/toolchain.sh
+  [ -f /mnt/toolchain/toolchain.sh ] && source /mnt/toolchain/toolchain.sh
 
   ############################## DOWNLOAD ##############################
 
