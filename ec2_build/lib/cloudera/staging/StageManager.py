@@ -23,8 +23,8 @@ class StageManager:
   STATUS_OFFICIAL = 'official'
   STATUS_UNOFFICIAL = 'unofficial'
   STATUS_PREVIOUSLY_OFFICIAL = 'previously-official'
-  STATUS_NIGHTLY = 'nightly'
-  STATUS_PREVIOUSLY_NIGHTLY = 'previously-nightly'
+  STATUS_NIGHTLY = 'rc'
+  STATUS_PREVIOUSLY_NIGHTLY = 'previously-rc'
 
 
   def __init__(self):

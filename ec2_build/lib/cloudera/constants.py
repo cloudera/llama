@@ -9,7 +9,7 @@ OFFICIAL_ARCHIVE_IP_ADDRESS = '184.73.170.21'
 
 # Public IP of nightly.cloudera.com
 # NIGHTLY_ARCHIVE_IP_ADDRESS = '184.73.215.26'
-NIGHTLY_ARCHIVE_IP_ADDRESS = '50.16.200.36'
+NIGHTLY_ARCHIVE_IP_ADDRESS = '50.16.200.41'
 
 
 # OS using sudo for root operations
