@@ -137,7 +137,7 @@ TODO: need license header
     <module>repos/cdh3/sqoop/cloudera/maven-packaging</module>
     <module>repos/cdh3/oozie</module>
     <module>repos/cdh3/whirr</module>
-    <module>repos/cdh3/flume</modiule>
+    <module>repos/cdh3/flume</module>
   </modules>
   
   <dependencyManagement>
