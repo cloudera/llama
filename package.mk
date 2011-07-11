@@ -34,6 +34,7 @@ $(BUILD_DIR)/%/.build:
 	  JAVA64_HOME=$(JAVA64_HOME) \
 	  JAVA5_HOME=$(JAVA5_HOME) \
 	  FORREST_HOME=$(FORREST_HOME) \
+	  THRIFT_HOME=$(THRIFT_HOME) \
 	  FULL_VERSION=$($(PKG)_FULL_VERSION) \
 	  $($(PKG)_SOURCE_DIR)/cloudera/do-release-build
 	mkdir -p $($(PKG)_OUTPUT_DIR)
@@ -103,6 +104,7 @@ $(BUILD_DIR)/%/.deb:
 			debuild \
 				--preserve-envvar PATH --preserve-envvar JAVA32_HOME --preserve-envvar JAVA64_HOME \
 				--preserve-envvar JAVA5_HOME --preserve-envvar FORREST_HOME --preserve-envvar MAVEN3_HOME \
+				--preserve-envvar THRIFT_HOME --preserve-envvar JAVA_HOME \
 				-uc -us -b
 
 $(BUILD_DIR)/%/.relnotes:  $($(PKG)_OUTPUT_DIR)/$($(PKG)_NAME)-$($(PKG)_PKG_VERSION).releasenotes.html

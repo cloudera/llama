@@ -220,7 +220,7 @@ popd
       DEBUILD_FLAG='-b'
     fi
 
-    debuild --preserve-envvar FORREST_HOME -uc -us $DEBUILD_FLAG
+    debuild --preserve-envvar THRIFT_HOME --preserve-envvar FORREST_HOME -uc -us $DEBUILD_FLAG
 
     if [ $? -ne 0 ]; then
       send_email $PACKAGE $DEB_HOST_ARCH
