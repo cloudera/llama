@@ -82,7 +82,8 @@ if [ "x$INTERACTIVE" == "xFalse" ]; then
   trap "copy_logs_s3; hostname -f | grep -q internal && shutdown -h now;" INT TERM EXIT
 fi
 
-source /mnt/toolchain/toolchain.sh
+[ -f /opt/toolchain/toolchain.sh ] && source /opt/toolchain/toolchain.sh
+[ -f /mnt/toolchain/toolchain.sh ] && source /mnt/toolchain/toolchain.sh
 
 # Clean up ~/.m2/repository, ~/.ivy2, and ~/.ant to make sure we're getting fresh jars.
 rm -rf ~/.m2/repository
