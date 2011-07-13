@@ -84,6 +84,11 @@ fi
 
 source /mnt/toolchain/toolchain.sh
 
+# Clean up ~/.m2/repository, ~/.ivy2, and ~/.ant to make sure we're getting fresh jars.
+rm -rf ~/.m2/repository
+rm -rf ~/.ivy2
+rm -rf ~/.ant
+
 yum install -y openssl-devel
 
 {

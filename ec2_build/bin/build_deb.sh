@@ -170,6 +170,12 @@ popd
     export S3CMD=`pwd`/s3sync/s3cmd.rb
   popd
 
+  # Clean up ~/.m2/repository, ~/.ivy2, and ~/.ant to make sure we're getting fresh jars.
+  rm -rf ~/.m2/repository
+  rm -rf ~/.ivy2
+  rm -rf ~/.ant
+
+  
   [ -f /opt/toolchain/toolchain.sh ] && source /opt/toolchain/toolchain.sh
   [ -f /mnt/toolchain/toolchain.sh ] && source /mnt/toolchain/toolchain.sh
 
