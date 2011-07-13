@@ -57,20 +57,6 @@ PIG_PACKAGE_GIT_REPO=$(REPO_DIR)/cdh3/pig-package
 PIG_SITE=$(CLOUDERA_ARCHIVE)
 $(eval $(call PACKAGE,pig,PIG))
 
-# Hadoop Snappy
-HADOOP_SNAPPY_NAME=hadoop-snappy
-HADOOP_SNAPPY_RELNOTES_NAME=Hadoop Snappy
-HADOOP_SNAPPY_PKG_NAME=hadoop-snappy
-HADOOP_SNAPPY_BASE_VERSION=0.0.1
-HADOOP_SNAPPY_TARBALL_DST=hadoop-snappy-$(HADOOP_SNAPPY_BASE_VERSION).tar.gz
-HADOOP_SNAPPY_TARBALL_SRC=$(HADOOP_SNAPPY_TARBALL_DST)
-HADOOP_SNAPPY_GIT_REPO=$(REPO_DIR)/cdh3/hadoop-snappy
-HADOOP_SNAPPY_BASE_REF=cdh-base-$(HADOOP_SNAPPY_BASE_VERSION)
-HADOOP_SNAPPY_BUILD_REF=cdh-$(HADOOP_SNAPPY_BASE_VERSION)
-HADOOP_SNAPPY_PACKAGE_GIT_REPO=$(REPO_DIR)/cdh3/hadoop-snappy-package
-HADOOP_SNAPPY_SITE=http://golden.jenkins.sf.cloudera.com/job/hadoop-snappy-tarball/lastSuccessfulBuild/artifact/
-$(eval $(call PACKAGE,hadoop-snappy,HADOOP_SNAPPY))
-
 # Hive
 HIVE_NAME=hive
 HIVE_RELNOTES_NAME=Apache Hive

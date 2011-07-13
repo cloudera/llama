@@ -21,8 +21,6 @@
      "sqoop": {"track-branch": "cdh-1.3.0+5", "dir": "repos/cdh3/sqoop", "remotes": ["origin"]},
      "oozie": {"track-branch": "cdh-2.3.0+31", "dir": "repos/cdh3/oozie", "remotes": ["origin"]},
      "whirr": {"track-branch": "cdh-0.3.0+5", "dir": "repos/cdh3/whirr", "remotes": ["origin", "apache"]},
-     "hadoop-snappy": {"track-branch": "cdh-0.0.1", "dir": "repos/cdh3/hadoop-snappy", "remotes": ["origin"]},
-     "hadoop-snappy-package": {"track-branch": "cdh3", "dir": "repos/cdh3/hadoop-snappy-package", "remotes": ["origin"]},
 
 
      "hadoop-0.20-package": { "track-branch": "cdh3", "dir": "repos/cdh3/hadoop-0.20-package",
