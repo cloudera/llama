@@ -89,4 +89,7 @@ def printRelNotes(cdhReleaseVersion, baseVersion, cdhProjectVersion,
     jiraCount += printProject(jiraDict, "HIVE", "Hive")
     jiraCount += printProject(jiraDict, "OOZIE", "Oozie")
     jiraCount += printProject(jiraDict, "WHIRR", "Whirr")
+    jiraCount += printProject(jiraDict, "SQOOP", "Sqoop")
+    jiraCount += printProject(jiraDict, "FLUME", "Flume")
+    
     printFooter(jiraCount)
