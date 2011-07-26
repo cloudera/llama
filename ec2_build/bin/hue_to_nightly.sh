@@ -19,7 +19,7 @@ sudo chmod -R 777 $BASE_DIR/yum/gnupg
 
 # Get the bits out of S3 buckets (copied from apt/update_repo.sh)
 
-S3_BUCKET="cloudera-hue-rc-freezer"
+S3_BUCKET="cloudera-hue-freezer"
 sudo -E -u www-data mkdir -p $BASE_DIR/$BUILD_ID/binary $BASE_DIR/$BUILD_ID/source
 sudo -E -u www-data s3cmd sync s3://$S3_BUCKET/$BUILD_ID/binary $BASE_DIR/$BUILD_ID
 sudo -E -u www-data s3cmd sync s3://$S3_BUCKET/$BUILD_ID/source $BASE_DIR/$BUILD_ID
