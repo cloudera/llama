@@ -75,7 +75,7 @@ class Archive:
   GPG_ENV_VARIABLE_YUM = "GNUPGHOME=" + BASE_DIR + "/yum/gnupg/"
 
   # Since we
-  SSH_NO_STRICT_HOST_KEY_CHECKING_OPTION = '-o StrictHostKeyChecking=no'
+  SSH_NO_STRICT_HOST_KEY_CHECKING_OPTION = '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
   SSH_KEEP_ALIVE_OPTIONS = '-o ServerAliveInterval=10 -o ServerAliveCountMax=6'
 
   # Packages to be installed on the instance before proceeding to the staging
