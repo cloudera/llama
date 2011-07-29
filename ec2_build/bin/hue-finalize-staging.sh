@@ -13,11 +13,11 @@ set -ex
 shopt -s nullglob
 
 function usage {
-  echo "usage: $0 -s <s3_bucket> -b <build_id> -c <cdh release> -r <repo>"
-  echo "       s3_bucket: The S3 bucket the debs are in (e.g., ec2-build)"
-  echo "       build_id: The dir in the s3 bucket with the debs (e.g., chad-20090810_192726)"
+  echo "usage: $0 -b <build_id> -c <cdh release> -r <repo> -d <base dir>"
+  echo "       build_id: The dir in the base directory with the debs (e.g., chad-20090810_192726)"
   echo "       cdh release: The codename for this release (e.g., cdh2)"
   echo "       repo: The top level dir of the apt repo"
+  echo "       base dir: Base directory where everything's been copied to."
   exit 1
 }
 
@@ -34,7 +34,7 @@ while getopts "s:b:c:r:d:" options; do
   esac
 done
 
-if [ -z "$BUILD_ID" ] || [ -z "$CDH_RELEASE" ] || [ -z "$REPO" ]; then
+if [ -z "$BASE_DIR" ] || [ -z "$BUILD_ID" ] || [ -z "$CDH_RELEASE" ] || [ -z "$REPO" ]; then
   usage
 fi
 

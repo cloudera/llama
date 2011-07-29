@@ -13,21 +13,22 @@ set -e
 shopt -s nullglob
 
 function usage {
-  echo "usage: $0 -s <s3_bucket> -b <build_id> -c <cdh release> -r <repo>"
-  echo "       s3_bucket: The S3 bucket the debs are in (e.g., ec2-build)"
-  echo "       build_id: The dir in the s3 bucket with the debs (e.g., chad-20090810_192726)"
+  echo "usage: $0 -b <build_id> -c <cdh release> -r <repo> -d <base dir> [-u <update>]"
+  echo "       build_id: The dir in the base dir with the debs (e.g., chad-20090810_192726)"
   echo "       cdh release: The codename for this release (e.g., cdh2)"
   echo "       repo: The top level dir of the apt repo"
+  echo "       base dir: Base directory where everything's been copied to."
+  echo "       update: Optional - string to append to the main CDH release."
   exit 1
 }
 
-while getopts "s:b:c:r:d:" options; do
+while getopts "b:c:r:d:u:" options; do
   case $options in
-    s ) S3_BUCKET=$OPTARG;;
     b ) BUILD_ID=$OPTARG;;
     c ) CDH_RELEASE=$OPTARG;;
     r ) REPO=$OPTARG;;
     d ) BASE_DIR=$OPTARG;;
+    u ) UPDATE=$OPTARG;;
     h ) usage;;
     \?) usage;;
     * ) usage;;
@@ -35,7 +36,7 @@ while getopts "s:b:c:r:d:" options; do
   esac
 done
 
-if [ -z "$S3_BUCKET" ] || [ -z "$BUILD_ID" ] || [ -z "$CDH_RELEASE" ] || [ -z "$REPO" ]; then
+if [ -z "$BASE_DIR" ] || [ -z "$BUILD_ID" ] || [ -z "$CDH_RELEASE" ] || [ -z "$REPO" ]; then
   usage
 fi
 
@@ -52,18 +53,13 @@ DEBIAN_DISTROS="lenny lucid maverick squeeze"
 
 ARCHS="i386 amd64"
 
-# Download all the build data
-#mkdir -p $BASE_DIR/$BUILD_ID/binary
-#mkdir -p $BASE_DIR/$BUILD_ID/source
-
-#s3cmd sync s3://$S3_BUCKET/$BUILD_ID/binary $BASE_DIR/$BUILD_ID
-#s3cmd sync s3://$S3_BUCKET/$BUILD_ID/source $BASE_DIR/$BUILD_ID
+REALREL=${CDH_RELEASE}${UPDATE}
 
 REPREPRO_FLAGS="--export=never --keepunreferenced --ignore=wrongdistribution --basedir $REPO"
 
 for DEBIAN_DISTRO in $DEBIAN_DISTROS ; do
 
-  CODENAME=$DEBIAN_DISTRO-$CDH_RELEASE
+  CODENAME=$DEBIAN_DISTRO-$REALREL
 
   # include source package
   for changefile in $BASE_DIR/$BUILD_ID/source/*source.changes ; do
@@ -94,8 +90,12 @@ echo
 echo Exporting repo and running checks...
 echo
 
-for action in export check checkpool createsymlinks ; do
+for action in export check checkpool ; do
   echo $action...
   reprepro --basedir $REPO $action
   echo done
 done
+
+echo createsymlinks...
+reprepro --delete --basedir $REPO createsymlinks
+echo done
