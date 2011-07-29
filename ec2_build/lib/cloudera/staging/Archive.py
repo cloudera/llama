@@ -75,7 +75,8 @@ class Archive:
   GPG_ENV_VARIABLE_YUM = "GNUPGHOME=" + BASE_DIR + "/yum/gnupg/"
 
   # Since we
-  SSH_NO_STRICT_HOST_KEY_CHECKING_OPTION = '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
+  SSH_NO_HOST_KEY = '-o StrictHostKeyChecking=no'
+  SSH_NO_HOSTS_FILE = '-o UserKnownHostsFile=/dev/null '
   SSH_KEEP_ALIVE_OPTIONS = '-o ServerAliveInterval=10 -o ServerAliveCountMax=6'
 
   # Packages to be installed on the instance before proceeding to the staging
@@ -164,16 +165,16 @@ class Archive:
     self.execute("rm -rf " + Archive.BASE_DIR + "/ec2_build")
 
     display_message("Copy apt related scripts:")
-    subprocess.call(["scp", Archive.SSH_NO_STRICT_HOST_KEY_CHECKING_OPTION, '-i', key_file, '-r', '../../apt', self.username + '@' + host + ':' + Archive.BASE_DIR + '/apt'])
+    subprocess.call(["scp", Archive.SSH_NO_HOST_KEY, Archive.SSH_NO_HOSTS_FILE, '-i', key_file, '-r', '../../apt', self.username + '@' + host + ':' + Archive.BASE_DIR + '/apt'])
 
     display_message("Copy yum related scripts:")
-    subprocess.call(["scp", Archive.SSH_NO_STRICT_HOST_KEY_CHECKING_OPTION, '-i', key_file, '-r', '../../yum', self.username + '@' + host + ':' + Archive.BASE_DIR + '/yum'])
+    subprocess.call(["scp", Archive.SSH_NO_HOST_KEY, Archive.SSH_NO_HOSTS_FILE, '-i', key_file, '-r', '../../yum', self.username + '@' + host + ':' + Archive.BASE_DIR + '/yum'])
 
     display_message("Copy ec2_build related scripts:")
-    subprocess.call(["scp", Archive.SSH_NO_STRICT_HOST_KEY_CHECKING_OPTION, '-i', key_file, '-r', '../../ec2_build', self.username + '@' + host + ':' + Archive.BASE_DIR + '/ec2_build'])
+    subprocess.call(["scp", Archive.SSH_NO_HOST_KEY, Archive.SSH_NO_HOSTS_FILE, '-i', key_file, '-r', '../../ec2_build', self.username + '@' + host + ':' + Archive.BASE_DIR + '/ec2_build'])
 
     display_message("Copy source to %s:" % (INTERIM_ARCHIVE_HOST, ))
-    p = subprocess.Popen(["scp", Archive.SSH_NO_STRICT_HOST_KEY_CHECKING_OPTION, '-i', '../../ec2_build/conf/static_vm_key', '-r', staging, 'root@' + INTERIM_ARCHIVE_HOST + ':' + interim_staging + '/'])
+    p = subprocess.Popen(["scp", Archive.SSH_NO_HOST_KEY, Archive.SSH_NO_HOSTS_FILE, '-i', '../../ec2_build/conf/static_vm_key', '-r', staging, 'root@' + INTERIM_ARCHIVE_HOST + ':' + interim_staging + '/'])
 
     upload_returncode = p.wait()
 
@@ -181,7 +182,7 @@ class Archive:
       raise ErrorEncountered("Could not upload build to interim")
 
     display_message("Copy bits (now to nightly):")
-    ssh_cmd = "rsync -aqz -e 'ssh %s -i /root/.ssh/nightly_build.pem' %s %s@%s:%s" % (Archive.SSH_NO_STRICT_HOST_KEY_CHECKING_OPTION,  interim_staging + '/' + build_id, self.username,
+    ssh_cmd = "rsync -aqz -e 'ssh %s -i /root/.ssh/nightly_build.pem' %s %s@%s:%s" % (Archive.SSH_NO_HOST_KEY, Archive.SSH_NO_HOSTS_FILE,  interim_staging + '/' + build_id, self.username,
                                                                       host, Archive.BASE_DIR)
 
     display_message("ssh cmd: %s" % (ssh_cmd, ))
@@ -190,11 +191,11 @@ class Archive:
     temp_ssh.write(ssh_cmd)
     temp_ssh.close()
     subprocess.call(["chmod", "+x", "/tmp/ssh_cmd"]);
-    subprocess.call(["scp", Archive.SSH_NO_STRICT_HOST_KEY_CHECKING_OPTION, '-i', '../../ec2_build/conf/static_vm_key', '/tmp/ssh_cmd', 'root@' + INTERIM_ARCHIVE_HOST + ':/tmp/ssh_cmd'])
+    subprocess.call(["scp", Archive.SSH_NO_HOST_KEY, Archive.SSH_NO_HOSTS_FILE, '-i', '../../ec2_build/conf/static_vm_key', '/tmp/ssh_cmd', 'root@' + INTERIM_ARCHIVE_HOST + ':/tmp/ssh_cmd'])
     
     upload2_returncode = 1
     while upload2_returncode != 0:
-      p2 = subprocess.Popen(["ssh", Archive.SSH_NO_STRICT_HOST_KEY_CHECKING_OPTION, '-i', '../../ec2_build/conf/static_vm_key', 'root@' + INTERIM_ARCHIVE_HOST, '/tmp/ssh_cmd'], stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+      p2 = subprocess.Popen(["ssh", Archive.SSH_NO_HOST_KEY, Archive.SSH_NO_HOSTS_FILE, '-i', '../../ec2_build/conf/static_vm_key', 'root@' + INTERIM_ARCHIVE_HOST, '/tmp/ssh_cmd'], stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
     
       upload2_returncode = p2.wait()
 
