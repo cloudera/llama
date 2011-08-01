@@ -534,10 +534,19 @@ def main():
       instance.join()
 
     print "Instances have terminated..."
+
+    failed_builds = []
+    for instance in instances:
+      if instance.returncode != 0:
+        failed_builds.append("(%s %s)" % (instance.os_distro, instance.os_arch)) 
+
+    if failed_builds:
+      raise Exception("One or more builds failed: %s" % (str(failed_builds)))
+
     #    print "Expect results at s3://%s/build/%s/" % (options.S3_BUCKET, options.BUILD_ID)
     #print "To update apt repo after build is finished:"
     #print "  update_repo.sh %s %s" % (options.S3_BUCKET, options.BUILD_ID)
-
+                      
   except KeyboardInterrupt:
     print "Interrupting cleaning up old instances"
     for instance in instances:
