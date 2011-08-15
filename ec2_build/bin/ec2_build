@@ -211,7 +211,8 @@ class BuildWorker(Thread):
     return_code = ssh.execute(cmd_remote + './' + build_script_filename, [])
 
     # Third we remove it
-    return_code = ssh.execute('rm', ['-fv', build_script_filename])
+    return_code = ssh.execute('rm', ['-fv', build_script_filename], [r"^\*\*\*PACKAGE FAILED\*\*\*",
+                                                                     r"^\*\*\*PACKAGE BUILT\*\*\*"])
 
     self.returncode = return_code
 

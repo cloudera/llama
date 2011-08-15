@@ -129,7 +129,10 @@ for PACKAGE in $PACKAGES; do
     rpmbuild --define "_topdir /tmp/topdir" --buildroot /tmp/buildroot --target $TARGET_ARCH --rebuild *src.rpm
 
     if [ $? -ne 0 ]; then
+        echo "***PACKAGE FAILED*** ${PACKAGE} rpm_${CODENAME}_${ARCH}"
       send_email $PACKAGE $TARGET_ARCH
+    else
+        echo "***PACKAGE BUILT*** ${PACKAGE} rpm_${CODENAME}_${ARCH}"
     fi
   done
 

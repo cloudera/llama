@@ -5,6 +5,7 @@ import platform
 import re
 import subprocess
 import sys
+import re
 
 import cloudera.constants
 
@@ -245,12 +246,13 @@ class SSH:
       self.logger.info(message)
 
 
-  def execute(self, command, parameters=[]):
+  def execute(self, command, parameters=[], logfilters=[]):
     '''
     Execute remotely a command
 
     @param command Command to be executed remotely
     @param parameters Parameters to be passed to the command
+    @param logfilters Optional list of regexs - if given, only lines matching one of them will go to logger.
     @return Return code
     '''
 
@@ -270,7 +272,12 @@ class SSH:
     # Log output until it's done
     if self.logger:
       for line in p.stdout:
-        self.logger.info(line[:-1])
+        if logfilters:
+          for f in logfilters:
+            if re.search(f, line):
+              self.logger.info(line[:-1])
+        else:
+          self.logger.info(line[:-1])
     p.wait()
 
     self.log("Return code is %s for %s"%(str(p.returncode), self.host))

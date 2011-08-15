@@ -229,7 +229,10 @@ popd
     debuild --preserve-envvar THRIFT_HOME --preserve-envvar FORREST_HOME -uc -us $DEBUILD_FLAG
 
     if [ $? -ne 0 ]; then
+        echo "***PACKAGE FAILED*** ${PACKAGE} deb_${CODENAME}_${DEB_HOST_ARCH}"
       send_email $PACKAGE $DEB_HOST_ARCH
+    else
+        echo "***PACKAGE BUILT*** ${PACKAGE} deb_${CODENAME}_${DEB_HOST_ARCH}"
     fi
 
     apt-get -y remove openjdk* maven2 || /bin/true
