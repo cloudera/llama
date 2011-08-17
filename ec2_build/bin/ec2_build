@@ -208,11 +208,12 @@ class BuildWorker(Thread):
 
     # Ensure it is executable and then execute it
     return_code = ssh.execute('chmod', ['u+x', build_script_filename])
-    return_code = ssh.execute(cmd_remote + './' + build_script_filename, [])
+    return_code = ssh.execute(cmd_remote + './' + build_script_filename, [],
+                              [r"^\*\*\*PACKAGE FAILED\*\*\*",
+                               r"^\*\*\*PACKAGE BUILT\*\*\*"])
 
     # Third we remove it
-    return_code = ssh.execute('rm', ['-fv', build_script_filename], [r"^\*\*\*PACKAGE FAILED\*\*\*",
-                                                                     r"^\*\*\*PACKAGE BUILT\*\*\*"])
+    return_code = ssh.execute('rm', ['-fv', build_script_filename])
 
     self.returncode = return_code
 
