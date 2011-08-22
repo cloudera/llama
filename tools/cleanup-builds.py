@@ -10,7 +10,7 @@ from optparse import OptionParser
 
 __usage = """
     --root | -r <dir>       Staging root directory.
-    --expr | -e <seconds>   Age in seconds for expiration. Defaults to 86400 (1 week).
+    --expr | -e <seconds>   Age in seconds for expiration. Defaults to 604800 (1 week).
     --nightly | -n <string> Prefix for directories which should be deleted. Defaults to "nightly_"
     """
 
@@ -21,7 +21,7 @@ def parse_args():
 
     op.add_option('-r', "--root")
     op.add_option('-e', "--expr",
-                  default=86400)
+                  default=604800)
     op.add_option('-p', "--prefix",
                   default="nightly_")
     
@@ -43,13 +43,13 @@ def parse_args():
 
     
 
-def delete_builds(staging_root, expr_time=86400, dir_prefix="nightly_"):
+def delete_builds(staging_root, expr_time=604800, dir_prefix="nightly_"):
     """
     Remove directories under staging_root that are both older than the given expr_time and
     which have names starting with "nightly_".
 
     @param staging_root Staging root directory.
-    @param expr_time Minimum age in seconds for deletion. Defaults to 86400 - i.e., one week.
+    @param expr_time Minimum age in seconds for deletion. Defaults to 604800 - i.e., one week.
     """
     for dir_name in os.listdir(staging_root): 
         full_dir = os.path.join(staging_root, dir_name) 
