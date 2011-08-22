@@ -69,7 +69,7 @@ def delete_builds(staging_root, expr_time=86400, dir_prefix="nightly_"):
 def main():
     options = parse_args()
 
-    delete_builds(opts.root, opts.expr)
+    delete_builds(options.root, options.expr)
     
 
 if __name__ == "__main__":
