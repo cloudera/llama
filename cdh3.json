@@ -21,6 +21,7 @@
      "sqoop": {"track-branch": "cdh-1.3.0+5", "dir": "repos/cdh3/sqoop", "remotes": ["origin"]},
      "oozie": {"track-branch": "cdh-2.3.0+31", "dir": "repos/cdh3/oozie", "remotes": ["origin"]},
      "whirr": {"track-branch": "cdh-0.5.0", "dir": "repos/cdh3/whirr", "remotes": ["origin", "apache"]},
+     "mahout": {"track-branch": "cdh-0.5", "dir": "repos/cdh3/mahout", "remotes": ["origin", "apache"]},
 
      "hadoop-0.20-package": { "track-branch": "cdh3", "dir": "repos/cdh3/hadoop-0.20-package",
                               "remote-project-name": "hadoop-package",
@@ -41,6 +42,8 @@
      "oozie-package": { "track-branch": "cdh3", "dir":
           "repos/cdh3/oozie-package", "remotes": ["origin"]},
      "whirr-package": { "track-branch": "cdh3", "dir":
-          "repos/cdh3/whirr-package", "remotes": ["origin"]}
+          "repos/cdh3/whirr-package", "remotes": ["origin"]},
+     "mahout-package": { "track-branch": "cdh3", "dir":
+          "repos/cdh3/mahout-package", "remotes": ["origin"]}
     }
 }

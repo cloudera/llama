@@ -53,6 +53,7 @@ TODO: need license header
     <cdh.oozie.version>2.3.0-cdh3u2-SNAPSHOT</cdh.oozie.version>
     <cdh.whirr.version>0.5.0-cdh3u2-SNAPSHOT</cdh.whirr.version>
     <cdh.flume.version>0.9.4-cdh3u2-SNAPSHOT</cdh.flume.version>
+    <cdh.mahout.version>0.5-cdh3u2-SNAPSHOT</cdh.mahout.version>
     <cdh.hadoop-snappy.version>0.0.1-cdh3u2-SNAPSHOT</cdh.hadoop-snappy.version>
  
   </properties>
@@ -138,6 +139,7 @@ TODO: need license header
     <module>repos/cdh3/oozie</module>
     <module>repos/cdh3/whirr</module>
     <module>repos/cdh3/flume</module>
+    <module>repos/cdh3/mahout</module>
   </modules>
   
   <dependencyManagement>
