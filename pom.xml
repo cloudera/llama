@@ -864,6 +864,11 @@ TODO: need license header
           </exclusion>
         </exclusions>
       </dependency>
+      <dependency>
+        <groupId>com.linkedin</groupId>
+        <artifactId>haivvreo</artifactId>
+        <version>1.0.7-cdh-SNAPSHOT</version>
+      </dependency>
       
       <!-- Backed depedendecies from checked in JARs in hive-root sub-projects -->
       <dependency>
