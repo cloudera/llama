@@ -46,4 +46,4 @@ function relnote_gen {
   python ./tools/relnotes/relnotegen.py -l $commit_log -r "$4" -a $5 -c $6 -n "$7" > $relnote_file
 }
 
-relnote_gen $1 $2 $3 "$4" $5 $6 "$7"
+relnote_gen $1 $2 $3 "$4" $5 $6 "$7" $8 "$9"
