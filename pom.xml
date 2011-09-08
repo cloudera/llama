@@ -55,6 +55,9 @@ TODO: need license header
     <cdh.flume.version>0.9.4-cdh3u2-SNAPSHOT</cdh.flume.version>
     <cdh.mahout.version>0.5-cdh3u2-SNAPSHOT</cdh.mahout.version>
     <cdh.hadoop-snappy.version>0.0.1-cdh3u2-SNAPSHOT</cdh.hadoop-snappy.version>
+
+    <!-- Versions of the dependencies we manage -->
+    <cdh.avro.version>1.5.3</cdh.avro.version>
  
   </properties>
   
@@ -744,7 +747,7 @@ TODO: need license header
       <dependency>
         <groupId>org.apache.avro</groupId>
         <artifactId>avro</artifactId>
-        <version>1.5.3</version>
+        <version>${cdh.avro.version}</version>
       </dependency>
       <dependency>
         <groupId>org.codehaus.jackson</groupId>
