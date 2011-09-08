@@ -1,4 +1,5 @@
 CDH_VERSION=3
+PREV_RELEASE_TAG=cdh3u1-release
 
 # Hadoop 0.20.0-based hadoop package
 HADOOP20_NAME=hadoop

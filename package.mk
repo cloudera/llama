@@ -117,7 +117,9 @@ $(BUILD_DIR)/%/.relnotes:
 		"CDH $(CDH_VERSION)" \
 		"$($(PKG)_BASE_VERSION)" \
 		"$($(PKG)_NAME)-$($(PKG)_PKG_VERSION)" \
-		"$($(PKG)_RELNOTES_NAME)"
+		"$($(PKG)_RELNOTES_NAME)" \
+		"$($(PKG)_PACKAGE_GIT_REPO)" \
+		"$(PREV_RELEASE_TAG)..HEAD"
 	touch $@
 
 # Package make function
