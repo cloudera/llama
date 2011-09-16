@@ -4,7 +4,7 @@ DL_DIR    ?=$(BASE_DIR)/dl
 OUTPUT_DIR?=$(BASE_DIR)/output
 REPO_DIR  ?=$(BASE_DIR)/repos
 CONFIG    ?=$(BASE_DIR)/config.mk
-CDH       ?=cdh3
+CDH       ?=cdh4
 CDH_VERSION_STRING ?= cdh3u2-SNAPSHOT
 CDH_MAKEFILE:=$(CDH).mk
 

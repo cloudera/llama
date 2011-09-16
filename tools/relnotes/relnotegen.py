@@ -13,7 +13,6 @@ import sys
 
 from urllib import urlopen
 from xml.etree import ElementTree
-from xml.etree.ElementTree import ParseError
 from xml.parsers.expat import ExpatError
 from relnotehtml import printRelNotes
 from utils import getJiraIssueXMLURL, getJiraList
@@ -65,9 +64,6 @@ def getJiraDOM(jira):
         continue
       dom = ElementTree.fromstring(xml)
     except ExpatError as e:
-      print >> sys.stderr, "ERROR. Skip %s (%s)" % (jira, e)
-      return None
-    except ParseError as e:
       print >> sys.stderr, "ERROR. Skip %s (%s)" % (jira, e)
       return None
   return dom

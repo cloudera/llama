@@ -1,0 +1,29 @@
+{
+  "default-remote": "origin",
+
+  "remotes":
+    {"origin": { "fetch": "git://github.sf.cloudera.com/CDH/%(name)s.git" },
+     "apache": { "fetch": "git://github.sf.cloudera.com/Mirrors/apache-%(name)s.git" },
+     "common": { "fetch": "git://github.sf.cloudera.com/Mirrors/apache-hadoop-common.git" },
+     "yahoo": { "fetch": "git://github.sf.cloudera.com/Mirrors/yahoo-%(name)s.git" }},
+
+  "projects":
+  {
+     "hadoop": { "track-branch": "cdh-0.20.2+923", "dir":"repos/cdh4/hadoop",
+                      "remotes": ["origin", "common"],
+                      "remote-project-name": "hadoop" },
+
+     "pig": {"track-branch": "cdh-0.8.1+28", "dir": "repos/cdh4/pig", "remotes": ["origin", "apache"]},
+     "hive": {"track-branch": "cdh-0.7.1+42", "dir": "repos/cdh4/hive", "remotes": ["origin", "apache"]},
+     "flume": {"track-branch": "cdh-0.9.4+25", "dir": "repos/cdh4/flume", "remotes": ["origin"]},
+     "hbase": {"track-branch": "cdh-0.90.4", "dir": "repos/cdh4/hbase", "remotes": ["origin","apache"]},
+     "zookeeper": {"track-branch": "cdh-3.3.3+12", "dir": "repos/cdh4/zookeeper", "remotes": ["origin", "apache"]},
+     "sqoop": {"track-branch": "cdh-1.3.0+5", "dir": "repos/cdh4/sqoop", "remotes": ["origin"]},
+     "oozie": {"track-branch": "cdh-2.3.2", "dir": "repos/cdh4/oozie", "remotes": ["origin"]},
+     "whirr": {"track-branch": "cdh-0.5.0", "dir": "repos/cdh4/whirr", "remotes": ["origin", "apache"]},
+     "mahout": {"track-branch": "cdh-0.5", "dir": "repos/cdh4/mahout", "remotes": ["origin", "apache"]},
+
+     "cdh-package": { "track-branch": "cdh-0.2.0ish", "dir":
+          "repos/cdh4/cdh-package", "remotes": ["origin"]}
+    }
+}

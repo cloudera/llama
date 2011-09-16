@@ -60,7 +60,7 @@ def printProject(jiraDict, proj, projName):
             for (jira, summary) in typeDict[jt]:
                 url = getJiraIssueURL(jira)
                 summary = cgi.escape(summary)
-                print "<li>[<a href='"+url+"'>"+jira+"</a>] - "+summary+"</li>"
+                print "<li>[<a href='"+url+"'>"+jira+"</a>] - "+summary.encode('ascii', 'ignore')+"</li>"
                 jiraCount += 1
             print "</ul>"
     except KeyError:

@@ -45,26 +45,28 @@ $(BUILD_DIR)/%/.build:
 $(BUILD_DIR)/%/.srpm:
 	-rm -rf $(PKG_BUILD_DIR)/rpm/
 	mkdir -p $(PKG_BUILD_DIR)/rpm/
-	cp -r $($(PKG)_PACKAGE_GIT_REPO)/rpm/topdir $(PKG_BUILD_DIR)/rpm
-	mkdir -p $(PKG_BUILD_DIR)/rpm/topdir/{INSTALL,SOURCES,BUILD}
-	cp $($(PKG)_OUTPUT_DIR)/$($(PKG)_NAME)-$($(PKG)_FULL_VERSION).tar.gz $(PKG_BUILD_DIR)/rpm/topdir/SOURCES
+	cp -r $($(PKG)_PACKAGE_GIT_REPO)/rpm/$($(PKG)_NAME)/* $(PKG_BUILD_DIR)/rpm
+	mkdir -p $(PKG_BUILD_DIR)/rpm/{INSTALL,SOURCES,BUILD,SRPMS,RPMS}
+	cp $($(PKG)_OUTPUT_DIR)/$($(PKG)_NAME)-$($(PKG)_FULL_VERSION).tar.gz $(PKG_BUILD_DIR)/rpm/SOURCES
+	[ -d $($(PKG)_PACKAGE_GIT_REPO)/common/$($(PKG)_NAME) ] && \
+		cp -r $($(PKG)_PACKAGE_GIT_REPO)/common/$($(PKG)_NAME)/* $(PKG_BUILD_DIR)/rpm/SOURCES
 	$(BASE_DIR)/tools/create_rpms \
 	  $($(PKG)_NAME) \
-	  $(PKG_BUILD_DIR)/rpm/topdir/INSTALL \
-	  $(PKG_BUILD_DIR)/rpm/topdir \
+	  $(PKG_BUILD_DIR)/rpm/INSTALL \
+	  $(PKG_BUILD_DIR)/rpm \
 	  $($(PKG)_BASE_VERSION) \
 	  $(PKG_FULL_VERSION) \
 	  $($(PKG)_PKG_VERSION)$(CDH_BUILD_STAMP) \
 	  $($(PKG)_RELEASE)
-	cp $(PKG_BUILD_DIR)/rpm/topdir/SRPMS/$($(PKG)_PKG_NAME)-$($(PKG)_PKG_VERSION)$(CDH_BUILD_STAMP)-$($(PKG)_RELEASE).src.rpm \
+	cp $(PKG_BUILD_DIR)/rpm/SRPMS/$($(PKG)_PKG_NAME)-$($(PKG)_PKG_VERSION)$(CDH_BUILD_STAMP)-$($(PKG)_RELEASE).src.rpm \
 	   $($(PKG)_OUTPUT_DIR)
 	touch $@
 
 # Make binary RPMs
 $(BUILD_DIR)/%/.rpm: SRCRPM=$($(PKG)_OUTPUT_DIR)/$($(PKG)_PKG_NAME)-$($(PKG)_PKG_VERSION)$(CDH_BUILD_STAMP)-$($(PKG)_RELEASE).src.rpm
 $(BUILD_DIR)/%/.rpm:
-	rpmbuild --define "_topdir $(PKG_BUILD_DIR)/rpm/topdir" --rebuild $(SRCRPM)
-	rpmbuild --define "_topdir $(PKG_BUILD_DIR)/rpm/topdir" --rebuild --target noarch $(SRCRPM)
+	rpmbuild --define "_topdir $(PKG_BUILD_DIR)/rpm/" --rebuild $(SRCRPM)
+	rpmbuild --define "_topdir $(PKG_BUILD_DIR)/rpm/" --rebuild --target noarch $(SRCRPM)
 	touch $@
 
 # Make source DEBs
@@ -77,7 +79,8 @@ $(BUILD_DIR)/%/.sdeb:
 	  tar -xvf $($(PKG)_PKG_NAME)_$(PKG_PKG_VERSION)$(CDH_BUILD_STAMP).orig.tar.gz && \
 	  mv $($(PKG)_NAME)-$(PKG_FULL_VERSION) $($(PKG)_NAME)-$(PKG_PKG_VERSION)$(CDH_BUILD_STAMP)
 	  cd $(PKG_BUILD_DIR)/deb/$($(PKG)_NAME)-$(PKG_PKG_VERSION)$(CDH_BUILD_STAMP) && \
-	  cp -r $($(PKG)_PACKAGE_GIT_REPO)/deb/debian.$($(PKG)_NAME) debian && \
+          cp -r $($(PKG)_PACKAGE_GIT_REPO)/deb/$($(PKG)_NAME) debian && \
+	  cp -r $($(PKG)_PACKAGE_GIT_REPO)/common/$($(PKG)_NAME)/* debian && \
 	  find debian -name "*.[ex,EX,~]" | xargs rm -f && \
 	  $(BASE_DIR)/tools/generate-debian-changelog \
 	    $($(PKG)_GIT_REPO) \
