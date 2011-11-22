@@ -131,20 +131,6 @@ TODO: need license header
     </pluginRepository>
   </pluginRepositories>
 
-  <!-- These module locations assume you have already run crepo sync. -->
-  <modules>
-    <module>repos/cdh3/hadoop-0.20/cloudera/maven-packaging</module>
-    <module>repos/cdh3/zookeeper/cloudera/maven-packaging</module>
-    <module>repos/cdh3/hbase</module>
-    <module>repos/cdh3/pig/cloudera/maven-packaging</module>
-    <module>repos/cdh3/hive/cloudera/maven-packaging</module>
-    <module>repos/cdh3/sqoop/cloudera/maven-packaging</module>
-    <module>repos/cdh3/oozie</module>
-    <module>repos/cdh3/whirr</module>
-    <module>repos/cdh3/flume</module>
-    <module>repos/cdh3/mahout</module>
-  </modules>
-  
   <dependencyManagement>
     <dependencies>
       
@@ -391,7 +377,6 @@ TODO: need license header
         <artifactId>hadoop-dist</artifactId>
         <version>${cdh.hadoop.version}</version>
       </dependency>
-      <dependency>
       
       <!-- Zookeeper -->
       <dependency>
