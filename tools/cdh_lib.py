@@ -40,7 +40,7 @@ def count_commits_from(from_rev, to_rev):
   """Return the number of commits from from_rev to to_rev"""
   return len(git_rev_list(from_rev, to_rev))
 
-def cdh_best_branch(r):
+def cdh_best_branch(r, prefix='cdh'):
   """
   Return the name of the cdh branch that the given commit
   is best described by. This means the shortest version number
@@ -49,14 +49,14 @@ def cdh_best_branch(r):
   branches = git(['branch', '-a', '--contains', r]).split("\n")
   branches = [b.lstrip('*').strip() for b in branches]
   branches = [re.sub(r'^.+/(.+)$', r'\1', b) for b in branches]
-  branches = [b for b in branches if b.startswith('cdh-')]
+  branches = [b for b in branches if b.startswith(prefix + '-')]
 
   # The best branch is the one with the shortest version number
   branches.sort(cmp=lambda a,b: len(a) - len(b))
 
   return branches[0]
 
-def cdh_ancestor_branch(branch):
+def cdh_ancestor_branch(branch, prefix='cdh'):
   """
   Determine the ancestor branch of the given branch name.
   If the current branch is like cdh-a.b+c.d then will chop
@@ -66,30 +66,31 @@ def cdh_ancestor_branch(branch):
 
   See unit tests for some examples.
   """
-  if not branch.startswith('cdh-'):
-    raise Exception("Not a cdh-* branch: %s" % branch)
+  if not branch.startswith(prefix + '-'):
+    raise Exception("Not a %s-* branch: %s" % (prefix, branch))
   
-  m = re.match(r'cdh-([\d\.]+)$', branch)
+  m = re.match(prefix + r'-([\d\.]+)$', branch)
   if m:
-      return "cdh-base-%s" % (m.group(1))
+      return prefix + "-base-%s" % (m.group(1))
 
   # Add origin to all ancestor branches 
   return re.sub(r'[\.\+][^\.\+]+?$', '', 'origin/' + branch)
 
-def cdh_get_version(rev):
+def cdh_get_version(rev, prefix='cdh'):
   """ Given a revision, determine the unique version number for it. """
+  separator = '-'
 
-  if rev.startswith('cdh-'):
+  if rev.startswith(prefix + separator):
     cur_branch = rev
   else:
-    cur_branch = cdh_best_branch(rev)
-  assert cur_branch.startswith("cdh-")
-  base_version = re.sub(r'^cdh-', '', cur_branch)
-  ancestor = cdh_ancestor_branch(cur_branch)
+    cur_branch = cdh_best_branch(rev, prefix)
+  assert cur_branch.startswith(prefix + separator)
+  base_version = re.sub('^' + prefix + separator, '', cur_branch)
+  ancestor = cdh_ancestor_branch(cur_branch, prefix)
   merge_base = git_merge_base(rev, ancestor)
   count = count_commits_from(merge_base, rev)
 
-  if ancestor.startswith('apache') or ancestor.startswith('cdh-base'):
+  if ancestor.startswith('apache') or ancestor.startswith(prefix + separator + 'base'):
     return base_version + '+' + str(count)
   else:
     return base_version + '.' + str(count)

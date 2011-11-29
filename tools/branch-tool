@@ -7,6 +7,7 @@ flags:
 
 options:
   -a   - name of Apache remote to compare
+  -p   - Override branch prefix. Default is cdh
  
 
 tool is:
@@ -24,6 +25,7 @@ from cdh_lib import git, git_rev_parse, cdh_get_version, git_cur_branch
 
 VERBOSE = False
 AUTOMATIC_YES = False
+PREFIX= 'cdh'
 
 def sideeffect_git(cmdv):
   """
@@ -51,8 +53,8 @@ def usage(argv):
 
 def branch(argv):
   """ Create a new branch from this point """
-  version = cdh_get_version(git_cur_branch())
-  sideeffect_git(['checkout', '-b', 'cdh-' + version])
+  version = cdh_get_version(git_cur_branch(), PREFIX)
+  sideeffect_git(['checkout', '-b', PREFIX + '-' + version])
 
 def version(argv):
   """
@@ -60,7 +62,7 @@ def version(argv):
   of HEAD.
   """
   ref = len(argv) == 3 and argv[2] or git_cur_branch()
-  print cdh_get_version(ref)
+  print cdh_get_version(ref, PREFIX)
 
 def cust_branch(argv):
   """
@@ -74,12 +76,12 @@ def cust_branch(argv):
   make_cust_branch(argv[2])
 
 def get_cust_branch_target(cust_name):
-  head_ver = cdh_get_version(git_cur_branch())
-  return 'cdh-%s+%s' % (head_ver, cust_name)
+  head_ver = cdh_get_version(git_cur_branch(), PREFIX)
+  return '%s-%s+%s' % (PREFIX, head_ver, cust_name)
 
 def ensure_head_version_branch(checkout=False):
-  head_ver = cdh_get_version(git_cur_branch())
-  branch = 'cdh-' + head_ver
+  head_ver = cdh_get_version(git_cur_branch(), PREFIX)
+  branch = PREFIX + '-' + head_ver
   try:
     git_rev_parse('refs/heads/' + branch)
   except Exception, e:
@@ -98,9 +100,9 @@ def migrate_cust_branch(argv):
     usage(argv)
   old_branch = argv[2]
 
-  m = re.match(r'^(cdh.+?)\+(\w+)$', old_branch)
+  m = re.match(r'^(' + PREFIX + r'.+?)\+(\w+)$', old_branch)
   if not m:
-    raise Exception("This branch doesn't match cdh-version+customername")
+    raise Exception("This branch doesn't match %s-version+customername" % PREFIX)
   src_base, cust_name = m.groups()
   patches = git(["log", "--pretty=oneline", "--abbrev-commit",
                  "%s..%s" % (src_base, old_branch)])
@@ -144,14 +146,17 @@ def parse_args(args):
   op = OptionParser(usage = __usage)
   op.add_option('-y', '--yes', action='store_true')
   op.add_option('-v', '--verbose', action='store_true')
+  op.add_option('-p', '--prefix')
   opts, args = op.parse_args()
   return opts, args
 
 def main(argv):
-  global VERBOSE, AUTOMATIC_YES
+  global VERBOSE, AUTOMATIC_YES, PREFIX
   opts, args = parse_args(argv[1:])
   AUTOMATIC_YES = opts.yes
   VERBOSE = opts.verbose
+  if opts.prefix:
+    PREFIX = opts.prefix
 
   if len(args) == 0:
     usage(argv)
