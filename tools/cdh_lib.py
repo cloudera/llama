@@ -40,7 +40,7 @@ def count_commits_from(from_rev, to_rev):
   """Return the number of commits from from_rev to to_rev"""
   return len(git_rev_list(from_rev, to_rev))
 
-def cdh_best_branch(r, prefix='cdh'):
+def cdh_best_branch(r):
   """
   Return the name of the cdh branch that the given commit
   is best described by. This means the shortest version number
@@ -49,7 +49,7 @@ def cdh_best_branch(r, prefix='cdh'):
   branches = git(['branch', '-a', '--contains', r]).split("\n")
   branches = [b.lstrip('*').strip() for b in branches]
   branches = [re.sub(r'^.+/(.+)$', r'\1', b) for b in branches]
-  branches = [b for b in branches if b.startswith(prefix + '-')]
+  branches = [b for b in branches if b.startswith('cdh-')]
 
   # The best branch is the one with the shortest version number
   branches.sort(cmp=lambda a,b: len(a) - len(b))
@@ -83,7 +83,7 @@ def cdh_get_version(rev, prefix='cdh'):
   if rev.startswith(prefix + separator):
     cur_branch = rev
   else:
-    cur_branch = cdh_best_branch(rev, prefix)
+    cur_branch = cdh_best_branch(rev)
   assert cur_branch.startswith(prefix + separator)
   base_version = re.sub('^' + prefix + separator, '', cur_branch)
   ancestor = cdh_ancestor_branch(cur_branch, prefix)
