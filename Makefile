@@ -42,6 +42,9 @@ include package.mk
 
 include $(CDH_MAKEFILE)
 
+# Set the prefix if it's not already set.
+CDH_PREFIX ?=$(CDH)
+
 help: package-help
 
 all: srpm sdeb tgz
