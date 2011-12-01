@@ -15,7 +15,7 @@
 
      "zookeeper": {"track-branch": "cdh4-3.3.3", "dir": "repos/cdh4/zookeeper", "remotes": ["origin", "apache"]},
 
-     "cdh-package": { "track-branch": "cdh-0.2.0ish", "dir":
+     "cdh-package": { "track-branch": "cdh4-0.4", "dir":
           "repos/cdh4/cdh-package", "remotes": ["origin"]}
     }
 }

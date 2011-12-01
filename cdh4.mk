@@ -4,6 +4,18 @@ export IVY_MIRROR_PROP=http://azov01.sf.cloudera.com:8081/artifactory/cloudera-m
 
 CDH_PACKAGE_GIT_REPO=$(REPO_DIR)/cdh4/cdh-package
 
+# Bigtop-utils
+BIGTOP_UTILS_NAME=bigtop-utils
+BIGTOP_UTILS_RELNOTES_NAME=Bigtop-utils
+BIGTOP_UTILS_PKG_NAME=bigtop-utils
+BIGTOP_UTILS_BASE_VERSION=0.4
+BIGTOP_UTILS_RELEASE_VERSION=1
+BIGTOP_UTILS_GIT_REPO=$(REPO_DIR)/cdh4/cdh-package
+BIGTOP_UTILS_BASE_REF=cdh4-base-$(BIGTOP_UTILS_BASE_VERSION)
+BIGTOP_UTILS_BUILD_REF=HEAD
+BIGTOP_UTILS_PACKAGE_GIT_REPO=$(REPO_DIR)/cdh4/cdh-package/bigtop-packages/src
+$(eval $(call PACKAGE,bigtop-utils,BIGTOP_UTILS))
+
 # Hadoop 0.20.0-based hadoop package
 HADOOP20_NAME=hadoop
 HADOOP20_RELNOTES_NAME=Apache Hadoop

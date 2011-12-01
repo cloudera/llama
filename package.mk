@@ -4,13 +4,13 @@ SHELL := /bin/bash
 # Download
 $(BUILD_DIR)/%/.download:
 	mkdir -p $(@D)
-	[ -f $($(PKG)_DOWNLOAD_DST) ] || (cd $(DL_DIR) && curl -k -# -L -o $($(PKG)_TARBALL_DST) $($(PKG)_DOWNLOAD_URL))
+	[ -z "$($(PKG)_TARBALL_SRC)" -o -f $($(PKG)_DOWNLOAD_DST) ] || (cd $(DL_DIR) && curl -k -# -L -o $($(PKG)_TARBALL_DST) $($(PKG)_DOWNLOAD_URL))
 	touch $@
 
 # Prep
 $(BUILD_DIR)/%/.prep:
 	mkdir -p $($(PKG)_SOURCE_DIR)
-	$(BASE_DIR)/tools/setup-package-build \
+	[ -z "$($(PKG)_TARBALL_SRC)" ] || $(BASE_DIR)/tools/setup-package-build \
 	  $($(PKG)_GIT_REPO) \
 	  $($(PKG)_BASE_REF) \
 	  $($(PKG)_BUILD_REF) \
@@ -21,14 +21,14 @@ $(BUILD_DIR)/%/.prep:
 
 # Patch
 $(BUILD_DIR)/%/.patch:
-	$($(PKG)_SOURCE_DIR)/cloudera/apply-patches \
+	[ -z "$($(PKG)_TARBALL_SRC)" ] || $($(PKG)_SOURCE_DIR)/cloudera/apply-patches \
 	  $($(PKG)_SOURCE_DIR) \
 	  $($(PKG)_SOURCE_DIR)/cloudera/patches
 	touch $@
 
 # Build
 $(BUILD_DIR)/%/.build:
-	/usr/bin/env \
+	[ -z "$($(PKG)_TARBALL_SRC)" ] || /usr/bin/env \
 	  -u DISPLAY \
 	  JAVA32_HOME=$(JAVA32_HOME) \
 	  JAVA64_HOME=$(JAVA64_HOME) \
@@ -38,7 +38,7 @@ $(BUILD_DIR)/%/.build:
 	  FULL_VERSION=$($(PKG)_FULL_VERSION) \
 	  $($(PKG)_SOURCE_DIR)/cloudera/do-release-build
 	mkdir -p $($(PKG)_OUTPUT_DIR)
-	cp $($(PKG)_SOURCE_DIR)/build/$($(PKG)_NAME)-$($(PKG)_FULL_VERSION).tar.gz $($(PKG)_OUTPUT_DIR)
+	[ -z "$($(PKG)_TARBALL_SRC)" ] || cp $($(PKG)_SOURCE_DIR)/build/$($(PKG)_NAME)-$($(PKG)_FULL_VERSION).tar.gz $($(PKG)_OUTPUT_DIR)
 	touch $@
 
 # Make source RPMs
@@ -47,17 +47,16 @@ $(BUILD_DIR)/%/.srpm:
 	mkdir -p $(PKG_BUILD_DIR)/rpm/
 	cp -r $($(PKG)_PACKAGE_GIT_REPO)/rpm/$($(PKG)_NAME)/* $(PKG_BUILD_DIR)/rpm
 	mkdir -p $(PKG_BUILD_DIR)/rpm/{INSTALL,SOURCES,BUILD,SRPMS,RPMS}
-	cp $($(PKG)_OUTPUT_DIR)/$($(PKG)_NAME)-$($(PKG)_FULL_VERSION).tar.gz $(PKG_BUILD_DIR)/rpm/SOURCES
+	[ -z "$($(PKG)_TARBALL_SRC)" ] || cp $($(PKG)_OUTPUT_DIR)/$($(PKG)_NAME)-$($(PKG)_FULL_VERSION).tar.gz $(PKG_BUILD_DIR)/rpm/SOURCES
 	[ -d $($(PKG)_PACKAGE_GIT_REPO)/common/$($(PKG)_NAME) ] && \
 		cp -r $($(PKG)_PACKAGE_GIT_REPO)/common/$($(PKG)_NAME)/* $(PKG_BUILD_DIR)/rpm/SOURCES
-	$(BASE_DIR)/tools/create_rpms \
-	  $($(PKG)_NAME) \
-	  $(PKG_BUILD_DIR)/rpm/INSTALL \
-	  $(PKG_BUILD_DIR)/rpm \
-	  $($(PKG)_BASE_VERSION) \
-	  $(PKG_FULL_VERSION) \
-	  $($(PKG)_PKG_VERSION)$(CDH_BUILD_STAMP) \
-	  $($(PKG)_RELEASE)
+	sed -i -e '1i\
+%define $(subst -,_,$($(PKG)_NAME))_version $($(PKG)_PKG_VERSION)$(CDH_BUILD_STAMP) \
+%define $(subst -,_,$($(PKG)_NAME))_patched_version $($(PKG)_FULL_VERSION) \
+%define $(subst -,_,$($(PKG)_NAME))_base_version $($(PKG)_BASE_VERSION) \
+%define $(subst -,_,$($(PKG)_NAME))_release $($(PKG)_RELEASE_VERSION)' $(PKG_BUILD_DIR)/rpm/SPECS/$($(PKG)_NAME).spec
+	rpmbuild --define "_topdir $(PKG_BUILD_DIR)/rpm/" -bs --nodeps --buildroot="$(PKG_BUILD_DIR)/rpm/INSTALL" \
+                                                                       $(PKG_BUILD_DIR)/rpm/SPECS/$($(PKG)_NAME).spec
 	cp $(PKG_BUILD_DIR)/rpm/SRPMS/$($(PKG)_PKG_NAME)-$($(PKG)_PKG_VERSION)$(CDH_BUILD_STAMP)-$($(PKG)_RELEASE).src.rpm \
 	   $($(PKG)_OUTPUT_DIR)
 	touch $@
