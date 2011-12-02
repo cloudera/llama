@@ -28,7 +28,7 @@ $(BUILD_DIR)/%/.patch:
 
 # Build
 $(BUILD_DIR)/%/.build:
-	[ -z "$($(PKG)_TARBALL_SRC)" ] || /usr/bin/env \
+	[ -z "$($(PKG)_TARBALL_SRC)" ] || cd $($(PKG)_SOURCE_DIR) && /usr/bin/env \
 	  -u DISPLAY \
 	  JAVA32_HOME=$(JAVA32_HOME) \
 	  JAVA64_HOME=$(JAVA64_HOME) \
@@ -36,7 +36,7 @@ $(BUILD_DIR)/%/.build:
 	  FORREST_HOME=$(FORREST_HOME) \
 	  THRIFT_HOME=$(THRIFT_HOME) \
 	  FULL_VERSION=$($(PKG)_FULL_VERSION) \
-	  $($(PKG)_SOURCE_DIR)/cloudera/do-release-build
+	  $($(PKG)_PACKAGE_GIT_REPO)/common/$($(PKG)_NAME)/do-component-build
 	mkdir -p $($(PKG)_OUTPUT_DIR)
 	[ -z "$($(PKG)_TARBALL_SRC)" ] || cp $($(PKG)_SOURCE_DIR)/build/$($(PKG)_NAME)-$($(PKG)_FULL_VERSION).tar.gz $($(PKG)_OUTPUT_DIR)
 	touch $@
