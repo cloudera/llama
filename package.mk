@@ -28,7 +28,8 @@ $(BUILD_DIR)/%/.patch:
 
 # Build
 $(BUILD_DIR)/%/.build:
-	[ -z "$($(PKG)_TARBALL_SRC)" ] || cd $($(PKG)_SOURCE_DIR) && /usr/bin/env \
+	cd $($(PKG)_SOURCE_DIR)
+	[ -z "$($(PKG)_TARBALL_SRC)" ] || /usr/bin/env \
 	  -u DISPLAY \
 	  JAVA32_HOME=$(JAVA32_HOME) \
 	  JAVA64_HOME=$(JAVA64_HOME) \
