@@ -28,7 +28,7 @@ $(BUILD_DIR)/%/.patch:
 
 # Build
 $(BUILD_DIR)/%/.build:
-	cd $($(PKG)_SOURCE_DIR)
+	cd $($(PKG)_SOURCE_DIR) ;\
 	[ -z "$($(PKG)_TARBALL_SRC)" ] || /usr/bin/env \
 	  -u DISPLAY \
 	  JAVA32_HOME=$(JAVA32_HOME) \
