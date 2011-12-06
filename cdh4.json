@@ -14,6 +14,7 @@
                       "remote-project-name": "hadoop" },
 
      "zookeeper": {"track-branch": "cdh4-3.3.3", "dir": "repos/cdh4/zookeeper", "remotes": ["origin", "apache"]},
+     "hbase": {"track-branch": "cdh4-0.92.0", "dir": "repos/cdh4/hbase", "remotes": ["origin","apache"]},
 
      "cdh-package": { "track-branch": "cdh4-0.4", "dir":
           "repos/cdh4/cdh-package", "remotes": ["origin"]}
