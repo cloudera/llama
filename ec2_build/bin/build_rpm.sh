@@ -49,17 +49,16 @@ for PACKAGE in $PACKAGES; do
   mkdir $WORKSPACE/topdir
   (cd $WORKSPACE/topdir && mkdir BUILD RPMS SOURCE SPECS SRPMS)
 
-  for TARGET_ARCH in noarch $ARCH ; do
-    rm -Rf $WORKSPACE/buildroot
-    mkdir $WORKSPACE/buildroot
-    rpmbuild --define "_topdir $WORKSPACE/topdir" --buildroot $WORKSPACE/buildroot --target $TARGET_ARCH --rebuild *src.rpm
+  rm -Rf $WORKSPACE/buildroot
+  mkdir $WORKSPACE/buildroot
+  rpmbuild --define "_topdir $WORKSPACE/topdir" --buildroot $WORKSPACE/buildroot --rebuild *src.rpm
 
-    if [ $? -ne 0 ]; then
-        echo "***PACKAGE FAILED*** ${PACKAGE} rpm_${CODENAME}_${ARCH}"
-    else
-        echo "***PACKAGE BUILT*** ${PACKAGE} rpm_${CODENAME}_${ARCH}"
-    fi
-  done
+  if [ $? -ne 0 ]; then
+      echo "***PACKAGE FAILED*** ${PACKAGE} rpm_${CODENAME}_${ARCH}"
+  else
+      echo "***PACKAGE BUILT*** ${PACKAGE} rpm_${CODENAME}_${ARCH}"
+  fi
+
 
   ############################## UPLOAD ##############################
 
