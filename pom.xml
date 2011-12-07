@@ -933,7 +933,7 @@ TODO: need license header
       <dependency>
         <groupId>org.codehaus.jackson</groupId>
         <artifactId>jackson-core-asl</artifactId>
-        <version>1.5.2</version>
+        <version>1.7.1</version>
       </dependency>
       
       <!-- Pig -->
