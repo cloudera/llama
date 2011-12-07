@@ -81,7 +81,7 @@ $(BUILD_DIR)/%/.sdeb:
 	    tar -xvf $($(PKG)_PKG_NAME)_$(PKG_PKG_VERSION)$(CDH_BUILD_STAMP).orig.tar.gz ;\
 	  else \
 	    mkdir $($(PKG)_NAME)-$(PKG_FULL_VERSION) ;\
-            tar -czf $(PKG_BUILD_DIR)/deb/$($(PKG)_PKG_NAME)_$(PKG_PKG_VERSION)$(BIGTOP_BUILD_STAMP).orig.tar.gz \
+            tar -czf $(PKG_BUILD_DIR)/deb/$($(PKG)_PKG_NAME)_$(PKG_PKG_VERSION)$(CDH_BUILD_STAMP).orig.tar.gz \
                   $($(PKG)_NAME)-$(PKG_FULL_VERSION) ;\
           fi ;\
 	  mv $($(PKG)_NAME)-$(PKG_FULL_VERSION) $($(PKG)_NAME)-$(PKG_PKG_VERSION)$(CDH_BUILD_STAMP)
