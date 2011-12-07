@@ -74,13 +74,24 @@ $(BUILD_DIR)/%/.rpm:
 $(BUILD_DIR)/%/.sdeb:
 	-rm -rf $(PKG_BUILD_DIR)/deb/
 	mkdir -p $(PKG_BUILD_DIR)/deb/
-	cp $($(PKG)_OUTPUT_DIR)/$($(PKG)_NAME)-$(PKG_FULL_VERSION).tar.gz \
-	  $(PKG_BUILD_DIR)/deb/$($(PKG)_PKG_NAME)_$(PKG_PKG_VERSION)$(CDH_BUILD_STAMP).orig.tar.gz
 	cd $(PKG_BUILD_DIR)/deb && \
-	  tar -xvf $($(PKG)_PKG_NAME)_$(PKG_PKG_VERSION)$(CDH_BUILD_STAMP).orig.tar.gz && \
+	  if [ -n "$($(PKG)_TARBALL_SRC)" ]; then \
+	    cp $($(PKG)_OUTPUT_DIR)/$($(PKG)_NAME)-$(PKG_FULL_VERSION).tar.gz \
+	       $(PKG_BUILD_DIR)/deb/$($(PKG)_PKG_NAME)_$(PKG_PKG_VERSION)$(CDH_BUILD_STAMP).orig.tar.gz ;\
+	    tar -xvf $($(PKG)_PKG_NAME)_$(PKG_PKG_VERSION)$(CDH_BUILD_STAMP).orig.tar.gz ;\
+	  else \
+	    mkdir $($(PKG)_NAME)-$(PKG_FULL_VERSION) ;\
+            tar -czf $(PKG_BUILD_DIR)/deb/$($(PKG)_PKG_NAME)_$(PKG_PKG_VERSION)$(BIGTOP_BUILD_STAMP).orig.tar.gz \
+                  $($(PKG)_NAME)-$(PKG_FULL_VERSION) ;\
+          fi ;\
 	  mv $($(PKG)_NAME)-$(PKG_FULL_VERSION) $($(PKG)_NAME)-$(PKG_PKG_VERSION)$(CDH_BUILD_STAMP)
-	  cd $(PKG_BUILD_DIR)/deb/$($(PKG)_NAME)-$(PKG_PKG_VERSION)$(CDH_BUILD_STAMP) && \
+	cd $(PKG_BUILD_DIR)/deb/$($(PKG)_NAME)-$(PKG_PKG_VERSION)$(CDH_BUILD_STAMP) && \
           cp -r $($(PKG)_PACKAGE_GIT_REPO)/deb/$($(PKG)_NAME) debian && \
+	  sed -i -e '/^#!/a\
+$(PKG)_VERSION=$($(PKG)_PKG_VERSION)$(CDH_BUILD_STAMP) \
+$(PKG)_PATCHED_VERSION=$($(PKG)_FULL_VERSION) \
+$(PKG)_BASE_VERSION=$($(PKG)_BASE_VERSION) \
+$(PKG)_RELEASE=$($(PKG)_RELEASE_VERSION)' debian/rules && \
 	  cp -r $($(PKG)_PACKAGE_GIT_REPO)/common/$($(PKG)_NAME)/* debian && \
 	  find debian -name "*.[ex,EX,~]" | xargs rm -f && \
 	  $(BASE_DIR)/tools/generate-debian-changelog \
@@ -110,6 +121,7 @@ $(BUILD_DIR)/%/.deb:
 				--preserve-envvar JAVA5_HOME --preserve-envvar FORREST_HOME --preserve-envvar MAVEN3_HOME \
 				--preserve-envvar THRIFT_HOME --preserve-envvar JAVA_HOME \
 				-uc -us -b
+	touch $@
 
 $(BUILD_DIR)/%/.relnotes:  $($(PKG)_OUTPUT_DIR)/$($(PKG)_NAME)-$($(PKG)_PKG_VERSION).releasenotes.html
 $(BUILD_DIR)/%/.relnotes:
