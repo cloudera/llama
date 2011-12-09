@@ -47,9 +47,9 @@ TODO: need license header
     <cdh.hadoop.version>0.23.0-cdh4a1-SNAPSHOT</cdh.hadoop.version>
     <cdh.zookeeper.version>3.4.0-cdh4a1-SNAPSHOT</cdh.zookeeper.version>
     <cdh.hbase.version>0.92.0-cdh4a1-SNAPSHOT</cdh.hbase.version>
-    <cdh.pig.version>0.8.1-cdh4a1-SNAPSHOT</cdh.pig.version>
+    <cdh.pig.version>0.9.1-cdh4a1-SNAPSHOT</cdh.pig.version>
     <cdh.sqoop.version>1.4.0-cdh4a1-SNAPSHOT</cdh.sqoop.version>
-    <cdh.hive.version>0.7.1-cdh4a1-SNAPSHOT</cdh.hive.version>
+    <cdh.hive.version>0.8.0-cdh4a1-SNAPSHOT</cdh.hive.version>
     <cdh.oozie.version>2.3.2-cdh4a1-SNAPSHOT</cdh.oozie.version>
     <cdh.whirr.version>0.5.0-cdh4a1-SNAPSHOT</cdh.whirr.version>
     <cdh.flume.version>0.9.4-cdh4a1-SNAPSHOT</cdh.flume.version>
@@ -421,6 +421,16 @@ TODO: need license header
       <dependency>
         <groupId>org.apache.hadoop.hive</groupId>
         <artifactId>hive-anttasks</artifactId>
+        <version>${cdh.hive.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop.hive</groupId>
+        <artifactId>hive-builtins</artifactId>
+        <version>${cdh.hive.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop.hive</groupId>
+        <artifactId>hive-pdk</artifactId>
         <version>${cdh.hive.version}</version>
       </dependency>
       <dependency>
