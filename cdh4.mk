@@ -71,40 +71,26 @@ PIG_TARBALL_DST=pig-$(PIG_BASE_VERSION).tar.gz
 PIG_TARBALL_SRC=$(PIG_TARBALL_DST)
 PIG_GIT_REPO=$(REPO_DIR)/cdh4/pig
 PIG_BASE_REF=cdh4-base-$(PIG_BASE_VERSION)
-PIG_BUILD_REF=cdh-$(PIG_BASE_VERSION)
+PIG_BUILD_REF=cdh4-$(PIG_BASE_VERSION)
 PIG_PACKAGE_GIT_REPO=$(REPO_DIR)/cdh4/cdh-package/bigtop-packages/src
 PIG_SITE=$(CLOUDERA_ARCHIVE)
 $(eval $(call PACKAGE,pig,PIG))
 
-# # Hive
-# HIVE_NAME=hive
-# HIVE_RELNOTES_NAME=Apache Hive
-# HIVE_RELEASE=2
-# HIVE_PKG_NAME=hadoop-hive
-# HIVE_BASE_VERSION=0.7.1
-# HIVE_TARBALL_DST=hive-$(HIVE_BASE_VERSION).tar.gz
-# HIVE_TARBALL_SRC=$(HIVE_TARBALL_DST)
-# HIVE_GIT_REPO=$(REPO_DIR)/cdh4/hive
-# HIVE_BASE_REF=cdh-base-$(HIVE_BASE_VERSION)
-# HIVE_BUILD_REF=cdh-$(HIVE_BASE_VERSION)+42
-# HIVE_PACKAGE_GIT_REPO=$(REPO_DIR)/cdh4/cdh-package/bigtop-packages/src
-# HIVE_SITE=$(CLOUDERA_ARCHIVE)
-# $(eval $(call PACKAGE,hive,HIVE))
-
-# HIVE_ORIG_SOURCE_DIR=$(HIVE_BUILD_DIR)/source
-# HIVE_SOURCE_DIR=$(HIVE_BUILD_DIR)/source/src
-
-# $(HIVE_TARGET_PREP):
-# 	mkdir -p $($(PKG)_SOURCE_DIR)
-# 	$(BASE_DIR)/tools/setup-package-build \
-# 	  $($(PKG)_GIT_REPO) \
-# 	  $($(PKG)_BASE_REF) \
-# 	  $($(PKG)_BUILD_REF) \
-# 	  $($(PKG)_DOWNLOAD_DST) \
-# 	  $(HIVE_BUILD_DIR)/source \
-# 	  $($(PKG)_FULL_VERSION)
-# 	rsync -av $(HIVE_ORIG_SOURCE_DIR)/cloudera/ $(HIVE_SOURCE_DIR)/cloudera/
-# 	touch $@
+# Hive
+HIVE_NAME=hive
+HIVE_RELNOTES_NAME=Apache Hive
+HIVE_PKG_NAME=hadoop-hive
+HIVE_BASE_VERSION=0.8.0
+HIVE_RELEASE_VERSION=1
+HIVE_TARBALL_DST=hive-$(HIVE_BASE_VERSION)-rc.tar.gz
+HIVE_TARBALL_SRC=$(HIVE_TARBALL_DST)
+HIVE_GIT_REPO=$(REPO_DIR)/cdh4/hive
+HIVE_BASE_REF=cdh4-base-$(HIVE_BASE_VERSION)
+HIVE_BUILD_REF=cdh4-$(HIVE_BASE_VERSION)
+HIVE_PACKAGE_GIT_REPO=$(REPO_DIR)/cdh4/cdh-package/bigtop-packages/src
+HIVE_SITE=$(CLOUDERA_ARCHIVE)
+HIVE_SRC_PREFIX=src/
+$(eval $(call PACKAGE,hive,HIVE))
 
 # # Sqoop
 SQOOP_NAME=sqoop
