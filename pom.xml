@@ -419,67 +419,67 @@ TODO: need license header
       
       <!--Hive-->
       <dependency>
-        <groupId>org.apache.hadoop.hive</groupId>
+        <groupId>org.apache.hive</groupId>
         <artifactId>hive-anttasks</artifactId>
         <version>${cdh.hive.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.hadoop.hive</groupId>
+        <groupId>org.apache.hive</groupId>
         <artifactId>hive-builtins</artifactId>
         <version>${cdh.hive.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.hadoop.hive</groupId>
+        <groupId>org.apache.hive</groupId>
         <artifactId>hive-pdk</artifactId>
         <version>${cdh.hive.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.hadoop.hive</groupId>
+        <groupId>org.apache.hive</groupId>
         <artifactId>hive-cli</artifactId>
         <version>${cdh.hive.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.hadoop.hive</groupId>
+        <groupId>org.apache.hive</groupId>
         <artifactId>hive-common</artifactId>
         <version>${cdh.hive.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.hadoop.hive</groupId>
+        <groupId>org.apache.hive</groupId>
         <artifactId>hive-contrib</artifactId>
         <version>${cdh.hive.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.hadoop.hive</groupId>
+        <groupId>org.apache.hive</groupId>
         <artifactId>hive-exec</artifactId>
         <version>${cdh.hive.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.hadoop.hive</groupId>
+        <groupId>org.apache.hive</groupId>
         <artifactId>hive-hwi</artifactId>
         <version>${cdh.hive.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.hadoop.hive</groupId>
+        <groupId>org.apache.hive</groupId>
         <artifactId>hive-jdbc</artifactId>
         <version>${cdh.hive.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.hadoop.hive</groupId>
+        <groupId>org.apache.hive</groupId>
         <artifactId>hive-metastore</artifactId>
         <version>${cdh.hive.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.hadoop.hive</groupId>
+        <groupId>org.apache.hive</groupId>
         <artifactId>hive-serde</artifactId>
         <version>${cdh.hive.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.hadoop.hive</groupId>
+        <groupId>org.apache.hive</groupId>
         <artifactId>hive-service</artifactId>
         <version>${cdh.hive.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.hadoop.hive</groupId>
+        <groupId>org.apache.hive</groupId>
         <artifactId>hive-shims</artifactId>
         <version>${cdh.hive.version}</version>
       </dependency>
@@ -1004,8 +1004,18 @@ TODO: need license header
       </dependency>
       <dependency>
         <groupId>org.antlr</groupId>
+        <artifactId>antlr</artifactId>
+        <version>3.0.1</version>
+      </dependency>
+      <dependency>
+        <groupId>org.antlr</groupId>
         <artifactId>antlr-runtime</artifactId>
         <version>3.0.1</version>
+      </dependency>
+      <dependency>
+        <groupId>org.datanucleus</groupId>
+        <artifactId>datanucleus-connectionpool</artifactId>
+        <version>2.0.3</version>
       </dependency>
       <dependency>
         <groupId>org.datanucleus</groupId>
