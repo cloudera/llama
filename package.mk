@@ -16,7 +16,8 @@ $(BUILD_DIR)/%/.prep:
 	  $($(PKG)_BUILD_REF) \
 	  $($(PKG)_DOWNLOAD_DST) \
 	  $($(PKG)_SOURCE_DIR) \
-	  $($(PKG)_FULL_VERSION)
+	  $($(PKG)_FULL_VERSION) \
+	  $($(PKG)_SRC_PREFIX)
 	touch $@
 
 # Patch

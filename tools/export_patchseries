@@ -2,8 +2,8 @@
 
 set -e
 
-if [ $# -ne 4 ]; then
-  echo usage: $0 'repo <from-ref> <to-ref> <out-dir>'
+if [ $# -lt 4 ]; then
+  echo usage: $0 'repo <from-ref> <to-ref> <out-dir> [src-prefix]'
   exit 1
 fi
 
@@ -11,6 +11,7 @@ REPO=$1
 FROM_REF=$2
 TO_REF=$3
 OUT_DIR=$4
+SRC_PREFIX=$5
 
 cd $REPO
 
@@ -30,4 +31,4 @@ if [ $? -ne 0 ] ; then
 fi
 
 mkdir -p $OUT_DIR
-git format-patch -o $OUT_DIR $FROM_REF..$TO_REF
+git format-patch -o $OUT_DIR $FROM_REF..$TO_REF --dst-prefix=b/$SRC_PREFIX --src-prefix=a/$SRC_PREFIX

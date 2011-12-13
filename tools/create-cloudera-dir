@@ -11,6 +11,7 @@ BASE_BRANCH=$2
 BUILD_BRANCH=$3
 TARGET_DIR=$4
 VERSION=$5
+SRC_PREFIX=$6
 
 CLOUDERA_DIR=$TARGET_DIR
 rm -Rf $CLOUDERA_DIR
@@ -18,7 +19,7 @@ mkdir -p $CLOUDERA_DIR
 
 # Format patches into cloudera dir
 mkdir -p $CLOUDERA_DIR/patches
-$TOOLS_DIR/export_patchseries $GIT_REPO $BASE_BRANCH $BUILD_BRANCH $CLOUDERA_DIR/patches
+$TOOLS_DIR/export_patchseries $GIT_REPO $BASE_BRANCH $BUILD_BRANCH $CLOUDERA_DIR/patches $SRC_PREFIX
 
 # Generate cloudera change log
 (cd $GIT_REPO && git log $BASE_BRANCH..$BUILD_BRANCH) > $CLOUDERA_DIR/CHANGES.cloudera.txt
