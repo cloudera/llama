@@ -76,16 +76,16 @@ $(BUILD_DIR)/%/.sdeb:
 	-rm -rf $(PKG_BUILD_DIR)/deb/
 	mkdir -p $(PKG_BUILD_DIR)/deb/
 	cd $(PKG_BUILD_DIR)/deb && \
+          mkdir $($(PKG)_NAME)-$(PKG_PKG_VERSION)$(CDH_BUILD_STAMP) ;\
 	  if [ -n "$($(PKG)_TARBALL_SRC)" ]; then \
 	    cp $($(PKG)_OUTPUT_DIR)/$($(PKG)_NAME)-$(PKG_FULL_VERSION).tar.gz \
 	       $(PKG_BUILD_DIR)/deb/$($(PKG)_PKG_NAME)_$(PKG_PKG_VERSION)$(CDH_BUILD_STAMP).orig.tar.gz ;\
-	    tar -xvf $($(PKG)_PKG_NAME)_$(PKG_PKG_VERSION)$(CDH_BUILD_STAMP).orig.tar.gz ;\
+	    tar -C $($(PKG)_NAME)-$(PKG_PKG_VERSION)$(CDH_BUILD_STAMP) --strip-components 1 \
+                -xzvf $($(PKG)_PKG_NAME)_$(PKG_PKG_VERSION)$(CDH_BUILD_STAMP).orig.tar.gz  ;\
 	  else \
-	    mkdir $($(PKG)_NAME)-$(PKG_FULL_VERSION) ;\
             tar -czf $(PKG_BUILD_DIR)/deb/$($(PKG)_PKG_NAME)_$(PKG_PKG_VERSION)$(CDH_BUILD_STAMP).orig.tar.gz \
-                  $($(PKG)_NAME)-$(PKG_FULL_VERSION) ;\
+                  $($(PKG)_NAME)-$(PKG_PKG_VERSION)$(CDH_BUILD_STAMP) ;\
           fi ;\
-	  mv $($(PKG)_NAME)-$(PKG_FULL_VERSION) $($(PKG)_NAME)-$(PKG_PKG_VERSION)$(CDH_BUILD_STAMP)
 	cd $(PKG_BUILD_DIR)/deb/$($(PKG)_NAME)-$(PKG_PKG_VERSION)$(CDH_BUILD_STAMP) && \
           cp -r $($(PKG)_PACKAGE_GIT_REPO)/deb/$($(PKG)_NAME) debian && \
 	  sed -i -e '/^#!/a\
