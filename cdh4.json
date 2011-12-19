@@ -15,7 +15,7 @@
 
      "mr1" : {"track-branch": "cdh4-0.20.2", "dir": "repos/cdh4/mr1", "remotes": ["origin"], "remote-project-name": "hadoop"},
 
-     "zookeeper": {"track-branch": "cdh4-3.4.0", "dir": "repos/cdh4/zookeeper", "remotes": ["origin", "apache"]},
+     "zookeeper": {"track-branch": "cdh4-3.4.1", "dir": "repos/cdh4/zookeeper", "remotes": ["origin", "apache"]},
      "hbase": {"track-branch": "cdh4-0.92.0", "dir": "repos/cdh4/hbase", "remotes": ["origin","apache"]},
      "sqoop": {"track-branch": "cdh4-1.4.0", "dir": "repos/cdh4/sqoop", "remotes": ["origin"]},
      "pig": {"track-branch": "cdh4-0.9.1", "dir": "repos/cdh4/pig", "remotes": ["origin", "apache"]},
