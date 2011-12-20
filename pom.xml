@@ -141,19 +141,25 @@ TODO: need license header
       <dependency>
         <groupId>com.cloudera.cdh</groupId>
         <artifactId>hadoop-root</artifactId>
-        <version>${cdh.parent.version}</version>
+        <version>${cdh.hadoop-0.20.version}</version>
+        <type>pom</type>
+      </dependency>
+      <dependency>
+        <groupId>com.cloudera.cdh</groupId>
+        <artifactId>hadoop-ant</artifactId>
+        <version>${cdh.hadoop-0.20.version}</version>
         <type>pom</type>
       </dependency>
       <dependency>
         <groupId>com.cloudera.cdh</groupId>
         <artifactId>zookeeper-root</artifactId>
-        <version>${cdh.parent.version}</version>
+        <version>${cdh.zookeeper.version}</version>
         <type>pom</type>
       </dependency>
       <dependency>
         <groupId>com.cloudera.cdh</groupId>
         <artifactId>zookeeper-ant</artifactId>
-        <version>${cdh.parent.version}</version>
+        <version>${cdh.zookeeper.version}</version>
         <type>pom</type>
       </dependency>
       <dependency>
@@ -165,37 +171,37 @@ TODO: need license header
       <dependency>
         <groupId>com.cloudera.cdh</groupId>
         <artifactId>pig-root</artifactId>
-        <version>${cdh.parent.version}</version>
+        <version>${cdh.pig.version}</version>
         <type>pom</type>
       </dependency>
       <dependency>
         <groupId>com.cloudera.cdh</groupId>
         <artifactId>pig-ant</artifactId>
-        <version>${cdh.parent.version}</version>
+        <version>${cdh.pig.version}</version>
         <type>pom</type>
       </dependency>
       <dependency>
         <groupId>com.cloudera.cdh</groupId>
         <artifactId>hive-root</artifactId>
-        <version>${cdh.parent.version}</version>
+        <version>${cdh.hive.version}</version>
         <type>pom</type>
       </dependency>
       <dependency>
         <groupId>com.cloudera.cdh</groupId>
         <artifactId>hive-ant</artifactId>
-        <version>${cdh.parent.version}</version>
+        <version>${cdh.hive.version}</version>
         <type>pom</type>
       </dependency>
       <dependency>
         <groupId>com.cloudera.cdh</groupId>
         <artifactId>sqoop-root</artifactId>
-        <version>${cdh.parent.version}</version>
+        <version>${cdh.sqoop.version}</version>
         <type>pom</type>
       </dependency>
       <dependency>
         <groupId>com.cloudera.cdh</groupId>
         <artifactId>sqoop-ant</artifactId>
-        <version>${cdh.parent.version}</version>
+        <version>${cdh.sqoop.version}</version>
         <type>pom</type>
       </dependency>
       <dependency>
