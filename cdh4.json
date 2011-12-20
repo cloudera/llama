@@ -20,6 +20,7 @@
      "sqoop": {"track-branch": "cdh4-1.4.0", "dir": "repos/cdh4/sqoop", "remotes": ["origin"]},
      "pig": {"track-branch": "cdh4-0.9.1", "dir": "repos/cdh4/pig", "remotes": ["origin", "apache"]},
      "hive": {"track-branch": "cdh4-0.8.0", "dir": "repos/cdh4/hive", "remotes": ["origin", "apache"]},
+     "flume": {"track-branch": "cdh4-0.9.4+25", "dir": "repos/cdh4/flume", "remotes": ["origin"]},
 
      "mahout": {"track-branch": "cdh4-0.5", "dir": "repos/cdh4/mahout", "remotes": ["origin", "apache"]},
      "oozie": {"track-branch": "cdh4-3.1.2", "dir": "repos/cdh4/oozie", "remotes": ["origin"]},
