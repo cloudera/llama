@@ -385,6 +385,38 @@ TODO: need license header
         <artifactId>hadoop-dist</artifactId>
         <version>${cdh.hadoop.version}</version>
       </dependency>
+
+      <!-- MR1 -->
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-core</artifactId>
+        <version>${cdh.mr1.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-test</artifactId>
+        <version>${cdh.mr1.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-streaming</artifactId>
+        <version>${cdh.mr1.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-examples</artifactId>
+        <version>${cdh.mr1.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-tools</artifactId>
+        <version>${cdh.mr1.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-tarball</artifactId>
+        <version>${cdh.mr1.version}</version>
+      </dependency>
       
       <!-- Zookeeper -->
       <dependency>
