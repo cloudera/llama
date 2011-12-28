@@ -444,6 +444,16 @@ TODO: need license header
         <artifactId>pig</artifactId>
         <version>${cdh.pig.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.apache.pig</groupId>
+        <artifactId>pigunit</artifactId>
+        <version>${cdh.pig.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.pig</groupId>
+        <artifactId>pigsmoke</artifactId>
+        <version>${cdh.pig.version}</version>
+      </dependency>
       
       <!--Sqoop-->
       <dependency>
