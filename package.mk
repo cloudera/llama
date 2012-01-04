@@ -136,6 +136,7 @@ $(BUILD_DIR)/%/.relnotes:
 		"$($(PKG)_NAME)-$($(PKG)_PKG_VERSION)" \
 		"$($(PKG)_RELNOTES_NAME)" \
 		"$($(PKG)_PACKAGE_GIT_REPO)" \
+		"$($(PKG)_NAME)" \
 		"$(PREV_RELEASE_TAG)..HEAD"
 	touch $@
 
