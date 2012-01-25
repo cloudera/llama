@@ -86,7 +86,7 @@ deb: install-pom $(TARGETS_DEB)
 relnotes: $(TARGETS_RELNOTES)
 
 install-pom:
-	mvn -N install $(DO_MAVEN_DEPLOY)
+	[ -f "$(BASE_DIR)/pom.xml" ] && mvn -N install $(DO_MAVEN_DEPLOY)
 
 .DEFAULT_GOAL:= help
 .PHONY: realclean clean distclean package-help help-header packages all world help tgz srpm sdeb install-pom relnotes

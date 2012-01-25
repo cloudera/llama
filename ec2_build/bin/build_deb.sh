@@ -81,7 +81,7 @@ groovy $WORKSPACE/ec2_build/bin/fetchStaging --origin-path=$PARENT_BUILD_ID --fi
 
     export IVY_MIRROR_PROP='http://azov01.sf.cloudera.com:8081/artifactory/cloudera-mirrors/'
 
-    debuild --preserve-envvar JAVA_HOME --preserve-envvar JAVA32_HOME --preserve-envvar JAVA64_HOME --preserve-envvar JAVA5_HOME --preserve-envvar MAVEN3_HOME --preserve-envvar THRIFT_HOME --preserve-envvar FORREST_HOME --preserve-envvar IVY_MIRROR_PROP -uc -us $DEBUILD_FLAG
+    debuild --preserve-envvar JAVA_HOME --preserve-envvar JAVA32_HOME --preserve-envvar JAVA64_HOME --preserve-envvar JAVA5_HOME --preserve-envvar MAVEN3_HOME --preserve-envvar THRIFT_HOME --preserve-envvar FORREST_HOME --preserve-envvar IVY_MIRROR_PROP --preserve-envvar NODE_HOME -uc -us $DEBUILD_FLAG
     
     if [ $? -ne 0 ]; then
         echo "***PACKAGE FAILED*** ${PACKAGE} deb_${CODENAME}_${DEB_HOST_ARCH}"

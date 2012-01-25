@@ -3,9 +3,8 @@
  * All actual logic is in com.cloudera.kitchen.staging.CopyToStagingArea.
  */
 
-@GrabResolver(name='cloudera-local-snap', root='file:///Users/abayer/.m2/repository')
 @GrabResolver(name='cloudera-snap', root='https://repository.cloudera.com/artifactory/libs-snapshot')
-@Grab(group='com.cloudera.kitchen', module='package-tools', version='0.1-SNAPSHOT')
+@Grab(group='com.cloudera.kitchen', module='package-tools', version='0.2-SNAPSHOT')
 
 import com.cloudera.kitchen.staging.*
 

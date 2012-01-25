@@ -18,6 +18,8 @@ $(BUILD_DIR)/%/.prep:
 	  $($(PKG)_SOURCE_DIR) \
 	  $($(PKG)_FULL_VERSION) \
 	  $($(PKG)_SRC_PREFIX)
+	# Special logic below for cases with source we want to copy, but without pristine tarballs.
+	[ -z "$($(PKG)_TARBALL_SRC)" -a -n "$($(PKG)_TARBALL_DST)" ] && cp -r $($(PKG)_GIT_REPO)/* $($(PKG)_SOURCE_DIR)
 	touch $@
 
 # Patch
@@ -29,18 +31,22 @@ $(BUILD_DIR)/%/.patch:
 
 # Build
 $(BUILD_DIR)/%/.build:
+	# Hack - use tarball dst here because we want to do the build for CM, but not for bigtop-utils.
 	cd $($(PKG)_SOURCE_DIR) ;\
-	[ -z "$($(PKG)_TARBALL_SRC)" ] || /usr/bin/env \
+	[ -z "$($(PKG)_TARBALL_DST)" ] || /usr/bin/env \
 	  -u DISPLAY \
 	  JAVA32_HOME=$(JAVA32_HOME) \
 	  JAVA64_HOME=$(JAVA64_HOME) \
 	  JAVA5_HOME=$(JAVA5_HOME) \
 	  FORREST_HOME=$(FORREST_HOME) \
 	  THRIFT_HOME=$(THRIFT_HOME) \
+	  NODE_HOME=$(NODE_HOME) \
+	  GIT_REPO=$($(PKG)_GIT_REPO) \
 	  FULL_VERSION=$($(PKG)_FULL_VERSION) \
 	  $($(PKG)_PACKAGE_GIT_REPO)/common/$($(PKG)_NAME)/do-component-build
 	mkdir -p $($(PKG)_OUTPUT_DIR)
-	[ -z "$($(PKG)_TARBALL_SRC)" ] || cp $($(PKG)_SOURCE_DIR)/build/$($(PKG)_NAME)-$($(PKG)_FULL_VERSION).tar.gz $($(PKG)_OUTPUT_DIR)
+	[ -f "$($(PKG)_SOURCE_DIR)/build/$($(PKG)_NAME)-$($(PKG)_FULL_VERSION).tar.gz" ] && \
+	  cp $($(PKG)_SOURCE_DIR)/build/$($(PKG)_NAME)-$($(PKG)_FULL_VERSION).tar.gz $($(PKG)_OUTPUT_DIR)
 	touch $@
 
 # Make source RPMs
@@ -51,7 +57,7 @@ $(BUILD_DIR)/%/.srpm:
 	cp -r $($(PKG)_PACKAGE_GIT_REPO)/common/$($(PKG)_NAME)/* $(PKG_BUILD_DIR)/rpm/SOURCES
 	# FIXME: BIGTOP-292
 	cd $($(PKG)_PACKAGE_GIT_REPO)/common/$($(PKG)_NAME) ; tar -czf $(PKG_BUILD_DIR)/rpm/SOURCES/$($(PKG)_NAME)-bigtop-packaging.tar.gz *
-	[ -z "$($(PKG)_TARBALL_SRC)" ] || cp $($(PKG)_OUTPUT_DIR)/$($(PKG)_NAME)-$($(PKG)_FULL_VERSION).tar.gz $(PKG_BUILD_DIR)/rpm/SOURCES
+	[ -f "$($(PKG)_OUTPUT_DIR)/$($(PKG)_NAME)-$($(PKG)_FULL_VERSION).tar.gz" ] && cp $($(PKG)_OUTPUT_DIR)/$($(PKG)_NAME)-$($(PKG)_FULL_VERSION).tar.gz $(PKG_BUILD_DIR)/rpm/SOURCES
 	[ -d $($(PKG)_PACKAGE_GIT_REPO)/common/$($(PKG)_NAME) ] && \
 		cp -r $($(PKG)_PACKAGE_GIT_REPO)/common/$($(PKG)_NAME)/* $(PKG_BUILD_DIR)/rpm/SOURCES
 	sed -i -e '1i\
@@ -112,7 +118,7 @@ $(PKG)_RELEASE=$($(PKG)_RELEASE_VERSION)' debian/rules && \
         done
 	touch $@
 
-$(BUILD_DIR)/%/.deb: SRCDEB=$($(PKG)_PKG_NAME)_$($(PKG)_PKG_VERSION)$(CDH_BUILD_STAMP)-$($(PKG)_RELEASE).dsc
+$(BUILD_DIR)/%/.deb: SRCDEB=$($(PKG)_PKG_NAME)_$($(PKG)_PKG_VERSION)$(CDH_BUILD_STAMP)-$($(PKG)_RELEASE).dsc GIT_REPO=$($(PKG)_GIT_REPO)
 $(BUILD_DIR)/%/.deb:
 	cd $($(PKG)_OUTPUT_DIR) && \
 		dpkg-source -x $(SRCDEB) && \
@@ -120,8 +126,8 @@ $(BUILD_DIR)/%/.deb:
 			debuild \
 				--preserve-envvar PATH --preserve-envvar JAVA32_HOME --preserve-envvar JAVA64_HOME \
 				--preserve-envvar JAVA5_HOME --preserve-envvar FORREST_HOME --preserve-envvar MAVEN3_HOME \
-				--preserve-envvar THRIFT_HOME --preserve-envvar JAVA_HOME \
-				-uc -us -b
+				--preserve-envvar THRIFT_HOME --preserve-envvar JAVA_HOME --preserve-envvar GIT_REPO \
+				--preserve-envvar NODE_HOME -uc -us -b
 	touch $@
 
 $(BUILD_DIR)/%/.relnotes:  $($(PKG)_OUTPUT_DIR)/$($(PKG)_NAME)-$($(PKG)_PKG_VERSION).releasenotes.html
@@ -155,7 +161,7 @@ $(2)_RELEASE        ?= 1
 
 # Calculate the full version based on the git patches
 $(2)_FULL_VERSION   = $$($(2)_BASE_VERSION)-$(CDH_VERSION_STRING)
-$(2)_PKG_VERSION   := $(shell cd $($(2)_GIT_REPO) && $(BASE_DIR)/tools/branch-tool version prefix=$(CDH))
+$(2)_PKG_VERSION   := $(shell cd $($(2)_GIT_REPO) && $(BASE_DIR)/tools/branch-tool version --prefix=$(CDH) $(NO_PATCH_COUNT))
 $(2)_BUILD_REF      := $(notdir $(shell cd $($(2)_GIT_REPO) && git symbolic-ref --quiet HEAD))
 
 $(2)_BUILD_DIR      = $(BUILD_DIR)/$(CDH)/$(1)/$$($(2)_FULL_VERSION)/

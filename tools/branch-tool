@@ -24,6 +24,8 @@ from cdh_lib import git, git_rev_parse, cdh_get_version, git_cur_branch
 
 VERBOSE = False
 AUTOMATIC_YES = False
+PREFIX = None
+NO_PATCH_COUNT = False
 
 def sideeffect_git(cmdv):
   """
@@ -51,7 +53,7 @@ def usage(argv):
 
 def branch(argv):
   """ Create a new branch from this point """
-  version = cdh_get_version(git_cur_branch())
+  version = cdh_get_version(git_cur_branch(), NO_PATCH_COUNT, PREFIX)
   sideeffect_git(['checkout', '-b', 'cdh-' + version])
 
 def version(argv):
@@ -59,19 +61,15 @@ def version(argv):
   Print the version of the revision on the command line, or else that
   of HEAD.
   """
-  prefix_arg='prefix='
-  prefix_value=None
 
   ref = None
-  if len(argv) == 3 and argv[2].startswith(prefix_arg):
-    prefix_value = argv[2][len(prefix_arg):]
-  elif len(argv) == 3:
+  if len(argv) == 3:
     ref = argv[2]
 
   if not ref:
     ref = git_cur_branch()
 
-  print cdh_get_version(ref, prefix_value)
+  print cdh_get_version(ref, NO_PATCH_COUNT, PREFIX)
 
 def cust_branch(argv):
   """
@@ -85,11 +83,11 @@ def cust_branch(argv):
   make_cust_branch(argv[2])
 
 def get_cust_branch_target(cust_name):
-  head_ver = cdh_get_version(git_cur_branch())
+  head_ver = cdh_get_version(git_cur_branch(), NO_PATCH_COUNT, PREFIX)
   return 'cdh-%s+%s' % (head_ver, cust_name)
 
 def ensure_head_version_branch(checkout=False):
-  head_ver = cdh_get_version(git_cur_branch())
+  head_ver = cdh_get_version(git_cur_branch(), NO_PATCH_COUNT, PREFIX)
   branch = 'cdh-' + head_ver
   try:
     git_rev_parse('refs/heads/' + branch)
@@ -155,15 +153,20 @@ def parse_args(args):
   op = OptionParser(usage = __usage)
   op.add_option('-y', '--yes', action='store_true')
   op.add_option('-v', '--verbose', action='store_true')
+  op.add_option('-n', '--no-patch-count', action='store_true')
+  op.add_option('-p', '--prefix')
   opts, args = op.parse_args()
   return opts, args
 
 def main(argv):
-  global VERBOSE, AUTOMATIC_YES
+  global VERBOSE, AUTOMATIC_YES, PREFIX, NO_PATCH_COUNT
   opts, args = parse_args(argv[1:])
   AUTOMATIC_YES = opts.yes
   VERBOSE = opts.verbose
-
+  NO_PATCH_COUNT = opts.no_patch_count
+  if opts.prefix:
+    PREFIX = opts.prefix
+  
   if len(args) == 0:
     usage(argv)
   tool = args[0]
