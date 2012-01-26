@@ -121,7 +121,7 @@ $(PKG)_RELEASE=$($(PKG)_RELEASE_VERSION)' debian/rules && \
         done
 	touch $@
 
-$(BUILD_DIR)/%/.deb: SRCDEB=$($(PKG)_PKG_NAME)_$($(PKG)_PKG_VERSION)$(CDH_BUILD_STAMP)-$($(PKG)_RELEASE).dsc GIT_REPO=$($(PKG)_GIT_REPO)
+$(BUILD_DIR)/%/.deb: SRCDEB=$($(PKG)_PKG_NAME)_$($(PKG)_PKG_VERSION)$(CDH_BUILD_STAMP)-$($(PKG)_RELEASE).dsc
 $(BUILD_DIR)/%/.deb:
 	cd $($(PKG)_OUTPUT_DIR) && \
 		dpkg-source -x $(SRCDEB) && \
