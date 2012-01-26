@@ -85,11 +85,18 @@ def cdh_get_version(rev, no_patch_count, prefix='cdh'):
   else:
     cur_branch = cdh_best_branch(rev)
   assert cur_branch.startswith(prefix + separator)
-  base_version = re.sub('^' + prefix + separator, '', cur_branch)
+  
+  m = re.match(r'(.*?)_', cur_branch)
+  if m:
+    true_branch = m.group(1)
+  else:
+    true_branch = cur_branch
+  
+  base_version = re.sub('^' + prefix + separator, '', true_branch)
   if no_patch_count:
     return base_version
   
-  ancestor = cdh_ancestor_branch(cur_branch, prefix)
+  ancestor = cdh_ancestor_branch(true_branch, prefix)
   merge_base = git_merge_base(rev, ancestor)
   count = count_commits_from(merge_base, rev)
 
