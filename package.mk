@@ -45,7 +45,7 @@ $(BUILD_DIR)/%/.build:
 	  FULL_VERSION=$($(PKG)_FULL_VERSION) \
 	  $($(PKG)_PACKAGE_GIT_REPO)/common/$($(PKG)_NAME)/do-component-build
 	mkdir -p $($(PKG)_OUTPUT_DIR)
-	[ -f "$($(PKG)_SOURCE_DIR)/build/$($(PKG)_NAME)-$($(PKG)_FULL_VERSION).tar.gz" ] && \
+	[ -z "$($(PKG)_TARBALL_DST)" ] || \
 	  cp $($(PKG)_SOURCE_DIR)/build/$($(PKG)_NAME)-$($(PKG)_FULL_VERSION).tar.gz $($(PKG)_OUTPUT_DIR)
 	touch $@
 
@@ -57,7 +57,8 @@ $(BUILD_DIR)/%/.srpm:
 	cp -r $($(PKG)_PACKAGE_GIT_REPO)/common/$($(PKG)_NAME)/* $(PKG_BUILD_DIR)/rpm/SOURCES
 	# FIXME: BIGTOP-292
 	cd $($(PKG)_PACKAGE_GIT_REPO)/common/$($(PKG)_NAME) ; tar -czf $(PKG_BUILD_DIR)/rpm/SOURCES/$($(PKG)_NAME)-bigtop-packaging.tar.gz *
-	[ -f "$($(PKG)_OUTPUT_DIR)/$($(PKG)_NAME)-$($(PKG)_FULL_VERSION).tar.gz" ] && cp $($(PKG)_OUTPUT_DIR)/$($(PKG)_NAME)-$($(PKG)_FULL_VERSION).tar.gz $(PKG_BUILD_DIR)/rpm/SOURCES
+	[ -z "$($(PKG)_TARBALL_DST)" ] || \
+	  cp $($(PKG)_OUTPUT_DIR)/$($(PKG)_NAME)-$($(PKG)_FULL_VERSION).tar.gz $(PKG_BUILD_DIR)/rpm/SOURCES
 	[ -d $($(PKG)_PACKAGE_GIT_REPO)/common/$($(PKG)_NAME) ] && \
 		cp -r $($(PKG)_PACKAGE_GIT_REPO)/common/$($(PKG)_NAME)/* $(PKG_BUILD_DIR)/rpm/SOURCES
 	sed -i -e '1i\
