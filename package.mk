@@ -19,7 +19,7 @@ $(BUILD_DIR)/%/.prep:
 	  $($(PKG)_FULL_VERSION) \
 	  $($(PKG)_SRC_PREFIX)
 	# Special logic below for cases with source we want to copy, but without pristine tarballs.
-	[ -z "$($(PKG)_TARBALL_SRC)" -a -n "$($(PKG)_TARBALL_DST)" ] && cp -r $($(PKG)_GIT_REPO)/* $($(PKG)_SOURCE_DIR)
+	#[ -z "$($(PKG)_TARBALL_SRC)" -a -n "$($(PKG)_TARBALL_DST)" ] && cp -r $($(PKG)_GIT_REPO)/* $($(PKG)_SOURCE_DIR)
 	touch $@
 
 # Patch
