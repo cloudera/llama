@@ -67,7 +67,7 @@ $(BUILD_DIR)/%/.srpm:
 %define $(subst -,_,$($(PKG)_NAME))_version $($(PKG)_PKG_VERSION) \
 %define $(subst -,_,$($(PKG)_NAME))_patched_version $($(PKG)_FULL_VERSION) \
 %define $(subst -,_,$($(PKG)_NAME))_base_version $($(PKG)_BASE_VERSION) \
-%define $(subst -,_,$($(PKG)_NAME))_release $($(PKG)_RELEASE_VERSION).$(CDH_REL_STRING).p$($(PKG)_CDH_PATCH)$(CDH_BUILD_STAMP)' $(PKG_BUILD_DIR)/rpm/SPECS/$($(PKG)_NAME).spec
+%define $(subst -,_,$($(PKG)_NAME))_release $($(PKG)_RELEASE)' $(PKG_BUILD_DIR)/rpm/SPECS/$($(PKG)_NAME).spec
 	rpmbuild --define "_topdir $(PKG_BUILD_DIR)/rpm/" -bs --nodeps --buildroot="$(PKG_BUILD_DIR)/rpm/INSTALL" \
                                                                        $(PKG_BUILD_DIR)/rpm/SPECS/$($(PKG)_NAME).spec
 	cp $(PKG_BUILD_DIR)/rpm/SRPMS/$($(PKG)_PKG_NAME)-$($(PKG)_PKG_VERSION)-$($(PKG)_RELEASE).src.rpm \
@@ -101,7 +101,7 @@ $(BUILD_DIR)/%/.sdeb:
 $(PKG)_VERSION=$($(PKG)_PKG_VERSION) \
 $(PKG)_PATCHED_VERSION=$($(PKG)_FULL_VERSION) \
 $(PKG)_BASE_VERSION=$($(PKG)_BASE_VERSION) \
-$(PKG)_RELEASE= $($(PKG)_RELEASE_VERSION).$(CDH_REL_STRING).p$($(PKG)_CDH_PATCH)$(CDH_BUILD_STAMP)' debian/rules && \
+$(PKG)_RELEASE=$($(PKG)_RELEASE)' debian/rules && \
 	  cp -r $($(PKG)_PACKAGE_GIT_REPO)/common/$($(PKG)_NAME)/* debian && \
 	  find debian -name "*.[ex,EX,~]" | xargs rm -f && \
 	  $(BASE_DIR)/tools/generate-debian-changelog \
@@ -159,8 +159,7 @@ $(2)_NAME           ?= $(1)
 # For deb packages, the name of the package itself
 $(2)_PKG_NAME       ?= $$($(2)_NAME)
 
-# The default PKG_RELEASE will be 1 unless specified
-$(2)_RELEASE        ?= 1
+$(2)_RELEASE        = $($(PKG)_RELEASE_VERSION).$(CDH_REL_STRING).p$($(PKG)_CDH_PATCH)$(CDH_BUILD_STAMP)
 
 # Calculate the full version based on the git patches
 $(2)_FULL_VERSION   = $$($(2)_BASE_VERSION)-$(CDH_VERSION_STRING)
