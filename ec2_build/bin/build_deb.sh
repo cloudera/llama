@@ -21,7 +21,12 @@ rm -rf ~/.groovy/grapes/com.cloudera.kitchen
 
   # Clean up ~/.m2/repository, ~/.ivy2, and ~/.ant to make sure we're getting fresh jars.
   # Actually, just nuke CDH stuff.
-  (cd ~/.m2/repository; find . -name "*cdh*" -type d -exec rm -rf {} \;) || true
+  rm -rf ~/.m2/repository/org/apache/hadoop*
+  rm -rf ~/.m2/repository/org/apache/hbase*
+  rm -rf ~/.m2/repository/org/apache/zookeeper*
+  rm -rf ~/.m2/repository/org/apache/pig*
+  rm -rf ~/.m2/repository/com/cloudera
+  rm -rf ~/.m2/repository/com/yahoo/oozie*
   rm -rf ~/.ivy2/cache/org.apache.hadoop
   rm -rf ~/.ivy2/cache/org.apache.zookeeper  
   rm -rf ~/.ivy2/cache/org.apache.pig
