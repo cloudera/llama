@@ -4,7 +4,7 @@
  * All actual logic is in com.cloudera.kitchen.staging.FetchStagingFiles.
  */
 @GrabResolver(name='cloudera-snap', root='https://repository.cloudera.com/artifactory/libs-snapshot')
-@Grab(group='com.cloudera.kitchen', module='package-tools', version='0.2-SNAPSHOT')
+@Grab(group='com.cloudera.kitchen', module='package-tools', version='0.3-SNAPSHOT')
 
 import com.cloudera.kitchen.staging.*
 
