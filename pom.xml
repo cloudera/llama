@@ -46,7 +46,7 @@ TODO: need license header
     <cdh.parent.version>4.0-b2-SNAPSHOT</cdh.parent.version>
     <cdh.hadoop.version>0.23.0-cdh4b2-SNAPSHOT</cdh.hadoop.version>
     <cdh.mr1.version>0.23.0-mr1-cdh4b2-SNAPSHOT</cdh.mr1.version>
-    <cdh.zookeeper.version>3.4.1-cdh4b2-SNAPSHOT</cdh.zookeeper.version>
+    <cdh.zookeeper.version>3.4.3-cdh4b2-SNAPSHOT</cdh.zookeeper.version>
     <cdh.hbase.version>0.92.0-cdh4b2-SNAPSHOT</cdh.hbase.version>
     <cdh.pig.version>0.9.2-cdh4b2-SNAPSHOT</cdh.pig.version>
     <cdh.sqoop.version>1.4.0-cdh4b2-SNAPSHOT</cdh.sqoop.version>
