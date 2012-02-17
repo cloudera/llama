@@ -52,7 +52,7 @@ TODO: need license header
     <cdh.sqoop.version>1.4.0-cdh4b2-SNAPSHOT</cdh.sqoop.version>
     <cdh.hive.version>0.8.1-cdh4b2-SNAPSHOT</cdh.hive.version>
     <cdh.oozie.version>3.1.2-cdh4b2-SNAPSHOT</cdh.oozie.version>
-    <cdh.whirr.version>0.5.0-cdh4b2-SNAPSHOT</cdh.whirr.version>
+    <cdh.whirr.version>0.7.0-cdh4b2-SNAPSHOT</cdh.whirr.version>
     <cdh.flume.version>0.9.4-cdh4b2-SNAPSHOT</cdh.flume.version>
     <cdh.flume-ng.version>1.0.0-cdh4b2-SNAPSHOT</cdh.flume-ng.version>
     <cdh.mahout.version>0.5-cdh4b2-SNAPSHOT</cdh.mahout.version>
@@ -1197,69 +1197,6 @@ TODO: need license header
         <artifactId>ojdbc6</artifactId>
         <version>11.2.0.1.0</version>
       </dependency>
-      
-      <!-- Whirr -->
-      <dependency>
-        <groupId>org.jclouds</groupId>
-        <artifactId>jclouds-aws</artifactId>
-        <version>1.0-beta-7</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jclouds</groupId>
-        <artifactId>jclouds-compute</artifactId>
-        <version>1.0-beta-7</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jclouds</groupId>
-        <artifactId>jclouds-core</artifactId>
-        <version>1.0-beta-7</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jclouds</groupId>
-        <artifactId>jclouds-enterprise</artifactId>
-        <version>1.0-beta-7</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jclouds</groupId>
-        <artifactId>jclouds-jsch</artifactId>
-        <version>1.0-beta-7</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jclouds</groupId>
-        <artifactId>jclouds-log4j</artifactId>
-        <version>1.0-beta-7</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jclouds</groupId>
-        <artifactId>jclouds-scriptbuilder</artifactId>
-        <version>1.0-beta-7</version>
-      </dependency>
-      <dependency>
-        <groupId>org.hamcrest</groupId>
-        <artifactId>hamcrest-all</artifactId>
-        <version>1.1</version>
-      </dependency>
-      <dependency>
-        <groupId>net.sf.jopt-simple</groupId>
-        <artifactId>jopt-simple</artifactId>
-        <version>3.2</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.code.findbugs</groupId>
-        <artifactId>findbugs</artifactId>
-        <version>1.3.9</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.code.findbugs</groupId>
-        <artifactId>findbugs-ant</artifactId>
-        <version>1.3.9</version>
-      </dependency>
-      <dependency>
-        <groupId>net.sourceforge.cobertura</groupId>
-        <artifactId>cobertura</artifactId>
-        <version>1.9.4.1</version>
-      </dependency>
-
     </dependencies>
   </dependencyManagement>
   
