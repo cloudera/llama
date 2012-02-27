@@ -11,7 +11,11 @@ BASE_BRANCH=$2
 BUILD_BRANCH=$3
 TARGET_DIR=$4
 VERSION=$5
-SRC_PREFIX=$6
+PKG_NAME=$6
+PKG_VERSION=$7
+PKG_RELEASE=$8
+CDH_REL=$9
+SRC_PREFIX=${10}
 
 CLOUDERA_DIR=$TARGET_DIR
 rm -Rf $CLOUDERA_DIR
@@ -30,4 +34,4 @@ for tool in $TOOLS_DIR/redist/* ; do
 done
 
 # Setup build.properties file for ant
-$TOOLS_DIR/generate-build-properties $GIT_REPO $BASE_BRANCH $BUILD_BRANCH $CLOUDERA_DIR/build.properties $VERSION
+$TOOLS_DIR/generate-build-properties $GIT_REPO $BASE_BRANCH $BUILD_BRANCH $CLOUDERA_DIR/build.properties $VERSION $PKG_VERSION $PKG_RELEASE $PKG_NAME $CDH_REL

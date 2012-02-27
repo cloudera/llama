@@ -17,6 +17,10 @@ $(BUILD_DIR)/%/.prep:
 	  $($(PKG)_DOWNLOAD_DST) \
 	  $($(PKG)_SOURCE_DIR) \
 	  $($(PKG)_FULL_VERSION) \
+	  $($(PKG)_NAME) \
+	  $($(PKG)_PKG_VERSION) \
+	  $($(PKG)_RELEASE) \
+	  $(CDH_VERSION_STRING) \
 	  $($(PKG)_SRC_PREFIX)
 	# Special logic below for cases with source we want to copy, but without pristine tarballs.
 	if [ -z "$($(PKG)_TARBALL_SRC)" ] && [ ! -z "$($(PKG)_TARBALL_DST)" ]; then \

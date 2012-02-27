@@ -8,8 +8,8 @@
 set -e
 TOOLS_DIR=$(readlink -f $(dirname $0))
 
-if [ $# -ne 5 ]; then
-  echo usage: $0 git_repo base_branch build_branch out-file version
+if [ $# -ne 9 ]; then
+  echo usage: $0 git_repo base_branch build_branch out-file version pkg-version pkg-release pkg-name cdh-release
   exit 1
 fi
 
@@ -19,6 +19,12 @@ BASE_BRANCH=$2
 BUILD_BRANCH=$3
 OUT=$4
 VERSION=$5
+PKG_VERSION=$6
+PKG_RELEASE=$7
+PKG_NAME=$8
+CDH_REL=$9
+
+DATETIME=`date -u "+%Y.%m.%d-%H:%M:%SGMT"`
 
 # Set up build properties with our version number
 #VERSION=$(cd $GIT_REPO && $TOOLS_DIR/branch-tool version)
@@ -30,4 +36,9 @@ git.hash=$REPO_HASH
 cloudera.hash=$REPO_HASH
 cloudera.base-branch=$BASE_BRANCH
 cloudera.build-branch=$BUILD_BRANCH
+cloudera.pkg.version=$PKG_VERSION
+cloudera.pkg.release=$PKG_RELEASE
+cloudera.pkg.name=$PKG_NAME
+cloudera.cdh.release=$CDH_REL
+cloudera.build.time=$DATETIME
 " > $OUT
