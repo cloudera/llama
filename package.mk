@@ -10,27 +10,31 @@ $(BUILD_DIR)/%/.download:
 # Prep
 $(BUILD_DIR)/%/.prep:
 	mkdir -p $($(PKG)_SOURCE_DIR)
-	[ -z "$($(PKG)_TARBALL_SRC)" ] || $(BASE_DIR)/tools/setup-package-build \
-	  $($(PKG)_GIT_REPO) \
-	  $($(PKG)_BASE_REF) \
-	  $($(PKG)_BUILD_REF) \
-	  $($(PKG)_DOWNLOAD_DST) \
-	  $($(PKG)_SOURCE_DIR) \
-	  $($(PKG)_FULL_VERSION) \
-	  $($(PKG)_NAME) \
-	  $($(PKG)_PKG_VERSION) \
-	  $($(PKG)_RELEASE) \
-	  $(CDH_VERSION_STRING) \
-	  $($(PKG)_SRC_PREFIX)
+	if [ ! -z "$($(PKG)_TARBALL_SRC)" ] && [ -z "$($(PKG)_TARBALL_ONLY)" ]; then \
+	  $(BASE_DIR)/tools/setup-package-build \
+	    $($(PKG)_GIT_REPO) \
+	    $($(PKG)_BASE_REF) \
+	    $($(PKG)_BUILD_REF) \
+	    $($(PKG)_DOWNLOAD_DST) \
+	    $($(PKG)_SOURCE_DIR) \
+	    $($(PKG)_FULL_VERSION) \
+	    $($(PKG)_NAME) \
+	    $($(PKG)_PKG_VERSION) \
+	    $($(PKG)_RELEASE) \
+	    $(CDH_VERSION_STRING) \
+	    $($(PKG)_SRC_PREFIX); \
+	fi ;
 	# Special logic below for cases with source we want to copy, but without pristine tarballs.
 	if [ -z "$($(PKG)_TARBALL_SRC)" ] && [ ! -z "$($(PKG)_TARBALL_DST)" ]; then \
 	  cp -r $($(PKG)_GIT_REPO)/* $($(PKG)_SOURCE_DIR); \
 	fi ;
+	# More special logic for pristine tarball but no source git repo
+	[ -z "$($(PKG)_TARBALL_ONLY)" ] || tar  --strip-components 1 -xf "$($(PKG)_DOWNLOAD_DST)" -C "$($(PKG)_SOURCE_DIR)"
 	touch $@
 
 # Patch
 $(BUILD_DIR)/%/.patch:
-	[ -z "$($(PKG)_TARBALL_SRC)" ] || $($(PKG)_SOURCE_DIR)/cloudera/apply-patches \
+	[ -z "$($(PKG)_TARBALL_SRC)" -o -n "$($(PKG)_TARBALL_ONLY)" ] || $($(PKG)_SOURCE_DIR)/cloudera/apply-patches \
 	  $($(PKG)_SOURCE_DIR) \
 	  $($(PKG)_SOURCE_DIR)/cloudera/patches
 	touch $@
@@ -167,7 +171,7 @@ $(2)_RELEASE        = $$($(2)_RELEASE_VERSION).$(CDH_REL_STRING).p$(CDH_CUSTOMER
 
 # Calculate the full version based on the git patches
 $(2)_FULL_VERSION   = $$($(2)_BASE_VERSION)-$(CDH_VERSION_STRING)
-$(2)_PKG_VERSION   := $(shell cd $($(2)_GIT_REPO) && $(BASE_DIR)/tools/branch-tool version --prefix=$(CDH) $(NO_PATCH_COUNT))
+$(2)_PKG_VERSION   ?= $(shell cd $($(2)_GIT_REPO) && $(BASE_DIR)/tools/branch-tool version --prefix=$(CDH) $(NO_PATCH_COUNT))
 $(2)_BUILD_REF      := $(notdir $(shell cd $($(2)_GIT_REPO) && git symbolic-ref --quiet HEAD))
 
 $(2)_BUILD_DIR      = $(BUILD_DIR)/$(CDH)/$(1)/$$($(2)_FULL_VERSION)/
