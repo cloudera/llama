@@ -42,3 +42,7 @@ cloudera.pkg.name=$PKG_NAME
 cloudera.cdh.release=$CDH_REL
 cloudera.build.time=$DATETIME
 " > $OUT
+
+CLOUDERA_DIR=$(readlink -f $(dirname $OUT))
+
+cp -f $OUT $CLOUDERA_DIR/cdh_version.properties
