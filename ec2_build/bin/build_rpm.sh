@@ -35,6 +35,17 @@ rm -rf ~/.groovy/grapes/com.cloudera.kitchen
   rm -rf ~/.ant/cache/com.cloudera*
 
 
+# Put %dist into ~/.rpmmacros if needed
+if [ ! -f ~/.rpmmacros ] || ! grep -q '%dist' ~/.rpmmacros; then
+    if [ "${PLATFORM}" == "rhel6" ]; then
+        echo '%dist   .el6' >> ~/.rpmmacros
+    elif [ "${PLATFORM}" == "centos5" ]; then
+        echo '%dist   .el5' >> ~/.rpmmacros
+    elif [ "${PLATFORM}" == "sles11" ]; then
+        echo '%dist   .sles11' >> ~/.rpmmacros
+    fi
+fi
+
 ############# BUILD PACKAGE ####################
 
 for PACKAGE in $PACKAGES; do
