@@ -75,17 +75,19 @@ $(BUILD_DIR)/%/.srpm:
 %define $(subst -,_,$($(PKG)_NAME))_version $($(PKG)_PKG_VERSION) \
 %define $(subst -,_,$($(PKG)_NAME))_patched_version $($(PKG)_FULL_VERSION) \
 %define $(subst -,_,$($(PKG)_NAME))_base_version $($(PKG)_BASE_VERSION) \
-%define $(subst -,_,$($(PKG)_NAME))_release $($(PKG)_RELEASE)' $(PKG_BUILD_DIR)/rpm/SPECS/$($(PKG)_NAME).spec
+%define $(subst -,_,$($(PKG)_NAME))_release $($(PKG)_RELEASE)%{?dist}' $(PKG_BUILD_DIR)/rpm/SPECS/$($(PKG)_NAME).spec
 	rpmbuild --define "_topdir $(PKG_BUILD_DIR)/rpm/" -bs --nodeps --buildroot="$(PKG_BUILD_DIR)/rpm/INSTALL" \
                                                                        $(PKG_BUILD_DIR)/rpm/SPECS/$($(PKG)_NAME).spec
-	cp $(PKG_BUILD_DIR)/rpm/SRPMS/$($(PKG)_PKG_NAME)-$($(PKG)_PKG_VERSION)-$($(PKG)_RELEASE).src.rpm \
+	$(PKG)_RELEASE_DIST=$(shell rpmbuild --eval '%{?dist}' 2>/dev/null); \
+	cp $(PKG_BUILD_DIR)/rpm/SRPMS/$($(PKG)_PKG_NAME)-$($(PKG)_PKG_VERSION)-$($(PKG)_RELEASE)$${$(PKG)_RELEASE_DIST}.src.rpm \
 	   $($(PKG)_OUTPUT_DIR)
 	touch $@
 
 # Make binary RPMs
-$(BUILD_DIR)/%/.rpm: SRCRPM=$($(PKG)_OUTPUT_DIR)/$($(PKG)_PKG_NAME)-$($(PKG)_PKG_VERSION)-$($(PKG)_RELEASE).src.rpm
 $(BUILD_DIR)/%/.rpm:
-	rpmbuild --define "_topdir $(PKG_BUILD_DIR)/rpm/" --rebuild $(SRCRPM)
+	$(PKG)_RELEASE_DIST=$(shell rpmbuild --eval '%{?dist}' 2>/dev/null); \
+	SRCRPM=$($(PKG)_OUTPUT_DIR)/$($(PKG)_PKG_NAME)-$($(PKG)_PKG_VERSION)-$($(PKG)_RELEASE)$${$(PKG)_RELEASE_DIST}.src.rpm ; \
+	rpmbuild --define "_topdir $(PKG_BUILD_DIR)/rpm/" --rebuild $${SRCRPM}
 	touch $@
 
 # Make source DEBs
