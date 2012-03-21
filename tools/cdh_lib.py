@@ -40,6 +40,10 @@ def count_commits_from(from_rev, to_rev):
   """Return the number of commits from from_rev to to_rev"""
   return len(git_rev_list(from_rev, to_rev))
 
+def remove_underscore_suffix(br):
+  """Removes underscore suffixes from branch names when needed."""
+  return re.sub("_[^_]*", "", br)
+
 def cdh_best_branch(r):
   """
   Return the name of the cdh branch that the given commit
@@ -52,7 +56,7 @@ def cdh_best_branch(r):
   branches = [b for b in branches if b.startswith('cdh-')]
 
   # The best branch is the one with the shortest version number
-  branches.sort(cmp=lambda a,b: len(a) - len(b))
+  branches.sort(cmp=lambda a,b: len(remove_underscore_suffix(a)) - len(remove_underscore_suffix(b)))
 
   return branches[0]
 
@@ -81,22 +85,16 @@ def cdh_get_version(rev, no_patch_count, prefix='cdh'):
   separator = '-'
 
   if rev.startswith(prefix + separator):
-    cur_branch = rev
+    cur_branch = remove_underscore_suffix(rev)
   else:
-    cur_branch = cdh_best_branch(rev)
+    cur_branch = remove_underscore_suffix(cdh_best_branch(rev))
   assert cur_branch.startswith(prefix + separator)
-  
-  m = re.match(r'(.*?)_', cur_branch)
-  if m:
-    true_branch = m.group(1)
-  else:
-    true_branch = cur_branch
-  
-  base_version = re.sub('^' + prefix + separator, '', true_branch)
+    
+  base_version = re.sub('^' + prefix + separator, '', cur_branch)
   if no_patch_count:
     return base_version
   
-  ancestor = cdh_ancestor_branch(true_branch, prefix)
+  ancestor = cdh_ancestor_branch(cur_branch, prefix)
   merge_base = git_merge_base(rev, ancestor)
   count = count_commits_from(merge_base, rev)
 

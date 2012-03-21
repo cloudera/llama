@@ -154,7 +154,7 @@ def parse_args(args):
   op.add_option('-y', '--yes', action='store_true')
   op.add_option('-v', '--verbose', action='store_true')
   op.add_option('-n', '--no-patch-count', action='store_true')
-  op.add_option('-p', '--prefix')
+  op.add_option('-p', '--prefix', default='cdh')
   opts, args = op.parse_args()
   return opts, args
 
