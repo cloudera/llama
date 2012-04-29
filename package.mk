@@ -169,7 +169,7 @@ $(2)_NAME           ?= $(1)
 # For deb packages, the name of the package itself
 $(2)_PKG_NAME       ?= $$($(2)_NAME)
 
-$(2)_RELEASE        = $$($(2)_RELEASE_VERSION).cdh$(CDH_REL_STRING).p$(CDH_CUSTOMER_PATCH)$(CDH_BUILD_STAMP)
+$(2)_RELEASE        = $$($(2)_RELEASE_VERSION).$(CDH_REL_STRING).p$(CDH_CUSTOMER_PATCH)$(CDH_BUILD_STAMP)
 
 # Calculate the full version based on the git patches
 $(2)_FULL_VERSION   = $$($(2)_BASE_VERSION)-$(CDH_VERSION_STRING)
