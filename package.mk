@@ -96,7 +96,7 @@ $(BUILD_DIR)/%/.sdeb:
 	mkdir -p $(PKG_BUILD_DIR)/deb/
 	cd $(PKG_BUILD_DIR)/deb && \
           mkdir $($(PKG)_NAME)-$(PKG_PKG_VERSION) ;\
-	  if [ -n "$($(PKG)_TARBALL_SRC)" ]; then \
+	  if [ -n "$($(PKG)_TARBALL_DST)" ]; then \
 	    cp $($(PKG)_OUTPUT_DIR)/$($(PKG)_NAME)-$(PKG_FULL_VERSION).tar.gz \
 	       $(PKG_BUILD_DIR)/deb/$($(PKG)_PKG_NAME)_$(PKG_PKG_VERSION).orig.tar.gz ;\
 	    tar -C $($(PKG)_NAME)-$(PKG_PKG_VERSION) --strip-components 1 \
