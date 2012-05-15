@@ -181,7 +181,7 @@ $(2)_OUTPUT_DIR      = $(OUTPUT_DIR)/$(CDH)/$(1)
 $(2)_SOURCE_DIR       = $$($(2)_BUILD_DIR)/source
 
 # Download source URL and destination path
-$(2)_DOWNLOAD_URL = $($(2)_SITE)/$($(2)_TARBALL_SRC)
+$(2)_DOWNLOAD_URL ?= $($(2)_SITE)/$($(2)_TARBALL_SRC)
 $(2)_DOWNLOAD_DST = $(DL_DIR)/$($(2)_TARBALL_DST)
 
 # Define the file stamps
