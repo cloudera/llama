@@ -20,7 +20,7 @@
 # $3 git range specification to generate notes for
 # $4 Release version eg "CDH 2"
 # $5 Base Project verion eg "0.20.1"
-# $6 CDH Project version eg "hadoop-0.20.1+169.56"
+# $6 CDH Project version eg "hadoop-2.0.0-cdh4.1.0-SNAPSHOT"
 # $7 CDH Project Name ed "Apache Hadoop"
 # $8 CDH Packaging repository source directory
 # $9 Base project name

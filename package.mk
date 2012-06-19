@@ -152,7 +152,7 @@ $(BUILD_DIR)/%/.relnotes:
 		"$($(PKG)_BASE_REF)..HEAD" \
 		"CDH $(CDH_VERSION)" \
 		"$($(PKG)_BASE_VERSION)" \
-		"$($(PKG)_NAME)-$($(PKG)_PKG_VERSION)" \
+		"$($(PKG)_NAME)-$($(PKG)_FULL_VERSION)" \
 		"$($(PKG)_RELNOTES_NAME)" \
 		"$($(PKG)_PACKAGE_GIT_REPO)" \
 		"$($(PKG)_NAME)" \
