@@ -23,7 +23,7 @@
      "flume": {"track-branch": "cdh4-0.9.4+25", "dir": "repos/cdh4/flume", "remotes": ["origin"]},
      "flume-ng": {"track-branch": "cdh4-1.1.0", "dir": "repos/cdh4/flume-ng", "remotes": ["origin"]},
 
-     "mahout": {"track-branch": "cdh4-0.6", "dir": "repos/cdh4/mahout", "remotes": ["origin", "apache"]},
+     "mahout": {"track-branch": "cdh4-0.7", "dir": "repos/cdh4/mahout", "remotes": ["origin", "apache"]},
      "oozie": {"track-branch": "cdh4-3.2.0", "dir": "repos/cdh4/oozie", "remotes": ["origin"]},
      "whirr": {"track-branch": "cdh4-0.7.1", "dir": "repos/cdh4/whirr", "remotes": ["origin"]},
      "hue": {"track-branch": "cdh4-2.0.0", "dir": "repos/cdh4/hue", "remotes": ["origin"]},

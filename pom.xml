@@ -55,7 +55,7 @@ TODO: need license header
     <cdh.whirr.version>0.7.1-cdh4.1.0-SNAPSHOT</cdh.whirr.version>
     <cdh.flume.version>0.9.4-cdh4.1.0-SNAPSHOT</cdh.flume.version>
     <cdh.flume-ng.version>1.1.0-cdh4.1.0-SNAPSHOT</cdh.flume-ng.version>
-    <cdh.mahout.version>0.6-cdh4.1.0-SNAPSHOT</cdh.mahout.version>
+    <cdh.mahout.version>0.7-cdh4.1.0-SNAPSHOT</cdh.mahout.version>
     <cdh.hue.version>2.0.0-cdh4.1.0-SNAPSHOT</cdh.hue.version>
     <cdh.hadoop-snappy.version>0.0.1-cdh4.1.0-SNAPSHOT</cdh.hadoop-snappy.version>
 
