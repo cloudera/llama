@@ -20,6 +20,8 @@ def git_log(from_ref, to_ref):
     
   entries = []
   for entry in text_entries:
+    if entry == '':
+	  continue
     header_text, body_text = entry.split("\n\n", 1)
 
     header_lines = header_text.split("\n")
@@ -55,12 +57,26 @@ def main(args):
   os.chdir(repo)
   log_entries = git_log(base_ref, build_ref)
 
+  version = debianize_version(release_version, package_version)
+
+  if not log_entries:
+    # Generate empty debian changelog
+
+    commit_time = time.strftime("%a, %d %b %Y %H:%M:%S", time.gmtime()) + ' +0000'
+
+    out = ""
+    out +="%s (%s) cloudera; urgency=low\n" % (package_name, version)
+    out += "\n"
+    out += "  Commit None:\n"
+    out += re.sub(r'^(?m)', '    ', 'No changes since base version') + "\n" # indent
+    out += " -- %s <%s>  %s\n" % ('Cloudera, Inc.', 'info@cloudera.com', commit_time)
+    print >>out_file, out
+
   first = True
   for entry in log_entries:
     commit_hash = entry['commit']
     print >>sys.stderr, "[%s] generating changelog entry for %s" % \
           (prog_name, commit_hash)
-    version = debianize_version(release_version, package_version)
 
     committer_name, committer_email, commit_time, commit_tz = parse_person(entry['committer'])
     author_name, author_email, author_time, author_tz = parse_person(entry['author'])
