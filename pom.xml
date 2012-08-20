@@ -57,6 +57,7 @@ TODO: need license header
     <cdh.flume-ng.version>1.2.0-cdh4.1.0-SNAPSHOT</cdh.flume-ng.version>
     <cdh.mahout.version>0.7-cdh4.1.0-SNAPSHOT</cdh.mahout.version>
     <cdh.hue.version>2.0.1-cdh4.1.0-SNAPSHOT</cdh.hue.version>
+    <cdh.datafu.version>0.0.4-cdh4.1.0-SNAPSHOT</cdh.datafu.version>
     <cdh.hadoop-snappy.version>0.0.1-cdh4.1.0-SNAPSHOT</cdh.hadoop-snappy.version>
 
     <!-- Versions of the dependencies we manage -->
@@ -215,6 +216,18 @@ TODO: need license header
         <groupId>com.cloudera.cdh</groupId>
         <artifactId>whirr-root</artifactId>
         <version>${cdh.parent.version}</version>
+        <type>pom</type>
+      </dependency>
+      <dependency>
+        <groupId>com.cloudera.cdh</groupId>
+        <artifactId>datafu-root</artifactId>
+        <version>${cdh.datafu.version}</version>
+        <type>pom</type>
+      </dependency>
+      <dependency>
+        <groupId>com.cloudera.cdh</groupId>
+        <artifactId>datafu-ant</artifactId>
+        <version>${cdh.datafu.version}</version>
         <type>pom</type>
       </dependency>
       
@@ -616,6 +629,13 @@ TODO: need license header
         <groupId>org.apache.whirr</groupId>
         <artifactId>whirr-zookeeper</artifactId>
         <version>${cdh.whirr.version}</version>
+      </dependency>
+
+      <!-- Datafu -->
+      <dependency>
+        <groupId>com.linkedin.datafu</groupId>
+        <artifactId>datafu</artifactId>
+        <version>${cdh.datafu.version}</version>
       </dependency>
 
         
@@ -1198,6 +1218,19 @@ TODO: need license header
         <artifactId>ojdbc6</artifactId>
         <version>11.2.0.1.0</version>
       </dependency>
+
+      <!-- DataFu -->
+      <dependency>
+        <groupId>it.unimi.dsi</groupId>
+        <artifactId>fastutil</artifactId>
+        <version>6.3</version>
+      </dependency>
+      <dependency>
+        <groupId>org.testng</groupId>
+        <artifactId>testng</artifactId>
+        <version>6.2</version>
+      </dependency>
+      
     </dependencies>
   </dependencyManagement>
   
