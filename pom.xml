@@ -519,6 +519,11 @@ TODO: need license header
       </dependency>
       <dependency>
         <groupId>org.apache.hive</groupId>
+        <artifactId>hive-hbase-handler</artifactId>
+        <version>${cdh.hive.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hive</groupId>
         <artifactId>hive-hwi</artifactId>
         <version>${cdh.hive.version}</version>
       </dependency>
@@ -835,6 +840,11 @@ TODO: need license header
         <version>4.8.1</version>
       </dependency>
       <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-compress</artifactId>
+        <version>1.4.1</version>
+      </dependency>
+      <dependency>
         <groupId>commons-lang</groupId>
         <artifactId>commons-lang</artifactId>
         <version>2.5</version>
@@ -1016,6 +1026,16 @@ TODO: need license header
         <artifactId>jackson-core-asl</artifactId>
         <version>1.8.8</version>
       </dependency>
+      <dependency>
+        <groupId>org.codehaus.jackson</groupId>
+        <artifactId>jackson-jaxrs</artifactId>
+        <version>1.8.8</version>
+      </dependency>
+      <dependency>
+        <groupId>org.codehaus.jackson</groupId>
+        <artifactId>jackson-xc</artifactId>
+        <version>1.8.8</version>
+      </dependency>
       
       <!-- Pig -->
       <dependency>
@@ -1068,6 +1088,11 @@ TODO: need license header
       </dependency>
       
       <!-- Hive -->
+      <dependency>
+        <groupId>com.github.stephenc.high-scale-lib</groupId>
+        <artifactId>high-scale-lib</artifactId>
+        <version>1.1.1</version>
+      </dependency>
       <dependency>
         <groupId>org.apache.derby</groupId>
         <artifactId>derby</artifactId>
