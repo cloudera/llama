@@ -28,6 +28,7 @@
      "oozie": {"track-branch": "cdh4-3.2.0", "dir": "repos/cdh4/oozie", "remotes": ["origin"]},
      "whirr": {"track-branch": "cdh4-0.8.0", "dir": "repos/cdh4/whirr", "remotes": ["origin"]},
      "hue": {"track-branch": "cdh4-2.0.1", "dir": "repos/cdh4/hue", "remotes": ["origin"]},
+     "lucene-solr": {"track-branch": "cdh4-4.0.0", "dir": "repos/cdh4/solr", "remotes": ["origin"]},
 
      "cdh-package": { "track-branch": "cdh4-0.4", "dir":
           "repos/cdh4/cdh-package", "remotes": ["origin"]}
