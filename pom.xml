@@ -58,6 +58,7 @@ TODO: need license header
     <cdh.mahout.version>0.7-cdh4.1.0-SNAPSHOT</cdh.mahout.version>
     <cdh.hue.version>2.0.1-cdh4.1.0-SNAPSHOT</cdh.hue.version>
     <cdh.datafu.version>0.0.4-cdh4.1.0-SNAPSHOT</cdh.datafu.version>
+    <cdh.solr.version>4.0.0-cdh4.1.0-SNAPSHOT</cdh.solr.version>
     <cdh.hadoop-snappy.version>0.0.1-cdh4.1.0-SNAPSHOT</cdh.hadoop-snappy.version>
 
     <!-- Versions of the dependencies we manage -->
