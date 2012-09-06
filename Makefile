@@ -5,7 +5,7 @@ OUTPUT_DIR?=$(BASE_DIR)/output
 REPO_DIR  ?=$(BASE_DIR)/repos
 CONFIG    ?=$(BASE_DIR)/config.mk
 CDH       ?=cdh4
-CDH_VERSION_STRING ?= cdh4.1.0-SNAPSHOT
+CDH_VERSION_STRING ?= cdh4.2.0-SNAPSHOT
 CDH_REL_STRING ?= cdh4.1.0
 CDH_MAKEFILE:=$(CDH).mk
 

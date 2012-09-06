@@ -7,7 +7,7 @@ TODO: need license header
 
   <groupId>com.cloudera.cdh</groupId>
   <artifactId>cdh-root</artifactId>
-  <version>4.1.0-SNAPSHOT</version>
+  <version>4.2.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   
   <name>CDH root</name>
@@ -43,23 +43,23 @@ TODO: need license header
     <maven.repo.local>${user.home}/.m2/repository</maven.repo.local>
 
     <!-- Versions of the projects we build/use -->
-    <cdh.parent.version>4.1.0-SNAPSHOT</cdh.parent.version>
-    <cdh.hadoop.version>2.0.0-cdh4.1.0-SNAPSHOT</cdh.hadoop.version>
-    <cdh.mr1.version>2.0.0-mr1-cdh4.1.0-SNAPSHOT</cdh.mr1.version>
-    <cdh.zookeeper.version>3.4.3-cdh4.1.0-SNAPSHOT</cdh.zookeeper.version>
-    <cdh.hbase.version>0.92.1-cdh4.1.0-SNAPSHOT</cdh.hbase.version>
-    <cdh.pig.version>0.10.0-cdh4.1.0-SNAPSHOT</cdh.pig.version>
-    <cdh.sqoop.version>1.4.1-cdh4.1.0-SNAPSHOT</cdh.sqoop.version>
-    <cdh.hive.version>0.9.0-cdh4.1.0-SNAPSHOT</cdh.hive.version>
-    <cdh.oozie.version>3.2.0-cdh4.1.0-SNAPSHOT</cdh.oozie.version>
-    <cdh.whirr.version>0.8.0-cdh4.1.0-SNAPSHOT</cdh.whirr.version>
-    <cdh.flume.version>0.9.4-cdh4.1.0-SNAPSHOT</cdh.flume.version>
-    <cdh.flume-ng.version>1.2.0-cdh4.1.0-SNAPSHOT</cdh.flume-ng.version>
-    <cdh.mahout.version>0.7-cdh4.1.0-SNAPSHOT</cdh.mahout.version>
-    <cdh.hue.version>2.1.0-cdh4.1.0-SNAPSHOT</cdh.hue.version>
-    <cdh.datafu.version>0.0.4-cdh4.1.0-SNAPSHOT</cdh.datafu.version>
-    <cdh.solr.version>4.0.0-cdh4.1.0-SNAPSHOT</cdh.solr.version>
-    <cdh.hadoop-snappy.version>0.0.1-cdh4.1.0-SNAPSHOT</cdh.hadoop-snappy.version>
+    <cdh.parent.version>4.2.0-SNAPSHOT</cdh.parent.version>
+    <cdh.hadoop.version>2.0.0-cdh4.2.0-SNAPSHOT</cdh.hadoop.version>
+    <cdh.mr1.version>2.0.0-mr1-cdh4.2.0-SNAPSHOT</cdh.mr1.version>
+    <cdh.zookeeper.version>3.4.3-cdh4.2.0-SNAPSHOT</cdh.zookeeper.version>
+    <cdh.hbase.version>0.92.1-cdh4.2.0-SNAPSHOT</cdh.hbase.version>
+    <cdh.pig.version>0.10.0-cdh4.2.0-SNAPSHOT</cdh.pig.version>
+    <cdh.sqoop.version>1.4.1-cdh4.2.0-SNAPSHOT</cdh.sqoop.version>
+    <cdh.hive.version>0.9.0-cdh4.2.0-SNAPSHOT</cdh.hive.version>
+    <cdh.oozie.version>3.2.0-cdh4.2.0-SNAPSHOT</cdh.oozie.version>
+    <cdh.whirr.version>0.8.0-cdh4.2.0-SNAPSHOT</cdh.whirr.version>
+    <cdh.flume.version>0.9.4-cdh4.2.0-SNAPSHOT</cdh.flume.version>
+    <cdh.flume-ng.version>1.2.0-cdh4.2.0-SNAPSHOT</cdh.flume-ng.version>
+    <cdh.mahout.version>0.7-cdh4.2.0-SNAPSHOT</cdh.mahout.version>
+    <cdh.hue.version>2.1.0-cdh4.2.0-SNAPSHOT</cdh.hue.version>
+    <cdh.datafu.version>0.0.4-cdh4.2.0-SNAPSHOT</cdh.datafu.version>
+    <cdh.solr.version>4.0.0-cdh4.2.0-SNAPSHOT</cdh.solr.version>
+    <cdh.hadoop-snappy.version>0.0.1-cdh4.2.0-SNAPSHOT</cdh.hadoop-snappy.version>
 
     <!-- Versions of the dependencies we manage -->
     <cdh.avro.version>1.7.1</cdh.avro.version>
