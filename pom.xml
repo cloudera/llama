@@ -155,6 +155,12 @@ TODO: need license header
       </dependency>
       <dependency>
         <groupId>com.cloudera.cdh</groupId>
+        <artifactId>solr-props</artifactId>
+        <version>${cdh.solr.version}</version>
+        <type>pom</type>
+      </dependency>
+      <dependency>
+        <groupId>com.cloudera.cdh</groupId>
         <artifactId>zookeeper-root</artifactId>
         <version>${cdh.zookeeper.version}</version>
         <type>pom</type>
