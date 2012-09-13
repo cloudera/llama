@@ -6,7 +6,8 @@ flags:
   -y   - ask forgiveness, not permission
 
 options:
-  -a   - name of Apache remote to compare
+  -n, --no-patch-count   - Don't include patch count in version
+  -p, --prefix   - Prefix for branches - defaults to 'cdh'
  
 
 tool is:
