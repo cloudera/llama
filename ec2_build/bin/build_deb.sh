@@ -27,6 +27,7 @@ rm -rf ~/.groovy/grapes/com.cloudera.kitchen
   rm -rf ~/.m2/repository/org/apache/pig*
   rm -rf ~/.m2/repository/com/cloudera
   rm -rf ~/.m2/repository/com/yahoo/oozie*
+  rm -rf ~/.m2/repository/org/slf4j
   rm -rf ~/.ivy2/cache/org.apache.hadoop
   rm -rf ~/.ivy2/cache/org.apache.zookeeper  
   rm -rf ~/.ivy2/cache/org.apache.pig
