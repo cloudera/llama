@@ -19,5 +19,7 @@ cd $TARGET_DIR
 # anchor the repository root at the source dir root.
 git init-db
 for PATCH in `ls -1 $PATCH_DIR/* | sort` ; do
-    git apply --whitespace=nowarn $PATCH
+    if [ -s $PATCH ]; then
+        git apply --whitespace=nowarn $PATCH
+    fi
 done
