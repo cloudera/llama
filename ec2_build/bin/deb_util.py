@@ -16,6 +16,7 @@ def find_source_deb_files(root):
   changes = changes[0]
   base = changes.replace("_source.changes", "")
   files = [base + ext for ext in ["_source.changes",
+                                  ".debian.tar.gz",
                                   ".diff.gz",
                                   ".dsc"]]
   pkg_name, full_vers = base.split("_", 1)
