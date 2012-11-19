@@ -65,6 +65,7 @@ $(BUILD_DIR)/%/.srpm:
 	mkdir -p $(PKG_BUILD_DIR)/rpm/{INSTALL,SOURCES,BUILD,SRPMS,RPMS}
 	cp -r $($(PKG)_PACKAGE_GIT_REPO)/rpm/$($(PKG)_NAME)/* $(PKG_BUILD_DIR)/rpm
 	cp -r $($(PKG)_PACKAGE_GIT_REPO)/common/$($(PKG)_NAME)/* $(PKG_BUILD_DIR)/rpm/SOURCES
+	cp $($(PKG)_PACKAGE_GIT_REPO)/templates/init.d.tmpl $(PKG_BUILD_DIR)/rpm/SOURCES
 	# FIXME: BIGTOP-292
 	cd $($(PKG)_PACKAGE_GIT_REPO)/common/$($(PKG)_NAME) ; tar -czf $(PKG_BUILD_DIR)/rpm/SOURCES/$($(PKG)_NAME)-bigtop-packaging.tar.gz *
 	[ -z "$($(PKG)_TARBALL_DST)" ] || \
@@ -116,6 +117,7 @@ $(PKG)_BASE_VERSION=$($(PKG)_BASE_VERSION) \
 $(PKG)_RELEASE=$($(PKG)_RELEASE) \
 CDH_CUSTOMER_PATCH=p$(CDH_CUSTOMER_PATCH) \
 CDH_PARCEL_CUSTOM_VERSION=$($(PKG)_PKG_VERSION)-$($(PKG)_RELEASE).$(shell lsb_release -sc)' debian/rules && \
+	  cp $($(PKG)_PACKAGE_GIT_REPO)/templates/init.d.tmpl debian && \
 	  cp -r $($(PKG)_PACKAGE_GIT_REPO)/common/$($(PKG)_NAME)/* debian && \
 	  find debian -name "*.[ex,EX,~]" | xargs rm -f && \
 	  $(BASE_DIR)/tools/generate-debian-changelog \
