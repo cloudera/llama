@@ -11,6 +11,7 @@ export ARCH=$(uname -i)
 export GROOVY_HOME=/opt/toolchain/groovy-1.8.2
 export PATH=$PATH:$GROOVY_HOME/bin
 rm -rf ~/.groovy/grapes/com.cloudera.kitchen
+rm -rf /tmp/forrest-jenkins
 
 [ -f /opt/toolchain/toolchain.sh ] && source /opt/toolchain/toolchain.sh
 [ -f /mnt/toolchain/toolchain.sh ] && source /mnt/toolchain/toolchain.sh

@@ -6,6 +6,7 @@ export EMAIL_ADDRESS='andrew@cloudera.com'
 export CODENAME="${PLATFORM}-${CDH_RELEASE}"
 export PYTHONPATH="$WORKSPACE/lib:$PYTHONPATH"
 
+rm -rf /tmp/forrest-jenkins
   export OOZIE_SKIP_TEST_EXEC=true
 rm -rf ~/.groovy/grapes/com.cloudera.kitchen
 
