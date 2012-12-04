@@ -19,7 +19,7 @@
      "hbase": {"track-branch": "cdh4-0.94.2", "dir": "repos/cdh4/hbase", "remotes": ["origin","apache"]},
      "sqoop": {"track-branch": "cdh4-1.4.2", "dir": "repos/cdh4/sqoop", "remotes": ["origin"]},
      "sqoop2": {"track-branch": "cdh4-2.0.0", "dir": "repos/cdh4/sqoop2", "remotes": ["origin"]},
-     "pig": {"track-branch": "cdh4-0.10.0", "dir": "repos/cdh4/pig", "remotes": ["origin", "apache"]},
+     "pig": {"track-branch": "cdh4-0.10.0_1", "dir": "repos/cdh4/pig", "remotes": ["origin", "apache"]},
      "datafu": {"track-branch": "cdh4-0.0.4", "dir": "repos/cdh4/datafu", "remotes": ["origin"]},
      "hive": {"track-branch": "cdh4-0.9.0", "dir": "repos/cdh4/hive", "remotes": ["origin", "apache"]},
      "flume": {"track-branch": "cdh4-0.9.4+25", "dir": "repos/cdh4/flume", "remotes": ["origin"]},
