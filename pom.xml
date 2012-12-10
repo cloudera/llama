@@ -1083,6 +1083,16 @@ TODO: need license header
         <artifactId>jython</artifactId>
         <version>2.5.0</version>
       </dependency>
+      <dependency>
+        <groupId>dk.brics.automaton</groupId>
+        <artifactId>automaton</artifactId>
+        <version>1.11-8</version>
+      </dependency>
+      <dependency>
+        <groupId>org.fusesource.jansi</groupId>
+        <artifactId>jansi</artifactId>
+        <version>1.9</version>
+      </dependency>
       
       <!-- Sqoop -->
       
