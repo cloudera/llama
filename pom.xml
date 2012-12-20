@@ -65,7 +65,7 @@ TODO: need license header
     <cdh.cdh-parcel.version>4.2.0-SNAPSHOT</cdh.cdh-parcel.version>
     
     <!-- Versions of the dependencies we manage -->
-    <cdh.avro.version>1.7.1.cloudera.2</cdh.avro.version>
+    <cdh.avro.version>1.7.3</cdh.avro.version>
  
   </properties>
   
