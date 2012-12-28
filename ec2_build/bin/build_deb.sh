@@ -24,6 +24,7 @@ rm -rf ~/.groovy/grapes/com.cloudera.kitchen
   # Actually, just nuke CDH stuff.
   rm -rf ~/.m2/repository/org/apache/hadoop*
   rm -rf ~/.m2/repository/org/apache/hbase*
+  rm -rf ~/.m2/repository/org/apache/hive*
   rm -rf ~/.m2/repository/org/apache/zookeeper*
   rm -rf ~/.m2/repository/org/apache/pig*
   rm -rf ~/.m2/repository/com/cloudera
@@ -33,13 +34,16 @@ rm -rf ~/.groovy/grapes/com.cloudera.kitchen
   rm -rf ~/.ivy2/cache/org.apache.zookeeper  
   rm -rf ~/.ivy2/cache/org.apache.pig
   rm -rf ~/.ivy2/cache/org.apache.hbase
+  rm -rf ~/.ivy2/cache/org.apache.hive
   rm -rf ~/.ivy2/cache/com.cloudera*
   rm -rf ~/.ant/cache/org.apache.hadoop
   rm -rf ~/.ant/cache/org.apache.zookeeper  
   rm -rf ~/.ant/cache/org.apache.pig
   rm -rf ~/.ant/cache/org.apache.hbase
+  rm -rf ~/.ant/cache/org.apache.hive
   rm -rf ~/.ant/cache/com.cloudera*
-
+  rm -rf ~/.ivy2/local
+  
   export GROOVY_HOME=/opt/toolchain/groovy-1.8.2
   export PATH=$PATH:$GROOVY_HOME/bin
   
