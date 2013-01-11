@@ -51,7 +51,7 @@ TODO: need license header
     <cdh.pig.version>0.10.0-cdh4.2.0-SNAPSHOT</cdh.pig.version>
     <cdh.sqoop.version>1.4.2-cdh4.2.0-SNAPSHOT</cdh.sqoop.version>
     <cdh.sqoop2.version>1.99.1-cdh4.2.0-SNAPSHOT</cdh.sqoop2.version>
-    <cdh.hive.version>0.9.0-cdh4.2.0-SNAPSHOT</cdh.hive.version>
+    <cdh.hive.version>0.10.0-cdh4.2.0-SNAPSHOT</cdh.hive.version>
     <cdh.oozie.version>3.2.0-cdh4.2.0-SNAPSHOT</cdh.oozie.version>
     <cdh.whirr.version>0.8.0-cdh4.2.0-SNAPSHOT</cdh.whirr.version>
     <cdh.flume.version>0.9.4-cdh4.2.0-SNAPSHOT</cdh.flume.version>
