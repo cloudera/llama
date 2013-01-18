@@ -1049,11 +1049,6 @@ TODO: need license header
       
       <!-- Pig -->
       <dependency>
-        <groupId>antlr</groupId>
-        <artifactId>antlr</artifactId>
-        <version>2.7.7</version>
-      </dependency>
-      <dependency>
         <groupId>commons-beanutils</groupId>
         <artifactId>commons-beanutils</artifactId>
         <version>1.7.0</version>
