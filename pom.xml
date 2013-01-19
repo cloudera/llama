@@ -48,6 +48,7 @@ TODO: need license header
     <cdh.mr1.version>2.0.0-mr1-cdh4.2.0-SNAPSHOT</cdh.mr1.version>
     <cdh.zookeeper.version>3.4.5-cdh4.2.0-SNAPSHOT</cdh.zookeeper.version>
     <cdh.hbase.version>0.94.2-cdh4.2.0-SNAPSHOT</cdh.hbase.version>
+    <cdh.hcatalog.version>0.4.0-cdh4.2.0-SNAPSHOT</cdh.hcatalog.version>
     <cdh.pig.version>0.10.0-cdh4.2.0-SNAPSHOT</cdh.pig.version>
     <cdh.sqoop.version>1.4.2-cdh4.2.0-SNAPSHOT</cdh.sqoop.version>
     <cdh.sqoop2.version>1.99.1-cdh4.2.0-SNAPSHOT</cdh.sqoop2.version>
@@ -178,6 +179,12 @@ TODO: need license header
         <groupId>com.cloudera.cdh</groupId>
         <artifactId>hbase-root</artifactId>
         <version>${cdh.parent.version}</version>
+        <type>pom</type>
+      </dependency>
+      <dependency>
+        <groupId>com.cloudera.cdh</groupId>
+        <artifactId>hcatalog-root</artifactId>
+        <version>${cdh.hcatalog.version}</version>
         <type>pom</type>
       </dependency>
       <dependency>
@@ -460,6 +467,38 @@ TODO: need license header
         <artifactId>hbase</artifactId>
         <version>${cdh.hbase.version}</version>
         <classifier>tests</classifier>
+      </dependency>
+
+      <!-- Hcatalog -->
+      <dependency>
+        <groupId>org.apache.hcatalog</groupId>
+        <artifactId>hcatalog-core</artifactId>
+        <version>${cdh.hcatalog.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hcatalog</groupId>
+        <artifactId>hcatalog-pig-adapter</artifactId>
+        <version>${cdh.hcatalog.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hcatalog</groupId>
+        <artifactId>hbase-storage-handler</artifactId>
+        <version>${cdh.hcatalog.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hcatalog</groupId>
+        <artifactId>hcatalog-server-extensions</artifactId>
+        <version>${cdh.hcatalog.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hcatalog</groupId>
+        <artifactId>webhcat</artifactId>
+        <version>${cdh.hcatalog.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hcatalog</groupId>
+        <artifactId>webhcat-java-client</artifactId>
+        <version>${cdh.hcatalog.version}</version>
       </dependency>
       
       <!-- Pig -->
@@ -1047,6 +1086,49 @@ TODO: need license header
         <version>1.8.8</version>
       </dependency>
       
+      <!-- Hcatalog -->
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-core</artifactId>
+        <version>5.5.0</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>kahadb</artifactId>
+        <version>5.5.0</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-exec</artifactId>
+        <version>1.1</version>
+      </dependency>
+      <dependency>
+        <groupId>org.eclipse.jetty.aggregate</groupId>
+        <artifactId>jetty-all-server</artifactId>
+        <version>7.6.0.v20120127</version>
+      </dependency>
+      <dependency>
+        <groupId>javax.jms</groupId>
+        <artifactId>jms</artifactId>
+        <version>1.1</version>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>jul-to-slf4j</artifactId>
+        <version>1.6.1</version>
+      </dependency>
+      <dependency>
+        <groupId>com.sun.jersey.contribs</groupId>
+        <artifactId>wadl-resourcedoc-doclet</artifactId>
+        <version>1.4</version>
+      </dependency>
+
       <!-- Pig -->
       <dependency>
         <groupId>commons-beanutils</groupId>
