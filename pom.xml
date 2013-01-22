@@ -1092,7 +1092,7 @@ TODO: need license header
       <dependency>
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-core</artifactId>
-        <version>5.5.0</version>
+        <version>5.7.0</version>
         <exclusions>
           <exclusion>
             <groupId>org.springframework</groupId>
@@ -1103,7 +1103,7 @@ TODO: need license header
       <dependency>
         <groupId>org.apache.activemq</groupId>
         <artifactId>kahadb</artifactId>
-        <version>5.5.0</version>
+        <version>5.7.0</version>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>
