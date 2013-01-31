@@ -73,6 +73,7 @@ $(BUILD_DIR)/%/.srpm:
 	[ -d $($(PKG)_PACKAGE_GIT_REPO)/common/$($(PKG)_NAME) ] && \
 		cp -r $($(PKG)_PACKAGE_GIT_REPO)/common/$($(PKG)_NAME)/* $(PKG_BUILD_DIR)/rpm/SOURCES
 	sed -i -e '1i\
+$(EXTRA_VAR_DEFS) \
 %define $(subst -,_,$($(PKG)_NAME))_version $($(PKG)_PKG_VERSION) \
 %define $(subst -,_,$($(PKG)_NAME))_patched_version $($(PKG)_FULL_VERSION) \
 %define $(subst -,_,$($(PKG)_NAME))_base_version $($(PKG)_BASE_VERSION) \
@@ -111,6 +112,7 @@ $(BUILD_DIR)/%/.sdeb:
 	cd $(PKG_BUILD_DIR)/deb/$($(PKG)_NAME)-$(PKG_PKG_VERSION) && \
           cp -r $($(PKG)_PACKAGE_GIT_REPO)/deb/$($(PKG)_NAME) debian && \
 	  sed -i -e '/^#!/a\
+$(EXTRA_VAR_DEFS) \
 $(PKG)_VERSION=$($(PKG)_PKG_VERSION) \
 $(PKG)_PATCHED_VERSION=$($(PKG)_FULL_VERSION) \
 $(PKG)_BASE_VERSION=$($(PKG)_BASE_VERSION) \
@@ -165,6 +167,14 @@ $(BUILD_DIR)/%/.relnotes:
 		"$($(PKG)_NAME)" \
 		"$(PREV_RELEASE_TAG)..HEAD"
 	touch $@
+
+# FIXME: the following needs to go away once MR1 grafting happens
+HADOOP_COMMON_PKG_VERSION=$(shell groovy $(BASE_DIR)/ec2_build/bin/pinMr1DependencyVersion \
+                                         --release=$(CDH_REL_STRING)              \
+                                         --maven-suffix=$(CDH_VERSION_STRING)     \
+                                         --project=hadoop --dump)
+mr1-sdeb : EXTRA_VAR_DEFS=HADOOP_COMMON_VERSION=$(HADOOP_COMMON_PKG_VERSION)
+mr1-srpm : EXTRA_VAR_DEFS=%define hadoop_common_version $(HADOOP_COMMON_PKG_VERSION)
 
 # Package make function
 # $1 is the target prefix, $2 is the variable prefix

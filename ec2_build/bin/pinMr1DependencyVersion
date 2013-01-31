@@ -1,0 +1,97 @@
+#!/usr/bin/env groovy
+
+@GrabResolver(name='cloudera-snap', root='https://repository.cloudera.com/artifactory/libs-snapshot')
+@Grab(group='com.cloudera.kitchen', module='package-tools', version='0.4-SNAPSHOT')
+
+import com.cloudera.kitchen.staging.*
+
+import com.cloudera.kitchen.util.CliWithDefaultsBuilder
+import com.gmongo.GMongo
+
+def parseArgs(cliArgs) { 
+    def cli = new CliWithDefaultsBuilder(usage: "pinMr1DependencyVersion [options]",
+                                         header: "Options")
+
+    def defaultOptions = [:]
+
+    cli._(longOpt:'dbhost', defaultValue:StagingConstants.DEFAULT_MONGODB_HOST,
+          args:1, "Database host to use - defaults to ${StagingConstants.DEFAULT_MONGODB_HOST}")
+    
+    cli._(longOpt:'dbport', defaultValue:StagingConstants.DEFAULT_MONGODB_PORT,
+          args:1, "Database port to use - defaults to ${StagingConstants.DEFAULT_MONGODB_PORT}")
+    
+    cli._(longOpt:'dbname', defaultValue:StagingConstants.DEFAULT_MONGODB_DBNAME,
+          args:1, "Database name to use - defaults to ${StagingConstants.DEFAULT_MONGODB_DBNAME}")
+
+    cli._(longOpt:'project', args:1, 
+          "The name of the project the artifact(s) belong to")
+
+    cli._(longOpt:'release', args:1,
+          "Release name the artifact(s) belong to - e.g., 'cdh3b4', 'enterprise3.5'")
+
+    cli._(longOpt:'dump',
+          "Just dump the versions -- don't edit the file")
+    
+    cli._(longOpt:'deb-control', args:1,  
+          "Path to debian control file")
+
+    cli._(longOpt:'rpm-spec', args:1,  
+          "Path to rpm spec file")
+
+    cli._(longOpt:'maven-suffix', args:1,  
+          "Maven version suffix")
+
+    cli._(longOpt:'staging-root', defaultValue:StagingConstants.DEFAULT_STAGING_ROOT, args:1,
+          "Override the default STAGING_ROOT. Optional.")
+
+    
+    def options = cli.parse(cliArgs)
+
+    def stagingArea = new StagingArea(options.dbname, options.dbhost, options.dbport, options."staging-root")
+
+    return [stagingArea, options]
+}
+
+
+def argRes = parseArgs(this.args)
+
+def stagingArea = argRes[0]
+def options = argRes[1]
+
+def mongoConnection = new GMongo(options.dbhost, options.dbport.toInteger())
+def mongoDb = mongoConnection.getDB(options.dbname)
+def mongoStaging = mongoDb.staging
+
+def allHadoop = mongoStaging.find([release: options.release, project:"$options.project", 'maven-version': ~/${options.'maven-suffix'}/]).toArray()
+
+def timeSorted = allHadoop.findAll { it.is_binary == false }.sort { x, y -> Date.parse(y.'build-timestamp') <=> Date.parse(x.'build-timestamp') }
+def theOne = timeSorted.find { m -> 
+    def binaries = allHadoop.findAll { it.'parent-build-path' == m._id }
+    if (binaries.size() < 7) {
+        return false
+    } else {
+        return true
+    }
+}
+
+def debReplace = ""
+def rpmReplace = ""
+
+if (theOne) {
+    debReplace = " (>= ${theOne.'package-version'})"
+    rpmReplace = " >= ${theOne.'package-version'}"
+}
+
+if (options.'deb-control') {
+    File debControl = new File(options.'deb-control')
+    def processed = debControl.text.replaceAll('__HADOOP_VERSION__', debReplace)
+    debControl.write(processed)
+}
+if (options.'rpm-spec') {
+    File rpmSpec = new File(options.'rpm-spec')
+    def processed = rpmSpec.text.replaceAll('__HADOOP_VERSION__', rpmReplace)
+    rpmSpec.write(processed)
+}
+if (options.'dump') {
+    println "${theOne.'package-version'}"
+}
