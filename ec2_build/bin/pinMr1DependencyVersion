@@ -31,6 +31,9 @@ def parseArgs(cliArgs) {
 
     cli._(longOpt:'dump',
           "Just dump the versions -- don't edit the file")
+
+    cli._(longOpt:'dump-release',
+          "Just dump the versions -- don't edit the file")
     
     cli._(longOpt:'deb-control', args:1,  
           "Path to debian control file")
@@ -93,5 +96,8 @@ if (options.'rpm-spec') {
     rpmSpec.write(processed)
 }
 if (options.'dump') {
-    println "${theOne.'package-version'}"
+    println "${theOne.'package-version'}-1.${theOne.release}.p0.${theOne.'build-number'}"
+}
+if (options.'dump-release') {
+    println "${theOne.release}"
 }

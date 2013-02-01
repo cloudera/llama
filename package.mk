@@ -173,8 +173,12 @@ HADOOP_COMMON_PKG_VERSION=$(shell groovy $(BASE_DIR)/ec2_build/bin/pinMr1Depende
                                          --release=$(CDH_REL_STRING)              \
                                          --maven-suffix=$(CDH_VERSION_STRING)     \
                                          --project=hadoop --dump)
-mr1-sdeb : EXTRA_VAR_DEFS=HADOOP_COMMON_VERSION=$(HADOOP_COMMON_PKG_VERSION)
-mr1-srpm : EXTRA_VAR_DEFS=%define hadoop_common_version $(HADOOP_COMMON_PKG_VERSION)
+HADOOP_COMMON_PKG_RELEASE=$(shell groovy $(BASE_DIR)/ec2_build/bin/pinMr1DependencyVersion \
+                                         --release=$(CDH_REL_STRING)              \
+                                         --maven-suffix=$(CDH_VERSION_STRING)     \
+                                         --project=hadoop --dump-release)
+mr1-sdeb : EXTRA_VAR_DEFS=HADOOP_COMMON_VERSION=$(strip $(HADOOP_COMMON_PKG_VERSION))~$$(shell lsb_release -sc)-$(strip $(HADOOP_COMMON_PKG_RELEASE))
+mr1-srpm : EXTRA_VAR_DEFS=%define hadoop_common_version $(strip $(HADOOP_COMMON_PKG_VERSION))%{?dist}
 
 # Package make function
 # $1 is the target prefix, $2 is the variable prefix
