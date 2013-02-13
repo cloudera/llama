@@ -1125,11 +1125,6 @@ TODO: need license header
         <artifactId>jul-to-slf4j</artifactId>
         <version>1.6.1</version>
       </dependency>
-      <dependency>
-        <groupId>com.sun.jersey.contribs</groupId>
-        <artifactId>wadl-resourcedoc-doclet</artifactId>
-        <version>1.4</version>
-      </dependency>
 
       <!-- Pig -->
       <dependency>
