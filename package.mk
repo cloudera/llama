@@ -195,7 +195,12 @@ $(2)_PKG_NAME       ?= $$($(2)_NAME)
 $(2)_RELEASE        = $$($(2)_RELEASE_VERSION).$(CDH_REL_STRING).p$(CDH_CUSTOMER_PATCH)$(CDH_BUILD_STAMP)
 
 # Calculate the full version based on the git patches
-$(2)_FULL_VERSION   = $$($(2)_BASE_VERSION)-$(CDH_VERSION_STRING)
+ifneq (, $(CDH_VERSION_STRING))
+  ifneq ("", $(strip $(CDH_VERSION_STRING)))
+    $(2)_FULL_VERSION   = $$($(2)_BASE_VERSION)-$(CDH_VERSION_STRING)
+  endif
+endif
+$(2)_FULL_VERSION  ?= $$($(2)_BASE_VERSION)
 $(2)_PKG_VERSION   ?= $(shell cd $($(2)_GIT_REPO) && $(BASE_DIR)/tools/branch-tool version --prefix=$(CDH) $(NO_PATCH_COUNT))
 $(2)_BUILD_REF      := $(notdir $(shell cd $($(2)_GIT_REPO) && git symbolic-ref --quiet HEAD))
 
