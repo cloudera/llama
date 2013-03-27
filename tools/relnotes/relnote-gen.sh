@@ -29,8 +29,10 @@ set -ex
 function relnote_gen {
   local gen_dir=$1
   local commit_log=$gen_dir/$6-changes.log
+  local commit_since_last_log=$gen_dir/$6-since-last-release-changes.log
   local package_commit_log=$gen_dir/$6-package-changes.log
   local changes_file=$gen_dir/$6.CHANGES.txt
+  local changes_since_last_file=$gen_dir/$6.since.last.release.CHANGES.txt
   local package_changes_file=$gen_dir/$6.package.CHANGES.txt
   local relnote_file=$gen_dir/$6.releasenotes.html
   echo "pushd $2 >& /dev/null"
@@ -40,6 +42,8 @@ function relnote_gen {
   pushd $2 >& /dev/null
   git log --pretty=oneline --no-color $3 > $commit_log
   git log --pretty=medium --no-color $3 > $changes_file
+  git log --pretty=oneline --no-color ${10} > $commit_since_last_log
+  git log --pretty=medium --no-color ${10} > $changes_since_last_file
   popd >& /dev/null
   pushd $8 >& /dev/null
   git ls-files | grep -E "(common|deb|rpm)/$9" | xargs git log --pretty=oneline --no-color ${10} > $package_commit_log
