@@ -171,10 +171,12 @@ $(BUILD_DIR)/%/.relnotes:
 # FIXME: the following needs to go away once MR1 grafting happens
 HADOOP_COMMON_PKG_VERSION=$(shell groovy $(BASE_DIR)/ec2_build/bin/pinMr1DependencyVersion \
                                          --release=$(CDH_REL_STRING)              \
+                                         --patch=$(CDH_CUSTOMER_PATCH)              \
                                          --maven-suffix=$(CDH_VERSION_STRING)     \
                                          --project=hadoop --dump)
 HADOOP_COMMON_PKG_RELEASE=$(shell groovy $(BASE_DIR)/ec2_build/bin/pinMr1DependencyVersion \
                                          --release=$(CDH_REL_STRING)              \
+                                         --patch=$(CDH_CUSTOMER_PATCH)              \
                                          --maven-suffix=$(CDH_VERSION_STRING)     \
                                          --project=hadoop --dump-release)
 mr1-sdeb : EXTRA_VAR_DEFS=HADOOP_COMMON_VERSION=$(strip $(HADOOP_COMMON_PKG_VERSION))~$$(shell lsb_release -sc)-$(strip $(HADOOP_COMMON_PKG_RELEASE))

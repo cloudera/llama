@@ -26,6 +26,9 @@ def parseArgs(cliArgs) {
     cli._(longOpt:'project', args:1, 
           "The name of the project the artifact(s) belong to")
 
+    cli._(longOpt:'patch', args:1, 
+          "The patch count for the build the artifact(s) belong to")
+
     cli._(longOpt:'release', args:1,
           "Release name the artifact(s) belong to - e.g., 'cdh3b4', 'enterprise3.5'")
 
@@ -66,6 +69,13 @@ def mongoDb = mongoConnection.getDB(options.dbname)
 def mongoStaging = mongoDb.staging
 
 def allHadoop = mongoStaging.find([release: options.release, project:"$options.project", 'maven-version': ~/${options.'maven-suffix'}/]).toArray()
+
+def patchHadoop
+if (options.patch) {
+    patchHadoop = allHadoop.findAll { it.'patch-number' == options.patch || !it.'patch-number' }
+} else {
+    patchHadoop = allHadoop
+}
 
 def timeSorted = allHadoop.findAll { it.is_binary == false }.sort { x, y -> Date.parse(y.'build-timestamp') <=> Date.parse(x.'build-timestamp') }
 def theOne = timeSorted.find { m -> 
