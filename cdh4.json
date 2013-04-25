@@ -33,6 +33,7 @@
      "flume-ng-solr": {"track-branch": "cdh4-1.2.0", "dir": "repos/cdh4/flume-ng-solr", "remotes": ["origin"], "remote-project-name": "flume-ng-solr-sink"},
 
      "hcatalog": {"track-branch": "cdh4-0.5.0", "dir": "repos/cdh4/hcatalog", "remotes": ["origin"] },
+     "access": {"track-branch": "cdh4-1.0.0", "dir": "repos/cdh4/access", "remotes": ["origin"]},
 
      "cdh-package": { "track-branch": "cdh4-0.4", "dir":
           "repos/cdh4/cdh-package", "remotes": ["origin"]}
