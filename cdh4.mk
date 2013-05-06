@@ -373,5 +373,5 @@ ACCESS_GIT_REPO=$(REPO_DIR)/cdh4/access
 ACCESS_BASE_REF=cdh4-base-$(ACCESS_BASE_VERSION)
 ACCESS_BUILD_REF=cdh4-$(ACCESS_BASE_VERSION)
 ACCESS_PACKAGE_GIT_REPO=$(REPO_DIR)/cdh4/cdh-package/bigtop-packages/src
-ACCESS_SITE=$(CLOUDERA_ARCHIVE)
+ACCESS_SITE=http://www.sf.cloudera.com/~sean
 $(eval $(call PACKAGE,access,ACCESS))
