@@ -13,8 +13,6 @@
                       "remotes": ["origin", "common"],
                       "remote-project-name": "hadoop" },
 
-     "mr1" : {"track-branch": "cdh4-0.20.2", "dir": "repos/cdh4/mr1", "remotes": ["origin"], "remote-project-name": "hadoop"},
-
      "zookeeper": {"track-branch": "cdh4-3.4.5", "dir": "repos/cdh4/zookeeper", "remotes": ["origin", "apache"]},
      "hbase": {"track-branch": "cdh4-0.94.6", "dir": "repos/cdh4/hbase", "remotes": ["origin","apache"]},
      "sqoop": {"track-branch": "cdh4-1.4.3", "dir": "repos/cdh4/sqoop", "remotes": ["origin"]},
@@ -22,15 +20,12 @@
      "pig": {"track-branch": "cdh4-0.11.0", "dir": "repos/cdh4/pig", "remotes": ["origin", "apache"]},
      "datafu": {"track-branch": "cdh4-0.0.4", "dir": "repos/cdh4/datafu", "remotes": ["origin"]},
      "hive": {"track-branch": "cdh4-0.10.0", "dir": "repos/cdh4/hive", "remotes": ["origin", "apache"]},
-     "flume": {"track-branch": "cdh4-0.9.4+25", "dir": "repos/cdh4/flume", "remotes": ["origin"]},
      "flume-ng": {"track-branch": "cdh4-1.3.0", "dir": "repos/cdh4/flume-ng", "remotes": ["origin"]},
 
      "mahout": {"track-branch": "cdh4-0.7", "dir": "repos/cdh4/mahout", "remotes": ["origin", "apache"]},
      "oozie": {"track-branch": "cdh4-3.3.2", "dir": "repos/cdh4/oozie", "remotes": ["origin"]},
      "whirr": {"track-branch": "cdh4-0.8.2", "dir": "repos/cdh4/whirr", "remotes": ["origin"]},
      "hue": {"track-branch": "cdh4-2.3.0", "dir": "repos/cdh4/hue", "remotes": ["origin"]},
-     "solr": {"track-branch": "cdh4-4.0.0", "dir": "repos/cdh4/solr", "remotes": ["origin"], "remote-project-name": "lucene-solr"},
-     "flume-ng-solr": {"track-branch": "cdh4-1.2.0", "dir": "repos/cdh4/flume-ng-solr", "remotes": ["origin"], "remote-project-name": "flume-ng-solr-sink"},
 
      "hcatalog": {"track-branch": "cdh4-0.5.0", "dir": "repos/cdh4/hcatalog", "remotes": ["origin"] },
      "access": {"track-branch": "cdh4-1.0.0", "dir": "repos/cdh4/access", "remotes": ["origin"]},
