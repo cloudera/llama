@@ -21,8 +21,8 @@ TARGETS_CLEAN:=
 
 # Pull in the config variables
 -include $(CONFIG)
-ifndef JAVA64_HOME
-$(error Please set JAVA64_HOME in $(CONFIG) or environment)
+ifndef JAVA_HOME
+$(error Please set JAVA_HOME in $(CONFIG) or environment)
 endif
 ifndef JAVA5_HOME
 $(error Please set JAVA5_HOME in $(CONFIG) or environment)
