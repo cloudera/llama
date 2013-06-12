@@ -24,9 +24,9 @@ TARGETS_CLEAN:=
 ifndef JAVA_HOME
 $(error Please set JAVA_HOME in $(CONFIG) or environment)
 endif
-ifndef JAVA7_HOME
-$(error Please set JAVA_HOME in $(CONFIG) or environment)
-endif
+#ifndef JAVA7_HOME
+#$(error Please set JAVA_HOME in $(CONFIG) or environment)
+#endif
 ifndef JAVA5_HOME
 $(error Please set JAVA5_HOME in $(CONFIG) or environment)
 endif
@@ -34,8 +34,8 @@ ifndef FORREST_HOME
 $(error Please set FORREST_HOME in $(CONFIG) or environment)
 endif
 
-JAVA_HOME := $(JAVA7_HOME)
-JAVA64_HOME := $(JAVA7_HOME)
+#JAVA_HOME := $(JAVA7_HOME)
+#JAVA64_HOME := $(JAVA7_HOME)
 
 # Default Apache mirror
 APACHE_MIRROR ?= http://mirrors.ibiblio.org/apache
