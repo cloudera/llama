@@ -45,7 +45,6 @@ $(BUILD_DIR)/%/.build:
 	cd $($(PKG)_SOURCE_DIR) ;\
 	[ -z "$($(PKG)_TARBALL_DST)" ] || /usr/bin/env \
 	  -u DISPLAY \
-	  JAVA32_HOME=$(JAVA32_HOME) \
 	  JAVA64_HOME=$(JAVA64_HOME) \
 	  JAVA5_HOME=$(JAVA5_HOME) \
 	  FORREST_HOME=$(FORREST_HOME) \
@@ -146,7 +145,7 @@ $(BUILD_DIR)/%/.deb:
 		dpkg-source -x $(SRCDEB) && \
 		cd $($(PKG)_PKG_NAME)-$(PKG_PKG_VERSION) && \
 			debuild \
-				--preserve-envvar PATH --preserve-envvar JAVA32_HOME --preserve-envvar JAVA64_HOME \
+				--preserve-envvar PATH --preserve-envvar JAVA64_HOME \
 				--preserve-envvar JAVA5_HOME --preserve-envvar FORREST_HOME --preserve-envvar MAVEN3_HOME \
 				--preserve-envvar THRIFT_HOME --preserve-envvar JAVA_HOME --preserve-envvar GIT_REPO \
 				--preserve-envvar NODE_HOME -uc -us -b
