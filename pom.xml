@@ -461,15 +461,50 @@ TODO: need license header
       <!-- Hbase -->
       <dependency>
         <groupId>org.apache.hbase</groupId>
-        <artifactId>hbase</artifactId>
+        <artifactId>hbase-common</artifactId>
         <version>${cdh.hbase.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.hbase</groupId>
-        <artifactId>hbase</artifactId>
+        <artifactId>hbase-protocol</artifactId>
         <version>${cdh.hbase.version}</version>
-        <classifier>tests</classifier>
       </dependency>
+      <dependency>
+        <groupId>org.apache.hbase</groupId>
+        <artifactId>hbase-hadoop-compat</artifactId>
+        <version>${cdh.hbase.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hbase</groupId>
+        <artifactId>hbase-hadoop2-compat</artifactId>
+        <version>${cdh.hbase.version}</version>
+      </dependency>
+      <dependency>
+        <artifactId>hbase-server</artifactId>
+        <groupId>org.apache.hbase</groupId>
+        <version>${cdh.hbase.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hbase</groupId>
+        <artifactId>hbase-prefix-tree</artifactId>
+        <version>${cdh.hbase.version}</version>
+      </dependency>
+      <dependency>
+        <artifactId>hbase-examples</artifactId>
+        <groupId>org.apache.hbase</groupId>
+        <version>${cdh.hbase.version}</version>
+      </dependency>
+      <dependency>
+        <artifactId>hbase-it</artifactId>
+        <groupId>org.apache.hbase</groupId>
+        <version>${cdh.hbase.version}</version>
+      </dependency>
+      <dependency>
+        <artifactId>hbase-client</artifactId>
+        <groupId>org.apache.hbase</groupId>
+        <version>${cdh.hbase.version}</version>
+      </dependency>
+
 
       <!-- Hcatalog -->
       <dependency>
