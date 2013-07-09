@@ -20,7 +20,7 @@
      "pig": {"track-branch": "cdh5-0.11.0", "dir": "repos/cdh5/pig", "remotes": ["origin", "apache"]},
      "datafu": {"track-branch": "cdh5-0.0.4", "dir": "repos/cdh5/datafu", "remotes": ["origin"]},
      "hive": {"track-branch": "cdh5-0.10.0", "dir": "repos/cdh5/hive", "remotes": ["origin", "apache"]},
-     "flume-ng": {"track-branch": "cdh5-1.3.0", "dir": "repos/cdh5/flume-ng", "remotes": ["origin"]},
+     "flume-ng": {"track-branch": "cdh5-1.4.0", "dir": "repos/cdh5/flume-ng", "remotes": ["origin"]},
 
      "mahout": {"track-branch": "cdh5-0.7", "dir": "repos/cdh5/mahout", "remotes": ["origin", "apache"]},
      "oozie": {"track-branch": "cdh5-3.3.2", "dir": "repos/cdh5/oozie", "remotes": ["origin"]},
