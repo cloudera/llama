@@ -23,6 +23,18 @@ $(BUILD_DIR)/%/.prep:
 	    $($(PKG)_RELEASE) \
 	    $(CDH_VERSION_STRING) \
 	    $($(PKG)_SRC_PREFIX); \
+	else \
+	  mkdir -p $($(PKG)_SOURCE_DIR)/cloudera; \
+          $(BASE_DIR)/tools/generate-build-properties \
+	    $($(PKG)_GIT_REPO) \
+	    $($(PKG)_BASE_REF) \
+	    $($(PKG)_BUILD_REF) \
+	    $($(PKG)_SOURCE_DIR)/cloudera/build.properties \
+	    $($(PKG)_FULL_VERSION) \
+	    $($(PKG)_PKG_VERSION) \
+	    $($(PKG)_RELEASE) \
+	    $($(PKG)_NAME) \
+	    $(CDH_VERSION_STRING); \
 	fi ;
 	# Special logic below for cases with source we want to copy, but without pristine tarballs.
 	if [ -z "$($(PKG)_TARBALL_SRC)" ] && [ ! -z "$($(PKG)_TARBALL_DST)" ]; then \
