@@ -52,6 +52,7 @@
     <module>llama-am-yarn</module>
     <module>llama-thrift-am</module>
     <module>llama-thrift-mini-am</module>
+    <module>llama-dist</module>
   </modules>
 
   <properties>
