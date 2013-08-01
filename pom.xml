@@ -47,6 +47,7 @@
 
   <modules>
     <module>llama-thrift-api</module>
+    <module>llama-am-api</module>
   </modules>
 
   <properties>
