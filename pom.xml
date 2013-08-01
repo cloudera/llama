@@ -50,6 +50,7 @@
     <module>llama-am-api</module>
     <module>llama-am-mock</module>
     <module>llama-am-yarn</module>
+    <module>llama-thrift-am</module>
   </modules>
 
   <properties>
