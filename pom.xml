@@ -49,6 +49,7 @@
     <module>llama-thrift-api</module>
     <module>llama-am-api</module>
     <module>llama-am-mock</module>
+    <module>llama-am-yarn</module>
   </modules>
 
   <properties>
