@@ -48,7 +48,6 @@ TODO: need license header
     <cdh.mr1.version>2.1.0-mr1-cdh5.0.0-SNAPSHOT</cdh.mr1.version>
     <cdh.zookeeper.version>3.4.5-cdh5.0.0-SNAPSHOT</cdh.zookeeper.version>
     <cdh.hbase.version>0.95.1-cdh5.0.0-SNAPSHOT</cdh.hbase.version>
-    <cdh.hcatalog.version>0.5.0-cdh5.0.0-SNAPSHOT</cdh.hcatalog.version>
     <cdh.pig.version>0.11.0-cdh5.0.0-SNAPSHOT</cdh.pig.version>
     <cdh.sqoop.version>1.4.3-cdh5.0.0-SNAPSHOT</cdh.sqoop.version>
     <cdh.sqoop2.version>1.99.2-cdh5.0.0-SNAPSHOT</cdh.sqoop2.version>
@@ -190,12 +189,6 @@ TODO: need license header
         <groupId>com.cloudera.cdh</groupId>
         <artifactId>hbase-root</artifactId>
         <version>${cdh.parent.version}</version>
-        <type>pom</type>
-      </dependency>
-      <dependency>
-        <groupId>com.cloudera.cdh</groupId>
-        <artifactId>hcatalog-root</artifactId>
-        <version>${cdh.hcatalog.version}</version>
         <type>pom</type>
       </dependency>
       <dependency>
@@ -515,38 +508,6 @@ TODO: need license header
       </dependency>
 
 
-      <!-- Hcatalog -->
-      <dependency>
-        <groupId>org.apache.hcatalog</groupId>
-        <artifactId>hcatalog-core</artifactId>
-        <version>${cdh.hcatalog.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.hcatalog</groupId>
-        <artifactId>hcatalog-pig-adapter</artifactId>
-        <version>${cdh.hcatalog.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.hcatalog</groupId>
-        <artifactId>hbase-storage-handler</artifactId>
-        <version>${cdh.hcatalog.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.hcatalog</groupId>
-        <artifactId>hcatalog-server-extensions</artifactId>
-        <version>${cdh.hcatalog.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.hcatalog</groupId>
-        <artifactId>webhcat</artifactId>
-        <version>${cdh.hcatalog.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.hcatalog</groupId>
-        <artifactId>webhcat-java-client</artifactId>
-        <version>${cdh.hcatalog.version}</version>
-      </dependency>
-      
       <!-- Pig -->
       <dependency>
         <groupId>org.apache.pig</groupId>
@@ -648,28 +609,33 @@ TODO: need license header
         <version>${cdh.hive.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.hive</groupId>
+        <groupId>org.apache.hcatalog</groupId>
         <artifactId>hcatalog-core</artifactId>
         <version>${cdh.hive.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.hive</groupId>
+        <groupId>org.apache.hcatalog</groupId>
         <artifactId>hcatalog-pig-adapter</artifactId>
         <version>${cdh.hive.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.hive</groupId>
+        <groupId>org.apache.hcatalog</groupId>
         <artifactId>hcatalog-server-extensions</artifactId>
         <version>${cdh.hive.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.hive</groupId>
-        <artifactId>hcatalog-webhcat</artifactId>
+        <groupId>org.apache.hcatalog</groupId>
+        <artifactId>webhcat</artifactId>
         <version>${cdh.hive.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.hive</groupId>
-        <artifactId>hcatalog-webhcat-java-client</artifactId>
+        <groupId>org.apache.hcatalog</groupId>
+        <artifactId>webhcat-java-client</artifactId>
+        <version>${cdh.hive.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hcatalog</groupId>
+        <artifactId>hbase-storage-handler</artifactId>
         <version>${cdh.hive.version}</version>
       </dependency>
  
