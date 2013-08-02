@@ -31,7 +31,7 @@
 
      "solr": {"track-branch": "cdh5-4.3.0", "dir": "repos/cdh5/solr", "remotes": ["origin"], "remote-project-name": "lucene-solr"},
      "search": {"track-branch": "cdh5-1.0.0", "dir": "repos/cdh5/search", "remotes": ["origin"]},
-     "hbase-indexer": {"track-branch": "cdh5-1.2", "dir": "repos/cdh5/hbase-indexer", "remotes": ["origin"]},
+     "hbase-solr": {"track-branch": "cdh5-1.2", "dir": "repos/cdh5/hbase-indexer", "remotes": ["origin"]},
 
      "cdh-package": { "track-branch": "cdh5-0.6.0", "dir":
           "repos/cdh5/cdh-package", "remotes": ["origin"]}
