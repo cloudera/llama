@@ -29,8 +29,8 @@ import java.util.List;
 import java.util.UUID;
 
 public class APIContractEnforcerLlamaAM extends LlamaAM {
-  private LlamaAM llamaAM;
-  private Logger logger;
+  private final Logger logger;
+  private final LlamaAM llamaAM;
   private boolean active;
 
   public APIContractEnforcerLlamaAM(LlamaAM llamaAM) {

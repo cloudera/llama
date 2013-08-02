@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.UUID;
 
 public class PlacedReservationImpl extends PlacedReservation {
-  private UUID reservationId;
+  private final UUID reservationId;
   private Status status;
 
   @SuppressWarnings("unchecked")

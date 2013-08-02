@@ -22,34 +22,33 @@ import com.cloudera.llama.am.PlacedResource;
 import java.util.UUID;
 
 public class RMResourceChange {
-  private UUID clientResourceId;
-  private String rmResourceId;
-  private PlacedResource.Status status;
-  private int vCpuCores;
-  private int memoryMb;
-  private String location;
+  private final UUID clientResourceId;
+  private final String rmResourceId;
+  private final PlacedResource.Status status;
+  private final int vCpuCores;
+  private final int memoryMb;
+  private final String location;
 
-  RMResourceChange() {
+  private RMResourceChange(UUID clientResourceId,
+      String rmResourceId, int vCpuCores, int memoryMb, String location, 
+      PlacedResource.Status status) {
+    this.clientResourceId = clientResourceId;
+    this.rmResourceId = rmResourceId;
+    this.status = status;
+    this.location = location;
+    this.vCpuCores = vCpuCores;
+    this.memoryMb = memoryMb;
   }
 
   public static RMResourceChange createResourceAllocation(UUID clientResourceId,
       String rmResourceId, int vCpuCores, int memoryMb, String location) {
-    RMResourceChange rc = new RMResourceChange();
-    rc.clientResourceId = clientResourceId;
-    rc.rmResourceId = rmResourceId;
-    rc.status = PlacedResource.Status.ALLOCATED;
-    rc.location = location;
-    rc.vCpuCores = vCpuCores;
-    rc.memoryMb = memoryMb;
-    return rc;
+    return new RMResourceChange(clientResourceId, rmResourceId, vCpuCores,
+        memoryMb, location, PlacedResource.Status.ALLOCATED);
   }
 
   public static RMResourceChange createResourceChange(UUID clientResourceId,
       PlacedResource.Status status) {
-    RMResourceChange rc = new RMResourceChange();
-    rc.clientResourceId = clientResourceId;
-    rc.status = status;
-    return rc;
+    return new RMResourceChange(clientResourceId, null, -1, -1, null, status);
   }
 
   public UUID getClientResourceId() {

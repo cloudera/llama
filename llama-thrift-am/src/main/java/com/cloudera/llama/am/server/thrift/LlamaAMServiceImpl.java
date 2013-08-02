@@ -43,8 +43,8 @@ public class LlamaAMServiceImpl implements LlamaAMService.Iface {
   private static final Logger LOG = LoggerFactory.getLogger(
       LlamaAMServiceImpl.class);
 
-  private ClientRegistry clientRegistry;
-  private LlamaAM llamaAM;
+  private final LlamaAM llamaAM;
+  private final ClientRegistry clientRegistry;
 
   @SuppressWarnings("unchecked")
   public LlamaAMServiceImpl(LlamaAM llamaAM, ClientRegistry clientRegistry, 

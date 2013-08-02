@@ -25,10 +25,10 @@ import java.util.List;
 import java.util.UUID;
 
 public class Reservation <T extends Resource> {
-  private UUID clientId;
-  private String queue;
-  private List<T> resources;
-  private boolean gang;
+  private final UUID clientId;
+  private final String queue;
+  private final List<T> resources;
+  private final boolean gang;
 
   public Reservation(UUID clientId, String queue, 
       List<? extends Resource> resources, boolean gang) {

@@ -25,15 +25,15 @@ import java.util.List;
 import java.util.UUID;
 
 public class LlamaAMEventImpl implements LlamaAMEvent {
-  private UUID clientId;
-  private List<UUID> allocatedReservationIds = new ArrayList<UUID>();
-  private List<PlacedResource> allocatedResources = new 
+  private final UUID clientId;
+  private final List<UUID> allocatedReservationIds = new ArrayList<UUID>();
+  private final List<PlacedResource> allocatedResources = new 
       ArrayList<PlacedResource>();
-  private List<UUID> rejectedClientResourceIds = new ArrayList<UUID>();
-  private List<UUID> lostClientResourceIds = new ArrayList<UUID>();
-  private List<UUID> rejectedReservationIds = new ArrayList<UUID>();
-  private List<UUID> preemptedReservationIds = new ArrayList<UUID>();
-  private List<UUID> preemptedResourceIds = new ArrayList<UUID>();
+  private final List<UUID> rejectedClientResourceIds = new ArrayList<UUID>();
+  private final List<UUID> lostClientResourceIds = new ArrayList<UUID>();
+  private final List<UUID> rejectedReservationIds = new ArrayList<UUID>();
+  private final List<UUID> preemptedReservationIds = new ArrayList<UUID>();
+  private final List<UUID> preemptedResourceIds = new ArrayList<UUID>();
 
   public LlamaAMEventImpl(UUID clientId) {
     this.clientId = clientId;

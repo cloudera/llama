@@ -51,7 +51,7 @@ public class MultiQueueLlamaAM extends LlamaAM implements Configurable,
 
   private Configuration conf;
   private Cache<String, LlamaAM> ams;
-  private ConcurrentHashMap<UUID, String> reservationToQueue;
+  private final ConcurrentHashMap<UUID, String> reservationToQueue;
   private final Set<LlamaAMListener> listeners;
 
   public MultiQueueLlamaAM() {

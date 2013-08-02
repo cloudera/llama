@@ -28,11 +28,11 @@ public class Resource {
     MUST, PREFERRED, DONT_CARE
   }
   
-  private UUID clientResourceId;
-  private String location;
-  private LocationEnforcement enforcement;
-  private int vCpuCores;
-  private int memoryMb;
+  private final UUID clientResourceId;
+  private final String location;
+  private final LocationEnforcement enforcement;
+  private final int vCpuCores;
+  private final int memoryMb;
   
   public Resource(UUID clientResourceId, String location, 
                   LocationEnforcement enforcement,

@@ -41,15 +41,18 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
     Configurable {
   static final String QUEUE_KEY = PREFIX_KEY + "single.queue";
 
-  private Logger logger;
+  private final Logger logger;
   private Configuration conf;
   private LlamaAMListener listener;
-  private ReentrantReadWriteLock.WriteLock lock;
-  private Map<UUID, PlacedReservationImpl> reservationsMap;
-  private Map<UUID, PlacedResourceImpl> resourcesMap;
+  private final ReentrantReadWriteLock.WriteLock lock;
+  private final Map<UUID, PlacedReservationImpl> reservationsMap;
+  private final Map<UUID, PlacedResourceImpl> resourcesMap;
 
   public AbstractSingleQueueLlamaAM() {
     logger = LoggerFactory.getLogger(getClass());
+    lock = new ReentrantReadWriteLock().writeLock();
+    reservationsMap = new HashMap<UUID, PlacedReservationImpl>();
+    resourcesMap = new HashMap<UUID, PlacedResourceImpl>();
   }
 
   protected Logger getLog() {
@@ -77,9 +80,6 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
       throw new IllegalStateException("Missing '" + QUEUE_KEY +
           "' configuration property");
     }
-    lock = new ReentrantReadWriteLock().writeLock();
-    reservationsMap = new HashMap<UUID, PlacedReservationImpl>();
-    resourcesMap = new HashMap<UUID, PlacedResourceImpl>();
     rmStart(queue);
   }
 

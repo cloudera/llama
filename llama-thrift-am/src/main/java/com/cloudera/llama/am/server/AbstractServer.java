@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 
 public abstract class AbstractServer<T> implements Configurable {
   private final Logger log;  
-  private String serviceName;
+  private final String serviceName;
   private Configuration llamaConf;
   private int runLevel = 0;
   private int exitCode = 0;

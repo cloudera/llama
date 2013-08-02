@@ -27,11 +27,11 @@ import org.apache.thrift.transport.TTransport;
 import java.util.UUID;
 
 public class ClientCaller {  
-  private Configuration conf;
-  private String clientId;
-  private UUID handle;
-  private String host;
-  private int port;
+  private final Configuration conf;
+  private final String clientId;
+  private final UUID handle;
+  private final String host;
+  private final int port;
   private TTransport tTransport;
   private LlamaNotificationService.Iface client;
   private boolean lastSuccessful;

@@ -72,8 +72,8 @@ public class MiniLlama {
     return conf;
   }
 
-  private Configuration conf;
-  private AbstractServer server;
+  private final Configuration conf;
+  private final AbstractServer server;
 
   public MiniLlama(Configuration conf) {
     ParamChecker.notNull(conf, "conf");

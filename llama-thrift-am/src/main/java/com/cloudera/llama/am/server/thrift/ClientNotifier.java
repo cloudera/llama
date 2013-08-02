@@ -41,13 +41,13 @@ public class ClientNotifier implements LlamaAMListener {
     void onMaxFailures(UUID handle);
   }
 
-  private Configuration conf;
+  private final Configuration conf;
+  private final ClientRegistry clientRegistry;
   private int queueThreshold;
   private int maxRetries;
   private int retryInverval;
   private DelayQueue<Notifier> eventsQueue;
   private ThreadPoolExecutor executor;
-  ClientRegistry clientRegistry;
   
   public ClientNotifier(Configuration conf, ClientRegistry clientRegistry) {
     this.conf = conf;

@@ -95,7 +95,7 @@ public class MockLlamaAM extends AbstractSingleQueueLlamaAM {
     return location;
   }
 
-  private AtomicLong counter = new AtomicLong();
+  private final AtomicLong counter = new AtomicLong();
   private ScheduledExecutorService scheduler;
   private int minWait;
   private int maxWait;

@@ -27,25 +27,23 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class ClientRegistry implements ClientNotifier.MaxFailuresListener {
   
   private class Entry {
-    String clientId;
-    UUID handle;
-    String host;
-    int port;
-    ClientCaller caller;
+    private final String clientId;
+    private final String host;
+    private final int port;
+    private final ClientCaller caller;
 
     public Entry(String clientId, UUID handle, String host, int port) {
       this.clientId = clientId;
-      this.handle = handle;
       this.host = host;
       this.port = port;
       caller = new ClientCaller(conf, clientId, handle, host, port);
     }
   }
 
-  private Configuration conf;
-  private ReentrantReadWriteLock lock;
-  private ConcurrentHashMap<UUID, Entry> clients;
-  private ConcurrentHashMap<String, UUID> reverseMap;
+  private final Configuration conf;
+  private final ReentrantReadWriteLock lock;
+  private final ConcurrentHashMap<UUID, Entry> clients;
+  private final ConcurrentHashMap<String, UUID> reverseMap;
 
   public ClientRegistry(Configuration conf) {
     this.conf = conf;
