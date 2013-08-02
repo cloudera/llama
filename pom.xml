@@ -1045,11 +1045,6 @@ TODO: need license header
         <version>6.1.14</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.lucene</groupId>
-        <artifactId>lucene-core</artifactId>
-        <version>3.6.1</version>
-      </dependency>
-      <dependency>
         <groupId>com.google.code.p.arat</groupId>
         <artifactId>rat-lib</artifactId>
         <version>0.5.1</version>
