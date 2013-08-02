@@ -113,7 +113,7 @@ public class MockLlamaAM extends AbstractSingleQueueLlamaAM {
 
 
   @Override
-  protected void rmStart(String queue) throws LlamaAMException {
+  protected void rmRegister(String queue) throws LlamaAMException {
     Collection<String> validQueues = getConf().
         getTrimmedStringCollection(QUEUES_KEY);
     if (!validQueues.contains(queue)) {
@@ -123,7 +123,7 @@ public class MockLlamaAM extends AbstractSingleQueueLlamaAM {
   }
 
   @Override
-  protected void rmStop() {
+  protected void rmUnregister() {
     scheduler.shutdownNow();
   }
 

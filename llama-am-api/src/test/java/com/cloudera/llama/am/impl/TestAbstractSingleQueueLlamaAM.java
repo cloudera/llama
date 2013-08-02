@@ -49,12 +49,12 @@ public class TestAbstractSingleQueueLlamaAM {
     }
 
     @Override
-    protected void rmStart(String queue) throws LlamaAMException {
+    protected void rmRegister(String queue) throws LlamaAMException {
       start = true;
     }
 
     @Override
-    protected void rmStop() {
+    protected void rmUnregister() {
       stop = true;
     }
 

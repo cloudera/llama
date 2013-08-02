@@ -27,12 +27,12 @@ import java.util.List;
 
 public class YarnLlamaAM extends AbstractSingleQueueLlamaAM {
   @Override
-  protected void rmStart(String queue) throws LlamaAMException {
+  protected void rmRegister(String queue) throws LlamaAMException {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  protected void rmStop() {
+  protected void rmUnregister() {
     throw new UnsupportedOperationException();
   }
 

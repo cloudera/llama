@@ -31,7 +31,7 @@ import java.util.UUID;
 public class APIContractEnforcerLlamaAM extends LlamaAM {
   private final Logger logger;
   private final LlamaAM llamaAM;
-  private boolean active;
+  private volatile boolean active;
 
   public APIContractEnforcerLlamaAM(LlamaAM llamaAM) {
     this.llamaAM = ParamChecker.notNull(llamaAM, "llamaAM");

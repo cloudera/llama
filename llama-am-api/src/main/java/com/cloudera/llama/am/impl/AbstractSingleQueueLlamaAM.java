@@ -80,12 +80,12 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
       throw new IllegalStateException("Missing '" + QUEUE_KEY +
           "' configuration property");
     }
-    rmStart(queue);
+    rmRegister(queue);
   }
 
   @Override
   public synchronized void stop() {
-    rmStop();
+    rmUnregister();
   }
 
   @Override
@@ -245,8 +245,7 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
     if (reservation == null) {
       getLog().warn("Reservation '{}' during resource allocation handling " +
           "for" + " '{}'", reservationId, resource.getClientResourceId());
-    }
-    if (reservation != null) {
+    } else {
       LlamaAMEventImpl event = getEventForClientId(eventsMap,
           reservation.getClientId());
       List<PlacedResourceImpl> resources = reservation.getResourceImpls();
@@ -404,9 +403,9 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
     }
   }
 
-  protected abstract void rmStart(String queue) throws LlamaAMException;
+  protected abstract void rmRegister(String queue) throws LlamaAMException;
 
-  protected abstract void rmStop();
+  protected abstract void rmUnregister();
 
   protected abstract List<String> rmGetNodes() throws LlamaAMException;
   
