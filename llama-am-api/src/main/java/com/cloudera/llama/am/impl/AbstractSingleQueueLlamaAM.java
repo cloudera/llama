@@ -35,7 +35,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.Callable;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements 
@@ -130,52 +129,39 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
     return reservation;
   }
 
-  private <T> T sync(Callable<T> callable) {
-    try {
-      lock.lock();
-      return callable.call();
-    } catch (Throwable ex) {
-      Thrower.throwEx(ex);
-    } finally {
-      lock.unlock();
-    }
-    return null;
-  }
-
   @Override
   public UUID reserve(final Reservation reservation) throws LlamaAMException {
     final PlacedReservationImpl impl = new PlacedReservationImpl(reservation);
     rmReserve(impl);
-    sync(new Callable<Void>() {
-      @Override
-      public Void call() throws Exception {
-        _addReservation(impl);
-        return null;
-      }
-    });
+    try {
+      lock.lock();
+      _addReservation(impl);
+    } finally {
+      lock.unlock();
+    }
     return impl.getReservationId();
   }
 
   @Override
   public PlacedReservation getReservation(final UUID reservationId)
       throws LlamaAMException {
-    return sync(new Callable<PlacedReservationImpl>() {
-      @Override
-      public PlacedReservationImpl call() throws Exception {
-        return _getReservation(reservationId);
-      }
-    });
+    try {
+      lock.lock();
+      return _getReservation(reservationId);
+    } finally {
+      lock.unlock();
+    }
   }
 
   @Override
   public void releaseReservation(final UUID reservationId) throws LlamaAMException {
-    PlacedReservationImpl reservation = sync(new 
-                                                 Callable<PlacedReservationImpl>() {
-      @Override
-      public PlacedReservationImpl call() throws Exception {
-        return _deleteReservation(reservationId);
-      }
-    });
+    PlacedReservationImpl reservation;
+    try {
+      lock.lock();
+      reservation = _deleteReservation(reservationId);
+    } finally {
+      lock.unlock();
+    }
     if (reservation != null) {
       rmRelease(reservation.getResources());
     } else {
@@ -186,20 +172,17 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
   @Override
   public void releaseReservationsForClientId(UUID clientId)
       throws LlamaAMException {
-    List<PlacedReservation> reservations = sync(
-        new Callable<List<PlacedReservation>>() {
-      @Override
-      public List<PlacedReservation> call() throws Exception {
-        List<PlacedReservation> reservations = 
-            new ArrayList<PlacedReservation>();
-        for (PlacedReservation reservation : 
-            new ArrayList<PlacedReservation>(reservationsMap.values())) {
-          _deleteReservation(reservation.getReservationId());
-          reservations.add(reservation);
-        }
-        return reservations;
+    List<PlacedReservation> reservations = new ArrayList<PlacedReservation>();
+    try {
+      lock.lock();
+      for (PlacedReservation reservation :
+          new ArrayList<PlacedReservation>(reservationsMap.values())) {
+        _deleteReservation(reservation.getReservationId());
+        reservations.add(reservation);
       }
-    });
+    } finally {
+      lock.unlock();
+    }
     for (PlacedReservation reservation : reservations) {
       if (reservation != null) {
         rmRelease(reservation.getResources());
@@ -217,8 +200,9 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
     return event;
   }
 
-  private void _resourceRejected(PlacedResourceImpl resource,
-      Map<UUID, LlamaAMEventImpl> eventsMap) throws LlamaAMException {
+  private List<PlacedResource> _resourceRejected(PlacedResourceImpl resource,
+      Map<UUID, LlamaAMEventImpl> eventsMap) {
+    List<PlacedResource> toRelease = null;
     resource.setStatus(PlacedResource.Status.REJECTED);
     UUID reservationId = resource.getReservationId();
     PlacedReservationImpl reservation = reservationsMap.get(reservationId);
@@ -237,7 +221,7 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
         case PARTIAL:
           if (reservation.isGang()) {
             _deleteReservation(reservationId);
-            rmRelease(reservation.getResources());
+            toRelease = reservation.getResources();
             event.getRejectedReservationIds().add(reservationId);
           }
           event.getRejectedClientResourcesIds().add(resource
@@ -249,6 +233,7 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
           break;
       }
     }
+    return toRelease;
   }
 
   private void _resourceAllocated(PlacedResourceImpl resource,
@@ -287,8 +272,9 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
     }
   }
 
-  private void _resourcePreempted(PlacedResourceImpl resource,
-      Map<UUID, LlamaAMEventImpl> eventsMap) throws LlamaAMException {
+  private List<PlacedResource> _resourcePreempted(PlacedResourceImpl resource,
+      Map<UUID, LlamaAMEventImpl> eventsMap) {
+    List<PlacedResource> toRelease = null;
     resource.setStatus(PlacedResource.Status.PREEMPTED);
     UUID reservationId = resource.getReservationId();
     PlacedReservationImpl reservation = reservationsMap.get(reservationId);
@@ -307,7 +293,7 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
         case PARTIAL:
           if (reservation.isGang()) {
             _deleteReservation(reservationId);
-            rmRelease(reservation.getResources());
+            toRelease = reservation.getResources();
             event.getRejectedReservationIds().add(reservationId);
           } else {
             event.getPreemptedClientResourceIds().add(
@@ -320,10 +306,12 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
               reservationId, resource.getClientResourceId()));
       }
     }
+    return toRelease;
   }
 
-  private void _resourceLost(PlacedResourceImpl resource,
-      Map<UUID, LlamaAMEventImpl> eventsMap) throws LlamaAMException {
+  private List<PlacedResource> _resourceLost(PlacedResourceImpl resource,
+      Map<UUID, LlamaAMEventImpl> eventsMap) {
+    List<PlacedResource> toRelease = null;
     resource.setStatus(PlacedResource.Status.LOST);
     UUID reservationId = resource.getReservationId();
     PlacedReservationImpl reservation = reservationsMap.get(reservationId);
@@ -341,7 +329,7 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
         case PARTIAL:
           if (reservation.isGang()) {
             _deleteReservation(reservationId);
-            rmRelease(reservation.getResources());
+            toRelease = reservation.getResources();
             event.getRejectedReservationIds().add(reservationId);
           } else {
             event.getLostClientResourcesIds().add(resource
@@ -354,6 +342,7 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
               reservationId, resource.getClientResourceId()));
       }
     }
+    return toRelease;
   }
 
   // API to wire with RM client
@@ -365,37 +354,43 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
     final boolean hasListener = listener != null;
     getLog().trace("rmChanges({})", changes);
     Map<UUID, LlamaAMEventImpl> eventsMap = 
-        sync(new Callable<Map<UUID, LlamaAMEventImpl>>() {
-      @Override
-      public Map<UUID, LlamaAMEventImpl> call() throws Exception {
-        Map<UUID, LlamaAMEventImpl> eventsMap = 
-            new HashMap<UUID, LlamaAMEventImpl>();
-        for (RMResourceChange change : changes) {
-          PlacedResourceImpl resource = resourcesMap.get(change
-              .getClientResourceId());
-          if (resource == null) {
-            getLog().warn("Unknown resource '{}'", 
-                change.getClientResourceId());
-          } else {
-            switch (change.getStatus()) {
-              case REJECTED:
-                _resourceRejected(resource, eventsMap);
-                break;
-              case ALLOCATED:
-                _resourceAllocated(resource, change, eventsMap);
-                break;
-              case PREEMPTED:
-                _resourcePreempted(resource, eventsMap);
-                break;
-              case LOST:
-                _resourceLost(resource, eventsMap);
-                break;
-            }
+        new HashMap<UUID, LlamaAMEventImpl>();
+    List<PlacedResource> toRelease = null;
+    try {
+      lock.lock();
+      for (RMResourceChange change : changes) {
+        PlacedResourceImpl resource = resourcesMap.get(change
+            .getClientResourceId());
+        if (resource == null) {
+          getLog().warn("Unknown resource '{}'",
+              change.getClientResourceId());
+        } else {
+          switch (change.getStatus()) {
+            case REJECTED:
+              toRelease = _resourceRejected(resource, eventsMap);
+              break;
+            case ALLOCATED:
+              _resourceAllocated(resource, change, eventsMap);
+              break;
+            case PREEMPTED:
+              toRelease =_resourcePreempted(resource, eventsMap);
+              break;
+            case LOST:
+              toRelease = _resourceLost(resource, eventsMap);
+              break;
           }
         }
-        return eventsMap;
       }
-    });
+    } finally {
+      lock.unlock();
+    }
+    if (toRelease != null) {
+      try {
+        rmRelease(toRelease);
+      } catch (LlamaAMException ex) {
+        getLog().warn("rmRelease() error: {}", ex.toString(), ex);
+      }
+    }  
     if (hasListener && !eventsMap.isEmpty()) {
         for (LlamaAMEventImpl event : eventsMap.values()) {
           try {
