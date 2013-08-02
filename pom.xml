@@ -58,6 +58,8 @@
   <properties>
     <javaVersion>1.6</javaVersion>
 
+    <clover.license.file>${user.home}/.clover.license</clover.license.file>
+
     <!-- to be able to run a single test case from the main project -->
     <failIfNoTests>false</failIfNoTests>
 
@@ -289,11 +291,6 @@
           <version>2.2</version>
         </plugin>
         <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>build-helper-maven-plugin</artifactId>
-          <version>1.8</version>
-        </plugin>
-        <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-antrun-plugin</artifactId>
           <version>1.6</version>
@@ -307,6 +304,11 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-jar-plugin</artifactId>
           <version>2.3.2</version>
+        </plugin>
+        <plugin>
+          <groupId>com.atlassian.maven.plugins</groupId>
+          <artifactId>maven-clover2-plugin</artifactId>
+          <version>3.0.5</version>
         </plugin>
       </plugins>
     </pluginManagement>
@@ -411,4 +413,53 @@
     </plugins>
   </build>
 
+  <profiles>
+    <profile>
+      <id>clover</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <properties>
+        <cloverLicenseLocation>${clover.license.file}</cloverLicenseLocation>
+        <cloverDatabase>${project.build.directory}/clover/llama-coverage.db</cloverDatabase>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>com.atlassian.maven.plugins</groupId>
+            <artifactId>maven-clover2-plugin</artifactId>
+            <configuration>
+              <excludes>
+                <exclude>com/cloudera/llama/thrift/*.java</exclude>
+              </excludes>
+              <includesTestSourceRoots>false</includesTestSourceRoots>
+              <licenseLocation>${cloverLicenseLocation}</licenseLocation>
+              <cloverDatabase>${cloverDatabase}</cloverDatabase>
+              <targetPercentage>50%</targetPercentage>
+              <outputDirectory>${project.build.directory}/clover</outputDirectory>
+              <generateHtml>true</generateHtml>
+              <generateXml>true</generateXml>
+            </configuration>
+            <executions>
+              <execution>
+                <id>setup</id>
+                <phase>generate-sources</phase>
+                <goals>
+                  <goal>setup</goal>
+                </goals>
+              </execution>
+              <execution>
+                <id>clover</id>
+                <phase>test</phase>
+                <goals>
+                  <goal>clover</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+  
 </project>

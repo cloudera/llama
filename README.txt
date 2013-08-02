@@ -16,8 +16,11 @@ Llama 1.0.0-cdh5.0.0-SNAPSHOT
   Compile                : mvn compile
   Run tests              : mvn test
   Install in ~/.m2 cache : mvn install
+  Run clover (coverage)  : mvn clean test -Pclover clover2:aggregate clover2:clover (1)
   Create dist TARBALL    : mvn package assembly single -PdistWithMock
 
+  [1: you need a clover license at ${user.home}/.clover.license]
+  
 * Running Llama Thrift AM server from TARBALL
 
   Create dist TARBALL, built in llama-dist/target

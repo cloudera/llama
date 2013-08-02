@@ -306,7 +306,7 @@ public class TestLlamaAMThriftServer {
       Assert.assertEquals(TStatusCode.OK, tresRes.getStatus().getStatus_code());
 
       //check notification delivery
-      Thread.sleep(100);
+      Thread.sleep(300);
       Assert.assertEquals(1, callbackServer.notifications.size());
       
       //unregister
@@ -363,7 +363,7 @@ public class TestLlamaAMThriftServer {
       Assert.assertEquals(TStatusCode.OK, tresRes.getStatus().getStatus_code());
 
       //check notification delivery
-      Thread.sleep(100);
+      Thread.sleep(300);
       Assert.assertEquals(1, callbackServer.notifications.size());
 
       //release

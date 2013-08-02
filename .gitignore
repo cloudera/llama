@@ -1,6 +1,9 @@
 # Maven
 target
 
+# Clover2
+llama-thrift-api/src/main/java
+
 # IntelliJ
 *.iml
 *.ipr
