@@ -81,7 +81,7 @@
         <executions>
           <execution>
             <id>clean</id>
-            <phase>clean</phase>
+            <phase>pre-clean</phase>
             <configuration>
               <target>
                 <delete dir="${basedir}/src/main/java/com"/>

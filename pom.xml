@@ -56,6 +56,8 @@
   </modules>
 
   <properties>
+    <buildDirectory>target</buildDirectory>
+    
     <javaVersion>1.6</javaVersion>
 
     <clover.license.file>${user.home}/.clover.license</clover.license.file>
@@ -256,6 +258,7 @@
   </reporting>
 
   <build>
+    <directory>${project.basedir}/${buildDirectory}</directory>
     <pluginManagement>
       <plugins>
         <plugin>
