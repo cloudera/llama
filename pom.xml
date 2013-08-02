@@ -662,6 +662,11 @@ TODO: need license header
         <artifactId>hcatalog-server-extensions</artifactId>
         <version>${cdh.hive.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.apache.hive</groupId>
+        <artifactId>hcatalog-webhcat</artifactId>
+        <version>${cdh.hive.version}</version>
+      </dependency>
  
       <!-- Oozie -->
       <dependency>
@@ -863,6 +868,7 @@ TODO: need license header
         <artifactId>jersey-server</artifactId>
         <version>1.8</version>
       </dependency>
+
       <dependency>
         <groupId>commons-el</groupId>
         <artifactId>commons-el</artifactId>
@@ -1184,6 +1190,16 @@ TODO: need license header
         <groupId>org.slf4j</groupId>
         <artifactId>jul-to-slf4j</artifactId>
         <version>1.6.1</version>
+      </dependency>
+      <dependency>
+        <groupId>com.sun.jersey</groupId>
+        <artifactId>jersey-servlet</artifactId>
+        <version>1.8</version> <!-- upstream used 1.14 -->
+      </dependency>
+      <dependency>
+        <groupId>com.sun.jersey.contribs</groupId>
+        <artifactId>wadl-resourcedoc-doclet</artifactId>
+        <version>1.8</version> <!-- upstream used 1.14 -->
       </dependency>
 
       <!-- Pig -->
