@@ -32,6 +32,10 @@
   <name>Llama Thrift API</name>
   <packaging>jar</packaging>
 
+  <properties>
+    <child.module>true</child.module>
+  </properties>
+  
   <repositories>
     <repository>
       <id>cdh.repo</id>

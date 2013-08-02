@@ -75,13 +75,6 @@
     <hadoop.version>${cdh.hadoop.version}</hadoop.version>
   </properties>
 
-  <distributionManagement>
-    <site>
-      <id>www.cloudera.com</id>
-      <url>DUMMY</url>
-    </site>
-  </distributionManagement>
-
   <repositories>
     <repository>
       <id>cdh.repo</id>
@@ -365,38 +358,21 @@
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-site-plugin</artifactId>
+        <artifactId>maven-antrun-plugin</artifactId>
         <executions>
           <execution>
-            <id>docs</id>
+            <id>site</id>
             <phase>site</phase>
+            <configuration>
+              <target unless="child.module">
+                <copy file="${basedir}/llama-thrift-api/src/main/thrift/Llama.thrift"
+                      todir="${project.build.directory}/site"/>
+                <copy file="${basedir}/llama-dist/src/main/conf/llama-site.xml"
+                      todir="${project.build.directory}/site/"/>
+              </target>
+            </configuration>
             <goals>
-              <goal>site</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <configuration>
-          <linksource>true</linksource>
-          <quiet>true</quiet>
-          <verbose>false</verbose>
-          <source>${maven.compile.source}</source>
-          <charset>${maven.compile.encoding}</charset>
-          <groups>
-            <group>
-              <title>Simple AM Public API</title>
-              <packages>com.cloudera.ram</packages>
-            </group>
-          </groups>
-        </configuration>
-        <executions>
-          <execution>
-            <phase>site</phase>
-            <goals>
-              <goal>javadoc</goal>
+              <goal>run</goal>
             </goals>
           </execution>
         </executions>

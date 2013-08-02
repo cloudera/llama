@@ -74,8 +74,8 @@ public class Main {
     Class<? extends AbstractServer> klass = 
       llamaConf.getClass(SERVER_CLASS_KEY, LlamaAMThriftServer.class, 
           AbstractServer.class);
-    LOG.info("Llama server: {}", klass.getName());
-    LOG.info("---------------------------------------------------------------");
+    LOG.info("Server: {}", klass.getName());
+    LOG.info("-----------------------------------------------------------------");
     AbstractServer server = ReflectionUtils.newInstance(klass, llamaConf);
 
     addShutdownHook(server);

@@ -20,10 +20,10 @@ package com.cloudera.llama.am.server.thrift;
 public interface ServerConfiguration {
   String KEY_PREFIX = "llama.am.server.thrift.";
 
-  String SERVER_MIN_THREADS_KEY = KEY_PREFIX + ".min.threads";
+  String SERVER_MIN_THREADS_KEY = KEY_PREFIX + "server.min.threads";
   int SERVER_MIN_THREADS_DEFAULT = 10;
 
-  String SERVER_MAX_THREADS_KEY = KEY_PREFIX + ".max.threads";
+  String SERVER_MAX_THREADS_KEY = KEY_PREFIX + "server.max.threads";
   int SERVER_MAX_THREADS_DEFAULT = 50;
 
   String SECURITY_ENABLED_KEY = KEY_PREFIX + "security";
@@ -46,6 +46,6 @@ public interface ServerConfiguration {
   
   String CLIENT_NOTIFIER_RETRY_INTERVAL_KEY = KEY_PREFIX + 
       "client.notifier.retry.interval.ms";
-  int CLIENT_NOTIFIER_RETRY_INTERVAL_DEFAULT = 1000;
+  int CLIENT_NOTIFIER_RETRY_INTERVAL_DEFAULT = 5000;
 
 }

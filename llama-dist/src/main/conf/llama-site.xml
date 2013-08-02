@@ -13,4 +13,69 @@
   limitations under the License.
 -->
 <configuration>
+
+  <!-- LlamaAM Thrift server configuration -->
+  <property>
+    <name>llama.am.server.thrift.address</name>
+    <value>localhost:0</value>
+  </property>
+  <property>
+    <name>llama.am.server.thrift.server.min.threads</name>
+    <value>10</value>
+  </property>
+  <property>
+    <name>llama.am.server.thrift.server.max.threads</name>
+    <value>50</value>
+  </property>
+  <property>
+    <name>llama.am.server.thrift.client.notifier.queue.threshold</name>
+    <value>10000</value>
+  </property>
+  <property>
+    <name>llama.am.server.thrift.client.notifier.threads</name>
+    <value>10</value>
+  </property>
+  <property>
+    <name>llama.am.server.thrift.client.notifier.max.retries</name>
+    <value>5</value>
+  </property>
+  <property>
+    <name>llama.am.server.thrift.client.notifier.retry.interval.ms</name>
+    <value>5000</value>
+  </property>
+  <property>
+    <name>llama.am.server.thrift.security</name>
+    <value>false</value>
+  </property>
+
+  <!-- LlamaAM implementation configuration -->
+  <property>
+    <name>llama.am.class</name>
+    <value>com.cloudera.llama.am.mock.MockLlamaAM</value>
+  </property>
+  <property>
+    <name>llama.am.initial.queues</name>
+    <value>queue1,queue2</value>
+  </property>
+
+  <!-- MockLlamaAM configuration -->
+  <property>
+    <name>llama.am.mock.nodes</name>
+    <value>node1,node2</value>
+  </property>
+  <property>
+    <name>llama.am.mock.queues</name>
+    <value>queue1,queue2</value>
+  </property>
+  <property>
+    <name>llama.am.mock.events.max.wait.ms</name>
+    <value>10000</value>
+  </property>
+  <property>
+    <name>llama.am.mock.events.min.wait.ms</name>
+    <value>1000</value>
+  </property>
+
+  <!-- YarnLlamaAM configuration -->
+
 </configuration>

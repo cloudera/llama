@@ -1,0 +1,78 @@
+~~ Licensed under the Apache License, Version 2.0 (the "License");
+~~ you may not use this file except in compliance with the License.
+~~ You may obtain a copy of the License at
+~~
+~~ http://www.apache.org/licenses/LICENSE-2.0
+~~
+~~ Unless required by applicable law or agreed to in writing, software
+~~ distributed under the License is distributed on an "AS IS" BASIS,
+~~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+~~ See the License for the specific language governing permissions and
+~~ limitations under the License.
+
+  ---
+  Llama, Integrating
+  ---
+  ---
+  ${maven.build.timestamp}
+
+Integrating Llama
+
+* Using Thrift API
+
+  {{{./Llama.thrift}Llama Thrift definition}}
+
+  Llama Thrift server supports unframed transport only.
+
+  <<NOTE:>> Currently Thrift SASL is not supported.
+  
+* Using MiniLlama for Testcases
+  
+  Add the following dependency in your project
+  
++----+
+    <dependency>
+      <groupId>com.cloudera.llama</groupId>
+      <artifactId>llama-thrift-mini-am</artifactId>
+      <version>1.0.0-cdh5.0.0-SNAPSHOT</version>
+      <scope>test</scope>
+    </dependency>
++----+
+
+  The Maven repository where SNAPSHOT artifacts are currently deployed is 
+  <<<{{https://repository.cloudera.com/artifactory/libs-snapshot-local}}>>>
+  
+  Boiler plate code for a testcase using MiniLlama:
+  
++----+
+public class TestMiniLlamaWithMock {
+
+  @Test
+  public void testMiniLlama() throws Exception {
+    Configuration conf = MiniLlama.createMiniConf(MiniLlama.Type.MOCK, 
+        Arrays.asList("queue1", "queue2"), Arrays.asList("node1", "node2"));
+    MiniLlama server = new MiniLlama(conf);
+    try {
+      server.start();
+      
+      String serverHost = server.getAddressHost();
+      String serverPort = server.getAddressPort();
+      
+      TTransport transport = new TSocket(server.getAddressHost(),
+          server.getAddressPort());
+      transport.open();
+      TProtocol protocol = new TBinaryProtocol(transport);
+      LlamaAMService.Client client = new LlamaAMService.Client(protocol);
+
+      ....
+
+    } finally {
+      server.stop();
+    }
+      
+  }
+}
++----+
+
+  <<NOTE:>> By default, MiniLlama uses an ephemeral port on <<<localhost>>>.
+  

@@ -42,7 +42,7 @@ public class TestMiniLlamaWithMock {
   @Test
   public void testMiniLlama() throws Exception {
     Configuration conf = MiniLlama.createMiniConf(MiniLlama.Type.MOCK, 
-        Arrays.asList("q1", "q2"), 3, null);
+        Arrays.asList("queue1", "queue2"), Arrays.asList("node1", "node2"));
     MiniLlama server = new MiniLlama(conf);
     try {
       server.start();
@@ -72,8 +72,7 @@ public class TestMiniLlamaWithMock {
       tgnReq.setAm_handle(trRes.getAm_handle());
       TLlamaAMGetNodesResponse tgnRes = client.GetNodes(tgnReq);
       Assert.assertEquals(TStatusCode.OK, tgnRes.getStatus().getStatus_code());
-      Assert.assertEquals(Arrays.asList("node-0", "node-1", "node-2"), 
-          tgnRes.getNodes());
+      Assert.assertEquals(Arrays.asList("node1", "node2"), tgnRes.getNodes());
 
       //unregister
       TLlamaAMUnregisterRequest turReq = new TLlamaAMUnregisterRequest();

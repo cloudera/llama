@@ -144,14 +144,14 @@ public abstract class AbstractServer<T> implements Configurable {
   }
   
   protected void startMetrics() {
-    getLog().info("METRICS TBD");
+    getLog().warn("METRICS TBD");
   }
 
   protected void stopMetrics() {
   }
 
   protected void startJMX() {
-    getLog().info("JMX TBD");
+    getLog().warn("JMX TBD");
   }
 
   protected void stopJMX() {

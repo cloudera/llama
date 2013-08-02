@@ -26,7 +26,6 @@ import com.cloudera.llama.am.yarn.YarnLlamaAM;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ReflectionUtils;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class MiniLlama {
@@ -44,44 +43,29 @@ public class MiniLlama {
 
   public enum Type {MOCK, YARN}
 
-  private static String toString(List<String> list) {
-    StringBuilder sb = new StringBuilder();
-    String separator = "";
-    for (String s : list) {
-      sb.append(separator).append(s);
-      separator = ",";
-    }
-    return sb.toString();
-  }
-
   public static Configuration createMiniConf(Type llamaType,
-      List<String> queues, int numberOfNodes, Configuration baseConf) {
+      List<String> queues, List<String> nodes) {
     ParamChecker.notNull(llamaType, "llamaType");
     ParamChecker.notNulls(queues, "queues");
-    baseConf = (baseConf == null) ? new Configuration(false) : baseConf;
-    Configuration conf = new Configuration(baseConf);
+    Configuration conf = new Configuration(false);
     if (llamaType == Type.MOCK) {
       conf.setClass(LlamaAM.CLASS_KEY, MockLlamaAM.class, LlamaAM.class);
-      conf.set(LlamaAM.INITIAL_QUEUES_KEY, toString(queues));
-      conf.set(MockLlamaAM.QUEUES_KEY, toString(queues));
-      List<String> nodes = new ArrayList<String>();
-      for (int i = 0; i < numberOfNodes; i++) {
-        nodes.add("node-" + i);
-      }
-      conf.set(MockLlamaAM.NODES_KEY, toString(nodes));
-      conf.setIfUnset(MockLlamaAM.EVENTS_MIN_WAIT_KEY, "1000");
-      conf.setIfUnset(MockLlamaAM.EVENTS_MAX_WAIT_KEY, "10000");
+      conf.setStrings(LlamaAM.INITIAL_QUEUES_KEY, queues.toArray(new String[0]));
+      conf.setStrings(MockLlamaAM.QUEUES_KEY, queues.toArray(new String[0]));
+      conf.setStrings(MockLlamaAM.NODES_KEY, nodes.toArray(new String[0]));
+      conf.set(MockLlamaAM.EVENTS_MIN_WAIT_KEY, "1000");
+      conf.set(MockLlamaAM.EVENTS_MAX_WAIT_KEY, "10000");
 
-      conf.setIfUnset(ServerConfiguration.SERVER_ADDRESS_KEY, "localhost:0");
+      conf.set(ServerConfiguration.SERVER_ADDRESS_KEY, "localhost:0");
 
       conf.setBoolean(START_MINI_YARN, false);
     } else {
       conf.setClass(LlamaAM.CLASS_KEY, YarnLlamaAM.class, LlamaAM.class);
-      conf.set(LlamaAM.INITIAL_QUEUES_KEY, toString(queues));
-      conf.set(YARN_QUEUES, toString(queues));
-      conf.setInt(MINI_YARN_NODES, numberOfNodes);
+      conf.setStrings(LlamaAM.INITIAL_QUEUES_KEY, queues.toArray(new String[0]));
+      conf.setStrings(MockLlamaAM.QUEUES_KEY, queues.toArray(new String[0]));
+      conf.setInt(MINI_YARN_NODES, nodes.size());
 
-      conf.setIfUnset(ServerConfiguration.SERVER_ADDRESS_KEY, "localhost:0");
+      conf.set(ServerConfiguration.SERVER_ADDRESS_KEY, "localhost:0");
 
       conf.setBoolean(START_MINI_YARN, true);
     }

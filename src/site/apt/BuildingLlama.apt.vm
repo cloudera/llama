@@ -1,0 +1,80 @@
+~~ Licensed under the Apache License, Version 2.0 (the "License");
+~~ you may not use this file except in compliance with the License.
+~~ You may obtain a copy of the License at
+~~
+~~ http://www.apache.org/licenses/LICENSE-2.0
+~~
+~~ Unless required by applicable law or agreed to in writing, software
+~~ distributed under the License is distributed on an "AS IS" BASIS,
+~~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+~~ See the License for the specific language governing permissions and
+~~ limitations under the License.
+
+  ---
+  Llama, Building
+  ---
+  ---
+  ${maven.build.timestamp}
+
+Building Llama
+
+* Requirements
+
+  * JDK 1.6+
+  
+  * Maven 3.0.3+
+  
+  * Thrift 0.9.0
+  
+  * Clover license (optional)
+  
+* Building and Testing
+
+  Common Maven goals: <<<clean, compile, test, package & install>>>.
+
+* Running a Clover Report
+
++----+
+$ mvn clean test -Pclover clover2:aggregate clover2:clover
++----+
+
+  The resulting report will be available at <<<target/clover/index.html>>>.
+
+  <<NOTE:>> A clover license file must be present at <<<~/.clover.license>>>.
+  If the license is a different location use 
+  <<<-Dclover.license.file=FULL_PATH>>>. Cloudera's Clover license is available
+  at <<<dev-support/clover.license>>>.
+  
+* Building the Documentation
+  
++----+
+$  mvn site
++----+
+
+  The resulting documentation will be available at <<<target/site/index.html>>>.
+
+  To have a live site while editing APT pages:
+  
++----+
+$  mvn site:run 
++----+
+
+* Building a Distribution Tarball
+
++----+
+$  mvn clean package site site:stage assembly:single
++----+
+
+  To include the <<<MockLlamaAM>>> in the distribution use the 
+  <<<-PdistWithMock>>> profile when running Maven.
+
+  The resulting tarball (and expanded version) will be available at 
+  <<<llama-dist/target/llama-dist-${project.version}.tar.gz>>>.
+
+* To Update the Version of the Project
+
+  Run:
+
++----+
+$  mvn versions:set -DnewVersion=<NEW_VERSION>
++----+
