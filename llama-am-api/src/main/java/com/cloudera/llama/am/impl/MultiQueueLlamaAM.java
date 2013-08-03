@@ -23,21 +23,19 @@ import com.cloudera.llama.am.LlamaAMException;
 import com.cloudera.llama.am.LlamaAMListener;
 import com.cloudera.llama.am.PlacedReservation;
 import com.cloudera.llama.am.Reservation;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 
 public class MultiQueueLlamaAM extends LlamaAM implements Configurable, 
     LlamaAMListener {
@@ -50,11 +48,12 @@ public class MultiQueueLlamaAM extends LlamaAM implements Configurable,
       "single.am.class";
 
   private Configuration conf;
-  private Cache<String, LlamaAM> ams;
+  private final Map<String, LlamaAM> ams;
   private final ConcurrentHashMap<UUID, String> reservationToQueue;
   private final Set<LlamaAMListener> listeners;
 
   public MultiQueueLlamaAM() {
+    ams = new HashMap<String, LlamaAM>();
     listeners = new HashSet<LlamaAMListener>();
     reservationToQueue = new ConcurrentHashMap<UUID, String>();
   }
@@ -85,45 +84,67 @@ public class MultiQueueLlamaAM extends LlamaAM implements Configurable,
 
   // LlamaAM API
 
-  @SuppressWarnings("deprecation")
-  @Override
-  public void start() throws LlamaAMException {
-    ams = CacheBuilder.newBuilder().build(new CacheLoader<String, LlamaAM>() {
-      @Override
-      public LlamaAM load(String queue) throws Exception {
+  private LlamaAM getLlamaAM(String queue) throws LlamaAMException {
+    LlamaAM am;
+    //TODO: see how to remove global contention during creation/start of an AM
+    synchronized (ams) {
+      am = ams.get(queue);
+      if (am == null) {
         Configuration conf = new Configuration(getConf());
         conf.set(AbstractSingleQueueLlamaAM.QUEUE_KEY, queue);
-        LlamaAM llama = LlamaAM.create(conf);
-        llama.start();
-        llama.addListener(MultiQueueLlamaAM.this);
-        return llama;
+        am = LlamaAM.create(conf);
+        am.start();
+        am.addListener(MultiQueueLlamaAM.this);
+        ams.put(queue, am);
       }
-    });
+    }
+    return am;
+  }
+
+  private Set<LlamaAM> getLlamaAMs() throws LlamaAMException {
+    synchronized (ams) {
+      return new HashSet<LlamaAM>(ams.values());
+    }
+  }
+  
+  private LlamaAM getAnyLlama() throws LlamaAMException {
+    LlamaAM am;
+    synchronized (ams) {
+      Iterator<Map.Entry<String, LlamaAM>> iterator = ams.entrySet().iterator();
+      if (iterator.hasNext()) {
+        am = iterator.next().getValue();
+      } else {
+        throw new LlamaAMException("There is not active LlamaAM for any queue");
+      }
+    }
+    return am;    
+  }
+
+  @Override
+  public void start() throws LlamaAMException {
     for (String queue : conf.getTrimmedStringCollection(INITIAL_QUEUES_KEY)) {
       try {
-        ams.get(queue);
-      } catch (ExecutionException ex) {
+        getLlamaAM(queue);
+      } catch (LlamaAMException ex) {
         stop();
-        Thrower.throwEx(ex.getCause());
+        throw ex;
       }
     }
   }
 
   @Override
   public void stop() {
-    for (LlamaAM am : ams.asMap().values()) {
-      am.stop();
+    synchronized (ams) {
+      for (LlamaAM am : ams.values()) {
+        am.stop();
+      }
     }
   }
 
   @Override
   public List<String> getNodes() throws LlamaAMException {
-    Iterator<LlamaAM> iterator = ams.asMap().values().iterator();
-    if (iterator.hasNext()) {
-      return iterator.next().getNodes();
-    } else {
-      throw new LlamaAMException("There is not active LlamaAM for any queue");
-    }
+    LlamaAM am = getAnyLlama();
+    return am.getNodes();
   }
 
   @Override
@@ -143,13 +164,9 @@ public class MultiQueueLlamaAM extends LlamaAM implements Configurable,
   @SuppressWarnings("deprecation")
   @Override
   public UUID reserve(Reservation reservation) throws LlamaAMException {
-    UUID reservationId = null;
-    try {
-      reservationId = ams.get(reservation.getQueue()).reserve(reservation);
-      reservationToQueue.put(reservationId, reservation.getQueue());
-    } catch (ExecutionException ex) {
-      Thrower.throwEx(ex.getCause());
-    }
+    LlamaAM am = getLlamaAM(reservation.getQueue());
+    UUID reservationId = am.reserve(reservation);
+    reservationToQueue.put(reservationId, reservation.getQueue());
     return reservationId;
   }
 
@@ -160,13 +177,10 @@ public class MultiQueueLlamaAM extends LlamaAM implements Configurable,
     PlacedReservation reservation = null;
     String queue = reservationToQueue.get(reservationId);
     if (queue != null) {
-      try {
-        reservation = ams.get(queue).getReservation(reservationId);
-      } catch (ExecutionException ex) {
-        Thrower.throwEx(ex.getCause());
-      }
+      LlamaAM am = getLlamaAM(queue);
+      reservation = am.getReservation(reservationId);      
     } else {
-      LOG.warn("getReservation({}): reservationId not found", reservationId);
+      LOG.warn("getReservation({}), reservationId not found", reservationId);
     }
     return reservation;
   }
@@ -176,21 +190,30 @@ public class MultiQueueLlamaAM extends LlamaAM implements Configurable,
   public void releaseReservation(UUID reservationId) throws LlamaAMException {
     String queue = reservationToQueue.remove(reservationId);
     if (queue != null) {
-      try {
-        ams.get(queue).releaseReservation(reservationId);
-      } catch (ExecutionException ex) {
-        Thrower.throwEx(ex.getCause());
-      }
+      LlamaAM am = getLlamaAM(queue);
+      am.releaseReservation(reservationId);
     } else {
-      LOG.warn("releaseReservation({}): reservationId not found", reservationId);
+      LOG.warn("releaseReservation({}), reservationId not found", reservationId);
     }
   }
 
   @Override
   public void releaseReservationsForClientId(UUID clientId)
       throws LlamaAMException {
-    for (LlamaAM am : ams.asMap().values()) {
-      am.releaseReservationsForClientId(clientId);
+    LlamaAMException thrown = null;
+    for (LlamaAM am : getLlamaAMs()) {
+      try {
+        am.releaseReservationsForClientId(clientId);
+      } catch (LlamaAMException ex) {
+        if (thrown != null) {
+          LOG.error("releaseReservationsFoClientId({}), error: {}", 
+              new Object[]{clientId, ex.toString(), ex});
+        }
+        thrown = ex;
+      }
+    }
+    if (thrown != null) {
+      throw thrown;
     }
   }
 }
