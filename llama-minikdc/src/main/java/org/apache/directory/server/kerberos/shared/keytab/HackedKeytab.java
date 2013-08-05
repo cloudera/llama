@@ -15,26 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.cloudera.llama.am.impl;
+package org.apache.directory.server.kerberos.shared.keytab;
 
-import org.slf4j.helpers.MessageFormatter;
+import java.io.File;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 
-/**
- * Utility class to format message using same syntax as slf4j log messages,
- * using '{}' for argument placement.
- */
-public class FastFormat {
+//This is a hack for ApacheDS 2.0.0-M15-SNAPSHOT to be able to create
+//keytab files with more than one principal.
+//It needs to be in this package because the KeytabEncoder class is package 
+// private
+public class HackedKeytab extends Keytab {
 
-  /**
-   * Returns a message created using the specified message pattern and 
-   * arguments.
-   *
-   * @param messagePattern message pattern, with '{}' for arguments placement
-   * @param args arguments, they are applied to the message pattern in order.
-   * @return the formatted message
-   */
-  public static String format(String messagePattern, Object... args) {
-    return MessageFormatter.arrayFormat(messagePattern, args).toString();
+  private byte[] keytabVersion = VERSION_52;
+
+  public void write( File file, int principalCount ) throws IOException
+  {
+    HackedKeytabEncoder writer = new HackedKeytabEncoder();
+    ByteBuffer buffer = writer.write( keytabVersion, getEntries(), 
+        principalCount );
+    writeFile( buffer, file );
   }
 
 }
