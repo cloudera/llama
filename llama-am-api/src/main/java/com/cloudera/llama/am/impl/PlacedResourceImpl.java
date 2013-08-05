@@ -28,7 +28,7 @@ public class PlacedResourceImpl extends PlacedResource {
   private String queue;
   private Status status;
   private String rmResourceId;
-  private int actualVCpuCores = -1;
+  private int actualCpuVCores = -1;
   private int actualMemoryMb = -1;
   private String actualLocation;
 
@@ -63,8 +63,8 @@ public class PlacedResourceImpl extends PlacedResource {
   }
 
   @Override
-  public int getActualVCpuCores() {
-    return actualVCpuCores;
+  public int getActualCpuVCores() {
+    return actualCpuVCores;
   }
 
   @Override
@@ -79,7 +79,7 @@ public class PlacedResourceImpl extends PlacedResource {
 
   public void setAllocationInfo(int vCpuCores, int memoryMb, String location,
       String rmResourceId) {
-    actualVCpuCores = vCpuCores;
+    actualCpuVCores = vCpuCores;
     actualMemoryMb = memoryMb;
     this.actualLocation = location;
     this.rmResourceId = rmResourceId;

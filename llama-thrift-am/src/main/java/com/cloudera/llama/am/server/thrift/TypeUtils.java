@@ -100,7 +100,7 @@ public class TypeUtils {
     tResource.setReservation_id(toTUniqueId(resource.getReservationId()));
     tResource.setClient_resource_id(toTUniqueId(resource.getClientResourceId()));
     tResource.setRm_resource_id(resource.getRmResourceId());
-    tResource.setV_cpu_cores((short)resource.getActualVCpuCores());
+    tResource.setV_cpu_cores((short)resource.getActualCpuVCores());
     tResource.setMemory_mb(resource.getActualMemoryMb());
     tResource.setLocation(resource.getActualLocation());
     return tResource;

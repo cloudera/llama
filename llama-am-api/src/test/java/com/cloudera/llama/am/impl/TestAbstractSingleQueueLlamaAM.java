@@ -159,7 +159,7 @@ public class TestAbstractSingleQueueLlamaAM {
       Assert.assertEquals(RESOURCE1.getClientResourceId(), 
           resource.getClientResourceId());
       Assert.assertEquals(PlacedResource.Status.PENDING, resource.getStatus());
-      Assert.assertEquals(-1, resource.getActualVCpuCores());
+      Assert.assertEquals(-1, resource.getActualCpuVCores());
       Assert.assertEquals(-1, resource.getActualMemoryMb());
       Assert.assertEquals(null, resource.getActualLocation());
       Assert.assertEquals("queue", resource.getQueue());
@@ -199,7 +199,7 @@ public class TestAbstractSingleQueueLlamaAM {
           ());
       PlacedResource resource = listener.event.getAllocatedResources().get(0);
       Assert.assertEquals("cid1", resource.getRmResourceId());
-      Assert.assertEquals(3, resource.getActualVCpuCores());
+      Assert.assertEquals(3, resource.getActualCpuVCores());
       Assert.assertEquals(4096, resource.getActualMemoryMb());
       Assert.assertEquals("a1", resource.getActualLocation());
       PlacedReservation reservation = llama.getReservation(reservationId);
@@ -228,7 +228,7 @@ public class TestAbstractSingleQueueLlamaAM {
 
       PlacedResource resource = listener.event.getAllocatedResources().get(0);
       Assert.assertEquals("cid1", resource.getRmResourceId());
-      Assert.assertEquals(3, resource.getActualVCpuCores());
+      Assert.assertEquals(3, resource.getActualCpuVCores());
       Assert.assertEquals(4096, resource.getActualMemoryMb());
       Assert.assertEquals("a1", resource.getActualLocation());
       PlacedReservation reservation = llama.getReservation(reservationId);

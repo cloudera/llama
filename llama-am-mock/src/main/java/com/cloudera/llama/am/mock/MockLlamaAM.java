@@ -165,7 +165,7 @@ public class MockLlamaAM extends AbstractSingleQueueLlamaAM {
     private void toAllocate() {
       RMResourceChange change = RMResourceChange.createResourceAllocation
           (resource.getClientResourceId(), "c" + counter.incrementAndGet
-              (), resource.getVCpuCores(), resource.getMemoryMb(),
+              (), resource.getCpuVCores(), resource.getMemoryMb(),
               getLocation(resource.getLocation()));
       llama.rmChanges(Arrays.asList(change));      
     }

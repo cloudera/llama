@@ -31,26 +31,26 @@ public class Resource {
   private final UUID clientResourceId;
   private final String location;
   private final LocationEnforcement enforcement;
-  private final int vCpuCores;
+  private final int cpuVCores;
   private final int memoryMb;
   
   public Resource(UUID clientResourceId, String location, 
                   LocationEnforcement enforcement,
-                  int vCpuCores, int memoryMb) {
+                  int cpuVCores, int memoryMb) {
     this.clientResourceId = ParamChecker.notNull(clientResourceId, 
       "clientResourceId");
     this.location = ParamChecker.notEmpty(location, "location");
     this.enforcement = ParamChecker.notNull(enforcement, "enforcement");
-    this.vCpuCores = ParamChecker.lessThanZero(vCpuCores, "vCpuCores");
+    this.cpuVCores = ParamChecker.lessThanZero(cpuVCores, "cpuVCores");
     this.memoryMb = ParamChecker.lessThanZero(memoryMb, "memoryMb");
-    ParamChecker.asserts((vCpuCores != 0 && memoryMb != 0),
-        "vCpuCores and memoryMb cannot be both zero");
+    ParamChecker.asserts((cpuVCores != 0 && memoryMb != 0),
+        "cpuVCores and memoryMb cannot be both zero");
   }
 
   protected Resource(Resource resource) {
     this(resource.getClientResourceId(), resource.getLocation(),
       resource.getEnforcement(), 
-      resource.getVCpuCores(), resource.getMemoryMb());
+      resource.getCpuVCores(), resource.getMemoryMb());
   }
   
   public UUID getClientResourceId() {
@@ -65,8 +65,8 @@ public class Resource {
     return enforcement;
   }
 
-  public int getVCpuCores() {
-    return vCpuCores;
+  public int getCpuVCores() {
+    return cpuVCores;
   }
 
   public int getMemoryMb() {
@@ -85,12 +85,12 @@ public class Resource {
   }
 
   private static final String TO_STRING_MSG = "resource[" +
-      "client_resource_id: {} vCpuCores: {} memoryMb: {} location: {} " +
+      "client_resource_id: {} cpuVCores: {} memoryMb: {} location: {} " +
       "enforcement: {}]";
 
   public String toString() {
     return FastFormat.format(TO_STRING_MSG, getClientResourceId(), 
-        getVCpuCores(), getMemoryMb(), getLocation(), getEnforcement());
+        getCpuVCores(), getMemoryMb(), getLocation(), getEnforcement());
   }
 
 }

@@ -35,7 +35,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements 
     Configurable {
@@ -44,13 +43,11 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
   private final Logger logger;
   private Configuration conf;
   private LlamaAMListener listener;
-  private final ReentrantReadWriteLock.WriteLock lock;
   private final Map<UUID, PlacedReservationImpl> reservationsMap;
   private final Map<UUID, PlacedResourceImpl> resourcesMap;
 
   public AbstractSingleQueueLlamaAM() {
     logger = LoggerFactory.getLogger(getClass());
-    lock = new ReentrantReadWriteLock().writeLock();
     reservationsMap = new HashMap<UUID, PlacedReservationImpl>();
     resourcesMap = new HashMap<UUID, PlacedResourceImpl>();
   }
@@ -133,11 +130,8 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
   public UUID reserve(final Reservation reservation) throws LlamaAMException {
     final PlacedReservationImpl impl = new PlacedReservationImpl(reservation);
     rmReserve(impl);
-    try {
-      lock.lock();
+    synchronized (this) {
       _addReservation(impl);
-    } finally {
-      lock.unlock();
     }
     return impl.getReservationId();
   }
@@ -145,22 +139,16 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
   @Override
   public PlacedReservation getReservation(final UUID reservationId)
       throws LlamaAMException {
-    try {
-      lock.lock();
+    synchronized (this) {
       return _getReservation(reservationId);
-    } finally {
-      lock.unlock();
     }
   }
 
   @Override
   public void releaseReservation(final UUID reservationId) throws LlamaAMException {
     PlacedReservationImpl reservation;
-    try {
-      lock.lock();
+    synchronized (this) {
       reservation = _deleteReservation(reservationId);
-    } finally {
-      lock.unlock();
     }
     if (reservation != null) {
       rmRelease(reservation.getResources());
@@ -173,15 +161,12 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
   public void releaseReservationsForClientId(UUID clientId)
       throws LlamaAMException {
     List<PlacedReservation> reservations = new ArrayList<PlacedReservation>();
-    try {
-      lock.lock();
+    synchronized (this) {
       for (PlacedReservation reservation :
           new ArrayList<PlacedReservation>(reservationsMap.values())) {
         _deleteReservation(reservation.getReservationId());
         reservations.add(reservation);
       }
-    } finally {
-      lock.unlock();
     }
     for (PlacedReservation reservation : reservations) {
       if (reservation != null) {
@@ -355,8 +340,7 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
     Map<UUID, LlamaAMEventImpl> eventsMap = 
         new HashMap<UUID, LlamaAMEventImpl>();
     List<PlacedResource> toRelease = null;
-    try {
-      lock.lock();
+    synchronized (this) {
       for (RMResourceChange change : changes) {
         PlacedResourceImpl resource = resourcesMap.get(change
             .getClientResourceId());
@@ -380,8 +364,6 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
           }
         }
       }
-    } finally {
-      lock.unlock();
     }
     if (toRelease != null) {
       try {

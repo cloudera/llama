@@ -39,7 +39,7 @@ public abstract class PlacedResource extends Resource {
 
   public abstract String getRmResourceId();
 
-  public abstract int getActualVCpuCores();
+  public abstract int getActualCpuVCores();
 
   public abstract int getActualMemoryMb();
 
@@ -48,17 +48,17 @@ public abstract class PlacedResource extends Resource {
   public abstract Status getStatus();
 
   private static final String TO_STRING_MSG = "placedResource[" +
-      "client_resource_id: {} vCpuCores: {} memoryMb: {} askedLocation: {} " +
+      "client_resource_id: {} cpuVCores: {} memoryMb: {} askedLocation: {} " +
       "enforcement: {} clientId: {} queue: {} reservationId: {} " +
-      "rmResourceId: {} actualVCpuCores: {} actualMemoryMb: {} " +
+      "rmResourceId: {} actualCpuVCores: {} actualMemoryMb: {} " +
       "actualLocation: {} status: {}]";
 
   @Override
   public String toString() {
     return FastFormat.format(TO_STRING_MSG, getClientResourceId(), 
-        getVCpuCores(), getMemoryMb(), getLocation(), getEnforcement(), 
+        getCpuVCores(), getMemoryMb(), getLocation(), getEnforcement(), 
         getClientId(), getQueue(), getReservationId(), getRmResourceId(), 
-        getActualVCpuCores(), getActualMemoryMb(), getActualLocation(), 
+        getActualCpuVCores(), getActualMemoryMb(), getActualLocation(), 
         getStatus());
   }
 

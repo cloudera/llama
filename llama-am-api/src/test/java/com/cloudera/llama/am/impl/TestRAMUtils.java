@@ -51,7 +51,7 @@ public class TestRAMUtils {
 //    Assert.assertEquals(r1.getLocations(), r2.getLocations());
 //    Assert.assertEquals(r1.getEnforcement(), r2.getEnforcement());
 //    Assert.assertEquals(r1.getPriority(), r2.getPriority());
-//    Assert.assertEquals(r1.getVCpuCores(), r2.getVCpuCores());
+//    Assert.assertEquals(r1.getCpuVCores(), r2.getCpuVCores());
 //    Assert.assertEquals(r1.getMemoryMb(), r2.getMemoryMb());
 //    Assert.assertEquals(r1.getStatus(), r2.getStatus());
 //    Assert.assertEquals(r1.getAllocationInfo(), r2.getAllocationInfo());
@@ -73,7 +73,7 @@ public class TestRAMUtils {
 //    Assert.assertEquals(r1.getLocations(), r2.getLocations());
 //    Assert.assertEquals(r1.getEnforcement(), r2.getEnforcement());
 //    Assert.assertEquals(r1.getPriority(), r2.getPriority());
-//    Assert.assertEquals(r1.getVCpuCores(), r2.getVCpuCores());
+//    Assert.assertEquals(r1.getCpuVCores(), r2.getCpuVCores());
 //    Assert.assertEquals(r1.getMemoryMb(), r2.getMemoryMb());
 //    Assert.assertEquals(Status.KILLED, r2.getStatus());
 //    Assert.assertEquals(r1.getAllocationInfo(), r2.getAllocationInfo());
@@ -93,7 +93,7 @@ public class TestRAMUtils {
 //    Assert.assertEquals(r1.getLocations(), r2.getLocations());
 //    Assert.assertEquals(r1.getEnforcement(), r2.getEnforcement());
 //    Assert.assertEquals(r1.getPriority(), r2.getPriority());
-//    Assert.assertEquals(r1.getVCpuCores(), r2.getVCpuCores());
+//    Assert.assertEquals(r1.getCpuVCores(), r2.getCpuVCores());
 //    Assert.assertEquals(r1.getMemoryMb(), r2.getMemoryMb());
 //    Assert.assertEquals(r1.getStatus(), r2.getStatus());
 //    Assert.assertEquals(r1.getAllocationInfo(), r2.getAllocationInfo());
@@ -118,7 +118,7 @@ public class TestRAMUtils {
 //    Assert.assertEquals(r1.getLocations(), r2.getLocations());
 //    Assert.assertEquals(r1.getEnforcement(), r2.getEnforcement());
 //    Assert.assertEquals(r1.getPriority(), r2.getPriority());
-//    Assert.assertEquals(r1.getVCpuCores(), r2.getVCpuCores());
+//    Assert.assertEquals(r1.getCpuVCores(), r2.getCpuVCores());
 //    Assert.assertEquals(r1.getMemoryMb(), r2.getMemoryMb());
 //    Assert.assertEquals(Status.KILLED, r2.getStatus());
 //    Assert.assertEquals(r1.getAllocationInfo(), r2.getAllocationInfo());
