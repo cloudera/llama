@@ -62,6 +62,7 @@ TODO: need license header
     <cdh.solr.version>4.3.0-cdh5.0.0-SNAPSHOT</cdh.solr.version>
     <cdh.search.version>1.0.0-cdh5.0.0-SNAPSHOT</cdh.search.version>
     <cdh.hbase-solr.version>1.2-cdh5.0.0-SNAPSHOT</cdh.hbase-solr.version>
+    <cdh.cdk.version>0.5.0-cdh5.0.0-SNAPSHOT</cdh.cdk.version>
     
     <cdh.hadoop-snappy.version>0.0.1-cdh5.0.0-SNAPSHOT</cdh.hadoop-snappy.version>
     <cdh.cdh-parcel.version>5.0.0-SNAPSHOT</cdh.cdh-parcel.version>
