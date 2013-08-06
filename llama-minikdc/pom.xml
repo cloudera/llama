@@ -89,11 +89,15 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-assembly-plugin</artifactId>
         <configuration>
+          <appendAssemblyId>false</appendAssemblyId>
+          <attach>false</attach>
+          <finalName>${project.artifactId}-${project.version}</finalName>
           <descriptors>
-            <descriptor>../src/main/assemblies/empty.xml</descriptor>
+            <descriptor>src/main/assemblies/minikdc.xml</descriptor>
           </descriptors>
         </configuration>
       </plugin>
     </plugins>
   </build>
+
 </project>

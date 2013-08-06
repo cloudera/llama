@@ -55,6 +55,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
@@ -62,6 +63,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -71,7 +73,10 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * Mini KDC based on Apache Directory Server that can be embedded in testcases.
+ * Mini KDC based on Apache Directory Server that can be embedded in testcases
+ * or used from command line as a standalone KDC.
+ * <p/>
+ * <b>From within testcases:</b>
  * <p/>
  * MiniKdc sets 2 System properties when started and un-sets them when stopped:
  * <ul>
@@ -97,8 +102,70 @@ import java.util.UUID;
  *   <li>debug=false</li>
  * </ul>
  * The generated krb5.conf forces TCP connections.
+ * <p/>
+ * <b>As a standalone KDC:</b>
+ * <p/>
+ * <code>bin/minikdc <WORKDIR> <MINIKDCPROPERTIES> <KEYTABFILE> [<PRINCIPALS>]+
+ * </code>
+ * <p/>
+ * The above configurations apply.
+ * <p/>
  */
 public class MiniKdc {
+  
+  public static void main(String[] args) throws  Exception {
+    if (args.length < 4) {
+      System.out.println("Arguments: <WORKDIR> <MINIKDCPROPERTIES> " +
+          "<KEYTABFILE> [<PRINCIPALS>]+");
+    }
+    File workDir = new File(args[0]);
+    if (!workDir.exists()) {
+      throw new RuntimeException("Specified work directory does not exists: "
+          + workDir.getAbsolutePath());
+    }
+    Properties conf = createConf();
+    File file = new File(args[1]);
+    if (!file.exists()) {
+      throw new RuntimeException("Specified configuration does not exists: " 
+          + file.getAbsolutePath());
+    }
+    Properties userConf = new Properties();
+    userConf.load(new FileReader(file));
+    for (Map.Entry entry : userConf.entrySet()) {
+      conf.put(entry.getKey(), entry.getValue());
+    }
+    if (args.length > 1) {
+    }
+    final MiniKdc miniKdc = new MiniKdc(conf, workDir);
+    miniKdc.start();
+    File krb5conf = new File(workDir, "krb5.conf");
+    miniKdc.getKrb5conf().renameTo(krb5conf);
+    File keytabFile = new File(args[2]).getAbsoluteFile();
+    String[] principals = new String[args.length - 3];
+    System.arraycopy(args, 3, principals, 0, args.length - 3);
+    miniKdc.createPrincipal(keytabFile, principals);
+    System.out.println();
+    System.out.println("Standalone MiniKdc Running");
+    System.out.println("-----------------------------------------------------");
+    System.out.println("  Realm           : " + miniKdc.getRealm());
+    System.out.println("  Running at      : " + miniKdc.getHost() + ":" + 
+        miniKdc.getHost());
+    System.out.println("  krb5conf        : " + krb5conf);
+    System.out.println();
+    System.out.println("  created keytab  : " + keytabFile);
+    System.out.println("  with principals : " + Arrays.asList(principals));
+    System.out.println();
+    System.out.println(" Do <CTRL-C> or kill <PID> to stop it");
+    System.out.println("-----------------------------------------------------");
+    System.out.println();
+    Runtime.getRuntime().addShutdownHook(new Thread() {
+      @Override
+      public void run() {
+        miniKdc.stop();
+      }
+    });
+  }
+  
   private static final Logger LOG = LoggerFactory.getLogger(MiniKdc.class);
 
   public static final String ORG_NAME = "org.name";
@@ -153,7 +220,8 @@ public class MiniKdc {
   private int port;
   private String realm;
   private File workDir;
-
+  private File krb5conf;
+  
   /**
    * Creates a MiniKdc.
    * 
@@ -218,6 +286,10 @@ public class MiniKdc {
     return realm;
   }
 
+  public File getKrb5conf() {
+    return krb5conf;
+  }
+  
   /**
    * Starts the MiniKdc.
    *
@@ -352,16 +424,17 @@ public class MiniKdc {
       line = r.readLine();
     }
     r.close();
-    File file = new File(workDir, "krb5.conf").getAbsoluteFile();
-    FileUtils.writeStringToFile(file,
+    krb5conf = new File(workDir, "krb5.conf").getAbsoluteFile();
+    FileUtils.writeStringToFile(krb5conf,
         MessageFormat.format(sb.toString(), getRealm(), getHost(), 
             Integer.toString(getPort()), System.getProperty("line.separator")));
-    System.setProperty("java.security.krb5.conf", file.getAbsolutePath());
+    System.setProperty("java.security.krb5.conf", krb5conf.getAbsolutePath());
     
     System.setProperty("sun.security.krb5.debug", conf.getProperty(DEBUG, 
         "false"));
     LOG.info("MiniKdc listening at port: {}", getPort());
-    LOG.info("MiniKdc setting JVM krb5.conf to: {}", file.getAbsolutePath());
+    LOG.info("MiniKdc setting JVM krb5.conf to: {}", 
+        krb5conf.getAbsolutePath());
   }
 
   /**
@@ -379,6 +452,18 @@ public class MiniKdc {
         LOG.error("Could not shutdown ApacheDS properly: {}", ex.toString(), 
             ex);
       }
+    }
+    delete(workDir);
+  }
+  
+  private void delete(File f) {
+    if (f.isFile()) {
+      f.delete();
+    } else {
+      for (File c: f.listFiles()) {
+        delete(c);
+      }
+      f.delete();
     }
   }
 
