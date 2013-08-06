@@ -15,26 +15,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.cloudera.llama.am.impl;
+package com.cloudera.llama.am;
 
-import org.slf4j.helpers.MessageFormatter;
+import junit.framework.Assert;
+import org.junit.Test;
 
-/**
- * Utility class to format message using same syntax as slf4j log messages,
- * using '{}' for argument placement.
- */
-public class FastFormat {
+public class TestLlamaAMException {
+  
+  @Test
+  public void testException1() {
+    Throwable t = new Throwable();
+    LlamaAMException ex = new LlamaAMException(t);
+    Assert.assertEquals(t.toString(), ex.getMessage());
+    Assert.assertEquals(t, ex.getCause());
+  }
 
-  /**
-   * Returns a message created using the specified message pattern and 
-   * arguments.
-   *
-   * @param messagePattern message pattern, with '{}' for arguments placement
-   * @param args arguments, they are applied to the message pattern in order.
-   * @return the formatted message
-   */
-  public static String format(String messagePattern, Object... args) {
-    return MessageFormatter.arrayFormat(messagePattern, args).getMessage();
+  @Test
+  public void testException2() {
+    Throwable t = new Throwable();
+    LlamaAMException ex = new LlamaAMException("a", t);
+    Assert.assertEquals("a", ex.getMessage());
+    Assert.assertEquals(t, ex.getCause());
+  }
+
+  @Test
+  public void testException3() {
+    LlamaAMException ex = new LlamaAMException("a");
+    Assert.assertEquals("a", ex.getMessage());
   }
 
 }

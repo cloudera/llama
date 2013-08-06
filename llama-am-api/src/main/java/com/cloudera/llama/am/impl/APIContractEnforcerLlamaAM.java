@@ -22,6 +22,7 @@ import com.cloudera.llama.am.LlamaAMException;
 import com.cloudera.llama.am.LlamaAMListener;
 import com.cloudera.llama.am.PlacedReservation;
 import com.cloudera.llama.am.Reservation;
+import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,53 +32,63 @@ import java.util.UUID;
 public class APIContractEnforcerLlamaAM extends LlamaAM {
   private final Logger logger;
   private final LlamaAM llamaAM;
-  private volatile boolean active;
+  private volatile boolean running;
+  private volatile boolean stopped;
 
   public APIContractEnforcerLlamaAM(LlamaAM llamaAM) {
     this.llamaAM = ParamChecker.notNull(llamaAM, "llamaAM");
     logger = LoggerFactory.getLogger(this.llamaAM.getClass());
-    active = false;
+    running = false;
   }
 
   private Logger getLog() {
     return logger;
   }
 
-  private void checkIsActive() {
-    if (!active) {
-      throw new IllegalStateException("LlamaAM is not active");
+  private void checkIsRunning() {
+    if (!running) {
+      throw new IllegalStateException("LlamaAM is not running");
     }
+  }
+
+  @Override
+  public Configuration getConf() {
+    return llamaAM.getConf();
   }
 
   @Override
   public synchronized void start() throws LlamaAMException {
-    if (active) {
-      throw new IllegalStateException("LlamaAM already active");
+    if (running) {
+      throw new IllegalStateException("LlamaAM already running");
+    }
+    if (stopped) {
+      throw new IllegalStateException("LlamaAM stopped, cannot be restarted");
     }
     llamaAM.start();
     getLog().trace("start()");
-    active = true;
+    running = true;
   }
 
   @Override
   public synchronized void stop() {
-    if (active) {
+    if (running) {
       llamaAM.stop();
       getLog().trace("stop()");
-      active = false;
+      running = false;
+      stopped = true;
     }
   }
 
   @Override
   public List<String> getNodes() throws LlamaAMException {
-    checkIsActive();
+    checkIsRunning();
     getLog().trace("getNodes()");
     return llamaAM.getNodes();
   }
 
   @Override
   public void addListener(LlamaAMListener listener) {
-    checkIsActive();
+    checkIsRunning();
     ParamChecker.notNull(listener, "listener");
     llamaAM.addListener(listener);
     getLog().trace("addListener({})", listener);
@@ -85,7 +96,7 @@ public class APIContractEnforcerLlamaAM extends LlamaAM {
 
   @Override
   public void removeListener(LlamaAMListener listener) {
-    checkIsActive();
+    checkIsRunning();
     ParamChecker.notNull(listener, "listener");
     llamaAM.removeListener(listener);
     getLog().trace("removeListener({})", listener);
@@ -93,7 +104,7 @@ public class APIContractEnforcerLlamaAM extends LlamaAM {
 
   @Override
   public UUID reserve(Reservation reservation) throws LlamaAMException {
-    checkIsActive();
+    checkIsRunning();
     ParamChecker.notNull(reservation, "reservation");
     UUID reservationId = llamaAM.reserve(reservation);
     if (reservationId == null) {
@@ -106,7 +117,7 @@ public class APIContractEnforcerLlamaAM extends LlamaAM {
   @Override
   public PlacedReservation getReservation(UUID reservationId)
       throws LlamaAMException {
-    checkIsActive();
+    checkIsRunning();
     ParamChecker.notNull(reservationId, "reservationId");
     PlacedReservation reservation = llamaAM.getReservation(reservationId);
     getLog().trace("getReservation({}): {}", reservationId, reservation);
@@ -115,7 +126,7 @@ public class APIContractEnforcerLlamaAM extends LlamaAM {
 
   @Override
   public void releaseReservation(UUID reservationId) throws LlamaAMException {
-    checkIsActive();
+    checkIsRunning();
     ParamChecker.notNull(reservationId, "reservationId");
     llamaAM.releaseReservation(reservationId);
     getLog().trace("releaseReservation({})", reservationId);
@@ -124,7 +135,7 @@ public class APIContractEnforcerLlamaAM extends LlamaAM {
   @Override
   public void releaseReservationsForClientId(UUID clientId)
       throws LlamaAMException {
-    checkIsActive();
+    checkIsRunning();
     ParamChecker.notNull(clientId, "clientId");
     llamaAM.releaseReservationsForClientId(clientId);
     getLog().trace("releaseReservationsForClientId({})", clientId);

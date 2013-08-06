@@ -42,6 +42,9 @@ public abstract class LlamaAM {
 
   public static LlamaAM create(Configuration conf) throws LlamaAMException {
     conf = clone(conf);
+    if (conf.get(CLASS_KEY) == null) {
+      throw new IllegalArgumentException("LlamaAM class not set");
+    }
     boolean multi = conf.getBoolean(MultiQueueLlamaAM.MULTI_CREATE_KEY, true);
     String classKey = (multi) ? MultiQueueLlamaAM.SINGLE_QUEUE_AM_CLASS_KEY
                               : CLASS_KEY;
@@ -53,6 +56,8 @@ public abstract class LlamaAM {
     return (multi) ? new APIContractEnforcerLlamaAM(am) : am;
   }
 
+  public abstract Configuration getConf();
+  
   public abstract void start() throws LlamaAMException;
 
   public abstract void stop();

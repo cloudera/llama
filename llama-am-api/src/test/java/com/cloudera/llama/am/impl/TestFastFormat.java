@@ -17,24 +17,13 @@
  */
 package com.cloudera.llama.am.impl;
 
-import org.slf4j.helpers.MessageFormatter;
+import junit.framework.Assert;
+import org.junit.Test;
 
-/**
- * Utility class to format message using same syntax as slf4j log messages,
- * using '{}' for argument placement.
- */
-public class FastFormat {
-
-  /**
-   * Returns a message created using the specified message pattern and 
-   * arguments.
-   *
-   * @param messagePattern message pattern, with '{}' for arguments placement
-   * @param args arguments, they are applied to the message pattern in order.
-   * @return the formatted message
-   */
-  public static String format(String messagePattern, Object... args) {
-    return MessageFormatter.arrayFormat(messagePattern, args).getMessage();
+public class TestFastFormat {
+  
+  @Test
+  public void testFormat() {
+    Assert.assertEquals("12", FastFormat.format("{}{}", 1, 2));
   }
-
 }

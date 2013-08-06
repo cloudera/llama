@@ -98,6 +98,14 @@ public class TestAbstractSingleQueueLlamaAM {
     return llama;
   }
 
+  @Test(expected = IllegalStateException.class)
+  public void testMissingQueue() throws Exception {
+    DummySingleQueueLlamaAM llama = new DummySingleQueueLlamaAM();
+    Configuration conf = new Configuration(false);
+    llama.setConf(conf);
+    llama.start();
+  }
+
   @Test
   public void testRmStartStop() throws Exception {
     DummySingleQueueLlamaAM llama = createLlamaAM();
@@ -114,11 +122,30 @@ public class TestAbstractSingleQueueLlamaAM {
     }
   }
 
+  @Test
+  public void testAddRemoveListener() throws Exception {
+    DummySingleQueueLlamaAM llama = createLlamaAM();
+    LlamaAMListener l = new LlamaAMListener() {
+      @Override
+      public void handle(LlamaAMEvent event) {
+      }
+    };
+    Assert.assertNull(llama.getListener());
+    llama.addListener(l);
+    Assert.assertNotNull(llama.getListener());
+    llama.removeListener(l);
+    Assert.assertNull(llama.getListener());
+    llama.removeListener(l);
+  }
+
   private static final Resource RESOURCE1 = new Resource(UUID.randomUUID(), 
       "n1", Resource.LocationEnforcement.DONT_CARE, 1, 1024);
 
   private static final Resource RESOURCE2 = new Resource(UUID.randomUUID(), 
       "n2", Resource.LocationEnforcement.PREFERRED, 2, 2048);
+
+  private static final Resource RESOURCE3 = new Resource(UUID.randomUUID(),
+      "n3", Resource.LocationEnforcement.PREFERRED, 3, 2048);
 
   private static final List<Resource> RESOURCES1 = Arrays.asList(RESOURCE1);
 
@@ -176,6 +203,7 @@ public class TestAbstractSingleQueueLlamaAM {
       llama.start();
       UUID reservationId = llama.reserve(RESERVATION1_NONGANG);
       llama.releaseReservation(reservationId);
+      llama.releaseReservation(UUID.randomUUID());
       Assert.assertTrue(llama.release);
       Assert.assertNull(llama._getReservation(reservationId));
     } finally {
@@ -384,8 +412,6 @@ public class TestAbstractSingleQueueLlamaAM {
     try {
       llama.start();
       llama.addListener(listener);
-      llama.start();
-      llama.addListener(listener);
       UUID reservationId = llama.reserve(RESERVATION1_GANG);
       RMResourceChange change = RMResourceChange.createResourceChange
           (RESOURCE1.getClientResourceId(), PlacedResource.Status.REJECTED);
@@ -404,8 +430,6 @@ public class TestAbstractSingleQueueLlamaAM {
     DummySingleQueueLlamaAM llama = createLlamaAM();
     DummyLlamaAMListener listener = new DummyLlamaAMListener();
     try {
-      llama.start();
-      llama.addListener(listener);
       llama.start();
       llama.addListener(listener);
       UUID reservationId = llama.reserve(RESERVATION2_GANG);
@@ -430,8 +454,6 @@ public class TestAbstractSingleQueueLlamaAM {
     DummySingleQueueLlamaAM llama = createLlamaAM();
     DummyLlamaAMListener listener = new DummyLlamaAMListener();
     try {
-      llama.start();
-      llama.addListener(listener);
       llama.start();
       llama.addListener(listener);
       UUID reservationId = llama.reserve(RESERVATION2_NONGANG);
@@ -461,8 +483,6 @@ public class TestAbstractSingleQueueLlamaAM {
     try {
       llama.start();
       llama.addListener(listener);
-      llama.start();
-      llama.addListener(listener);
       UUID reservationId = llama.reserve(RESERVATION2_GANG);
 
       RMResourceChange change1 = RMResourceChange.createResourceAllocation
@@ -485,8 +505,6 @@ public class TestAbstractSingleQueueLlamaAM {
     DummySingleQueueLlamaAM llama = createLlamaAM();
     DummyLlamaAMListener listener = new DummyLlamaAMListener();
     try {
-      llama.start();
-      llama.addListener(listener);
       llama.start();
       llama.addListener(listener);
       UUID reservationId = llama.reserve(RESERVATION2_NONGANG);
@@ -517,8 +535,6 @@ public class TestAbstractSingleQueueLlamaAM {
     try {
       llama.start();
       llama.addListener(listener);
-      llama.start();
-      llama.addListener(listener);
       UUID reservationId = llama.reserve(RESERVATION1_GANG);
 
       RMResourceChange change1 = RMResourceChange.createResourceAllocation
@@ -546,8 +562,6 @@ public class TestAbstractSingleQueueLlamaAM {
     DummySingleQueueLlamaAM llama = createLlamaAM();
     DummyLlamaAMListener listener = new DummyLlamaAMListener();
     try {
-      llama.start();
-      llama.addListener(listener);
       llama.start();
       llama.addListener(listener);
       UUID reservationId = llama.reserve(RESERVATION1_NONGANG);
@@ -580,8 +594,6 @@ public class TestAbstractSingleQueueLlamaAM {
     try {
       llama.start();
       llama.addListener(listener);
-      llama.start();
-      llama.addListener(listener);
       UUID reservationId = llama.reserve(RESERVATION2_GANG);
 
       RMResourceChange change1 = RMResourceChange.createResourceAllocation
@@ -604,8 +616,6 @@ public class TestAbstractSingleQueueLlamaAM {
     DummySingleQueueLlamaAM llama = createLlamaAM();
     DummyLlamaAMListener listener = new DummyLlamaAMListener();
     try {
-      llama.start();
-      llama.addListener(listener);
       llama.start();
       llama.addListener(listener);
       UUID reservationId = llama.reserve(RESERVATION2_NONGANG);
@@ -696,8 +706,6 @@ public class TestAbstractSingleQueueLlamaAM {
     try {
       llama.start();
       llama.addListener(listener);
-      llama.start();
-      llama.addListener(listener);
       RMResourceChange change1 = RMResourceChange.createResourceAllocation(
           RESOURCE1.getClientResourceId(), "cid1", 3, 4096, "a1");
       llama.rmChanges(Arrays.asList(change1));
@@ -707,8 +715,41 @@ public class TestAbstractSingleQueueLlamaAM {
     }
   }
 
+  @Test(expected = IllegalArgumentException.class)
+  public void testRmChangesNull() throws Exception {
+    DummySingleQueueLlamaAM llama = createLlamaAM();
+    try {
+      llama.start();
+      llama.rmChanges(null);
+    } finally {
+      llama.stop();
+    }
+  }
+
   @Test
-  public void testReleaseReservationsForClientId() {
-    //TODO
+  public void testReleaseReservationsForClientId() throws Exception{
+    DummySingleQueueLlamaAM llama = createLlamaAM();
+    DummyLlamaAMListener listener = new DummyLlamaAMListener();
+    try {
+      llama.start();
+      llama.addListener(listener);
+      UUID cId1 = UUID.randomUUID();
+      UUID cId2 = UUID.randomUUID();
+      UUID reservationId1 = llama.reserve(new Reservation(cId1, "queue", 
+          Arrays.asList(RESOURCE1), true));
+      UUID reservationId2 = llama.reserve(new Reservation(cId1, "queue", 
+          Arrays.asList(RESOURCE2), true));
+      UUID reservationId3 = llama.reserve(new Reservation(cId2, "queue", 
+          Arrays.asList(RESOURCE3), true));
+      Assert.assertNotNull(llama._getReservation(reservationId1));
+      Assert.assertNotNull(llama._getReservation(reservationId2));
+      Assert.assertNotNull(llama._getReservation(reservationId3));
+      llama.releaseReservationsForClientId(cId1);
+      Assert.assertNull(llama._getReservation(reservationId1));
+      Assert.assertNull(llama._getReservation(reservationId2));
+      Assert.assertNotNull(llama._getReservation(reservationId3));
+    } finally {
+      llama.stop();
+    }
   }
 }

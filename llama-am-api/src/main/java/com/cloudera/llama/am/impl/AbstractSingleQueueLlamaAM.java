@@ -102,6 +102,10 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
     }
   }
 
+  protected LlamaAMListener getListener() {
+    return listener;
+  }
+
   void _addReservation(PlacedReservationImpl reservation) {
     UUID reservationId = reservation.getReservationId();
     reservationsMap.put(reservationId, reservation);
@@ -164,14 +168,14 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
     synchronized (this) {
       for (PlacedReservation reservation :
           new ArrayList<PlacedReservation>(reservationsMap.values())) {
-        _deleteReservation(reservation.getReservationId());
-        reservations.add(reservation);
+        if (reservation.getClientId().equals(clientId)) {
+          _deleteReservation(reservation.getReservationId());
+          reservations.add(reservation);
+        }
       }
     }
     for (PlacedReservation reservation : reservations) {
-      if (reservation != null) {
-        rmRelease(reservation.getResources());
-      }
+      rmRelease(reservation.getResources());
     }
   }
 
@@ -192,7 +196,7 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
     UUID reservationId = resource.getReservationId();
     PlacedReservationImpl reservation = reservationsMap.get(reservationId);
     if (reservation == null) {
-      getLog().warn("Reservation '{}' during resource '{}' rejection " + 
+      getLog().warn("Unknown Reservation '{}' during resource '{}' rejection " + 
           "handling", reservationId, resource.getClientResourceId());
     }
     // if reservation is NULL it means it is gone already
@@ -263,8 +267,9 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
     UUID reservationId = resource.getReservationId();
     PlacedReservationImpl reservation = reservationsMap.get(reservationId);
     if (reservation == null) {
-      getLog().warn("Reservation '{}' during resource preemption handling " +
-          "for" + " '{}'", reservationId, resource.getClientResourceId());
+      getLog().warn("Unknown Reservation '{}' during resource preemption " +
+          "handling for" + " '{}'", reservationId, 
+          resource.getClientResourceId());
     }
     if (reservation != null) {
       LlamaAMEventImpl event = getEventForClientId(eventsMap,
@@ -300,8 +305,8 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
     UUID reservationId = resource.getReservationId();
     PlacedReservationImpl reservation = reservationsMap.get(reservationId);
     if (reservation == null) {
-      getLog().warn("Reservation '{}' during resource lost handling  for " + 
-          "'{}'", reservationId, resource.getClientResourceId());
+      getLog().warn("Unknown Reservation '{}' during resource lost handling " +
+          "for '{}'", reservationId, resource.getClientResourceId());
     }
     if (reservation != null) {
       LlamaAMEventImpl event = getEventForClientId(eventsMap,

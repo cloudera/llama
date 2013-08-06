@@ -17,460 +17,247 @@
  */
 package com.cloudera.llama.am.impl;
 
+import com.cloudera.llama.am.AssertUtils;
+import com.cloudera.llama.am.LlamaAM;
+import com.cloudera.llama.am.LlamaAMException;
+import com.cloudera.llama.am.LlamaAMListener;
+import com.cloudera.llama.am.PlacedReservation;
+import com.cloudera.llama.am.Reservation;
+import com.cloudera.llama.am.Resource;
+import com.cloudera.llama.am.TestReservation;
+import org.apache.hadoop.conf.Configuration;
+import org.junit.Assert;
+import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.Callable;
+
 public class TestAPIContractEnforcerResourceAM {
 
-//  public static class DummyLlamaAM extends LlamaAM {
-//    private boolean connected = false;
-//    private boolean active = false;
-//
-//    public DummyLlamaAM() {
-//    }
-//    
-//    @Override
-//    public void addListener(LlamaAMListener listener) {
-//    }
-//
-//    @Override
-//    public void removeListener(LlamaAMListener listener) {
-//    }
-//
-//    @Override
-//    public void close(String queue) {
-//      connected = false;
-//    }
-//
-//    @Override
-//    public List<String> getQueues() throws LlamaAMException {
-//      return null;
-//    }
-//
-//    @Override
-//    public boolean isConnected(String queue) throws LlamaAMException {
-//      return connected;
-//    }
-//
-//    @Override
-//    public void start(String queue) throws LlamaAMException {
-//      connected = true;
-//    }
-//
-//    @Override
-//    public void start() throws LlamaAMException {
-//      active = true;
-//    }
-//
-//    @Override
-//    @SuppressWarnings("unchecked")
-//    public Set<String> getAvailableNodes() throws LlamaAMException {
-//      return Collections.EMPTY_SET;
-//    }
-//
-//    @Override
-//    public boolean isActive() {
-//      return active;
-//    }
-//
-//    @Override
-//    public synchronized void stop() {
-//      active = false;
-//    }
-//
-//    @Override
-//    public UUID reserve(Reservation reservation) 
-//      throws LlamaAMException {
-//      return new RequestIDImpl(new QueueIDImpl(reservation.getQueue()));
-//    }
-//
-//    @Override
-//    public void releaseReservation(UUID reservationId) throws LlamaAMException {
-//    }
-//
-//    @Override
-//    public void releaseReservation(ResourceID id) throws LlamaAMException {
-//    }
-//
-//    @Override
-//    public Status getRequestStatus(RequestID id) 
-//      throws LlamaAMException {
-//      return null;
-//    }
-//
-//    @Override
-//    public Status getResourceStatus(ResourceID id) 
-//      throws LlamaAMException {
-//      return null;
-//    }
-//
-//    @Override
-//    public Resource getResource(ResourceID id) throws LlamaAMException {
-//      return null;
-//    }
-//
-//    @Override
-//    public Reservation getRequest(RequestID id) 
-//      throws LlamaAMException {
-//      return null;
-//    }
-//
-//    @Override
-//    public List<RequestID> getRequests(String queue) 
-//      throws LlamaAMException {
-//      return null;
-//    }
-//
-//    @Override
-//    public List<ResourceID> getResources(String queue) 
-//      throws LlamaAMException {
-//      return null;
-//    }
-//
-//    @Override
-//    public List<RequestID> getRequests(String queue, Status status) 
-//      throws LlamaAMException {
-//      return null;
-//    }
-//
-//    @Override
-//    public List<ResourceID> getResources(String queue, Status status) 
-//      throws LlamaAMException {
-//      return null;
-//    }
-//
-//  }
-//
-//  private LlamaAM createRAM() throws Exception {
-//    DummyLlamaAM thrift = new DummyLlamaAM();
-//    thrift.start();
-//    return new APIContractEnforcerLlamaAM(thrift);
-//  }
-//
-//  @Test(expected = IllegalArgumentException.class)
-//  public void testRequestNullQueue() throws Exception {
-//    LlamaAM thrift = createRAM();
-//    try {
-//      thrift.reserve(new Reservation(null, null, false));
-//    } finally {
-//      thrift.stop();
-//    }
-//  }
-//
-//  @Test(expected = IllegalArgumentException.class)
-//  public void testRequestEmptyQueue() throws Exception {
-//    LlamaAM thrift = createRAM();
-//    try {
-//      thrift.reserve(new Reservation(" ", null, false));
-//    } finally {
-//      thrift.stop();
-//    }
-//  }
-//
-//  @Test(expected = IllegalArgumentException.class)
-//  public void testRequestOtherQueue() throws Exception {
-//    LlamaAM thrift = createRAM();
-//    try {
-//      thrift.reserve(new Reservation("o", null, false));
-//    } finally {
-//      thrift.stop();
-//    }
-//  }
-//
-//  @Test(expected = IllegalArgumentException.class)
-//  public void testRequestNullResources() throws Exception {
-//    LlamaAM thrift = createRAM();
-//    try {
-//      thrift.reserve(new Reservation("q", null, false));
-//    } finally {
-//      thrift.stop();
-//    }
-//  }
-//
-//  @Test(expected = IllegalArgumentException.class)
-//  public void testRequestEmptyResources() throws Exception {
-//    LlamaAM thrift = createRAM();
-//    try {
-//      thrift.reserve(new Reservation("q", new ArrayList<Resource>(), false));
-//    } finally {
-//      thrift.stop();
-//    }
-//  }
-//
-//  @Test(expected = IllegalArgumentException.class)
-//  public void testRequestNullResourceElements() throws Exception {
-//    LlamaAM thrift = createRAM();
-//    try {
-//      List<Resource> resources = new ArrayList<Resource>();
-//      resources.add(null);
-//      thrift.reserve(new Reservation("q", resources, false));
-//    } finally {
-//      thrift.stop();
-//    }
-//  }
-//
-//  @Test
-//  public void testRequestOK() throws Exception {
-//    LlamaAM thrift = createRAM();
-//    try {
-//      thrift.start("q");
-//      RequestID id = thrift.reserve(new Reservation("q", Arrays.asList(
-//        new Resource(java.util.UUID.randomUUID(), Arrays.asList("h1"), Resource.LocationEnforcement.DONT_CARE, 1, 1, 1)), false));
-//      Assert.assertNotNull(id);
-//    } finally {
-//      thrift.stop();
-//    }
-//  }
-//
-//  @Test(expected = IllegalArgumentException.class)
-//  public void testCancelRequestNull() throws Exception {
-//    LlamaAM thrift = createRAM();
-//    try {
-//      thrift.releaseReservation((RequestID) null);
-//    } finally {
-//      thrift.stop();
-//    }
-//  }
-//
-//  @Test
-//  public void testCancelRequestOK() throws Exception {
-//    LlamaAM thrift = createRAM();
-//    try {
-//      thrift.releaseReservation(new RequestIDImpl(new QueueIDImpl("q")));
-//    } finally {
-//      thrift.stop();
-//    }
-//  }
-//
-//  @Test(expected = IllegalArgumentException.class)
-//  public void testCancelResourceNull() throws Exception {
-//    LlamaAM thrift = createRAM();
-//    try {
-//      thrift.releaseReservation((ResourceID) null);
-//    } finally {
-//      thrift.stop();
-//    }
-//  }
-//
-//  @Test
-//  public void testCancelResourceOK() throws Exception {
-//    LlamaAM thrift = createRAM();
-//    try {
-//      thrift.releaseReservation(new ResourceIDImpl(new RequestIDImpl(new QueueIDImpl("q"))));
-//    } finally {
-//      thrift.stop();
-//    }
-//  }
-//
-//  @Test(expected = IllegalArgumentException.class)
-//  public void testGetResourceNull() throws Exception {
-//    LlamaAM thrift = createRAM();
-//    try {
-//      thrift.getResource(null);
-//    } finally {
-//      thrift.stop();
-//    }
-//  }
-//
-//  @Test
-//  public void testGetResourceUnknownResource() throws Exception {
-//    LlamaAM thrift = createRAM();
-//    try {
-//      thrift.getResource(new ResourceIDImpl(new RequestIDImpl(
-//        new QueueIDImpl("q"))));
-//    } finally {
-//      thrift.stop();
-//    }
-//  }
-//
-//  @Test(expected = IllegalArgumentException.class)
-//  public void testGetResourcesNull() throws Exception {
-//    LlamaAM thrift = createRAM();
-//    try {
-//      thrift.getRequest((RequestID) null);
-//    } finally {
-//      thrift.stop();
-//    }
-//  }
-//
-//  @Test
-//  public void testGetResourcesUnknownRequest() throws Exception {
-//    LlamaAM thrift = createRAM();
-//    try {
-//      thrift.getRequest(new RequestIDImpl(new QueueIDImpl("q")));
-//    } finally {
-//      thrift.stop();
-//    }
-//  }
-//
-//  @Test(expected = IllegalArgumentException.class)
-//  public void testGetResourcesStatusInvalidQueue() throws Exception {
-//    LlamaAM thrift = createRAM();
-//    try {
-//      thrift.getResources("o", null);
-//    } finally {
-//      thrift.stop();
-//    }
-//  }
-//
-//  @Test(expected = IllegalArgumentException.class)
-//  public void testGetResourcesQueueStatusNull() throws Exception {
-//    LlamaAM thrift = createRAM();
-//    try {
-//      thrift.getResources("q", null);
-//    } finally {
-//      thrift.stop();
-//    }
-//  }
-//
-//  @Test(expected = IllegalArgumentException.class)
-//  public void testGetResourcesStatusRejected() throws Exception {
-//    LlamaAM thrift = createRAM();
-//    try {
-//      thrift.getResources("q", Status.REJECTED);
-//    } finally {
-//      thrift.stop();
-//    }
-//  }
-//
-//  @Test(expected = IllegalArgumentException.class)
-//  public void testGetResourcesStatusUnknown() throws Exception {
-//    LlamaAM thrift = createRAM();
-//    try {
-//      thrift.getResources("q", Status.UNKNOWN);
-//    } finally {
-//      thrift.stop();
-//    }
-//  }
-//
-//  @Test(expected = IllegalArgumentException.class)
-//  public void testGetResourcesStatusKilled() throws Exception {
-//    LlamaAM thrift = createRAM();
-//    try {
-//      thrift.getResources("q", Status.KILLED);
-//    } finally {
-//      thrift.stop();
-//    }
-//  }
-//
-//  @Test
-//  public void testGetResourcesALLStatusOK() throws Exception {
-//    LlamaAM thrift = createRAM();
-//    try {
-//      thrift.getResources(LlamaAM.ALL_QUEUES, Status.ALLOCATED);
-//    } finally {
-//      thrift.stop();
-//    }
-//  }
-//
-//  @Test(expected = IllegalArgumentException.class)
-//  public void testGetRequestsStatusNull() throws Exception {
-//    LlamaAM thrift = createRAM();
-//    try {
-//      thrift.getRequestStatus(null);
-//    } finally {
-//      thrift.stop();
-//    }
-//  }
-//
-//  @Test(expected = IllegalArgumentException.class)
-//  public void testGetRequestsQueueStatusUnknown() throws Exception {
-//    LlamaAM thrift = createRAM();
-//    try {
-//      thrift.getRequests("q", Status.UNKNOWN);
-//    } finally {
-//      thrift.stop();
-//    }
-//  }
-//
-//  @Test(expected = IllegalArgumentException.class)
-//  public void testGetRequestsQueueStatusNull() throws Exception {
-//    LlamaAM thrift = createRAM();
-//    try {
-//      thrift.getRequests("q", null);
-//    } finally {
-//      thrift.stop();
-//    }
-//  }
-//
-//  @Test
-//  public void testReturns() throws Exception {
-//    LlamaAM thrift = createRAM();
-//    try {
-//      thrift.start("q");
-//      RequestIDImpl req = new RequestIDImpl(new QueueIDImpl("q"));
-//      Assert.assertNull(thrift.getResource(new ResourceIDImpl(req)));
-//      Assert.assertNull(thrift.getRequest(req));
-//      Assert.assertNotNull(thrift.getRequests("q"));
-//      Assert.assertNotNull(thrift.getResources("q", Status.ALLOCATED));
-//      Assert.assertEquals(Status.UNKNOWN, 
-//        thrift.getRequestStatus(req));
-//    } finally {
-//      thrift.stop();
-//    }
-//  }
-//
-//  @Test
-//  public void testMethodsPostClose() throws Exception {
-//    final RequestIDImpl req = new RequestIDImpl(new QueueIDImpl("q"));
-//    final LlamaAM thrift = createRAM();
-//    Assert.assertTrue(thrift.isActive());
-//    thrift.stop();
-//    Assert.assertFalse(thrift.isActive());
-//    AssertUtils.assertException(new Callable<Object>() {
-//      @Override
-//      public Object call() throws Exception {
-//        thrift.removeListener(null);
-//        return null;
-//      }
-//    }, IllegalStateException.class);
-//    AssertUtils.assertException(new Callable<Object>() {
-//      @Override
-//      public Object call() throws Exception {
-//        thrift.addListener(null);
-//        return null;
-//      }
-//    }, IllegalStateException.class);
-//    AssertUtils.assertException(new Callable<Object>() {
-//      @Override
-//      public Object call() throws Exception {
-//        thrift.getRequests(LlamaAM.ALL_QUEUES);
-//        return null;
-//      }
-//    }, IllegalStateException.class);
-//    AssertUtils.assertException(new Callable<Object>() {
-//      @Override
-//      public Object call() throws Exception {
-//        thrift.getRequests(LlamaAM.ALL_QUEUES, Status.PENDING);
-//        return null;
-//      }
-//    }, IllegalStateException.class);
-//    AssertUtils.assertException(new Callable<Object>() {
-//      @Override
-//      public Object call() throws Exception {
-//        thrift.getResource(new ResourceIDImpl(req));
-//        return null;
-//      }
-//    }, IllegalStateException.class);
-//    AssertUtils.assertException(new Callable<Object>() {
-//      @Override
-//      public Object call() throws Exception {
-//        thrift.getResources("q", Status.ALLOCATED);
-//        return null;
-//      }
-//    }, IllegalStateException.class);
-//    AssertUtils.assertException(new Callable<Object>() {
-//      @Override
-//      public Object call() throws Exception {
-//        thrift.getRequestStatus(req);
-//        return null;
-//      }
-//    }, IllegalStateException.class);
-//    AssertUtils.assertException(new Callable<Object>() {
-//      @Override
-//      public Object call() throws Exception {
-//        thrift.getResourceStatus(new ResourceIDImpl(req));
-//        return null;
-//      }
-//    }, IllegalStateException.class);
-//
-//  }
+  public static class MyLlamaAM extends LlamaAM {
+    static boolean nullOnReserve;
+
+    public MyLlamaAM() {
+      nullOnReserve = false;
+    }
+    
+    @Override
+    public void addListener(LlamaAMListener listener) {
+    }
+
+    @Override
+    public void removeListener(LlamaAMListener listener) {
+    }
+
+    @Override
+    public void start() throws LlamaAMException {
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<String> getNodes() throws LlamaAMException {
+      return Collections.EMPTY_LIST;
+    }
+
+    @Override
+    public synchronized void stop() {
+    }
+
+    @Override
+    public UUID reserve(Reservation reservation) 
+      throws LlamaAMException {
+      return (nullOnReserve) ? null : UUID.randomUUID();
+    }
+
+    @Override
+    public void releaseReservation(UUID reservationId) throws LlamaAMException {
+    }
+
+    @Override
+    public Configuration getConf() {
+      return null;
+    }
+
+    @Override
+    public PlacedReservation getReservation(UUID reservationId)
+        throws LlamaAMException {
+      return null;
+    }
+
+    @Override
+    public void releaseReservationsForClientId(UUID clientId)
+        throws LlamaAMException {
+    }
+  }
+
+  public static Reservation createReservation() {
+    List<Resource> resources = new ArrayList<Resource>();
+    resources.add(TestReservation.createResource());
+    return new Reservation(UUID.randomUUID(), "q", resources, false);
+  }
+  
+  private LlamaAM createLlamaAM() throws Exception {
+    MyLlamaAM am = new MyLlamaAM();
+    am.start();
+    return new APIContractEnforcerLlamaAM(am);
+  }
+
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testNullReservation() throws Exception {
+    LlamaAM am = createLlamaAM();
+    try {
+      am.start();
+      am.reserve(null);
+    } finally {
+      am.stop();
+    }
+  }
+
+  @Test
+  public void testRequestOK() throws Exception {
+    LlamaAM am = createLlamaAM();
+    try {
+      am.start();
+      Assert.assertNotNull(am.reserve(createReservation()));
+    } finally {
+      am.stop();
+    }
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testReleaseNull() throws Exception {
+    LlamaAM am = createLlamaAM();
+    try {
+      am.start();
+      am.releaseReservation(null);
+    } finally {
+      am.stop();
+    }
+  }
+
+  @Test
+  public void testReleaseOK() throws Exception {
+    LlamaAM am = createLlamaAM();
+    try {
+      am.start();
+      am.releaseReservation(UUID.randomUUID());
+    } finally {
+      am.stop();
+    }
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testGetReservationNull() throws Exception {
+    LlamaAM am = createLlamaAM();
+    try {
+      am.start();
+      am.getReservation(null);
+    } finally {
+      am.stop();
+    }
+  }
+
+  @Test
+  public void testGetReservationUnknown() throws Exception {
+    LlamaAM am = createLlamaAM();
+    try {
+      am.start();
+      am.getReservation(UUID.randomUUID());
+    } finally {
+      am.stop();
+    }
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void testReserveNull() throws Exception {
+    LlamaAM am = createLlamaAM();
+    MyLlamaAM.nullOnReserve = true;
+    try {
+      am.start();
+      am.reserve(createReservation());
+    } finally {
+      am.stop();
+    }
+  }
+
+
+  @Test(expected = IllegalStateException.class)
+  public void testDoubleStart() throws Exception {
+    LlamaAM am = createLlamaAM();
+    try {
+      am.start();
+      am.start();
+    } finally {
+      am.stop();
+    }    
+  }
+  
+  @Test
+  public void testMethodsPostClose() throws Exception {
+    final LlamaAM am = createLlamaAM();
+    am.start();
+    am.stop();
+    am.getConf();
+    AssertUtils.assertException(new Callable<Object>() {
+      @Override
+      public Object call() throws Exception {
+        am.removeListener(null);
+        return null;
+      }
+    }, IllegalStateException.class);
+    AssertUtils.assertException(new Callable<Object>() {
+      @Override
+      public Object call() throws Exception {
+        am.addListener(null);
+        return null;
+      }
+    }, IllegalStateException.class);
+    AssertUtils.assertException(new Callable<Object>() {
+      @Override
+      public Object call() throws Exception {
+        am.reserve(null);
+        return null;
+      }
+    }, IllegalStateException.class);
+    AssertUtils.assertException(new Callable<Object>() {
+      @Override
+      public Object call() throws Exception {
+        am.releaseReservation(null);
+        return null;
+      }
+    }, IllegalStateException.class);
+    AssertUtils.assertException(new Callable<Object>() {
+      @Override
+      public Object call() throws Exception {
+        am.releaseReservationsForClientId(null);
+        return null;
+      }
+    }, IllegalStateException.class);
+    AssertUtils.assertException(new Callable<Object>() {
+      @Override
+      public Object call() throws Exception {
+        am.getReservation(null);
+        return null;
+      }
+    }, IllegalStateException.class);
+    AssertUtils.assertException(new Callable<Object>() {
+      @Override
+      public Object call() throws Exception {
+        am.getNodes();
+        return null;
+      }
+    }, IllegalStateException.class);
+    AssertUtils.assertException(new Callable<Object>() {
+      @Override
+      public Object call() throws Exception {
+        am.start();
+        return null;
+      }
+    }, IllegalStateException.class);
+  }
 
 }

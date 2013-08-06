@@ -41,9 +41,9 @@ public class Resource {
       "clientResourceId");
     this.location = ParamChecker.notEmpty(location, "location");
     this.enforcement = ParamChecker.notNull(enforcement, "enforcement");
-    this.cpuVCores = ParamChecker.lessThanZero(cpuVCores, "cpuVCores");
-    this.memoryMb = ParamChecker.lessThanZero(memoryMb, "memoryMb");
-    ParamChecker.asserts((cpuVCores != 0 && memoryMb != 0),
+    this.cpuVCores = ParamChecker.greaterEqualZero(cpuVCores, "cpuVCores");
+    this.memoryMb = ParamChecker.greaterEqualZero(memoryMb, "memoryMb");
+    ParamChecker.asserts((cpuVCores != 0 || memoryMb != 0),
         "cpuVCores and memoryMb cannot be both zero");
   }
 

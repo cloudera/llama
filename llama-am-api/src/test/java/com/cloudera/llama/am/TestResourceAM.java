@@ -19,7 +19,7 @@ package com.cloudera.llama.am;
 
 public class TestResourceAM {
 
-//  public static class DummyLlamaAM extends LlamaAM 
+//  public static class MyLlamaAM extends LlamaAM 
 //    implements Configurable {
 //    boolean active;
 //    boolean connected;
@@ -149,7 +149,7 @@ public class TestResourceAM {
 //  public void testResourceAMLifeCycle() throws Exception {
 //    final Resource resource = new Resource(java.util.UUID.randomUUID(), Arrays.asList("h1"), Resource.LocationEnforcement.DONT_CARE, 1, 1, 1);
 //    Configuration conf = new Configuration(false);
-//    conf.set(LlamaAM.CLASS_KEY, DummyLlamaAM.class.getName());
+//    conf.set(LlamaAM.CLASS_KEY, MyLlamaAM.class.getName());
 //    conf.setBoolean("multi.queue", true);
 //    final LlamaAM thrift = LlamaAM.create(conf);
 //    try {

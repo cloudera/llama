@@ -47,7 +47,7 @@ public class ParamChecker {
     return l;
   }
 
-  public static int lessThanZero(int i, String paramName) {
+  public static int greaterEqualZero(int i, String paramName) {
     if (i < 0) {
       throw new IllegalArgumentException(paramName + " cannot be less than 0");
     }

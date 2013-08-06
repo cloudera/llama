@@ -42,7 +42,8 @@ public class PlacedReservationImpl extends PlacedReservation {
   }
 
   @Override
-  protected List<PlacedResource> copyResources(List<? extends Resource> resources) {
+  protected List<PlacedResource> copyResources(List<? extends Resource> 
+      resources) {
     List<PlacedResource> list = new ArrayList<PlacedResource>();
     for (Resource resource : resources) {
       list.add(new PlacedResourceImpl(resource));
