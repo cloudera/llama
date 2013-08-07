@@ -28,6 +28,7 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -36,7 +37,8 @@ import java.util.UUID;
 public class TestMockResourceAM {
 
   public static class MockListener implements LlamaAMListener {
-    public List<LlamaAMEvent> events = new ArrayList<LlamaAMEvent>();
+    public List<LlamaAMEvent> events = Collections.synchronizedList(
+        new ArrayList<LlamaAMEvent>());
 
     @Override
     public void handle(LlamaAMEvent event) {
@@ -66,14 +68,22 @@ public class TestMockResourceAM {
       UUID c2 = UUID.randomUUID();
       UUID c3 = UUID.randomUUID();
       UUID c4 = UUID.randomUUID();
-      Resource a1 = new Resource(c1, MockLlamaAMFlags.ALLOCATE + "h0", Resource.LocationEnforcement.DONT_CARE, 1, 1);
-      Resource a2 = new Resource(c2, MockLlamaAMFlags.REJECT +"h1", Resource.LocationEnforcement.DONT_CARE, 1, 1);
-      Resource a3 = new Resource(c3, MockLlamaAMFlags.PREEMPT +"h2", Resource.LocationEnforcement.DONT_CARE, 1, 1);
-      Resource a4 = new Resource(c4, MockLlamaAMFlags.LOSE +"h3", Resource.LocationEnforcement.DONT_CARE, 1, 1);
-      llama.reserve(new Reservation(UUID.randomUUID(), "q1", Arrays.asList(a1), false));
-      llama.reserve(new Reservation(UUID.randomUUID(), "q1", Arrays.asList(a2), false));
-      llama.reserve(new Reservation(UUID.randomUUID(), "q1", Arrays.asList(a3), false));
-      llama.reserve(new Reservation(UUID.randomUUID(), "q1", Arrays.asList(a4), false));
+      Resource a1 = new Resource(c1, MockLlamaAMFlags.ALLOCATE + "h0", 
+          Resource.LocationEnforcement.DONT_CARE, 1, 1);
+      Resource a2 = new Resource(c2, MockLlamaAMFlags.REJECT +"h1", 
+          Resource.LocationEnforcement.DONT_CARE, 1, 1);
+      Resource a3 = new Resource(c3, MockLlamaAMFlags.PREEMPT +"h2", 
+          Resource.LocationEnforcement.DONT_CARE, 1, 1);
+      Resource a4 = new Resource(c4, MockLlamaAMFlags.LOSE +"h3", 
+          Resource.LocationEnforcement.DONT_CARE, 1, 1);
+      llama.reserve(new Reservation(UUID.randomUUID(), "q1", Arrays.asList(a1), 
+          false));
+      llama.reserve(new Reservation(UUID.randomUUID(), "q1", Arrays.asList(a2), 
+          false));
+      llama.reserve(new Reservation(UUID.randomUUID(), "q1", Arrays.asList(a3), 
+          false));
+      llama.reserve(new Reservation(UUID.randomUUID(), "q1", Arrays.asList(a4), 
+          false));
       Thread.sleep(100);
       Assert.assertEquals(6, listener.events.size());
       Set<UUID> allocated = new HashSet<UUID>();
@@ -120,6 +130,62 @@ public class TestMockResourceAM {
           listener.events.get(0).getRejectedReservationIds().size());
       Assert.assertEquals(1, 
           listener.events.get(0).getRejectedClientResourcesIds().size());
+    } finally {
+      llama.stop();
+    }
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testInvalidQueue() throws Exception {
+    final LlamaAM llama = LlamaAM.create(getConfiguration());
+    try {
+      llama.start();
+      UUID c1 = UUID.randomUUID();
+      Resource a1 = new Resource(c1, MockLlamaAMFlags.ALLOCATE + "h0",
+          Resource.LocationEnforcement.DONT_CARE, 1, 1);
+      llama.reserve(new Reservation(UUID.randomUUID(), "invalid-q", 
+          Arrays.asList(a1), false));
+    } finally {
+      llama.stop();
+    }
+  }
+
+  private boolean hasAllStatus(List<LlamaAMEvent> events) {
+    events = new ArrayList<LlamaAMEvent>(events);
+    boolean lost = false;
+    boolean rejected = false;
+    boolean preempted = false;
+    boolean allocated = false;
+    for (LlamaAMEvent event: events) {
+      if (!event.getLostClientResourcesIds().isEmpty()) {
+        lost = true;
+      }
+      if (!event.getRejectedClientResourcesIds().isEmpty()) {
+        rejected = true;
+      }
+      if (!event.getPreemptedClientResourceIds().isEmpty()) {
+        preempted = true;
+      }
+      if (!event.getAllocatedResources().isEmpty()) {
+        allocated = true;
+      }
+    }
+    return lost && rejected && preempted && allocated;
+  }
+  
+  @Test
+  public void testRandom() throws Exception {
+    final LlamaAM llama = LlamaAM.create(getConfiguration());
+    MockListener listener = new MockListener();
+    try {
+      llama.start();
+      llama.addListener(listener);
+      while (!hasAllStatus(listener.events)) {
+        Resource a1 = new Resource(UUID.randomUUID(),"h0",
+            Resource.LocationEnforcement.DONT_CARE, 1, 1);
+        llama.reserve(new Reservation(UUID.randomUUID(), "q1",
+            Arrays.asList(a1), false));        
+      }
     } finally {
       llama.stop();
     }

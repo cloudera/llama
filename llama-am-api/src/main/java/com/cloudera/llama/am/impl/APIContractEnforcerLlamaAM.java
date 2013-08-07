@@ -88,7 +88,9 @@ public class APIContractEnforcerLlamaAM extends LlamaAM {
 
   @Override
   public void addListener(LlamaAMListener listener) {
-    checkIsRunning();
+    if (stopped) {
+      throw new IllegalStateException("LlamaAM stopped");
+    }
     ParamChecker.notNull(listener, "listener");
     llamaAM.addListener(listener);
     getLog().trace("addListener({})", listener);
@@ -96,7 +98,9 @@ public class APIContractEnforcerLlamaAM extends LlamaAM {
 
   @Override
   public void removeListener(LlamaAMListener listener) {
-    checkIsRunning();
+    if (stopped) {
+      throw new IllegalStateException("LlamaAM stopped");
+    }
     ParamChecker.notNull(listener, "listener");
     llamaAM.removeListener(listener);
     getLog().trace("removeListener({})", listener);
