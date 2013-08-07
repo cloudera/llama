@@ -17,6 +17,7 @@
  */
 package com.cloudera.llama.am.server;
 
+import com.cloudera.llama.am.LlamaAM;
 import com.cloudera.llama.thrift.LlamaAMService;
 import com.cloudera.llama.thrift.TLlamaAMGetNodesRequest;
 import com.cloudera.llama.thrift.TLlamaAMGetNodesResponse;
@@ -45,6 +46,7 @@ public class TestMiniLlamaWithMock {
         Arrays.asList("queue1", "queue2"), Arrays.asList("node1", "node2"));
     MiniLlama server = new MiniLlama(conf);
     try {
+      Assert.assertNotNull(server.getConf().get(LlamaAM.INITIAL_QUEUES_KEY));
       server.start();
       Assert.assertNotSame(0, server.getAddressPort());
       TTransport transport = new TSocket(server.getAddressHost(),

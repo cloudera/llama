@@ -131,6 +131,19 @@ public class TestAbstractServer {
     }
   }
 
+  @Test(expected = RuntimeException.class)
+  public void testDoubleStartFailure() throws Exception {
+    MyServer server = new MyServer();
+    try {
+      Configuration conf = new Configuration(false);
+      server.setConf(conf);
+      server.start();
+      server.start();
+    } finally {
+    server.stop();
+    }
+  }
+
   @Test
   public void testStartStepsFailures() throws Exception {
     for (String step : STEPS) {
