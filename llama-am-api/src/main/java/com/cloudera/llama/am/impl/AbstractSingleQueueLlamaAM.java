@@ -344,7 +344,7 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
     getLog().trace("rmChanges({})", changes);
     Map<UUID, LlamaAMEventImpl> eventsMap = 
         new HashMap<UUID, LlamaAMEventImpl>();
-    List<PlacedResource> toRelease = null;
+    List<PlacedResource> toRelease = new ArrayList<PlacedResource>();
     synchronized (this) {
       for (RMResourceChange change : changes) {
         PlacedResourceImpl resource = resourcesMap.get(change
@@ -353,9 +353,10 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
           getLog().warn("Unknown resource '{}'",
               change.getClientResourceId());
         } else {
+          List<PlacedResource> release = null;
           switch (change.getStatus()) {
             case REJECTED:
-              toRelease = _resourceRejected(resource, eventsMap);
+              release = _resourceRejected(resource, eventsMap);
               break;
             case ALLOCATED:
               _resourceAllocated(resource, change, eventsMap);
@@ -364,8 +365,11 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
               toRelease =_resourcePreempted(resource, eventsMap);
               break;
             case LOST:
-              toRelease = _resourceLost(resource, eventsMap);
+              release = _resourceLost(resource, eventsMap);
               break;
+          }
+          if (release != null) {
+            toRelease.addAll(release);
           }
         }
       }
