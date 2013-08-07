@@ -106,7 +106,7 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
     return listener;
   }
 
-  void _addReservation(PlacedReservationImpl reservation) {
+  private void _addReservation(PlacedReservationImpl reservation) {
     UUID reservationId = reservation.getReservationId();
     reservationsMap.put(reservationId, reservation);
     for (PlacedResourceImpl resource : reservation.getResourceImpls()) {
@@ -120,7 +120,7 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
     return reservationsMap.get(reservationId);
   }
 
-  PlacedReservationImpl _deleteReservation(UUID reservationId) {
+  private PlacedReservationImpl _deleteReservation(UUID reservationId) {
     PlacedReservationImpl reservation = reservationsMap.remove(reservationId);
     if (reservation != null) {
       for (Resource resource : reservation.getResources()) {

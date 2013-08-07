@@ -32,7 +32,7 @@ public abstract class LlamaAM {
   public static final String INITIAL_QUEUES_KEY =  PREFIX_KEY + 
       "initial.queues";
 
-  private static Configuration clone(Configuration conf) {
+  private static Configuration cloneConfiguration(Configuration conf) {
     Configuration clone = new Configuration(false);
     for (Map.Entry<String, String> entry : conf) {
       clone.set(entry.getKey(), entry.getValue());
@@ -41,7 +41,7 @@ public abstract class LlamaAM {
   }
 
   public static LlamaAM create(Configuration conf) throws LlamaAMException {
-    conf = clone(conf);
+    conf = cloneConfiguration(conf);
     if (conf.get(CLASS_KEY) == null) {
       throw new IllegalArgumentException("LlamaAM class not set");
     }
