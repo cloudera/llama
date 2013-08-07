@@ -165,6 +165,18 @@ public class TestAbstractSingleQueueLlamaAM {
       (UUID.randomUUID(), "queue", RESOURCES2, false);
 
   @Test
+  public void testGetNode() throws Exception {
+    DummySingleQueueLlamaAM llama = createLlamaAM();
+    try {
+      llama.start();
+      llama.reserve(RESERVATION1_NONGANG);
+      Assert.assertEquals(Arrays.asList("node"), llama.getNodes());
+    } finally {
+      llama.stop();
+    }
+  }
+
+  @Test
   public void testRmReserve() throws Exception {
     DummySingleQueueLlamaAM llama = createLlamaAM();
     try {

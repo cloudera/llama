@@ -198,12 +198,10 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
     if (reservation == null) {
       getLog().warn("Unknown Reservation '{}' during resource '{}' rejection " + 
           "handling", reservationId, resource.getClientResourceId());
-    }
-    // if reservation is NULL it means it is gone already
-    if (reservation != null) {
+    } else {
       LlamaAMEventImpl event = getEventForClientId(eventsMap,
           reservation.getClientId());
-      // if reservation is ALLOCATED or it is PARTIAL and not GANG we let it be
+      // if reservation is ALLOCATED, or it is PARTIAL and not GANG we let it be
       // and in the ELSE we notify the resource rejection
       switch (reservation.getStatus()) {
         case PENDING:
@@ -217,8 +215,9 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
               .getClientResourceId());
           break;
         case ALLOCATED:
-          event.getRejectedClientResourcesIds().add(resource
-              .getClientResourceId());
+          logger.warn("Illegal internal state, reservation '{}' is " +
+              "ALLOCATED, resource cannot  be rejected '{}'",
+              reservationId, resource.getClientResourceId());
           break;
       }
     }
@@ -270,8 +269,7 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
       getLog().warn("Unknown Reservation '{}' during resource preemption " +
           "handling for" + " '{}'", reservationId, 
           resource.getClientResourceId());
-    }
-    if (reservation != null) {
+    } else {
       LlamaAMEventImpl event = getEventForClientId(eventsMap,
           reservation.getClientId());
       switch (reservation.getStatus()) {
@@ -290,9 +288,13 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
           }
           break;
         case PENDING:
-          throw new IllegalStateException(FastFormat.format("Reservation "
-              + "'{}' in pending, cannot have a preempted resource '{}'", 
-              reservationId, resource.getClientResourceId()));
+          logger.warn("Illegal internal state, reservation '{}' is " +
+              "PENDING, resource cannot  be preempted '{}', deleting " +
+              "reservation", reservationId, resource.getClientResourceId());
+          _deleteReservation(reservationId);
+          toRelease = reservation.getResources();
+          event.getRejectedReservationIds().add(reservationId);
+          break;
       }
     }
     return toRelease;
@@ -307,8 +309,7 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
     if (reservation == null) {
       getLog().warn("Unknown Reservation '{}' during resource lost handling " +
           "for '{}'", reservationId, resource.getClientResourceId());
-    }
-    if (reservation != null) {
+    } else {
       LlamaAMEventImpl event = getEventForClientId(eventsMap,
           reservation.getClientId());
       switch (reservation.getStatus()) {
