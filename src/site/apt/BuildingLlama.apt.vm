@@ -35,7 +35,7 @@ Building Llama
 * Running a Clover Report
 
 +----+
-$ mvn clean test -Pclover clover2:aggregate clover2:clover
+$ mvn clean clover2:setup test -Pclover clover2:aggregate clover2:clover
 +----+
 
   The resulting report will be available at <<<target/clover/index.html>>>.
