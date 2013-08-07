@@ -19,6 +19,7 @@ package com.cloudera.llama.am.server;
 
 import com.cloudera.llama.am.server.thrift.LlamaAMThriftServer;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.VersionInfo;
 import org.apache.log4j.PropertyConfigurator;
@@ -29,17 +30,26 @@ import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Properties;
+import java.util.concurrent.CountDownLatch;
 
 public class Main {
+  static final String TEST_LLAMA_JVM_EXIT_SYS_PROP = 
+      "test.llama.disable.jvm.exit";
+
   public static final String SERVER_CLASS_KEY = "llama.am.server.class";
   
-  public static final String CONF_DIR = "llama.am.server.conf.dir";
-  public static final String LOG_DIR = "llama.am.server.log.dir";
+  public static final String CONF_DIR_SYS_PROP = "llama.am.server.conf.dir";
+  public static final String LOG_DIR_SYS_PROP = "llama.am.server.log.dir";
 
   public static class Service {
+
+    static void verifyRequiredSysProps() {
+      verifySystemPropertyDir(CONF_DIR_SYS_PROP, true);
+      verifySystemPropertyDir(LOG_DIR_SYS_PROP, false);
+    }
+    
     public static void main(String[] args) throws Exception {
-      verifySystemPropertyDir(CONF_DIR, true);
-      verifySystemPropertyDir(LOG_DIR, false);      
+      verifyRequiredSysProps();
       Main.main(args);
     }
 
@@ -63,9 +73,25 @@ public class Main {
   private static final String SITE_XML = "llama-site.xml";
   
   private static Logger LOG;
-
+    
   public static void main(String[] args) throws Exception {
-    String confDir = System.getProperty(CONF_DIR);
+    Main main = new Main();
+    int exit = main.run(args);
+    if (!System.getProperty(TEST_LLAMA_JVM_EXIT_SYS_PROP,
+        "false").equals("true")) {
+      System.exit(exit);
+    }
+  }
+
+  private CountDownLatch latch = new CountDownLatch(1);
+
+  //Used for testing only
+  void releaseLatch() {
+    latch.countDown();
+  }
+  
+  public int run(String[] args) throws Exception {
+    String confDir = System.getProperty(CONF_DIR_SYS_PROP);
     initLogging(confDir);
     logServerInfo();
 
@@ -82,14 +108,14 @@ public class Main {
 
     try {
       server.start();
-      synchronized (Main.class) {
-        Main.class.wait();
-      }
+      latch.await();
+      server.stop();
     } catch (Exception ex) {
       LOG.error("Server error: {}", ex.toString(), ex);
       server.stop();
+      return 1;
     }
-    System.exit(server.getExitCode());
+    return server.getExitCode();
   }
 
   private static void initLogging(String confDir) {
@@ -140,23 +166,26 @@ public class Main {
   }
 
   private static Configuration loadConfiguration(String confDir) {
-    ClassLoader cl = Thread.currentThread().getContextClassLoader();
-    URL url = cl.getResource(SITE_XML);
-    if (url == null) {
+    Configuration llamaConf = new Configuration(false);
+    File file = new File(confDir, SITE_XML);
+    if (!file.exists()) {
       LOG.warn("Llama configuration file '{}' not found in '{}'", SITE_XML, 
           confDir);
+    } else {
+      llamaConf.addResource(new Path(file.getAbsolutePath()));
     }
-    Configuration llamaConf = new Configuration(false);
-    llamaConf.addResource(SITE_XML);
     return llamaConf;
   }
   
   private static void addShutdownHook(final AbstractServer server) {
-    Runtime.getRuntime().addShutdownHook(new Thread() {
-      @Override
-      public void run() {
-        server.shutdown(0);
-      }
-    });
+    if (!System.getProperty(TEST_LLAMA_JVM_EXIT_SYS_PROP, 
+        "false").equals("true")) {
+      Runtime.getRuntime().addShutdownHook(new Thread() {
+        @Override
+        public void run() {
+          server.shutdown(0);
+        }
+      });
+    }
   }
 }
