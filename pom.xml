@@ -1243,24 +1243,32 @@ TODO: need license header
       </dependency>
       <dependency>
         <groupId>org.datanucleus</groupId>
-        <artifactId>datanucleus-connectionpool</artifactId>
-        <version>2.0.3</version>
-      </dependency>
-      <dependency>
-        <groupId>org.datanucleus</groupId>
-        <artifactId>datanucleus-enhancer</artifactId>
-        <version>2.0.3</version>
+        <artifactId>datanucleus-api-jdo</artifactId>
+        <version>3.2.1</version>
         <exclusions>
           <exclusion>
-            <groupId>asm</groupId>
-            <artifactId>asm</artifactId>
+            <groupId>javax.jdo</groupId>
+            <artifactId>jdo-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
       <dependency>
         <groupId>org.datanucleus</groupId>
         <artifactId>datanucleus-rdbms</artifactId>
-        <version>2.0.3</version>
+        <version>3.2.1</version>
+      </dependency>
+      <dependency>
+        <groupId>com.jolbox</groupId>
+        <artifactId>bonecp</artifactId>
+        <version>0.7.1.RELEASE</version>
       </dependency>
       <dependency>
         <groupId>org.apache.velocity</groupId>
@@ -1311,7 +1319,7 @@ TODO: need license header
       <dependency>
         <groupId>org.datanucleus</groupId>
         <artifactId>datanucleus-core</artifactId>
-        <version>2.0.3</version>
+        <version>3.2.1</version>
       </dependency>
       
       <!-- Oozie -->
