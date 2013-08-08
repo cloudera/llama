@@ -17,49 +17,66 @@
  */
 package com.cloudera.llama.am.server.thrift;
 
+import com.cloudera.llama.am.impl.FastFormat;
 import com.cloudera.llama.am.server.AbstractServer;
-import org.apache.hadoop.net.NetUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.thrift.TProcessor;
 import org.apache.thrift.server.TServer;
 import org.apache.thrift.server.TThreadPoolServer;
-import org.apache.thrift.transport.TSaslServerTransport;
 import org.apache.thrift.transport.TServerSocket;
 import org.apache.thrift.transport.TTransportFactory;
 
-import javax.security.sasl.Sasl;
-import java.net.InetSocketAddress;
-import java.util.HashMap;
-import java.util.Map;
+import javax.security.auth.Subject;
+import java.security.PrivilegedExceptionAction;
 
 public abstract class ThriftServer<T extends TProcessor> extends 
     AbstractServer<T> { 
   private TServer tServer;
   private TServerSocket tServerSocket;
+  private Subject subject;
 
   protected ThriftServer(String serviceName) {
     super(serviceName);
   }
 
   @Override
+  public void setConf(Configuration conf) {
+    if (conf.get(ServerConfiguration.CONFIG_DIR_KEY) == null) {
+      throw new RuntimeException(FastFormat.format(
+          "Required configuration property '{}' missing", 
+          ServerConfiguration.CONFIG_DIR_KEY));
+    }
+    super.setConf(conf);
+  }
+
+  @Override
   protected void startTransport() {
-    int minThreads = getConf().getInt(
-        ServerConfiguration.SERVER_MIN_THREADS_KEY,
-        ServerConfiguration.SERVER_MIN_THREADS_DEFAULT);
-    int maxThreads = getConf().getInt(ServerConfiguration
-        .SERVER_MAX_THREADS_KEY, ServerConfiguration
-        .SERVER_MAX_THREADS_DEFAULT);
     try {
-      tServerSocket = ThriftEndPoint.createTServerSocket(getConf());
-      TTransportFactory tTransportFactory = 
-          ThriftEndPoint.createTTransportFactory(getConf());
-      T processor = createServiceProcessor();
-      TThreadPoolServer.Args args = new TThreadPoolServer.Args(tServerSocket);
-      args.transportFactory(tTransportFactory);
-      args = args.minWorkerThreads(minThreads);
-      args = args.maxWorkerThreads(maxThreads);
-      args = args.processor(processor);
-      tServer = new TThreadPoolServer(args);
-      tServer.serve();
+      subject = Security.loginServerSubject(getConf());
+      Subject.doAs(subject, new PrivilegedExceptionAction<Object>() {
+        @Override
+        public Object run() throws Exception {
+          int minThreads = getConf().getInt(ServerConfiguration
+              .SERVER_MIN_THREADS_KEY, ServerConfiguration
+              .SERVER_MIN_THREADS_DEFAULT);
+          int maxThreads = getConf().getInt(ServerConfiguration
+              .SERVER_MAX_THREADS_KEY, ServerConfiguration
+              .SERVER_MAX_THREADS_DEFAULT);
+          tServerSocket = ThriftEndPoint.createTServerSocket(getConf());
+          TTransportFactory tTransportFactory = ThriftEndPoint
+              .createTTransportFactory(getConf());
+          T processor = createServiceProcessor();
+          TThreadPoolServer.Args args = new TThreadPoolServer.Args
+              (tServerSocket);
+          args.transportFactory(tTransportFactory);
+          args = args.minWorkerThreads(minThreads);
+          args = args.maxWorkerThreads(maxThreads);
+          args = args.processor(processor);
+          tServer = new TThreadPoolServer(args);
+          tServer.serve();
+          return null;
+        }
+      });
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
@@ -68,6 +85,7 @@ public abstract class ThriftServer<T extends TProcessor> extends
   @Override
   protected void stopTransport() {
     tServer.stop();
+    Security.logout(subject);
   }
 
   @Override

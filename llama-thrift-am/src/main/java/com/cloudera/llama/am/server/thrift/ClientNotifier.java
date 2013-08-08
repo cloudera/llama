@@ -26,6 +26,9 @@ import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.security.auth.Subject;
+import java.security.PrivilegedAction;
+import java.security.PrivilegedExceptionAction;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.DelayQueue;
@@ -48,6 +51,7 @@ public class ClientNotifier implements LlamaAMListener {
   private int retryInverval;
   private DelayQueue<Notifier> eventsQueue;
   private ThreadPoolExecutor executor;
+  private Subject subject;
   
   public ClientNotifier(Configuration conf, ClientNotificationService 
       clientNotificationService) {
@@ -65,7 +69,7 @@ public class ClientNotifier implements LlamaAMListener {
   }
 
   @SuppressWarnings("unchecked")
-  public void start() {
+  public void start() throws Exception {
     eventsQueue = new DelayQueue<Notifier>();
     int threads = conf.getInt(
         ServerConfiguration.CLIENT_NOTIFIER_THREADS_KEY,
@@ -74,10 +78,12 @@ public class ClientNotifier implements LlamaAMListener {
     executor = new ThreadPoolExecutor(threads, threads, 0, TimeUnit.SECONDS,
         (BlockingQueue<Runnable>) (BlockingQueue) eventsQueue);
     executor.prestartAllCoreThreads();
+    subject = Security.loginClientSubject(conf);
   }
   
   public void stop() {
     executor.shutdownNow();
+    Security.logout(subject);
   }
   
   @Override
@@ -108,28 +114,34 @@ public class ClientNotifier implements LlamaAMListener {
       UUID handle = event.getClientId();
       String clientId = null;
       try {
-        ClientCaller clientCaller = 
+        final ClientCaller clientCaller = 
             clientNotificationService.getClientCaller(handle);
         if (clientCaller != null) {
           clientId = clientCaller.getClientId();
           final TLlamaAMNotificationRequest request = 
               TypeUtils.toAMNotification(event);
-          clientCaller.execute(new ClientCaller.Callable<Void>() {
+          Subject.doAs(subject, new PrivilegedExceptionAction<Object>() {
             @Override
-            public Void call() throws ClientException {
-              try {
-                TLlamaAMNotificationResponse response = 
-                    getClient().AMNotification(request);
-                if (!TypeUtils.isOK(response.getStatus())) {
-                  LOG.warn(
-                      "Client notification rejected status '{}', reason: {}",
-                      response.getStatus().getStatus_code(), 
-                      response.getStatus().getError_msgs());
+            public Object run() throws Exception {
+              clientCaller.execute(new ClientCaller.Callable<Void>() {
+                @Override
+                public Void call() throws ClientException {
+                  try {
+                    TLlamaAMNotificationResponse response =
+                        getClient().AMNotification(request);
+                    if (!TypeUtils.isOK(response.getStatus())) {
+                      LOG.warn(
+                          "Client notification rejected status '{}', reason: {}",
+                          response.getStatus().getStatus_code(),
+                          response.getStatus().getError_msgs());
+                    }
+                  } catch (TException ex) {
+                    throw new ClientException(ex);
+                  }
+                  return null;
                 }
-              } catch (TException ex) {
-                throw new ClientException(ex);                
-              }
-              return null;
+              });
+              return null; 
             }
           });
         } else {

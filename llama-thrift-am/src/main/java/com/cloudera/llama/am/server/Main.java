@@ -175,6 +175,7 @@ public class Main {
 
   private static Configuration loadConfiguration(String confDir) {
     Configuration llamaConf = new Configuration(false);
+    confDir = (confDir != null) ? confDir : "";
     File file = new File(confDir, SITE_XML);
     if (!file.exists()) {
       LOG.warn("Llama configuration file '{}' not found in '{}'", SITE_XML, 
@@ -182,6 +183,7 @@ public class Main {
     } else {
       llamaConf.addResource(new Path(file.getAbsolutePath()));
     }
+    llamaConf.set(CONF_DIR_SYS_PROP, confDir);
     return llamaConf;
   }
   

@@ -48,6 +48,7 @@ public class MiniLlama {
     ParamChecker.notNull(llamaType, "llamaType");
     ParamChecker.notNulls(queues, "queues");
     Configuration conf = new Configuration(false);
+    conf.set(ServerConfiguration.CONFIG_DIR_KEY, "");
     if (llamaType == Type.MOCK) {
       conf.setClass(LlamaAM.CLASS_KEY, MockLlamaAM.class, LlamaAM.class);
       conf.setStrings(LlamaAM.INITIAL_QUEUES_KEY, queues.toArray(new String[0]));

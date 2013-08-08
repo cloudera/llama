@@ -17,7 +17,11 @@
  */
 package com.cloudera.llama.am.server.thrift;
 
+import com.cloudera.llama.am.server.Main;
+
 public interface ServerConfiguration {
+  public static String CONFIG_DIR_KEY = Main.CONF_DIR_SYS_PROP;
+  
   public static String KEY_PREFIX = "llama.am.server.thrift.";
 
   public static String SERVER_MIN_THREADS_KEY = KEY_PREFIX + 
@@ -54,7 +58,10 @@ public interface ServerConfiguration {
 
   public static String TRANSPORT_TIMEOUT_KEY = KEY_PREFIX +
       "transport.timeout.ms";
-  public static int TRANSPORT_TIMEOUT_DEFAULT = 10000;
+  public static int TRANSPORT_TIMEOUT_DEFAULT = 1000;
+
+  public static String KEYTAB_FILE_KEY = KEY_PREFIX + "keytab.file";
+  public static String KEYTAB_FILE_DEFAULT = "llama.keytab";
 
   public static String SERVER_PRINCIPAL_NAME_KEY = KEY_PREFIX +
       "server.principal.name";

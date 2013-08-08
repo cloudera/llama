@@ -33,24 +33,18 @@ import java.util.Map;
 
 public class ThriftEndPoint {
 
-  public static boolean isSecure(Configuration conf) {
-    return conf.getBoolean(ServerConfiguration.SECURITY_ENABLED_KEY, 
-        ServerConfiguration.SECURITY_ENABLED_DEFAULT);
-  }
-
   public static TTransport createClientTransport(Configuration conf,
       String host, int port) throws Exception {
     int timeout = conf.getInt(ServerConfiguration.TRANSPORT_TIMEOUT_KEY,
         ServerConfiguration.TRANSPORT_TIMEOUT_DEFAULT);
 
     TTransport tTransport = new TSocket(host, port, timeout);
-    if (isSecure(conf)) {
+    if (Security.isSecure(conf)) {
       String serviceName = conf.get(
           ServerConfiguration.NOTIFICATION_PRINCIPAL_NAME_KEY,
           ServerConfiguration.NOTIFICATION_PRINCIPAL_NAME_DEFAULT);
       Map<String, String> saslProperties = new HashMap<String, String>();
       saslProperties.put(Sasl.QOP, "auth-conf");
-      //TODO inject additional configs from conf
       tTransport = new TSaslClientTransport("GSSAPI", null, serviceName, host,
           saslProperties, null, tTransport);
     }
@@ -70,14 +64,17 @@ public class ThriftEndPoint {
  
   public static TTransportFactory createTTransportFactory(Configuration conf) {
     TTransportFactory factory;
-    if (isSecure(conf)) {
+    if (Security.isSecure(conf)) {
       TSaslServerTransport.Factory saslFactory = null;
       Map<String, String> saslProperties = new HashMap<String, String>();
       saslProperties.put(Sasl.QOP, "auth-conf");
-      //TODO inject additional configs from conf
       String principalName = conf.get(
           ServerConfiguration.SERVER_PRINCIPAL_NAME_KEY,
           ServerConfiguration.SERVER_PRINCIPAL_NAME_DEFAULT);
+      int i = principalName.indexOf("/");
+      if (i > -1) {
+        principalName = principalName.substring(0, i);
+      }
       String strAddress = conf.get(ServerConfiguration.SERVER_ADDRESS_KEY,
           ServerConfiguration.SERVER_ADDRESS_DEFAULT);
       InetSocketAddress address = NetUtils.createSocketAddr(strAddress);
