@@ -20,7 +20,8 @@ package com.cloudera.llama.am.server.thrift;
 public interface ServerConfiguration {
   public static String KEY_PREFIX = "llama.am.server.thrift.";
 
-  public static String SERVER_MIN_THREADS_KEY = KEY_PREFIX + "server.min.threads";
+  public static String SERVER_MIN_THREADS_KEY = KEY_PREFIX + 
+      "server.min.threads";
   public static int SERVER_MIN_THREADS_DEFAULT = 10;
 
   public static String SERVER_MAX_THREADS_KEY = KEY_PREFIX + 
@@ -49,5 +50,18 @@ public interface ServerConfiguration {
   public static String CLIENT_NOTIFIER_RETRY_INTERVAL_KEY = KEY_PREFIX + 
       "client.notifier.retry.interval.ms";
   public static int CLIENT_NOTIFIER_RETRY_INTERVAL_DEFAULT = 5000;
+
+
+  public static String TRANSPORT_TIMEOUT_KEY = KEY_PREFIX +
+      "transport.timeout.ms";
+  public static int TRANSPORT_TIMEOUT_DEFAULT = 10000;
+
+  public static String SERVER_PRINCIPAL_NAME_KEY = KEY_PREFIX +
+      "server.principal.name";
+  public static String SERVER_PRINCIPAL_NAME_DEFAULT = "llama";
+
+  public static String NOTIFICATION_PRINCIPAL_NAME_KEY = KEY_PREFIX +
+      "notification.principal.name";
+  public static String NOTIFICATION_PRINCIPAL_NAME_DEFAULT = "impala";
 
 }

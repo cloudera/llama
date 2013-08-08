@@ -20,9 +20,10 @@ package com.cloudera.llama.am.server.thrift;
 import com.cloudera.llama.am.LlamaAM;
 import com.cloudera.llama.thrift.LlamaAMService;
 
-public class LlamaAMThriftServer extends ThriftServer<LlamaAMService.Processor> {
+public class LlamaAMThriftServer extends 
+    ThriftServer<LlamaAMService.Processor> {
   private LlamaAM llamaAm;
-  private ClientRegistry clientRegistry;
+  private ClientNotificationService clientNotificationService;
   private ClientNotifier clientNotifier;
 
   public LlamaAMThriftServer() {
@@ -32,8 +33,8 @@ public class LlamaAMThriftServer extends ThriftServer<LlamaAMService.Processor> 
   @Override
   protected void startService() {
     try {
-      clientRegistry = new ClientRegistry(getConf());
-      clientNotifier = new ClientNotifier(getConf(), clientRegistry);
+      clientNotificationService = new ClientNotificationService(getConf());
+      clientNotifier = new ClientNotifier(getConf(), clientNotificationService);
       llamaAm = LlamaAM.create(getConf());
       
       clientNotifier.start();
@@ -52,7 +53,7 @@ public class LlamaAMThriftServer extends ThriftServer<LlamaAMService.Processor> 
   @Override
   protected LlamaAMService.Processor createServiceProcessor() {
     LlamaAMService.Iface handler = new LlamaAMServiceImpl(llamaAm, 
-        clientRegistry, clientNotifier);
+        clientNotificationService, clientNotifier);
     return new LlamaAMService.Processor<LlamaAMService.Iface>(handler);
   }
 

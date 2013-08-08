@@ -44,13 +44,13 @@ public class LlamaAMServiceImpl implements LlamaAMService.Iface {
       LlamaAMServiceImpl.class);
 
   private final LlamaAM llamaAM;
-  private final ClientRegistry clientRegistry;
+  private final ClientNotificationService clientNotificationService;
 
   @SuppressWarnings("unchecked")
-  public LlamaAMServiceImpl(LlamaAM llamaAM, ClientRegistry clientRegistry, 
-      ClientNotifier clientNotifier) {
+  public LlamaAMServiceImpl(LlamaAM llamaAM, ClientNotificationService 
+      clientNotificationService, ClientNotifier clientNotifier) {
     this.llamaAM = llamaAM;
-    this.clientRegistry = clientRegistry;
+    this.clientNotificationService = clientNotificationService;
     llamaAM.addListener(clientNotifier);
   }
 
@@ -61,8 +61,8 @@ public class LlamaAMServiceImpl implements LlamaAMService.Iface {
     try {
       String clientId = request.getClient_id();
       TNetworkAddress tAddress = request.getNotification_callback_service();
-      UUID handle = clientRegistry.register(clientId, tAddress.getHostname(), 
-          tAddress.getPort());
+      UUID handle = clientNotificationService.register(clientId, 
+          tAddress.getHostname(), tAddress.getPort());
       response.setStatus(TypeUtils.OK);
       response.setAm_handle(TypeUtils.toTUniqueId(handle));
     } catch (ClientRegistryException ex) {
@@ -81,7 +81,7 @@ public class LlamaAMServiceImpl implements LlamaAMService.Iface {
     TLlamaAMUnregisterResponse response = new TLlamaAMUnregisterResponse();
     try {
       UUID handle = TypeUtils.toUUID(request.getAm_handle());
-      if (clientRegistry.unregister(handle)) {
+      if (clientNotificationService.unregister(handle)) {
         try {
           llamaAM.releaseReservationsForClientId(handle);
         } catch (LlamaAMException ex) {
@@ -106,7 +106,7 @@ public class LlamaAMServiceImpl implements LlamaAMService.Iface {
     TLlamaAMReservationResponse response = new TLlamaAMReservationResponse();
     try {
       UUID handle = TypeUtils.toUUID(request.getAm_handle());
-      clientRegistry.validateHandle(handle);
+      clientNotificationService.validateHandle(handle);
       Reservation reservation = TypeUtils.toReservation(request);
       UUID reservationId = llamaAM.reserve(reservation);
       response.setReservation_id(TypeUtils.toTUniqueId(reservationId));
@@ -127,7 +127,7 @@ public class LlamaAMServiceImpl implements LlamaAMService.Iface {
     TLlamaAMReleaseResponse response = new TLlamaAMReleaseResponse();
     try {
       UUID handle = TypeUtils.toUUID(request.getAm_handle());
-      clientRegistry.validateHandle(handle);
+      clientNotificationService.validateHandle(handle);
         UUID reservationId = TypeUtils.toUUID(request.getReservation_id());
         llamaAM.releaseReservation(reservationId);
         response.setStatus(TypeUtils.OK);
@@ -147,7 +147,7 @@ public class LlamaAMServiceImpl implements LlamaAMService.Iface {
     TLlamaAMGetNodesResponse response = new TLlamaAMGetNodesResponse();
     try {
       UUID handle = TypeUtils.toUUID(request.getAm_handle());
-      clientRegistry.validateHandle(handle);
+      clientNotificationService.validateHandle(handle);
       List<String> nodes = llamaAM.getNodes();
       response.setNodes(nodes);
       response.setStatus(TypeUtils.OK);

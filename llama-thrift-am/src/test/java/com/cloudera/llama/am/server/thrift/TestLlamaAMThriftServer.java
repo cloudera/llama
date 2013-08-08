@@ -58,7 +58,14 @@ import java.util.UUID;
 
 public class TestLlamaAMThriftServer {
   
-  private Configuration createConfiguration() {
+  private Configuration createCallbackConfiguration() {
+    Configuration conf = new Configuration(false);
+    conf.set(ServerConfiguration.SERVER_ADDRESS_KEY, "localhost:0");
+    return conf;
+  }
+
+ 
+  private Configuration createLlamaConfiguration() {
     Configuration conf = new Configuration(false);
 
     conf.setClass(LlamaAM.CLASS_KEY, MockLlamaAM.class, LlamaAM.class);
@@ -76,7 +83,7 @@ public class TestLlamaAMThriftServer {
   public void testStartStop() throws Exception {
     LlamaAMThriftServer server = new LlamaAMThriftServer(); 
     try {
-      server.setConf(createConfiguration());
+      server.setConf(createLlamaConfiguration());
       server.start();
       Assert.assertNotSame(0, server.getAddressPort());
       Assert.assertEquals("localhost", server.getAddressHost());
@@ -128,7 +135,7 @@ public class TestLlamaAMThriftServer {
   public void testRegister() throws Exception {
     LlamaAMThriftServer server = new LlamaAMThriftServer();
     try {
-      server.setConf(createConfiguration());
+      server.setConf(createLlamaConfiguration());
       server.start();
 
       TTransport transport = new TSocket(server.getAddressHost(), 
@@ -181,7 +188,7 @@ public class TestLlamaAMThriftServer {
   public void testUnregister() throws Exception {
     LlamaAMThriftServer server = new LlamaAMThriftServer();
     try {
-      server.setConf(createConfiguration());
+      server.setConf(createLlamaConfiguration());
       server.start();
 
       LlamaAMService.Client client = createClient(server);
@@ -227,7 +234,7 @@ public class TestLlamaAMThriftServer {
   public void testGetNodes() throws Exception {
     LlamaAMThriftServer server = new LlamaAMThriftServer();
     try {
-      server.setConf(createConfiguration());
+      server.setConf(createLlamaConfiguration());
       server.start();
 
       LlamaAMService.Client client = createClient(server);
@@ -269,9 +276,9 @@ public class TestLlamaAMThriftServer {
     LlamaAMThriftServer server = new LlamaAMThriftServer();
     NotificationEndPoint callbackServer = new NotificationEndPoint();
     try {
-      callbackServer.setConf(new Configuration(false));
+      callbackServer.setConf(createCallbackConfiguration());
       callbackServer.start();
-      server.setConf(createConfiguration());
+      server.setConf(createLlamaConfiguration());
       server.start();
 
       LlamaAMService.Client client = createClient(server);
@@ -326,9 +333,9 @@ public class TestLlamaAMThriftServer {
     LlamaAMThriftServer server = new LlamaAMThriftServer();
     NotificationEndPoint callbackServer = new NotificationEndPoint();
     try {
-      callbackServer.setConf(new Configuration(false));
+      callbackServer.setConf(createCallbackConfiguration());
       callbackServer.start();
-      server.setConf(createConfiguration());
+      server.setConf(createLlamaConfiguration());
       server.start();
 
       LlamaAMService.Client client = createClient(server);

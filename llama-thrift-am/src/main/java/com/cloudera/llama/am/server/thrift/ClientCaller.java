@@ -21,7 +21,6 @@ import com.cloudera.llama.thrift.LlamaNotificationService;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
-import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
 
 import java.util.UUID;
@@ -51,11 +50,16 @@ public class ClientCaller {
   
   public static abstract class Callable<T> implements 
       java.util.concurrent.Callable<T> {
+    private String clientId;
     private UUID handle;
     private LlamaNotificationService.Iface client;
 
     protected UUID getHandle() {
       return handle;
+    }
+    
+    protected String getClientId() {
+      return clientId;
     }
     
     protected LlamaNotificationService.Iface getClient() {
@@ -72,6 +76,7 @@ public class ClientCaller {
       if (!lastSuccessful) {
         client = createClient();
       }
+      callable.clientId = clientId;
       callable.handle = handle;
       callable.client = client;
       ret = callable.call();
@@ -83,16 +88,9 @@ public class ClientCaller {
     return ret;
   }
 
-
   LlamaNotificationService.Iface createClient() throws Exception {    
-    if (conf.getBoolean(ServerConfiguration.SECURITY_ENABLED_KEY,
-        ServerConfiguration.SECURITY_ENABLED_DEFAULT)) {
-      //TODO
-      throw new UnsupportedOperationException("Security not implemented yet");
-    } else {
-      tTransport = new TSocket(host, port);
-      tTransport.open();
-    }
+    tTransport = ThriftEndPoint.createClientTransport(conf, host, port);
+    tTransport.open();    
     TProtocol protocol = new TBinaryProtocol(tTransport);
     return new LlamaNotificationService.Client(protocol);
   }

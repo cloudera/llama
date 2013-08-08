@@ -24,7 +24,8 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class ClientRegistry implements ClientNotifier.MaxFailuresListener {
+public class ClientNotificationService implements 
+    ClientNotifier.MaxFailuresListener {
   
   private class Entry {
     private final String clientId;
@@ -45,7 +46,7 @@ public class ClientRegistry implements ClientNotifier.MaxFailuresListener {
   private final ConcurrentHashMap<UUID, Entry> clients;
   private final ConcurrentHashMap<String, UUID> reverseMap;
 
-  public ClientRegistry(Configuration conf) {
+  public ClientNotificationService(Configuration conf) {
     this.conf = conf;
     lock = new ReentrantReadWriteLock();
     clients = new ConcurrentHashMap<UUID, Entry>();

@@ -22,17 +22,19 @@ import org.apache.hadoop.net.NetUtils;
 import org.apache.thrift.TProcessor;
 import org.apache.thrift.server.TServer;
 import org.apache.thrift.server.TThreadPoolServer;
+import org.apache.thrift.transport.TSaslServerTransport;
 import org.apache.thrift.transport.TServerSocket;
+import org.apache.thrift.transport.TTransportFactory;
 
+import javax.security.sasl.Sasl;
 import java.net.InetSocketAddress;
-import java.net.ServerSocket;
+import java.util.HashMap;
+import java.util.Map;
 
 public abstract class ThriftServer<T extends TProcessor> extends 
-    AbstractServer<T> {  
-  private volatile TServer tServer;
+    AbstractServer<T> { 
+  private TServer tServer;
   private TServerSocket tServerSocket;
-  private String tServerAddressHost;
-  private int tServerAddressPort;
 
   protected ThriftServer(String serviceName) {
     super(serviceName);
@@ -43,14 +45,16 @@ public abstract class ThriftServer<T extends TProcessor> extends
     int minThreads = getConf().getInt(
         ServerConfiguration.SERVER_MIN_THREADS_KEY,
         ServerConfiguration.SERVER_MIN_THREADS_DEFAULT);
-    int maxThreads = getConf().getInt(
-        ServerConfiguration.SERVER_MAX_THREADS_KEY,
-        ServerConfiguration.SERVER_MAX_THREADS_DEFAULT);
+    int maxThreads = getConf().getInt(ServerConfiguration
+        .SERVER_MAX_THREADS_KEY, ServerConfiguration
+        .SERVER_MAX_THREADS_DEFAULT);
     try {
-      TServerSocket serverTransport = createTServerSocket();
-
+      tServerSocket = ThriftEndPoint.createTServerSocket(getConf());
+      TTransportFactory tTransportFactory = 
+          ThriftEndPoint.createTTransportFactory(getConf());
       T processor = createServiceProcessor();
-      TThreadPoolServer.Args args = new TThreadPoolServer.Args(serverTransport);
+      TThreadPoolServer.Args args = new TThreadPoolServer.Args(tServerSocket);
+      args.transportFactory(tTransportFactory);
       args = args.minWorkerThreads(minThreads);
       args = args.maxWorkerThreads(maxThreads);
       args = args.processor(processor);
@@ -68,45 +72,15 @@ public abstract class ThriftServer<T extends TProcessor> extends
 
   @Override
   public String getAddressHost() {
-    if (tServerAddressHost == null) {
-      if (tServer != null && tServer.isServing()) {
-        ServerSocket serverSocket = tServerSocket.getServerSocket();
-        if (serverSocket.isBound()) {
-          tServerAddressHost = serverSocket.getInetAddress().getHostName();
-        }
-      }
-    }
-    return tServerAddressHost;
+    return (tServerSocket != null && tServerSocket.getServerSocket().isBound()) 
+           ? tServerSocket.getServerSocket().getInetAddress().getHostName() 
+           : null;
   }
 
   @Override
   public int getAddressPort() {
-    if (tServerAddressPort == 0) {
-      if (tServer != null && tServer.isServing()) {
-        ServerSocket serverSocket = tServerSocket.getServerSocket();
-        if (serverSocket.isBound()) {
-          tServerAddressPort = serverSocket.getLocalPort();
-        }
-      }
-    }
-    return tServerAddressPort;
-  }
-
-  private TServerSocket createTServerSocket() throws Exception {    
-    String strAddress = getConf().get(ServerConfiguration.SERVER_ADDRESS_KEY, 
-        ServerConfiguration.SERVER_ADDRESS_DEFAULT);
-    InetSocketAddress address = NetUtils.createSocketAddr(strAddress, 
-        ServerConfiguration.SERVER_PORT_DEFAULT);
-    TServerSocket tServerSocket;
-    if (getConf().getBoolean(ServerConfiguration.SECURITY_ENABLED_KEY, 
-        ServerConfiguration.SECURITY_ENABLED_DEFAULT)) {
-      //TODO
-      throw new UnsupportedOperationException("Security not implemented yet");
-    } else {
-      tServerSocket = new TServerSocket(address);
-    }
-    this.tServerSocket = tServerSocket;
-    return tServerSocket;
+    return (tServerSocket != null && tServerSocket.getServerSocket().isBound())
+           ? tServerSocket.getServerSocket().getLocalPort() : 0;
   }
   
   protected abstract T createServiceProcessor();

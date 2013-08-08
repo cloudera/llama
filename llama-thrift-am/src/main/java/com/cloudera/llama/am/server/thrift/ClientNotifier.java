@@ -42,14 +42,15 @@ public class ClientNotifier implements LlamaAMListener {
   }
 
   private final Configuration conf;
-  private final ClientRegistry clientRegistry;
+  private final ClientNotificationService clientNotificationService;
   private int queueThreshold;
   private int maxRetries;
   private int retryInverval;
   private DelayQueue<Notifier> eventsQueue;
   private ThreadPoolExecutor executor;
   
-  public ClientNotifier(Configuration conf, ClientRegistry clientRegistry) {
+  public ClientNotifier(Configuration conf, ClientNotificationService 
+      clientNotificationService) {
     this.conf = conf;
     queueThreshold = conf.getInt(
         ServerConfiguration.CLIENT_NOTIFIER_QUEUE_THRESHOLD_KEY,
@@ -60,7 +61,7 @@ public class ClientNotifier implements LlamaAMListener {
     retryInverval = conf.getInt(
         ServerConfiguration.CLIENT_NOTIFIER_RETRY_INTERVAL_KEY,
         ServerConfiguration.CLIENT_NOTIFIER_RETRY_INTERVAL_DEFAULT);
-    this.clientRegistry = clientRegistry;
+    this.clientNotificationService = clientNotificationService;
   }
 
   @SuppressWarnings("unchecked")
@@ -107,7 +108,8 @@ public class ClientNotifier implements LlamaAMListener {
       UUID handle = event.getClientId();
       String clientId = null;
       try {
-        ClientCaller clientCaller = clientRegistry.getClientCaller(handle);
+        ClientCaller clientCaller = 
+            clientNotificationService.getClientCaller(handle);
         if (clientCaller != null) {
           clientId = clientCaller.getClientId();
           final TLlamaAMNotificationRequest request = 
@@ -119,7 +121,8 @@ public class ClientNotifier implements LlamaAMListener {
                 TLlamaAMNotificationResponse response = 
                     getClient().AMNotification(request);
                 if (!TypeUtils.isOK(response.getStatus())) {
-                  LOG.warn("Client notification rejected status '{}', reason: {}",
+                  LOG.warn(
+                      "Client notification rejected status '{}', reason: {}",
                       response.getStatus().getStatus_code(), 
                       response.getStatus().getError_msgs());
                 }
@@ -146,7 +149,7 @@ public class ClientNotifier implements LlamaAMListener {
           LOG.warn("Notification to '{}' failed on '{}' attempt, releasing " +
               "client, error: {}", new Object[] {clientId, retries, 
               ex.toString(), ex});
-          clientRegistry.onMaxFailures(handle);
+          clientNotificationService.onMaxFailures(handle);
         }
       }
     }
