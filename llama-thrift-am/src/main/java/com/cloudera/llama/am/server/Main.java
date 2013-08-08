@@ -83,11 +83,18 @@ public class Main {
     }
   }
 
-  private CountDownLatch latch = new CountDownLatch(1);
+  private CountDownLatch runningLatch = new CountDownLatch(1);
+  private CountDownLatch stopLatch = new CountDownLatch(1);
 
   //Used for testing only
-  void releaseLatch() {
-    latch.countDown();
+  void releaseRunningLatch() {
+    runningLatch.countDown();
+  }
+
+  //Used for testing only
+  void waitStopLach() throws InterruptedException {
+    stopLatch.await();
+    
   }
   
   public int run(String[] args) throws Exception {
@@ -108,13 +115,14 @@ public class Main {
 
     try {
       server.start();
-      latch.await();
+      runningLatch.await();
       server.stop();
     } catch (Exception ex) {
       LOG.error("Server error: {}", ex.toString(), ex);
       server.stop();
       return 1;
     }
+    stopLatch.countDown();
     return server.getExitCode();
   }
 

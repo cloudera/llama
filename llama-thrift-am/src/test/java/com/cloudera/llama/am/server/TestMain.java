@@ -19,6 +19,7 @@ package com.cloudera.llama.am.server;
 
 import com.cloudera.llama.am.LlamaAM;
 import com.cloudera.llama.am.mock.MockLlamaAM;
+import com.cloudera.llama.am.server.thrift.ServerConfiguration;
 import junit.framework.Assert;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -60,6 +61,7 @@ public class TestMain {
     System.setProperty(Main.CONF_DIR_SYS_PROP, confDir);
     Configuration conf = new Configuration(false);
     conf.setClass(LlamaAM.CLASS_KEY, MockLlamaAM.class, LlamaAM.class);
+    conf.set(ServerConfiguration.SERVER_ADDRESS_KEY, "localhost:0");
     Writer writer = new FileWriter(new File(confDir, "llama-site.xml"));
     conf.writeXml(writer);
     writer.close();
@@ -70,8 +72,9 @@ public class TestMain {
     String testDir = createTestDir();
     createMainConf(testDir);
     final Main main = new Main();
-    main.releaseLatch();
+    main.releaseRunningLatch();
     Assert.assertEquals(0, main.run(null));    
+    main.waitStopLach();
   }
 
   @Test
@@ -85,8 +88,9 @@ public class TestMain {
     System.setProperty(Main.CONF_DIR_SYS_PROP, testDir);
     System.setProperty(Main.LOG_DIR_SYS_PROP, testDir);
     final Main main = new Main();
-    main.releaseLatch();
+    main.releaseRunningLatch();
     Assert.assertEquals(0, main.run(null));
+    main.waitStopLach();
   }
 
   @Test
