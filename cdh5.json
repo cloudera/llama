@@ -25,7 +25,7 @@
      "mahout": {"track-branch": "cdh5-0.7", "dir": "repos/cdh5/mahout", "remotes": ["origin", "apache"]},
      "oozie": {"track-branch": "cdh5-3.3.2", "dir": "repos/cdh5/oozie", "remotes": ["origin"]},
      "whirr": {"track-branch": "cdh5-0.8.2", "dir": "repos/cdh5/whirr", "remotes": ["origin"]},
-     "hue": {"track-branch": "cdh5-2.3.0", "dir": "repos/cdh5/hue", "remotes": ["origin"]},
+     "hue": {"track-branch": "cdh5-3.0.0-beta", "dir": "repos/cdh5/hue", "remotes": ["origin"]},
 
      "hcatalog": {"track-branch": "cdh5-0.5.0", "dir": "repos/cdh5/hcatalog", "remotes": ["origin"] },
 
