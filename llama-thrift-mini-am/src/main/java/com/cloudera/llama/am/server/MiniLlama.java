@@ -21,85 +21,111 @@ import com.cloudera.llama.am.LlamaAM;
 import com.cloudera.llama.am.impl.ParamChecker;
 import com.cloudera.llama.am.mock.MockLlamaAM;
 import com.cloudera.llama.am.server.thrift.LlamaAMThriftServer;
+import com.cloudera.llama.am.server.thrift.NodeMapper;
 import com.cloudera.llama.am.server.thrift.ServerConfiguration;
 import com.cloudera.llama.am.yarn.YarnLlamaAM;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hdfs.server.datanode.DataNode;
 import org.apache.hadoop.util.ReflectionUtils;
+import org.apache.hadoop.yarn.api.records.NodeId;
+import org.apache.hadoop.yarn.server.MiniYARNCluster;
+import org.apache.hadoop.yarn.server.nodemanager.NodeManager;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MiniLlama {
 
   public static final String MINI_SERVER_CLASS_KEY = 
       "llama.am.server.mini.server.class";
 
-  private static final String START_MINI_YARN = 
-      "llama.am.server.mini.start.mini.yarn";
+  private static final String START_MINI_CLUSTER = 
+      "llama.am.server.mini.start.mini.cluster";
 
-  private static final String MINI_YARN_NODES = 
-      "llama.am.server.mini.yarn.nodes";
+  private static final String MINI_CLUSTER_NODES_KEY = 
+      "llama.am.server.mini.cluster.nodes";
 
-  private static final String YARN_QUEUES = "llama.am.server.mini.yarn.queues";
-
-  public enum Type {MOCK, YARN}
-
-  public static Configuration createMiniConf(Type llamaType,
-      List<String> queues, List<String> nodes) {
-    ParamChecker.notNull(llamaType, "llamaType");
+  public static Configuration createMockConf(List<String> queues, 
+      List<String> nodes) {
     ParamChecker.notNulls(queues, "queues");
+    ParamChecker.notNulls(nodes, "nodes");
+    if (nodes.isEmpty()) {
+      throw new IllegalArgumentException("nodes cannot be empty");
+    }
     Configuration conf = new Configuration(false);
     conf.set(ServerConfiguration.CONFIG_DIR_KEY, "");
-    if (llamaType == Type.MOCK) {
-      conf.setClass(LlamaAM.CLASS_KEY, MockLlamaAM.class, LlamaAM.class);
-      conf.setStrings(LlamaAM.INITIAL_QUEUES_KEY, queues.toArray(new String[0]));
-      conf.setStrings(MockLlamaAM.QUEUES_KEY, queues.toArray(new String[0]));
-      conf.setStrings(MockLlamaAM.NODES_KEY, nodes.toArray(new String[0]));
-      conf.set(MockLlamaAM.EVENTS_MIN_WAIT_KEY, "1000");
-      conf.set(MockLlamaAM.EVENTS_MAX_WAIT_KEY, "10000");
+    conf.setClass(LlamaAM.CLASS_KEY, MockLlamaAM.class, LlamaAM.class);
+    conf.setStrings(LlamaAM.INITIAL_QUEUES_KEY, queues.toArray(new String[0]));
+    conf.setStrings(MockLlamaAM.QUEUES_KEY, queues.toArray(new String[0]));
+    conf.setStrings(MockLlamaAM.NODES_KEY, nodes.toArray(new String[0]));
+    conf.set(MockLlamaAM.EVENTS_MIN_WAIT_KEY, "1000");
+    conf.set(MockLlamaAM.EVENTS_MAX_WAIT_KEY, "10000");
+    conf.set(ServerConfiguration.SERVER_ADDRESS_KEY, "localhost:0");
+    conf.setBoolean(START_MINI_CLUSTER, false);
+    return conf;
+  }
 
-      conf.set(ServerConfiguration.SERVER_ADDRESS_KEY, "localhost:0");
-
-      conf.setBoolean(START_MINI_YARN, false);
-    } else {
-      conf.setClass(LlamaAM.CLASS_KEY, YarnLlamaAM.class, LlamaAM.class);
-      conf.setStrings(LlamaAM.INITIAL_QUEUES_KEY, queues.toArray(new String[0]));
-      conf.setStrings(MockLlamaAM.QUEUES_KEY, queues.toArray(new String[0]));
-      conf.setInt(MINI_YARN_NODES, nodes.size());
-
-      conf.set(ServerConfiguration.SERVER_ADDRESS_KEY, "localhost:0");
-
-      conf.setBoolean(START_MINI_YARN, true);
+  public static Configuration createMiniClusterConf(int nodes) {
+    ParamChecker.greaterThan(nodes, 1, "nodes");
+    if (nodes > 1) {
+      throw new IllegalArgumentException(
+          "More than one node is not supported until YARN-1008 is committed");
     }
+    Configuration conf = new Configuration(false);
+    conf.set(ServerConfiguration.CONFIG_DIR_KEY, "");
+    conf.setClass(LlamaAM.CLASS_KEY, YarnLlamaAM.class, LlamaAM.class);
+    conf.setInt(MINI_CLUSTER_NODES_KEY, nodes);
+    conf.set(ServerConfiguration.SERVER_ADDRESS_KEY, "localhost:0");
+    conf.setBoolean(START_MINI_CLUSTER, true);
+    //TODO create queue config
     return conf;
   }
 
   private final Configuration conf;
   private final AbstractServer server;
+  private List<String> dataNodes;
+  private MiniDFSCluster miniHdfs;
+  private MiniYARNCluster miniYarn;
 
   public MiniLlama(Configuration conf) {
     ParamChecker.notNull(conf, "conf");
-    this.conf = conf;
     Class<? extends AbstractServer> klass = conf.getClass(MINI_SERVER_CLASS_KEY, 
         LlamaAMThriftServer.class, AbstractServer.class);
     server = ReflectionUtils.newInstance(klass, conf);
+    this.conf = server.getConf();
   }
 
   public Configuration getConf() {
     return conf;
   }
 
-  public void start() {
-    if (conf.getBoolean(START_MINI_YARN, false)) {
-      startMiniYarn();
-      //TODO seed yarn conf for llama server
+  public void start() throws Exception {
+    if (conf.getBoolean(START_MINI_CLUSTER, false)) {
+      Map<String, String> mapping = startMiniHadoop();
+      server.getConf().setClass(ServerConfiguration.NODE_NAME_MAPPING_CLASS_KEY,
+          MiniClusterNodeMapper.class, NodeMapper.class);
+      MiniClusterNodeMapper.addMapping(getConf(), mapping);
+      for (Map.Entry entry : miniYarn.getConfig()) {
+        conf.set((String) entry.getKey(), (String)entry.getValue());
+      }
+      dataNodes = new ArrayList<String>(mapping.keySet());
+    } else {
+      dataNodes = new ArrayList<String>(
+          conf.getStringCollection(MockLlamaAM.NODES_KEY));
     }
+    dataNodes = Collections.unmodifiableList(dataNodes);
     server.start();
   }
 
   public void stop() {
     server.stop();
-    if (conf.getBoolean(START_MINI_YARN, false)) {
-      stopMiniYarn();
+    if (conf.getBoolean(START_MINI_CLUSTER, false)) {
+      stopMiniHadoop();
     }
   }
 
@@ -111,17 +137,50 @@ public class MiniLlama {
     return server.getAddressPort();
   }
 
-  private Configuration getMiniYarnConf() {
-    //TODO
-    return null;
+  public List<String> getDataNodes() {
+    return dataNodes;
+  }
+  
+  private Map<String, String> startMiniHadoop() throws Exception {
+    int clusterNodes = getConf().getInt(MINI_CLUSTER_NODES_KEY, 1);
+    if (System.getProperty(MiniDFSCluster.PROP_TEST_BUILD_DATA) == null) {
+      String testBuildData = new File("target").getAbsolutePath();
+      System.setProperty(MiniDFSCluster.PROP_TEST_BUILD_DATA, testBuildData);
+    }
+    miniHdfs = new MiniDFSCluster(new Configuration(), clusterNodes, true, 
+        null);
+    Configuration conf = miniHdfs.getConfiguration(0);
+    miniYarn = new MiniYARNCluster("minillama", clusterNodes, 1, 1);
+    //TODO YARN-1008
+    conf.setBoolean("TODO.USE.PORT.FOR.NODE.NAME", true);
+    miniYarn.init(conf);
+    miniYarn.start();
+    Map<String, String> mapping = new HashMap<String, String>();
+    System.out.println();
+    System.out.println("Nodes:");
+    for (int i = 0; i < clusterNodes; i++) {
+      DataNode dn = miniHdfs.getDataNodes().get(i);
+      String key = dn.getDatanodeId().getXferAddr();
+      NodeManager nm = miniYarn.getNodeManager(i);
+      NodeId nodeId = nm.getNMContext().getNodeId();
+      //TODO YARN-1008
+      String value = nodeId.getHost();//+ ":" + nodeId.getPort();
+      mapping.put(key,  value);
+      System.out.println("  DN: " + key);
+    }
+    System.out.println();
+    return mapping;
   }
 
-  private void startMiniYarn() {
-    //TODO    
-  }
-
-  private void stopMiniYarn() {
-    //TODO    
+  private void stopMiniHadoop() {
+    if (miniYarn != null) {
+      miniYarn.stop();
+      miniYarn = null;
+    }
+    if (miniHdfs != null) {
+      miniHdfs.shutdown();
+      miniHdfs = null;
+    }
   }
 
 }

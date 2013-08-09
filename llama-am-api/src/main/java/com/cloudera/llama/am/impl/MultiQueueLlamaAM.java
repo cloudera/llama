@@ -46,7 +46,8 @@ public class MultiQueueLlamaAM extends LlamaAM implements Configurable,
   private final Map<String, LlamaAM> ams;
   private final ConcurrentHashMap<UUID, String> reservationToQueue;
   private final Set<LlamaAMListener> listeners;
-
+  private boolean running;
+  
   public MultiQueueLlamaAM() {
     ams = new HashMap<String, LlamaAM>();
     listeners = new HashSet<LlamaAMListener>();
@@ -124,15 +125,22 @@ public class MultiQueueLlamaAM extends LlamaAM implements Configurable,
         throw ex;
       }
     }
+    running = true;
   }
 
   @Override
   public void stop() {
+    running = false;
     synchronized (ams) {
       for (LlamaAM am : ams.values()) {
         am.stop();
       }
     }
+  }
+
+  @Override
+  public boolean isRunning() {
+    return running;
   }
 
   @Override

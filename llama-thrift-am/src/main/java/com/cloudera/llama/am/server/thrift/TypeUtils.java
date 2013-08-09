@@ -67,57 +67,60 @@ public class TypeUtils {
     return ids;
   }
 
-  public static Resource toResource(TResource resource) {
+  public static Resource toResource(TResource resource, NodeMapper nodeMapper) {
     UUID clientId = toUUID(resource.getClient_resource_id());
     int vCpuCores = resource.getV_cpu_cores();
     int memoryMb = resource.getMemory_mb();
-    String location = resource.getAskedLocation();
+    String location = nodeMapper.getNodeManager(resource.getAskedLocation());
     Resource.LocationEnforcement enforcement = 
         Resource.LocationEnforcement.valueOf(resource.getEnforcement().
             toString());
     return new Resource(clientId, location, enforcement, vCpuCores, memoryMb);
   }
   
-  public static List<Resource> toResourceList(List<TResource> tResources) {
+  public static List<Resource> toResourceList(List<TResource> tResources,
+      NodeMapper nodeMapper) {
     List<Resource> resources = new ArrayList<Resource>(tResources.size());
     for (TResource tResource : tResources) {
-      resources.add(toResource(tResource)); 
+      resources.add(toResource(tResource, nodeMapper)); 
     }
     return resources;
   }
 
-  public static Reservation toReservation(TLlamaAMReservationRequest request) {
+  public static Reservation toReservation(TLlamaAMReservationRequest request, 
+      NodeMapper nodeMapper) {
     UUID handle = toUUID(request.getAm_handle());
     String queue = request.getQueue();
     boolean isGang = request.isGang();
-    List<Resource> resources = toResourceList(request.getResources());
+    List<Resource> resources = toResourceList(request.getResources(), 
+        nodeMapper);
     return new Reservation(handle, queue, resources, isGang);  
   }
   
   public static TAllocatedResource toTAllocatedResource(PlacedResource 
-      resource) {
+      resource, NodeMapper nodeMapper) {
     TAllocatedResource tResource = new TAllocatedResource();
     tResource.setReservation_id(toTUniqueId(resource.getReservationId()));
     tResource.setClient_resource_id(toTUniqueId(resource.getClientResourceId()));
     tResource.setRm_resource_id(resource.getRmResourceId());
     tResource.setV_cpu_cores((short)resource.getActualCpuVCores());
     tResource.setMemory_mb(resource.getActualMemoryMb());
-    tResource.setLocation(resource.getActualLocation());
+    tResource.setLocation(nodeMapper.getDataNode(resource.getActualLocation()));
     return tResource;
   }
   
   public static List<TAllocatedResource> toTAllocatedResources(
-      List<PlacedResource> resources) {
+      List<PlacedResource> resources, NodeMapper nodeMapper) {
     List<TAllocatedResource> tResources = 
         new ArrayList<TAllocatedResource>(resources.size());
     for (PlacedResource resource : resources) {
-      tResources.add(toTAllocatedResource(resource));
+      tResources.add(toTAllocatedResource(resource, nodeMapper));
     }
     return tResources;    
   }
   
   public static TLlamaAMNotificationRequest toAMNotification(
-      LlamaAMEvent event) {
+      LlamaAMEvent event, NodeMapper nodeMapper) {
     TLlamaAMNotificationRequest request = new TLlamaAMNotificationRequest();
     request.setVersion(TLlamaServiceVersion.V1);
     request.setAm_handle(toTUniqueId(event.getClientId()));
@@ -125,7 +128,7 @@ public class TypeUtils {
     request.setAllocated_reservation_ids(toTUniqueIds(
         event.getAllocatedReservationIds()));
     request.setAllocated_resources(toTAllocatedResources(
-        event.getAllocatedResources()));
+        event.getAllocatedResources(), nodeMapper));
     request.setRejected_reservation_ids(toTUniqueIds(
         event.getRejectedReservationIds()));
     request.setRejected_client_resource_ids(toTUniqueIds(

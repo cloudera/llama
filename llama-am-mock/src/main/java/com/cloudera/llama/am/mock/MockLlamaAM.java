@@ -23,6 +23,8 @@ import com.cloudera.llama.am.PlacedReservation;
 import com.cloudera.llama.am.PlacedResource;
 import com.cloudera.llama.am.impl.AbstractSingleQueueLlamaAM;
 import com.cloudera.llama.am.impl.FastFormat;
+import com.cloudera.llama.am.impl.RMPlacedReservation;
+import com.cloudera.llama.am.impl.RMPlacedResource;
 import com.cloudera.llama.am.impl.RMResourceChange;
 
 import java.util.Arrays;
@@ -133,19 +135,19 @@ public class MockLlamaAM extends AbstractSingleQueueLlamaAM {
   }
 
   @Override
-  protected void rmReserve(PlacedReservation reservation)
+  protected void rmReserve(RMPlacedReservation reservation)
       throws LlamaAMException {
     schedule(this, reservation);
   }
 
   @Override
-  protected void rmRelease(Collection<PlacedResource> resources)
+  protected void rmRelease(Collection<RMPlacedResource> resources)
       throws LlamaAMException {
   }
 
   @Override
-  protected void rmChanges(List<RMResourceChange> changes) {
-    super.rmChanges(changes);
+  protected void changesFromRM(List<RMResourceChange> changes) {
+    super.changesFromRM(changes);
   }
 
   private class MockRMAllocator implements Callable<Void> {
@@ -167,13 +169,13 @@ public class MockLlamaAM extends AbstractSingleQueueLlamaAM {
           (resource.getClientResourceId(), "c" + counter.incrementAndGet
               (), resource.getCpuVCores(), resource.getMemoryMb(),
               getLocation(resource.getLocation()));
-      llama.rmChanges(Arrays.asList(change));      
+      llama.changesFromRM(Arrays.asList(change));      
     }
     
     private void toStatus(PlacedResource.Status status) {
       RMResourceChange change = RMResourceChange.createResourceChange(
           resource.getClientResourceId(), status);
-      llama.rmChanges(Arrays.asList(change));
+      llama.changesFromRM(Arrays.asList(change));
       
     }
     @Override

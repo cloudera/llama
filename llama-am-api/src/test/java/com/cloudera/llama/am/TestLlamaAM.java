@@ -47,6 +47,11 @@ public class TestLlamaAM {
     }
 
     @Override
+    public boolean isRunning() {
+      return false;
+    }
+
+    @Override
     public List<String> getNodes() throws LlamaAMException {
       return null;
     }

@@ -19,12 +19,14 @@ package com.cloudera.llama.am.server.thrift;
 
 import com.cloudera.llama.am.LlamaAM;
 import com.cloudera.llama.thrift.LlamaAMService;
+import org.apache.hadoop.util.ReflectionUtils;
 
 public class LlamaAMThriftServer extends 
     ThriftServer<LlamaAMService.Processor> {
   private LlamaAM llamaAm;
   private ClientNotificationService clientNotificationService;
   private ClientNotifier clientNotifier;
+  private NodeMapper nodeMapper;
 
   public LlamaAMThriftServer() {
     super("LlamaAM");
@@ -33,10 +35,14 @@ public class LlamaAMThriftServer extends
   @Override
   protected void startService() {
     try {
+      Class<? extends NodeMapper> klass = getConf().getClass(
+          ServerConfiguration.NODE_NAME_MAPPING_CLASS_KEY,
+          ServerConfiguration.NODE_NAME_MAPPING_CLASS_DEFAULT,
+          NodeMapper.class);
+      nodeMapper = ReflectionUtils.newInstance(klass, getConf());
       clientNotificationService = new ClientNotificationService(getConf());
-      clientNotifier = new ClientNotifier(getConf(), clientNotificationService);
-      llamaAm = LlamaAM.create(getConf());
-      
+      clientNotifier = new ClientNotifier(getConf(), nodeMapper, clientNotificationService);
+      llamaAm = LlamaAM.create(getConf());      
       clientNotifier.start();
       llamaAm.start();
     } catch (Exception ex) {
@@ -52,7 +58,7 @@ public class LlamaAMThriftServer extends
 
   @Override
   protected LlamaAMService.Processor createServiceProcessor() {
-    LlamaAMService.Iface handler = new LlamaAMServiceImpl(llamaAm, 
+    LlamaAMService.Iface handler = new LlamaAMServiceImpl(llamaAm, nodeMapper,
         clientNotificationService, clientNotifier);
     return new LlamaAMService.Processor<LlamaAMService.Iface>(handler);
   }

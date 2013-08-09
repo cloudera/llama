@@ -22,7 +22,7 @@ import com.cloudera.llama.am.Resource;
 
 import java.util.UUID;
 
-public class PlacedResourceImpl extends PlacedResource {
+public class PlacedResourceImpl extends RMPlacedResource {
   private UUID clientId;
   private UUID reservationId;
   private String queue;

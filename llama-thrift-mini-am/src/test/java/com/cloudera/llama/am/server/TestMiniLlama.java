@@ -36,14 +36,39 @@ import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
 import org.junit.Test;
 
+import java.net.URL;
 import java.util.Arrays;
 
-public class TestMiniLlamaWithMock {
+public class TestMiniLlama {
 
   @Test
-  public void testMiniLlama() throws Exception {
-    Configuration conf = MiniLlama.createMiniConf(MiniLlama.Type.MOCK, 
+  public void testMiniLlamaWithMock() throws Exception {
+    Configuration conf = MiniLlama.createMockConf(
         Arrays.asList("queue1", "queue2"), Arrays.asList("node1", "node2"));
+    testMiniLlama(conf);
+  }
+
+  @Test
+  public void testMiniLlamaWithHadoopMiniCluster() throws Exception {
+    URL url = Thread.currentThread().getContextClassLoader().getResource(
+        "fair-scheduler-allocation.xml");
+    if (url == null) {
+      throw new RuntimeException(
+          "Missing 'fair-scheduler-allocation.xml' file in classpath");
+    }
+    String fsallocationFile = url.toExternalForm();
+    if (!fsallocationFile.startsWith("file:")) {
+      throw new RuntimeException("File 'fair-scheduler-allocation.xml' is in " +
+          "a JAR, it should be in a directory");      
+    }
+    fsallocationFile = fsallocationFile.substring("file://".length());
+    Configuration conf = MiniLlama.createMiniClusterConf(1);
+    conf.set("yarn.scheduler.fair.allocation.file", fsallocationFile);
+    conf.set(LlamaAM.INITIAL_QUEUES_KEY, "default");
+    testMiniLlama(conf);
+  }
+
+  private void testMiniLlama(Configuration conf) throws Exception {
     MiniLlama server = new MiniLlama(conf);
     try {
       Assert.assertNotNull(server.getConf().get(LlamaAM.INITIAL_QUEUES_KEY));
@@ -74,7 +99,7 @@ public class TestMiniLlamaWithMock {
       tgnReq.setAm_handle(trRes.getAm_handle());
       TLlamaAMGetNodesResponse tgnRes = client.GetNodes(tgnReq);
       Assert.assertEquals(TStatusCode.OK, tgnRes.getStatus().getStatus_code());
-      Assert.assertEquals(Arrays.asList("node1", "node2"), tgnRes.getNodes());
+      Assert.assertEquals(server.getDataNodes(), tgnRes.getNodes());
 
       //unregister
       TLlamaAMUnregisterRequest turReq = new TLlamaAMUnregisterRequest();
@@ -85,7 +110,7 @@ public class TestMiniLlamaWithMock {
 
     } finally {
       server.stop();
-    }
-      
+    }      
   }
+  
 }

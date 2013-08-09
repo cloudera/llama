@@ -44,12 +44,15 @@ public class LlamaAMServiceImpl implements LlamaAMService.Iface {
       LlamaAMServiceImpl.class);
 
   private final LlamaAM llamaAM;
+  private final NodeMapper nodeMapper;
   private final ClientNotificationService clientNotificationService;
 
   @SuppressWarnings("unchecked")
-  public LlamaAMServiceImpl(LlamaAM llamaAM, ClientNotificationService 
-      clientNotificationService, ClientNotifier clientNotifier) {
+  public LlamaAMServiceImpl(LlamaAM llamaAM, NodeMapper nodeMapper, 
+      ClientNotificationService clientNotificationService, 
+      ClientNotifier clientNotifier) {
     this.llamaAM = llamaAM;
+    this.nodeMapper = nodeMapper;
     this.clientNotificationService = clientNotificationService;
     llamaAM.addListener(clientNotifier);
   }
@@ -107,7 +110,7 @@ public class LlamaAMServiceImpl implements LlamaAMService.Iface {
     try {
       UUID handle = TypeUtils.toUUID(request.getAm_handle());
       clientNotificationService.validateHandle(handle);
-      Reservation reservation = TypeUtils.toReservation(request);
+      Reservation reservation = TypeUtils.toReservation(request, nodeMapper);
       UUID reservationId = llamaAM.reserve(reservation);
       response.setReservation_id(TypeUtils.toTUniqueId(reservationId));
       response.setStatus(TypeUtils.OK);
@@ -148,7 +151,7 @@ public class LlamaAMServiceImpl implements LlamaAMService.Iface {
     try {
       UUID handle = TypeUtils.toUUID(request.getAm_handle());
       clientNotificationService.validateHandle(handle);
-      List<String> nodes = llamaAM.getNodes();
+      List<String> nodes = nodeMapper.getDataNodes(llamaAM.getNodes());
       response.setNodes(nodes);
       response.setStatus(TypeUtils.OK);
     } catch (ClientRegistryException ex) {

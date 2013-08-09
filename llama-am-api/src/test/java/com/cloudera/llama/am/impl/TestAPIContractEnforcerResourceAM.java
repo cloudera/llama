@@ -40,6 +40,8 @@ public class TestAPIContractEnforcerResourceAM {
   public static class MyLlamaAM extends LlamaAM {
     static boolean nullOnReserve;
 
+    private boolean running;
+    
     public MyLlamaAM() {
       nullOnReserve = false;
     }
@@ -54,6 +56,7 @@ public class TestAPIContractEnforcerResourceAM {
 
     @Override
     public void start() throws LlamaAMException {
+      running = true;
     }
 
     @Override
@@ -64,6 +67,12 @@ public class TestAPIContractEnforcerResourceAM {
 
     @Override
     public synchronized void stop() {
+      running = false;
+    }
+
+    @Override
+    public boolean isRunning() {
+      return running;
     }
 
     @Override
@@ -101,7 +110,6 @@ public class TestAPIContractEnforcerResourceAM {
   
   private LlamaAM createLlamaAM() throws Exception {
     MyLlamaAM am = new MyLlamaAM();
-    am.start();
     return new APIContractEnforcerLlamaAM(am);
   }
 

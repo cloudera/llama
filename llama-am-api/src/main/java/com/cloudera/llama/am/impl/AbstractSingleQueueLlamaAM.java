@@ -45,7 +45,8 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
   private LlamaAMListener listener;
   private final Map<UUID, PlacedReservationImpl> reservationsMap;
   private final Map<UUID, PlacedResourceImpl> resourcesMap;
-
+  private boolean running;
+  
   public AbstractSingleQueueLlamaAM() {
     logger = LoggerFactory.getLogger(getClass());
     reservationsMap = new HashMap<UUID, PlacedReservationImpl>();
@@ -78,10 +79,17 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
           "' configuration property");
     }
     rmRegister(queue);
+    setRunning(true);
+  }
+
+  @Override
+  public boolean isRunning() {
+    return running;
   }
 
   @Override
   public synchronized void stop() {
+    setRunning(false);
     rmUnregister();
   }
 
@@ -149,19 +157,21 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public void releaseReservation(final UUID reservationId) throws LlamaAMException {
     PlacedReservationImpl reservation;
     synchronized (this) {
       reservation = _deleteReservation(reservationId);
     }
     if (reservation != null) {
-      rmRelease(reservation.getResources());
+      rmRelease((List<RMPlacedResource>) (List) reservation.getResources());
     } else {
       getLog().warn("Unknown reservationId '{}'", reservationId);
     }
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public void releaseReservationsForClientId(UUID clientId)
       throws LlamaAMException {
     List<PlacedReservation> reservations = new ArrayList<PlacedReservation>();
@@ -175,7 +185,7 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
       }
     }
     for (PlacedReservation reservation : reservations) {
-      rmRelease(reservation.getResources());
+      rmRelease((List<RMPlacedResource>) (List) reservation.getResources());
     }
   }
 
@@ -189,9 +199,9 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
     return event;
   }
 
-  private List<PlacedResource> _resourceRejected(PlacedResourceImpl resource,
+  private List<PlacedResourceImpl> _resourceRejected(PlacedResourceImpl resource,
       Map<UUID, LlamaAMEventImpl> eventsMap) {
-    List<PlacedResource> toRelease = null;
+    List<PlacedResourceImpl> toRelease = null;
     resource.setStatus(PlacedResource.Status.REJECTED);
     UUID reservationId = resource.getReservationId();
     PlacedReservationImpl reservation = reservationsMap.get(reservationId);
@@ -208,7 +218,7 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
         case PARTIAL:
           if (reservation.isGang()) {
             _deleteReservation(reservationId);
-            toRelease = reservation.getResources();
+            toRelease = reservation.getResourceImpls();
             event.getRejectedReservationIds().add(reservationId);
           }
           event.getRejectedClientResourcesIds().add(resource
@@ -259,9 +269,9 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
     }
   }
 
-  private List<PlacedResource> _resourcePreempted(PlacedResourceImpl resource,
-      Map<UUID, LlamaAMEventImpl> eventsMap) {
-    List<PlacedResource> toRelease = null;
+  private List<PlacedResourceImpl> _resourcePreempted(
+      PlacedResourceImpl resource, Map<UUID, LlamaAMEventImpl> eventsMap) {
+    List<PlacedResourceImpl> toRelease = null;
     resource.setStatus(PlacedResource.Status.PREEMPTED);
     UUID reservationId = resource.getReservationId();
     PlacedReservationImpl reservation = reservationsMap.get(reservationId);
@@ -280,7 +290,7 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
         case PARTIAL:
           if (reservation.isGang()) {
             _deleteReservation(reservationId);
-            toRelease = reservation.getResources();
+            toRelease = reservation.getResourceImpls();
             event.getRejectedReservationIds().add(reservationId);
           } else {
             event.getPreemptedClientResourceIds().add(
@@ -292,7 +302,7 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
               "PENDING, resource cannot  be preempted '{}', deleting " +
               "reservation", reservationId, resource.getClientResourceId());
           _deleteReservation(reservationId);
-          toRelease = reservation.getResources();
+          toRelease = reservation.getResourceImpls();
           event.getRejectedReservationIds().add(reservationId);
           break;
       }
@@ -300,9 +310,9 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
     return toRelease;
   }
 
-  private List<PlacedResource> _resourceLost(PlacedResourceImpl resource,
-      Map<UUID, LlamaAMEventImpl> eventsMap) {
-    List<PlacedResource> toRelease = null;
+  private List<PlacedResourceImpl> _resourceLost(
+      PlacedResourceImpl resource, Map<UUID, LlamaAMEventImpl> eventsMap) {
+    List<PlacedResourceImpl> toRelease = null;
     resource.setStatus(PlacedResource.Status.LOST);
     UUID reservationId = resource.getReservationId();
     PlacedReservationImpl reservation = reservationsMap.get(reservationId);
@@ -319,7 +329,7 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
         case PARTIAL:
           if (reservation.isGang()) {
             _deleteReservation(reservationId);
-            toRelease = reservation.getResources();
+            toRelease = reservation.getResourceImpls();
             event.getRejectedReservationIds().add(reservationId);
           } else {
             event.getLostClientResourcesIds().add(resource
@@ -327,9 +337,10 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
           }
           break;
         case PENDING:
-          throw new IllegalStateException(FastFormat.format("Reservation "
-              + "'{}' in pending, cannot have a lost resource '{}'", 
-              reservationId, resource.getClientResourceId()));
+          _deleteReservation(reservationId);
+          toRelease = reservation.getResourceImpls();
+          event.getRejectedReservationIds().add(reservationId);
+          break;
       }
     }
     return toRelease;
@@ -337,15 +348,16 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
 
   // API to wire with RM client
 
-  protected void rmChanges(final List<RMResourceChange> changes) {
+  @SuppressWarnings("unchecked")
+  protected void changesFromRM(final List<RMResourceChange> changes) {
     if (changes == null) {
       throw new IllegalArgumentException("changes cannot be NULL");
     }
     final boolean hasListener = listener != null;
-    getLog().trace("rmChanges({})", changes);
+    getLog().trace("changesFromRM({})", changes);
     Map<UUID, LlamaAMEventImpl> eventsMap = 
         new HashMap<UUID, LlamaAMEventImpl>();
-    List<PlacedResource> toRelease = new ArrayList<PlacedResource>();
+    List<PlacedResourceImpl> toRelease = new ArrayList<PlacedResourceImpl>();
     synchronized (this) {
       for (RMResourceChange change : changes) {
         PlacedResourceImpl resource = resourcesMap.get(change
@@ -354,7 +366,7 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
           getLog().warn("Unknown resource '{}'",
               change.getClientResourceId());
         } else {
-          List<PlacedResource> release = null;
+          List<PlacedResourceImpl> release = null;
           switch (change.getStatus()) {
             case REJECTED:
               release = _resourceRejected(resource, eventsMap);
@@ -363,7 +375,7 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
               _resourceAllocated(resource, change, eventsMap);
               break;
             case PREEMPTED:
-              toRelease =_resourcePreempted(resource, eventsMap);
+              release =_resourcePreempted(resource, eventsMap);
               break;
             case LOST:
               release = _resourceLost(resource, eventsMap);
@@ -375,9 +387,9 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
         }
       }
     }
-    if (toRelease != null) {
+    if (!toRelease.isEmpty()) {
       try {
-        rmRelease(toRelease);
+        rmRelease((List<RMPlacedResource>) (List) toRelease);
       } catch (LlamaAMException ex) {
         getLog().warn("rmRelease() error: {}", ex.toString(), ex);
       }
@@ -395,16 +407,33 @@ public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements
     }
   }
 
+  protected void loseAllReservations() {
+    synchronized (this) {
+      List<UUID> clientResourceIds = 
+          new ArrayList<UUID>(resourcesMap.keySet());
+      List<RMResourceChange> changes = new ArrayList<RMResourceChange>();
+      for (UUID clientResourceId : clientResourceIds) {
+        changes.add(RMResourceChange.createResourceChange(clientResourceId, 
+            PlacedResource.Status.LOST));
+      }
+      changesFromRM(changes);
+    }
+  }
+  
+  protected void setRunning(boolean running) {
+    this.running = running;
+  }
+  
   protected abstract void rmRegister(String queue) throws LlamaAMException;
 
   protected abstract void rmUnregister();
 
   protected abstract List<String> rmGetNodes() throws LlamaAMException;
   
-  protected abstract void rmReserve(PlacedReservation reservation)
+  protected abstract void rmReserve(RMPlacedReservation reservation)
       throws LlamaAMException;
 
-  protected abstract void rmRelease(Collection<PlacedResource> resources)
+  protected abstract void rmRelease(Collection<RMPlacedResource> resources)
       throws LlamaAMException;
 
 }

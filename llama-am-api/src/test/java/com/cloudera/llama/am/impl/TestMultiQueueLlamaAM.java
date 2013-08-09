@@ -97,6 +97,11 @@ public class TestMultiQueueLlamaAM {
     }
 
     @Override
+    public boolean isRunning() {
+      return false;
+    }
+
+    @Override
     public void addListener(LlamaAMListener listener) {
       MyLlamaAM.listener = listener;
       methods.add("addListener");

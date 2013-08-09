@@ -52,6 +52,8 @@ public abstract class LlamaAM {
   public abstract void start() throws LlamaAMException;
 
   public abstract void stop();
+  
+  public abstract boolean isRunning();
 
   public abstract List<String> getNodes() throws LlamaAMException;
   

@@ -32,13 +32,11 @@ import java.util.UUID;
 public class APIContractEnforcerLlamaAM extends LlamaAM {
   private final Logger logger;
   private final LlamaAM llamaAM;
-  private volatile boolean running;
   private volatile boolean stopped;
 
   public APIContractEnforcerLlamaAM(LlamaAM llamaAM) {
     this.llamaAM = ParamChecker.notNull(llamaAM, "llamaAM");
     logger = LoggerFactory.getLogger(this.llamaAM.getClass());
-    running = false;
   }
 
   private Logger getLog() {
@@ -46,7 +44,7 @@ public class APIContractEnforcerLlamaAM extends LlamaAM {
   }
 
   private void checkIsRunning() {
-    if (!running) {
+    if (!llamaAM.isRunning()) {
       throw new IllegalStateException("LlamaAM is not running");
     }
   }
@@ -58,7 +56,7 @@ public class APIContractEnforcerLlamaAM extends LlamaAM {
 
   @Override
   public synchronized void start() throws LlamaAMException {
-    if (running) {
+    if (llamaAM.isRunning()) {
       throw new IllegalStateException("LlamaAM already running");
     }
     if (stopped) {
@@ -66,17 +64,20 @@ public class APIContractEnforcerLlamaAM extends LlamaAM {
     }
     llamaAM.start();
     getLog().trace("start()");
-    running = true;
   }
 
   @Override
   public synchronized void stop() {
-    if (running) {
+    if (llamaAM.isRunning()) {
       llamaAM.stop();
       getLog().trace("stop()");
-      running = false;
       stopped = true;
     }
+  }
+
+  @Override
+  public boolean isRunning() {
+    return llamaAM.isRunning();
   }
 
   @Override

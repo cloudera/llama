@@ -46,6 +46,7 @@ public class ClientNotifier implements LlamaAMListener {
 
   private final Configuration conf;
   private final ClientNotificationService clientNotificationService;
+  private final NodeMapper nodeMapper;
   private int queueThreshold;
   private int maxRetries;
   private int retryInverval;
@@ -53,9 +54,10 @@ public class ClientNotifier implements LlamaAMListener {
   private ThreadPoolExecutor executor;
   private Subject subject;
   
-  public ClientNotifier(Configuration conf, ClientNotificationService 
-      clientNotificationService) {
+  public ClientNotifier(Configuration conf, NodeMapper nodeMapper, 
+      ClientNotificationService clientNotificationService) {
     this.conf = conf;
+    this.nodeMapper = nodeMapper;
     queueThreshold = conf.getInt(
         ServerConfiguration.CLIENT_NOTIFIER_QUEUE_THRESHOLD_KEY,
         ServerConfiguration.CLIENT_NOTIFIER_QUEUE_THRESHOLD_DEFAULT);
@@ -119,7 +121,7 @@ public class ClientNotifier implements LlamaAMListener {
         if (clientCaller != null) {
           clientId = clientCaller.getClientId();
           final TLlamaAMNotificationRequest request = 
-              TypeUtils.toAMNotification(event);
+              TypeUtils.toAMNotification(event, nodeMapper);
           Subject.doAs(subject, new PrivilegedExceptionAction<Object>() {
             @Override
             public Object run() throws Exception {

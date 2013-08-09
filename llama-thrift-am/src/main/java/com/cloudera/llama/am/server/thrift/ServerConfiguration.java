@@ -55,6 +55,10 @@ public interface ServerConfiguration {
       "client.notifier.retry.interval.ms";
   public static int CLIENT_NOTIFIER_RETRY_INTERVAL_DEFAULT = 5000;
 
+  public static String NODE_NAME_MAPPING_CLASS_KEY = KEY_PREFIX +
+      "node.name.mapping.class";
+  public static Class<? extends NodeMapper> NODE_NAME_MAPPING_CLASS_DEFAULT = 
+      HostnameOnlyNodeMapper.class;
 
   public static String TRANSPORT_TIMEOUT_KEY = KEY_PREFIX +
       "transport.timeout.ms";

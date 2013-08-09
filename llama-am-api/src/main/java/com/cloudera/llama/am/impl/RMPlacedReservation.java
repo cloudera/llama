@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http|//www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,15 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.cloudera.llama.am.mock;
+package com.cloudera.llama.am.impl;
 
-/**
- * Prepend the desired flag to the location in a reservation resource
- */
-public class MockLlamaAMFlags {
-  public static final String ALLOCATE = "|ALLOCATE|";
-  public static final String REJECT = "|REJECT|";
-  public static final String LOSE = "|LOSE|";
-  public static final String PREEMPT = "|PREEMPT|";
+import com.cloudera.llama.am.PlacedReservation;
+import com.cloudera.llama.am.Reservation;
+import com.cloudera.llama.am.Resource;
+
+import java.util.List;
+
+public abstract class RMPlacedReservation extends PlacedReservation {
+
+  protected RMPlacedReservation(Reservation<Resource> reservation) {
+    super(reservation);
+  }
+  
+  @SuppressWarnings("unchecked")
+  public List<RMPlacedResource> getRMResources() {
+    return (List<RMPlacedResource>) (List) getResources();
+  }
 
 }

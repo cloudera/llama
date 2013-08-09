@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class PlacedReservationImpl extends PlacedReservation {
+public class PlacedReservationImpl extends RMPlacedReservation {
   private final UUID reservationId;
   private Status status;
 
