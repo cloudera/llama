@@ -38,7 +38,7 @@ import java.util.UUID;
 
 public abstract class AbstractSingleQueueLlamaAM extends LlamaAM implements 
     Configurable {
-  static final String QUEUE_KEY = PREFIX_KEY + "single.queue";
+  static final String QUEUE_KEY = PREFIX_KEY + "queue";
 
   private final Logger logger;
   private Configuration conf;

@@ -42,11 +42,6 @@ public class MultiQueueLlamaAM extends LlamaAM implements Configurable,
 
   private static Logger LOG = LoggerFactory.getLogger(MultiQueueLlamaAM.class);
 
-  public static final String PREFIX_KEY = LlamaAM.PREFIX_KEY + "multi.";
-  public static final String MULTI_CREATE_KEY = PREFIX_KEY + "create";
-  public static final String SINGLE_QUEUE_AM_CLASS_KEY = PREFIX_KEY + 
-      "single.am.class";
-
   private Configuration conf;
   private final Map<String, LlamaAM> ams;
   private final ConcurrentHashMap<UUID, String> reservationToQueue;
@@ -63,7 +58,7 @@ public class MultiQueueLlamaAM extends LlamaAM implements Configurable,
   @Override
   public void setConf(Configuration conf) {
     this.conf = conf;
-    conf.setBoolean(MULTI_CREATE_KEY, false);
+    LlamaAMCreate.verifyLlamaClass(conf);
   }
 
   @Override
@@ -86,13 +81,12 @@ public class MultiQueueLlamaAM extends LlamaAM implements Configurable,
 
   private LlamaAM getLlamaAM(String queue) throws LlamaAMException {
     LlamaAM am;
-    //TODO: see how to remove global contention during creation/start of an AM
     synchronized (ams) {
       am = ams.get(queue);
       if (am == null) {
         Configuration conf = new Configuration(getConf());
         conf.set(AbstractSingleQueueLlamaAM.QUEUE_KEY, queue);
-        am = LlamaAM.create(conf);
+        am = LlamaAMCreate.createSingle(conf);
         am.start();
         am.addListener(MultiQueueLlamaAM.this);
         ams.put(queue, am);

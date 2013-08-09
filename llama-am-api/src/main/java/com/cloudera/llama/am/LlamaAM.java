@@ -18,6 +18,7 @@
 package com.cloudera.llama.am;
 
 import com.cloudera.llama.am.impl.APIContractEnforcerLlamaAM;
+import com.cloudera.llama.am.impl.LlamaAMCreate;
 import com.cloudera.llama.am.impl.MultiQueueLlamaAM;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ReflectionUtils;
@@ -42,18 +43,8 @@ public abstract class LlamaAM {
 
   public static LlamaAM create(Configuration conf) throws LlamaAMException {
     conf = cloneConfiguration(conf);
-    if (conf.get(CLASS_KEY) == null) {
-      throw new IllegalArgumentException("LlamaAM class not set");
-    }
-    boolean multi = conf.getBoolean(MultiQueueLlamaAM.MULTI_CREATE_KEY, true);
-    String classKey = (multi) ? MultiQueueLlamaAM.SINGLE_QUEUE_AM_CLASS_KEY
-                              : CLASS_KEY;
-    Class<? extends LlamaAM> defaultClass = (multi) ? MultiQueueLlamaAM.class
-                                                    : null;
-    Class<? extends LlamaAM> klass = conf.getClass(classKey, defaultClass, 
-        LlamaAM.class);
-    LlamaAM am = ReflectionUtils.newInstance(klass, conf);
-    return (multi) ? new APIContractEnforcerLlamaAM(am) : am;
+    LlamaAM am = LlamaAMCreate.createMulti(conf);
+    return new APIContractEnforcerLlamaAM(am);
   }
 
   public abstract Configuration getConf();
