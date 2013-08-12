@@ -59,7 +59,7 @@ TODO: need license header
     <cdh.mahout.version>0.7-cdh5.0.0-SNAPSHOT</cdh.mahout.version>
     <cdh.hue.version>3.0.0-cdh5.0.0-SNAPSHOT</cdh.hue.version>
     <cdh.datafu.version>0.0.4-cdh5.0.0-SNAPSHOT</cdh.datafu.version>
-    <cdh.solr.version>4.3.0-cdh5.0.0-SNAPSHOT</cdh.solr.version>
+    <cdh.solr.version>4.4.0-cdh5.0.0-SNAPSHOT</cdh.solr.version>
     <cdh.search.version>1.0.0-cdh5.0.0-SNAPSHOT</cdh.search.version>
     <cdh.hbase-solr.version>1.2-cdh5.0.0-SNAPSHOT</cdh.hbase-solr.version>
     <cdh.cdk.version>0.5.0-cdh5.0.0-SNAPSHOT</cdh.cdk.version>
