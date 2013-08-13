@@ -21,6 +21,9 @@
     <html>
       <body>
         <h2>Llama Default Configuration</h2>
+        [<a href="./index.html">Go back to Llama Documentation</a>]
+        <p/>
+        <p/>
         <table border="1">
           <tr>
             <th>name</th>

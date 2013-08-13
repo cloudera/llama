@@ -18,13 +18,13 @@
 
 Integrating Llama
 
+%{toc|section=1|fromDepth=2}
+
 * Using Thrift API
 
   {{{./Llama.thrift}Llama Thrift definition}}
 
   Llama Thrift server supports unframed transport only.
-
-  <<NOTE:>> Currently Thrift SASL is not supported.
   
 * Using MiniLlama for Testcases
   
@@ -41,17 +41,22 @@ Integrating Llama
 
   The Maven repository where SNAPSHOT artifacts are currently deployed is 
   <<<{{https://repository.cloudera.com/artifactory/libs-snapshot-local}}>>>
-  
-  Boiler plate code for a testcase using MiniLlama:
+
+  <<IMPORTANT:>> By default, MiniLlama uses an ephemeral port bound to 
+  <<<localhost>>> only.
+
+**  Testcase boiler plate code:
   
 +----+
 public class TestMiniLlamaWithMock {
 
+  private Configuration createMiniLlamaConfiguration() {
+     ...
+  }
+  
   @Test
   public void testMiniLlama() throws Exception {
-    Configuration conf = MiniLlama.createMiniConf(MiniLlama.Type.MOCK, 
-        Arrays.asList("queue1", "queue2"), Arrays.asList("node1", "node2"));
-    MiniLlama server = new MiniLlama(conf);
+    Configuration conf = createMiniLlamaConfiguration();
     try {
       server.start();
       
@@ -63,16 +68,81 @@ public class TestMiniLlamaWithMock {
       transport.open();
       TProtocol protocol = new TBinaryProtocol(transport);
       LlamaAMService.Client client = new LlamaAMService.Client(protocol);
-
       ....
-
     } finally {
       server.stop();
-    }
-      
+    }   
   }
 }
 +----+
 
-  <<NOTE:>> By default, MiniLlama uses an ephemeral port on <<<localhost>>>.
+** Using MiniLlama with MockLlamaAM:
   
+  You need to create a Mock configuration.
+  
+  For example:
+  
++----+
+public class TestMiniLlamaWithMock {
+
+  private Configuration createMiniLlamaConfiguration() {
+    Configuration conf = MiniLlama.createMockConf(
+        Arrays.asList("queue1", "queue2"), Arrays.asList("node1", "node2"));
+  }
+
+  @Test
+  public void testMiniLlama() throws Exception {
+    ...
+  }
+}
++----+
+
+** Using MiniLlama with YarnLlamaAM:
+  
+  Using MiniLlama with the YarnLlamAM will also start a Hadoop HDFS/Yarn 
+  minicluster. You need to specify how many nodes (number of DataNodes and 
+  NodeManagers) for the Hadoop HDFS/Yarn minicluster.
+  
+  <<<NOTE:>>> Until {{{https://issues.apache.org/jira/browse/YARN-1008}YARN-1008}} 
+  is integrated, only one node miniclusters are supported.
+  
+  You must have in your classpath (in a directory, not in a JAR) a 
+  <<<fair-scheduler-allocation.xml>>> file defining the FairScheduler queue
+  configuration.
+  
+  For example:
+  
++----+
+public class TestMiniLlamaWithMock {
+
+  private Configuration createMiniLlamaConfiguration() {
+    URL url = Thread.currentThread().getContextClassLoader().getResource(
+        "fair-scheduler-allocation.xml");
+    String fsallocationFile = url.toExternalForm();
+    fsallocationFile = fsallocationFile.substring("file://".length());
+    Configuration conf = MiniLlama.createMiniClusterConf(1);
+    conf.set("yarn.scheduler.fair.allocation.file", fsallocationFile);
+    conf.set(LlamaAM.INITIAL_QUEUES_KEY, "default");
+    return conf;
+  }
+  
+  @Test
+  public void testMiniLlama() throws Exception {
+    ...
+  }
+}
++----+
+  
+  Example of a minimal <<<fair-scheduler-allocation.xml>>> configuration file 
+  defining 3 queues:
+  
++----+
+<allocations>
+  <queue name="queue1">
+  </queue>
+  <queue name="queue2">
+  </queue>
+  <queue name="queue3">
+  </queue>
+</allocations>
++----+

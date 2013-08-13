@@ -18,6 +18,8 @@
 
 Building Llama
 
+%{toc|section=1|fromDepth=2}
+
 * Requirements
 
   * JDK 1.6+

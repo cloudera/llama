@@ -18,19 +18,33 @@
 
 Running Llama
 
+%{toc|section=1|fromDepth=2}
+
 * Install
 
-* Configuration
+  Expand the Llama TARBALL distribution.
+  
+* Llama Configuration
 
+  Within Llama root directory:
+  
     * Llama startup configuration: <<<libexec/llama-env.sh>>>.
   
-    * Llama server configuration: <<<{{{./llama-site.html}conf/llama-site.xml}}>>> 
-    (changes take effect on re-start).
+    * Llama server configuration: 
+    <<<{{{./llama-site.html}conf/llama-site.xml}}>>> (changes take effect on 
+    re-start).
   
-    * Llama server logging: <<<{{{./llama-log4j.properties}conf/llama-log4j.properties}}>>> 
-    (changes take effect within 1 second).
+    * Llama server logging: 
+    <<<{{{./llama-log4j.properties}conf/llama-log4j.properties}}>>> (changes 
+    take effect within 1 second).
 
-  <<NOTE:>> These files have all the default configurations.
+    <<NOTE:>> These files have all configuration properties with their default 
+    values.
+  
+  <<Yarn Configuration:>>
+  
+  Copy the <<<core-site.xml>>> and <<<yarn-site.xml>>> files from the Hadoop 
+  cluster in Llama's <<<conf/>>> directory.
   
 * Run
 
@@ -65,3 +79,32 @@ $ bin/llama
 2013-08-02 07:06:29,653 INFO  LlamaAMThriftServer - Llama shutdown!
 $
 +----+
+
+* Security Configuration
+
+  If configuring Llama with security Enabled (Thrift with Kerberos SASL) you 
+  need a running KDC, a service keytab (<<<llama/HOSTNAME>>>) and the
+  corresponding keytab file.
+  
+  The properties to configure in the <<<llama-site.xml>>> file are (shown with 
+  default values):
+  
+  * llama.am.server.thrift.security=false
+  * llama.am.server.thrift.kerberos.keytab.file=llama.keytab
+  * llama.am.server.thrift.kerberos.server.principal.name=llama
+  * llama.am.server.thrift.kerberos.notification.principal.name=impala
+  
+  If the path specified in <<<llama.am.server.thrift.kerberos.keytab.file>>> is
+  a relative path, the keytab file will be expected in the Llama configuration 
+  directory.
+
+  When specifying the principal names use the short name only, do not include 
+  the service hostname. The Thrift SASL implementation composes the complete 
+  service principal name (<<<shortName>>>/<<<hostname>>>).
+  
+* Notes on Thrift
+
+  Llama Thrift server supports unframed transport only (per Impala requirement).
+  Because of this Llama must use synchronous IO (<<<TThreadPoolServer>>>).
+  
+  Kerberos Thrift SASL is supported.
