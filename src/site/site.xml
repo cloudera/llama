@@ -37,6 +37,7 @@
       <item name="Building Llama" href="BuildingLlama.html"/>
       <item name="Integrating Llama" href="IntegratingLlama.html"/>
       <item name="Running Llama" href="RunningLlama.html"/>
+      <item name="LlamaAM Configuration" href="llama-site.html"/>
     </menu>
 
   </body>

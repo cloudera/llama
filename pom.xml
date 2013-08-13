@@ -378,7 +378,10 @@
               <target unless="child.module">
                 <copy file="${basedir}/llama-thrift-api/src/main/thrift/Llama.thrift"
                       todir="${project.build.directory}/site"/>
-                <copy file="${basedir}/llama-dist/src/main/conf/llama-site.xml"
+                <xslt in="${basedir}/llama-dist/src/main/conf/llama-site.xml"
+                      out="${project.build.directory}/site/llama-site.html"
+                      style="${basedir}/src/site/configuration.xsl"/>
+                <copy file="${basedir}/llama-dist/src/main/conf/llama-log4j.properties"
                       todir="${project.build.directory}/site/"/>
               </target>
             </configuration>

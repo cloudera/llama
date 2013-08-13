@@ -24,11 +24,11 @@ Running Llama
 
     * Llama startup configuration: <<<libexec/llama-env.sh>>>.
   
-    * Llama server configuration: <<<{{{./llama-site.xml}conf/llama-site.xml}}>>> 
+    * Llama server configuration: <<<{{{./llama-site.html}conf/llama-site.xml}}>>> 
     (changes take effect on re-start).
   
-    * Llama server logging: <<<conf/llama-log4j.properties>>> (changes take effect 
-    immediately).
+    * Llama server logging: <<<{{{./llama-log4j.properties}conf/llama-log4j.properties}}>>> 
+    (changes take effect within 1 second).
 
   <<NOTE:>> These files have all the default configurations.
   
