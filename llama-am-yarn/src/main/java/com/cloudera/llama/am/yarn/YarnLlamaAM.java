@@ -79,12 +79,20 @@ public class YarnLlamaAM extends AbstractSingleQueueLlamaAM  implements
   private static final long APP_MONITOR_TIMEOUT_DEFAULT = 30000;
 
   private static final String APP_MONITOR_POLLING_KEY = PREFIX_KEY + 
-      "app.polling.ms";
+      "app.monitor.polling.ms";
   private static final long APP_MONITOR_POLLING_DEFAULT = 200;
 
   private static final String HEARTBEAT_INTERVAL_KEY = PREFIX_KEY + 
-      "heartbeat.interval.ms";
+      "app.heartbeat.interval.ms";
   private static final int HEARTBEAT_INTERNAL_DEFAULT = 200;
+
+  public static final String CONTAINER_HANDLER_QUEUE_THRESHOLD_KEY = PREFIX_KEY
+      + "container.handler.queue.threshold";
+  public static final int CONTAINER_HANDLER_QUEUE_THRESHOLD_DEFAULT = 10000;
+
+  public static final String CONTAINER_HANDLER_THREADS_KEY = PREFIX_KEY
+      + "container.handler.threads";
+  public static final int CONTAINER_HANDLER_THREADS_DEFAULT = 10;
 
   private YarnClient rmClient;
   private AMRMClientAsync<LlamaContainerRequest> amClient;
@@ -100,14 +108,6 @@ public class YarnLlamaAM extends AbstractSingleQueueLlamaAM  implements
   public YarnLlamaAM() {
     nodes = Collections.synchronizedSet(new HashSet<String>());
   }
-
-  public static final String CONTAINER_HANDLER_QUEUE_THRESHOLD_KEY = PREFIX_KEY 
-      + "container.handler.queue.threshold";
-  public static final int CONTAINER_HANDLER_QUEUE_THRESHOLD_DEFAULT = 10000;
-
-  public static final String CONTAINER_HANDLER_THREADS_KEY = PREFIX_KEY
-      + "container.handler.threads";
-  public static final int CONTAINER_HANDLER_THREADS_DEFAULT = 10;
 
   @Override
   @SuppressWarnings("unchecked")

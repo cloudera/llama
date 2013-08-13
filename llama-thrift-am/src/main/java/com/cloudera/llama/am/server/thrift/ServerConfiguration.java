@@ -64,15 +64,15 @@ public interface ServerConfiguration {
       "transport.timeout.ms";
   public static int TRANSPORT_TIMEOUT_DEFAULT = 1000;
 
-  public static String KEYTAB_FILE_KEY = KEY_PREFIX + "keytab.file";
+  public static String KEYTAB_FILE_KEY = KEY_PREFIX + "kerberos.keytab.file";
   public static String KEYTAB_FILE_DEFAULT = "llama.keytab";
 
   public static String SERVER_PRINCIPAL_NAME_KEY = KEY_PREFIX +
-      "server.principal.name";
+      "kerberos.server.principal.name";
   public static String SERVER_PRINCIPAL_NAME_DEFAULT = "llama";
 
   public static String NOTIFICATION_PRINCIPAL_NAME_KEY = KEY_PREFIX +
-      "notification.principal.name";
+      "kerberos.notification.principal.name";
   public static String NOTIFICATION_PRINCIPAL_NAME_DEFAULT = "impala";
 
 }

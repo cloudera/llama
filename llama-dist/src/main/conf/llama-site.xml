@@ -17,7 +17,7 @@
   <!-- LlamaAM Thrift server configuration -->
   <property>
     <name>llama.am.server.thrift.address</name>
-    <value>localhost:0</value>
+    <value>0.0.0.0:15000</value>
   </property>
   <property>
     <name>llama.am.server.thrift.server.min.threads</name>
@@ -26,6 +26,10 @@
   <property>
     <name>llama.am.server.thrift.server.max.threads</name>
     <value>50</value>
+  </property>
+  <property>
+    <name>llama.am.server.thrift.transport.timeout.ms</name>
+    <value>1000</value>
   </property>
   <property>
     <name>llama.am.server.thrift.client.notifier.queue.threshold</name>
@@ -44,11 +48,29 @@
     <value>5000</value>
   </property>
   <property>
+    <name>llama.am.server.thrift.node.name.mapping.class</name>
+    <value>com.cloudera.llama.am.server.thrift.HostnameOnlyNodeMapper</value>
+  </property>
+
+  <!-- LlamaAM Thrift server Security configuration -->
+  <property>
     <name>llama.am.server.thrift.security</name>
     <value>false</value>
   </property>
+  <property>
+    <name>llama.am.server.thrift.kerberos.keytab.file</name>
+    <value>llama.keytab</value>
+  </property>
+  <property>
+    <name>llama.am.server.thrift.kerberos.server.principal.name</name>
+    <value>llama</value>
+  </property>
+  <property>
+    <name>llama.am.server.thrift.kerberos.notification.principal.name</name>
+    <value>impala</value>
+  </property>
 
-  <!-- LlamaAM implementation configuration -->
+  <!-- LlamaAM configuration -->
   <property>
     <name>llama.am.class</name>
     <value>com.cloudera.llama.am.mock.MockLlamaAM</value>
@@ -77,5 +99,29 @@
   </property>
 
   <!-- YarnLlamaAM configuration -->
+  <property>
+    <name>llama.am.yarn.priority</name>
+    <value>0</value>
+  </property>
+  <property>
+    <name>llama.am.yarn.app.monitor.timeout.ms</name>
+    <value>30000</value>
+  </property>
+  <property>
+    <name>llama.am.yarn.app.monitor.polling.ms</name>
+    <value>200</value>
+  </property>
+  <property>
+    <name>llama.am.yarn.app.heartbeat.interval.ms</name>
+    <value>200</value>
+  </property>
+  <property>
+    <name>llama.am.yarn.container.handler.queue.threshold</name>
+    <value>10000</value>
+  </property>
+  <property>
+    <name>llama.am.yarn.container.handler.threads</name>
+    <value>10</value>
+  </property>
 
 </configuration>
