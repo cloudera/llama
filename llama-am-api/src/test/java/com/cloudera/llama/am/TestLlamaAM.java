@@ -17,38 +17,38 @@
  */
 package com.cloudera.llama.am;
 
+import com.cloudera.llama.am.spi.RMLlamaAMAdapter;
+import com.cloudera.llama.am.spi.RMLlamaAMCallback;
+import com.cloudera.llama.am.spi.RMPlacedReservation;
+import com.cloudera.llama.am.spi.RMPlacedResource;
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
 public class TestLlamaAM {
   
-  public static class MyLlamaAM extends LlamaAM {
+  public static class MyRMLlamaAMAdapter implements RMLlamaAMAdapter {
     static boolean created;
     
-    public MyLlamaAM() {
+    public MyRMLlamaAMAdapter() {
       created = true;
     }
-    
+
     @Override
-    public Configuration getConf() {
-      return null;
+    public void setLlamaAMCallback(RMLlamaAMCallback callback) {
     }
 
     @Override
-    public void start() throws LlamaAMException {
+    public void register(String queue) throws LlamaAMException {
     }
 
     @Override
-    public void stop() {
-    }
-
-    @Override
-    public boolean isRunning() {
-      return false;
+    public void unregister() {
     }
 
     @Override
@@ -57,47 +57,40 @@ public class TestLlamaAM {
     }
 
     @Override
-    public UUID reserve(Reservation reservation) throws LlamaAMException {
-      return null;
-    }
-
-    @Override
-    public PlacedReservation getReservation(UUID reservationId)
-        throws LlamaAMException {
-      return null;
-    }
-
-    @Override
-    public void releaseReservation(UUID reservationId) throws LlamaAMException {
-    }
-
-    @Override
-    public void releaseReservationsForClientId(UUID clientId)
+    public void reserve(RMPlacedReservation reservation)
         throws LlamaAMException {
     }
 
     @Override
-    public void addListener(LlamaAMListener listener) {
+    public void release(Collection<RMPlacedResource> resources)
+        throws LlamaAMException {
     }
+  }
 
-    @Override
-    public void removeListener(LlamaAMListener listener) {
+  private void testCreate(Configuration conf) throws Exception{
+    LlamaAM am = LlamaAM.create(conf);
+    try {
+      am.start();
+      am.reserve(new Reservation(UUID.randomUUID(), "q",
+          Arrays.asList(new Resource(UUID.randomUUID(), "l",
+              Resource.LocationEnforcement.MUST, 1, 1 )), false));
+      Assert.assertTrue(MyRMLlamaAMAdapter.created);
+    } finally {
+      am.stop();
     }
   }
 
   @Test(expected = RuntimeException.class)
   public void testCreateNoClassSet() throws Exception{
-    Configuration conf = new Configuration(false);
-    LlamaAM.create(conf);
+    testCreate(new  Configuration(false));
   }
 
-  @Test(expected = RuntimeException.class)
+  @Test
   public void testCreate() throws Exception{
     Configuration conf = new Configuration(false);
-    conf.setClass(LlamaAM.CLASS_KEY, LlamaAM.class, MyLlamaAM.class);
-    Assert.assertFalse(MyLlamaAM.created);
-    LlamaAM.create(conf);
-    Assert.assertTrue(MyLlamaAM.created);
+    conf.setClass(LlamaAM.RM_ADAPTER_CLASS_KEY, MyRMLlamaAMAdapter.class, 
+        RMLlamaAMAdapter.class);
+    testCreate(conf);
   }
 
 }

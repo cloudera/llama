@@ -15,9 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.cloudera.llama.am.impl;
+package com.cloudera.llama.am.spi;
 
 import com.cloudera.llama.am.PlacedResource;
+import com.cloudera.llama.am.impl.FastFormat;
 
 import java.util.UUID;
 
@@ -85,7 +86,7 @@ public class RMResourceChange {
   public String toString() {
     String msg = (getStatus() == PlacedResource.Status.ALLOCATED)
                  ? TO_STRING_ALLOCATED_MSG : TO_STRING_CHANGED_MSG;
-    return FastFormat.format(msg, getClientResourceId(), getStatus(),
+    return FastFormat.format(msg, getClientResourceId(), getStatus(), 
         getvCpuCores(), getMemoryMb(), getLocation());
   }
 

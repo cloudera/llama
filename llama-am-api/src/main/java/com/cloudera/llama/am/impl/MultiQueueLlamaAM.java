@@ -23,7 +23,6 @@ import com.cloudera.llama.am.LlamaAMException;
 import com.cloudera.llama.am.LlamaAMListener;
 import com.cloudera.llama.am.PlacedReservation;
 import com.cloudera.llama.am.Reservation;
-import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,34 +36,25 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class MultiQueueLlamaAM extends LlamaAM implements Configurable, 
-    LlamaAMListener {
+public class MultiQueueLlamaAM extends LlamaAM implements LlamaAMListener {
 
   private static Logger LOG = LoggerFactory.getLogger(MultiQueueLlamaAM.class);
 
-  private Configuration conf;
   private final Map<String, LlamaAM> ams;
   private final ConcurrentHashMap<UUID, String> reservationToQueue;
   private final Set<LlamaAMListener> listeners;
   private boolean running;
   
-  public MultiQueueLlamaAM() {
+  public MultiQueueLlamaAM(Configuration conf) {
+    super(conf);
     ams = new HashMap<String, LlamaAM>();
     listeners = new HashSet<LlamaAMListener>();
     reservationToQueue = new ConcurrentHashMap<UUID, String>();
-  }
-
-  // Configurable API
-
-  @Override
-  public void setConf(Configuration conf) {
-    this.conf = conf;
-    LlamaAMCreate.verifyLlamaClass(conf);
-  }
-
-  @Override
-  public Configuration getConf() {
-    return conf;
+    if (SingleQueueLlamaAM.getAdapterClass(conf) == null) {
+      throw new IllegalArgumentException(FastFormat.format(
+          "RMLlamaAMAdapter class not defined in the configuration under '{}'",
+          SingleQueueLlamaAM.RM_ADAPTER_CLASS_KEY));
+    }
   }
 
   // LlamaAMListener API
@@ -85,9 +75,7 @@ public class MultiQueueLlamaAM extends LlamaAM implements Configurable,
     synchronized (ams) {
       am = ams.get(queue);
       if (am == null) {
-        Configuration conf = new Configuration(getConf());
-        conf.set(AbstractSingleQueueLlamaAM.QUEUE_KEY, queue);
-        am = LlamaAMCreate.createSingle(conf);
+        am = new SingleQueueLlamaAM(getConf(), queue);
         am.start();
         am.addListener(MultiQueueLlamaAM.this);
         ams.put(queue, am);
@@ -117,7 +105,7 @@ public class MultiQueueLlamaAM extends LlamaAM implements Configurable,
 
   @Override
   public void start() throws LlamaAMException {
-    for (String queue : conf.getTrimmedStringCollection(INITIAL_QUEUES_KEY)) {
+    for (String queue : getConf().getTrimmedStringCollection(INITIAL_QUEUES_KEY)) {
       try {
         getLlamaAM(queue);
       } catch (LlamaAMException ex) {
@@ -208,8 +196,8 @@ public class MultiQueueLlamaAM extends LlamaAM implements Configurable,
         am.releaseReservationsForClientId(clientId);
       } catch (LlamaAMException ex) {
         if (thrown != null) {
-          LOG.error("releaseReservationsFoClientId({}), error: {}", 
-              new Object[]{clientId, ex.toString(), ex});
+          LOG.error("releaseReservationsFoClientId({}), error: {}", clientId, 
+              ex.toString(), ex);
         }
         thrown = ex;
       }

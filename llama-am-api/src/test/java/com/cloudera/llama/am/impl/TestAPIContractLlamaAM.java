@@ -35,14 +35,15 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
-public class TestAPIContractEnforcerResourceAM {
+public class TestAPIContractLlamaAM {
 
-  public static class MyLlamaAM extends LlamaAM {
+  public static class MyRMLlamaAMAdapter extends LlamaAM {
     static boolean nullOnReserve;
 
     private boolean running;
     
-    public MyLlamaAM() {
+    public MyRMLlamaAMAdapter() {
+      super(new Configuration(false));
       nullOnReserve = false;
     }
     
@@ -86,11 +87,6 @@ public class TestAPIContractEnforcerResourceAM {
     }
 
     @Override
-    public Configuration getConf() {
-      return null;
-    }
-
-    @Override
     public PlacedReservation getReservation(UUID reservationId)
         throws LlamaAMException {
       return null;
@@ -109,8 +105,8 @@ public class TestAPIContractEnforcerResourceAM {
   }
   
   private LlamaAM createLlamaAM() throws Exception {
-    MyLlamaAM am = new MyLlamaAM();
-    return new APIContractEnforcerLlamaAM(am);
+    MyRMLlamaAMAdapter am = new MyRMLlamaAMAdapter();
+    return new APIContractLlamaAM(am);
   }
 
 
@@ -120,6 +116,17 @@ public class TestAPIContractEnforcerResourceAM {
     try {
       am.start();
       am.reserve(null);
+    } finally {
+      am.stop();
+    }
+  }
+
+  @Test
+  public void testIsRunning() throws Exception {
+    LlamaAM am = createLlamaAM();
+    try {
+      am.start();
+      Assert.assertTrue(am.isRunning());
     } finally {
       am.stop();
     }
@@ -183,7 +190,7 @@ public class TestAPIContractEnforcerResourceAM {
   @Test(expected = IllegalStateException.class)
   public void testReserveNull() throws Exception {
     LlamaAM am = createLlamaAM();
-    MyLlamaAM.nullOnReserve = true;
+    MyRMLlamaAMAdapter.nullOnReserve = true;
     try {
       am.start();
       am.reserve(createReservation());

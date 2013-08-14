@@ -17,8 +17,8 @@
  */
 package com.cloudera.llama.am.impl;
 
-import com.cloudera.llama.am.PlacedResource;
 import com.cloudera.llama.am.Resource;
+import com.cloudera.llama.am.spi.RMPlacedResource;
 
 import java.util.UUID;
 

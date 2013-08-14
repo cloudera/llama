@@ -17,6 +17,7 @@
  */
 package com.cloudera.llama.am.impl;
 
+import com.cloudera.llama.am.LlamaAM;
 import com.cloudera.llama.am.LlamaAMEvent;
 import com.cloudera.llama.am.LlamaAMException;
 import com.cloudera.llama.am.LlamaAMListener;
@@ -24,107 +25,110 @@ import com.cloudera.llama.am.PlacedReservation;
 import com.cloudera.llama.am.PlacedResource;
 import com.cloudera.llama.am.Reservation;
 import com.cloudera.llama.am.Resource;
+import com.cloudera.llama.am.spi.RMLlamaAMAdapter;
+import com.cloudera.llama.am.spi.RMLlamaAMCallback;
+import com.cloudera.llama.am.spi.RMPlacedReservation;
+import com.cloudera.llama.am.spi.RMPlacedResource;
+import com.cloudera.llama.am.spi.RMResourceChange;
 import junit.framework.Assert;
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
-public class TestAbstractSingleQueueLlamaAM {
+public class TestSingleQueueLlamaAM {
 
-  public static class DummySingleQueueLlamaAM extends 
-      AbstractSingleQueueLlamaAM {
-    public static DummySingleQueueLlamaAM dummySimpleAM;
+  public static class MyRMLlamaAMAdapter implements RMLlamaAMAdapter {
 
     public boolean start = false;
     public boolean stop = false;
     public boolean reserve = false;
     public boolean release = false;
+    public RMLlamaAMCallback callback;
 
-    protected DummySingleQueueLlamaAM() {
-      dummySimpleAM = this;
+    protected MyRMLlamaAMAdapter() {
     }
 
     @Override
-    protected void rmRegister(String queue) throws LlamaAMException {
+    public void setLlamaAMCallback(RMLlamaAMCallback callback) {
+      this.callback = callback;
+    }
+
+    @Override
+    public void register(String queue) throws LlamaAMException {
       start = true;
     }
 
     @Override
-    protected void rmUnregister() {
+    public void unregister() {
       stop = true;
     }
 
     @Override
-    protected List<String> rmGetNodes() throws LlamaAMException {
+    public List<String> getNodes() throws LlamaAMException {
       return Arrays.asList("node");
     }
 
     @Override
-    protected void rmReserve(RMPlacedReservation reservation) 
+    public void reserve(RMPlacedReservation reservation) 
         throws LlamaAMException {
       reserve = true;
     }
 
     @Override
-    protected void rmRelease(Collection<RMPlacedResource> resources)
+    public void release(Collection<RMPlacedResource> resources)
         throws LlamaAMException {
       release = true;
     }
 
-    @Override
-    public void changesFromRM(List<RMResourceChange> changes) {
-      super.changesFromRM(changes);
-    }
   }
 
   public static class DummyLlamaAMListener implements LlamaAMListener {
-    public LlamaAMEvent event;
+    public List<LlamaAMEvent> events = new ArrayList<LlamaAMEvent>();
 
     @Override
     public void handle(LlamaAMEvent event) {
-      this.event = event;
+      events.add(event);
     }
   }
 
-  private DummySingleQueueLlamaAM createLlamaAM() {
-    DummySingleQueueLlamaAM llama = new DummySingleQueueLlamaAM();
+  private SingleQueueLlamaAM createLlamaAM() {
     Configuration conf = new Configuration(false);
-    conf.set(AbstractSingleQueueLlamaAM.QUEUE_KEY, "queue");
-    llama.setConf(conf);
-    return llama;
-  }
-
-  @Test(expected = IllegalStateException.class)
-  public void testMissingQueue() throws Exception {
-    DummySingleQueueLlamaAM llama = new DummySingleQueueLlamaAM();
-    Configuration conf = new Configuration(false);
-    llama.setConf(conf);
-    llama.start();
+    conf.setClass(LlamaAM.RM_ADAPTER_CLASS_KEY, MyRMLlamaAMAdapter.class, 
+        RMLlamaAMAdapter.class);
+    return new SingleQueueLlamaAM(conf, "queue");
   }
 
   @Test
   public void testRmStartStop() throws Exception {
-    DummySingleQueueLlamaAM llama = createLlamaAM();
+    SingleQueueLlamaAM llama = createLlamaAM();
     try {
-      Assert.assertFalse(llama.start);
-      Assert.assertFalse(llama.stop);
+      Assert.assertFalse(llama.isRunning());
       llama.start();
-      Assert.assertTrue(llama.start);
-      Assert.assertFalse(llama.stop);
+      Assert.assertTrue(((MyRMLlamaAMAdapter) llama.getRmLlamaAdapter()).start);
+      Assert.assertTrue(llama.isRunning());
+      Assert.assertFalse(((MyRMLlamaAMAdapter) llama.getRmLlamaAdapter()).stop);
     } finally {
       llama.stop();
-      Assert.assertTrue(llama.stop);
+      Assert.assertFalse(llama.isRunning());
+      Assert.assertTrue(((MyRMLlamaAMAdapter)llama.getRmLlamaAdapter()).stop);
       llama.stop();
     }
   }
 
   @Test
+  public void testRmStopNoRMAdapter() throws Exception {
+    SingleQueueLlamaAM llama = createLlamaAM();
+    llama.stop();
+  }
+
+  @Test
   public void testAddRemoveListener() throws Exception {
-    DummySingleQueueLlamaAM llama = createLlamaAM();
+    SingleQueueLlamaAM llama = createLlamaAM();
     LlamaAMListener l = new LlamaAMListener() {
       @Override
       public void handle(LlamaAMEvent event) {
@@ -166,7 +170,7 @@ public class TestAbstractSingleQueueLlamaAM {
 
   @Test
   public void testGetNode() throws Exception {
-    DummySingleQueueLlamaAM llama = createLlamaAM();
+    SingleQueueLlamaAM llama = createLlamaAM();
     try {
       llama.start();
       llama.reserve(RESERVATION1_NONGANG);
@@ -178,13 +182,13 @@ public class TestAbstractSingleQueueLlamaAM {
 
   @Test
   public void testRmReserve() throws Exception {
-    DummySingleQueueLlamaAM llama = createLlamaAM();
+    SingleQueueLlamaAM llama = createLlamaAM();
     try {
       llama.start();
       UUID reservationId = llama.reserve(RESERVATION1_NONGANG);
 
-      Assert.assertTrue(llama.reserve);
-      Assert.assertFalse(llama.release);
+      Assert.assertTrue(((MyRMLlamaAMAdapter)llama.getRmLlamaAdapter()).reserve);
+      Assert.assertFalse(((MyRMLlamaAMAdapter)llama.getRmLlamaAdapter()).release);
 
       PlacedReservation placedReservation = llama.getReservation(reservationId);
       Assert.assertNotNull(placedReservation);
@@ -210,13 +214,13 @@ public class TestAbstractSingleQueueLlamaAM {
 
   @Test
   public void testRmRelease() throws Exception {
-    DummySingleQueueLlamaAM llama = createLlamaAM();
+    SingleQueueLlamaAM llama = createLlamaAM();
     try {
       llama.start();
       UUID reservationId = llama.reserve(RESERVATION1_NONGANG);
       llama.releaseReservation(reservationId);
       llama.releaseReservation(UUID.randomUUID());
-      Assert.assertTrue(llama.release);
+      Assert.assertTrue(((MyRMLlamaAMAdapter)llama.getRmLlamaAdapter()).release);
       Assert.assertNull(llama._getReservation(reservationId));
     } finally {
       llama.stop();
@@ -225,7 +229,7 @@ public class TestAbstractSingleQueueLlamaAM {
 
   @Test
   public void testFullyAllocateReservationNoGangOneResource() throws Exception {
-    DummySingleQueueLlamaAM llama = createLlamaAM();
+    SingleQueueLlamaAM llama = createLlamaAM();
     DummyLlamaAMListener listener = new DummyLlamaAMListener();
     try {
       llama.start();
@@ -234,10 +238,13 @@ public class TestAbstractSingleQueueLlamaAM {
       RMResourceChange change = RMResourceChange.createResourceAllocation
           (RESOURCE1.getClientResourceId(), "cid1", 3, 4096, "a1");
       llama.changesFromRM(Arrays.asList(change));
-      Assert.assertEquals(1, listener.event.getAllocatedResources().size());
-      Assert.assertEquals(1, listener.event.getAllocatedReservationIds().size
+      Assert.assertEquals(1, 
+          listener.events.get(0).getAllocatedResources().size());
+      Assert.assertEquals(1, 
+          listener.events.get(0).getAllocatedReservationIds().size
           ());
-      PlacedResource resource = listener.event.getAllocatedResources().get(0);
+      PlacedResource resource = 
+          listener.events.get(0).getAllocatedResources().get(0);
       Assert.assertEquals("cid1", resource.getRmResourceId());
       Assert.assertEquals(3, resource.getActualCpuVCores());
       Assert.assertEquals(4096, resource.getActualMemoryMb());
@@ -253,7 +260,7 @@ public class TestAbstractSingleQueueLlamaAM {
 
   @Test
   public void testFullyAllocateReservationGangOneResource() throws Exception {
-    DummySingleQueueLlamaAM llama = createLlamaAM();
+    SingleQueueLlamaAM llama = createLlamaAM();
     DummyLlamaAMListener listener = new DummyLlamaAMListener();
     try {
       llama.start();
@@ -262,11 +269,14 @@ public class TestAbstractSingleQueueLlamaAM {
       RMResourceChange change = RMResourceChange.createResourceAllocation
           (RESOURCE1.getClientResourceId(), "cid1", 3, 4096, "a1");
       llama.changesFromRM(Arrays.asList(change));
-      Assert.assertEquals(1, listener.event.getAllocatedResources().size());
-      Assert.assertEquals(1, listener.event.getAllocatedReservationIds().size
+      Assert.assertEquals(1, 
+          listener.events.get(0).getAllocatedResources().size());
+      Assert.assertEquals(1, 
+          listener.events.get(0).getAllocatedReservationIds().size
           ());
 
-      PlacedResource resource = listener.event.getAllocatedResources().get(0);
+      PlacedResource resource = 
+          listener.events.get(0).getAllocatedResources().get(0);
       Assert.assertEquals("cid1", resource.getRmResourceId());
       Assert.assertEquals(3, resource.getActualCpuVCores());
       Assert.assertEquals(4096, resource.getActualMemoryMb());
@@ -283,7 +293,7 @@ public class TestAbstractSingleQueueLlamaAM {
   @Test
   public void testFullyAllocateReservationNoGangTwoResources()
       throws Exception {
-    DummySingleQueueLlamaAM llama = createLlamaAM();
+    SingleQueueLlamaAM llama = createLlamaAM();
     DummyLlamaAMListener listener = new DummyLlamaAMListener();
     try {
       llama.start();
@@ -294,12 +304,16 @@ public class TestAbstractSingleQueueLlamaAM {
       RMResourceChange change2 = RMResourceChange.createResourceAllocation
           (RESOURCE2.getClientResourceId(), "cid2", 4, 5112, "a2");
       llama.changesFromRM(Arrays.asList(change1, change2));
-      Assert.assertEquals(2, listener.event.getAllocatedResources().size());
-      Assert.assertEquals(1, listener.event.getAllocatedReservationIds().size
+      Assert.assertEquals(2, 
+          listener.events.get(0).getAllocatedResources().size());
+      Assert.assertEquals(1, 
+          listener.events.get(0).getAllocatedReservationIds().size
           ());
-      PlacedResource resource1 = listener.event.getAllocatedResources().get(0);
+      PlacedResource resource1 = 
+          listener.events.get(0).getAllocatedResources().get(0);
       Assert.assertEquals("cid1", resource1.getRmResourceId());
-      PlacedResource resource2 = listener.event.getAllocatedResources().get(1);
+      PlacedResource resource2 = 
+          listener.events.get(0).getAllocatedResources().get(1);
       Assert.assertEquals("cid2", resource2.getRmResourceId());
       PlacedReservation reservation = llama.getReservation(reservationId);
       Assert.assertNotNull(reservation);
@@ -312,7 +326,7 @@ public class TestAbstractSingleQueueLlamaAM {
 
   @Test
   public void testFullyAllocateReservationGangTwoResources() throws Exception {
-    DummySingleQueueLlamaAM llama = createLlamaAM();
+    SingleQueueLlamaAM llama = createLlamaAM();
     DummyLlamaAMListener listener = new DummyLlamaAMListener();
     try {
       llama.start();
@@ -323,12 +337,16 @@ public class TestAbstractSingleQueueLlamaAM {
       RMResourceChange change2 = RMResourceChange.createResourceAllocation
           (RESOURCE2.getClientResourceId(), "cid2", 4, 5112, "a2");
       llama.changesFromRM(Arrays.asList(change1, change2));
-      Assert.assertEquals(2, listener.event.getAllocatedResources().size());
-      Assert.assertEquals(1, listener.event.getAllocatedReservationIds().size
+      Assert.assertEquals(2, 
+          listener.events.get(0).getAllocatedResources().size());
+      Assert.assertEquals(1, 
+          listener.events.get(0).getAllocatedReservationIds().size
           ());
-      PlacedResource resource1 = listener.event.getAllocatedResources().get(0);
+      PlacedResource resource1 = 
+          listener.events.get(0).getAllocatedResources().get(0);
       Assert.assertEquals("cid1", resource1.getRmResourceId());
-      PlacedResource resource2 = listener.event.getAllocatedResources().get(1);
+      PlacedResource resource2 = 
+          listener.events.get(0).getAllocatedResources().get(1);
       Assert.assertEquals("cid2", resource2.getRmResourceId());
       PlacedReservation reservation = llama.getReservation(reservationId);
       Assert.assertNotNull(reservation);
@@ -343,7 +361,7 @@ public class TestAbstractSingleQueueLlamaAM {
   @Test
   public void testPartiallyThenFullyAllocateReservationNoGangTwoResources()
       throws Exception {
-    DummySingleQueueLlamaAM llama = createLlamaAM();
+    SingleQueueLlamaAM llama = createLlamaAM();
     DummyLlamaAMListener listener = new DummyLlamaAMListener();
     try {
       llama.start();
@@ -352,10 +370,13 @@ public class TestAbstractSingleQueueLlamaAM {
       RMResourceChange change1 = RMResourceChange.createResourceAllocation
           (RESOURCE1.getClientResourceId(), "cid1", 3, 4096, "a1");
       llama.changesFromRM(Arrays.asList(change1));
-      Assert.assertEquals(1, listener.event.getAllocatedResources().size());
-      Assert.assertEquals(0, listener.event.getAllocatedReservationIds().size
+      Assert.assertEquals(1, 
+          listener.events.get(0).getAllocatedResources().size());
+      Assert.assertEquals(0, 
+          listener.events.get(0).getAllocatedReservationIds().size
           ());
-      PlacedResource resource1 = listener.event.getAllocatedResources().get(0);
+      PlacedResource resource1 = 
+          listener.events.get(0).getAllocatedResources().get(0);
       Assert.assertEquals("cid1", resource1.getRmResourceId());
       PlacedReservation reservation = llama.getReservation(reservationId);
       Assert.assertNotNull(reservation);
@@ -363,11 +384,15 @@ public class TestAbstractSingleQueueLlamaAM {
           reservation.getStatus());
       RMResourceChange change2 = RMResourceChange.createResourceAllocation
           (RESOURCE2.getClientResourceId(), "cid2", 4, 5112, "a2");
+      listener.events.clear();
       llama.changesFromRM(Arrays.asList(change2));
-      Assert.assertEquals(1, listener.event.getAllocatedResources().size());
-      Assert.assertEquals(1, listener.event.getAllocatedReservationIds().size
+      Assert.assertEquals(1, 
+          listener.events.get(0).getAllocatedResources().size());
+      Assert.assertEquals(1, 
+          listener.events.get(0).getAllocatedReservationIds().size
           ());
-      PlacedResource resource2 = listener.event.getAllocatedResources().get(0);
+      PlacedResource resource2 = 
+          listener.events.get(0).getAllocatedResources().get(0);
       Assert.assertEquals("cid2", resource2.getRmResourceId());
       reservation = llama.getReservation(reservationId);
       Assert.assertNotNull(reservation);
@@ -382,7 +407,7 @@ public class TestAbstractSingleQueueLlamaAM {
   @Test
   public void testPartiallyThenFullyAllocateReservationGangTwoResources()
       throws Exception {
-    DummySingleQueueLlamaAM llama = createLlamaAM();
+    SingleQueueLlamaAM llama = createLlamaAM();
     DummyLlamaAMListener listener = new DummyLlamaAMListener();
     try {
       llama.start();
@@ -391,7 +416,7 @@ public class TestAbstractSingleQueueLlamaAM {
       RMResourceChange change1 = RMResourceChange.createResourceAllocation
           (RESOURCE1.getClientResourceId(), "cid1", 3, 4096, "a1");
       llama.changesFromRM(Arrays.asList(change1));
-      Assert.assertNull(listener.event);
+      Assert.assertTrue(listener.events.isEmpty());
       PlacedReservation reservation = llama.getReservation(reservationId);
       Assert.assertNotNull(reservation);
       Assert.assertEquals(PlacedReservation.Status.PARTIAL, 
@@ -399,13 +424,17 @@ public class TestAbstractSingleQueueLlamaAM {
       RMResourceChange change2 = RMResourceChange.createResourceAllocation
           (RESOURCE2.getClientResourceId(), "cid2", 4, 5112, "a2");
       llama.changesFromRM(Arrays.asList(change2));
-      Assert.assertNotNull(listener.event);
-      Assert.assertEquals(2, listener.event.getAllocatedResources().size());
-      Assert.assertEquals(1, listener.event.getAllocatedReservationIds().size
+      Assert.assertNotNull(listener.events.get(0));
+      Assert.assertEquals(2, 
+          listener.events.get(0).getAllocatedResources().size());
+      Assert.assertEquals(1, 
+          listener.events.get(0).getAllocatedReservationIds().size
           ());
-      PlacedResource resource1 = listener.event.getAllocatedResources().get(0);
+      PlacedResource resource1 = 
+          listener.events.get(0).getAllocatedResources().get(0);
       Assert.assertEquals("cid1", resource1.getRmResourceId());
-      PlacedResource resource2 = listener.event.getAllocatedResources().get(1);
+      PlacedResource resource2 = 
+          listener.events.get(0).getAllocatedResources().get(1);
       Assert.assertEquals("cid2", resource2.getRmResourceId());
       reservation = llama.getReservation(reservationId);
       Assert.assertNotNull(reservation);
@@ -419,7 +448,7 @@ public class TestAbstractSingleQueueLlamaAM {
 
   @Test
   public void testRejectPendingReservation() throws Exception {
-    DummySingleQueueLlamaAM llama = createLlamaAM();
+    SingleQueueLlamaAM llama = createLlamaAM();
     DummyLlamaAMListener listener = new DummyLlamaAMListener();
     try {
       llama.start();
@@ -428,9 +457,11 @@ public class TestAbstractSingleQueueLlamaAM {
       RMResourceChange change = RMResourceChange.createResourceChange
           (RESOURCE1.getClientResourceId(), PlacedResource.Status.REJECTED);
       llama.changesFromRM(Arrays.asList(change));
-      Assert.assertEquals(1, listener.event.getRejectedClientResourcesIds()
+      Assert.assertEquals(1, 
+          listener.events.get(0).getRejectedClientResourcesIds()
           .size());
-      Assert.assertEquals(1, listener.event.getRejectedReservationIds().size());
+      Assert.assertEquals(1, 
+          listener.events.get(0).getRejectedReservationIds().size());
       Assert.assertNull(llama.getReservation(reservationId));
     } finally {
       llama.stop();
@@ -439,7 +470,7 @@ public class TestAbstractSingleQueueLlamaAM {
 
   @Test
   public void testRejectPartialGangReservation() throws Exception {
-    DummySingleQueueLlamaAM llama = createLlamaAM();
+    SingleQueueLlamaAM llama = createLlamaAM();
     DummyLlamaAMListener listener = new DummyLlamaAMListener();
     try {
       llama.start();
@@ -452,9 +483,11 @@ public class TestAbstractSingleQueueLlamaAM {
       RMResourceChange change2 = RMResourceChange.createResourceChange
           (RESOURCE2.getClientResourceId(), PlacedResource.Status.REJECTED);
       llama.changesFromRM(Arrays.asList(change2));
-      Assert.assertEquals(1, listener.event.getRejectedClientResourcesIds()
+      Assert.assertEquals(1, 
+          listener.events.get(0).getRejectedClientResourcesIds()
           .size());
-      Assert.assertEquals(1, listener.event.getRejectedReservationIds().size());
+      Assert.assertEquals(1, 
+          listener.events.get(0).getRejectedReservationIds().size());
       Assert.assertNull(llama.getReservation(reservationId));
     } finally {
       llama.stop();
@@ -463,7 +496,7 @@ public class TestAbstractSingleQueueLlamaAM {
 
   @Test
   public void testRejectPartialNonGangReservation() throws Exception {
-    DummySingleQueueLlamaAM llama = createLlamaAM();
+    SingleQueueLlamaAM llama = createLlamaAM();
     DummyLlamaAMListener listener = new DummyLlamaAMListener();
     try {
       llama.start();
@@ -475,10 +508,13 @@ public class TestAbstractSingleQueueLlamaAM {
       llama.changesFromRM(Arrays.asList(change1));
       RMResourceChange change2 = RMResourceChange.createResourceChange
           (RESOURCE2.getClientResourceId(), PlacedResource.Status.REJECTED);
+      listener.events.clear();
       llama.changesFromRM(Arrays.asList(change2));
-      Assert.assertEquals(1, listener.event.getRejectedClientResourcesIds()
+      Assert.assertEquals(1, 
+          listener.events.get(0).getRejectedClientResourcesIds()
           .size());
-      Assert.assertEquals(0, listener.event.getRejectedReservationIds().size());
+      Assert.assertEquals(0, 
+          listener.events.get(0).getRejectedReservationIds().size());
       PlacedReservation reservation = llama.getReservation(reservationId);
       Assert.assertNotNull(reservation);
       Assert.assertEquals(PlacedReservation.Status.PARTIAL, 
@@ -490,7 +526,7 @@ public class TestAbstractSingleQueueLlamaAM {
 
   @Test
   public void testPreemptPartialGangReservation() throws Exception {
-    DummySingleQueueLlamaAM llama = createLlamaAM();
+    SingleQueueLlamaAM llama = createLlamaAM();
     DummyLlamaAMListener listener = new DummyLlamaAMListener();
     try {
       llama.start();
@@ -503,8 +539,10 @@ public class TestAbstractSingleQueueLlamaAM {
       RMResourceChange change2 = RMResourceChange.createResourceChange
           (RESOURCE1.getClientResourceId(), PlacedResource.Status.PREEMPTED);
       llama.changesFromRM(Arrays.asList(change2));
-      Assert.assertEquals(1, listener.event.getRejectedReservationIds().size());
-      Assert.assertEquals(0, listener.event.getPreemptedClientResourceIds()
+      Assert.assertEquals(1, 
+          listener.events.get(0).getRejectedReservationIds().size());
+      Assert.assertEquals(0, 
+          listener.events.get(0).getPreemptedClientResourceIds()
           .size());
       Assert.assertNull(llama.getReservation(reservationId));
     } finally {
@@ -514,7 +552,7 @@ public class TestAbstractSingleQueueLlamaAM {
 
   @Test
   public void testPreemptPartialNonGangReservation() throws Exception {
-    DummySingleQueueLlamaAM llama = createLlamaAM();
+    SingleQueueLlamaAM llama = createLlamaAM();
     DummyLlamaAMListener listener = new DummyLlamaAMListener();
     try {
       llama.start();
@@ -526,10 +564,13 @@ public class TestAbstractSingleQueueLlamaAM {
       llama.changesFromRM(Arrays.asList(change1));
       RMResourceChange change2 = RMResourceChange.createResourceChange
           (RESOURCE1.getClientResourceId(), PlacedResource.Status.PREEMPTED);
+      listener.events.clear();
       llama.changesFromRM(Arrays.asList(change2));
-      Assert.assertEquals(1, listener.event.getPreemptedClientResourceIds()
+      Assert.assertEquals(1,
+          listener.events.get(0).getPreemptedClientResourceIds()
           .size());
-      Assert.assertEquals(0, listener.event.getPreemptedReservationIds().size
+      Assert.assertEquals(0, 
+          listener.events.get(0).getPreemptedReservationIds().size
           ());
       PlacedReservation reservation = llama.getReservation(reservationId);
       Assert.assertNotNull(reservation);
@@ -542,7 +583,7 @@ public class TestAbstractSingleQueueLlamaAM {
 
   @Test
   public void testPreemptAllocatedGangReservation() throws Exception {
-    DummySingleQueueLlamaAM llama = createLlamaAM();
+    SingleQueueLlamaAM llama = createLlamaAM();
     DummyLlamaAMListener listener = new DummyLlamaAMListener();
     try {
       llama.start();
@@ -554,11 +595,15 @@ public class TestAbstractSingleQueueLlamaAM {
       llama.changesFromRM(Arrays.asList(change1));
       RMResourceChange change2 = RMResourceChange.createResourceChange
           (RESOURCE1.getClientResourceId(), PlacedResource.Status.PREEMPTED);
+      listener.events.clear();
       llama.changesFromRM(Arrays.asList(change2));
-      Assert.assertEquals(0, listener.event.getRejectedReservationIds().size());
-      Assert.assertEquals(0, listener.event.getPreemptedReservationIds().size
+      Assert.assertEquals(0, 
+          listener.events.get(0).getRejectedReservationIds().size());
+      Assert.assertEquals(0, 
+          listener.events.get(0).getPreemptedReservationIds().size
           ());
-      Assert.assertEquals(1, listener.event.getPreemptedClientResourceIds()
+      Assert.assertEquals(1, 
+          listener.events.get(0).getPreemptedClientResourceIds()
           .size());
       PlacedReservation reservation = llama.getReservation(reservationId);
       Assert.assertNotNull(reservation);
@@ -571,7 +616,7 @@ public class TestAbstractSingleQueueLlamaAM {
 
   @Test
   public void testPreemptAllocatedNonGangReservation() throws Exception {
-    DummySingleQueueLlamaAM llama = createLlamaAM();
+    SingleQueueLlamaAM llama = createLlamaAM();
     DummyLlamaAMListener listener = new DummyLlamaAMListener();
     try {
       llama.start();
@@ -583,11 +628,15 @@ public class TestAbstractSingleQueueLlamaAM {
       llama.changesFromRM(Arrays.asList(change1));
       RMResourceChange change2 = RMResourceChange.createResourceChange
           (RESOURCE1.getClientResourceId(), PlacedResource.Status.PREEMPTED);
+      listener.events.clear();
       llama.changesFromRM(Arrays.asList(change2));
-      Assert.assertEquals(0, listener.event.getRejectedReservationIds().size());
-      Assert.assertEquals(0, listener.event.getPreemptedReservationIds().size
+      Assert.assertEquals(0, 
+          listener.events.get(0).getRejectedReservationIds().size());
+      Assert.assertEquals(0, 
+          listener.events.get(0).getPreemptedReservationIds().size
           ());
-      Assert.assertEquals(1, listener.event.getPreemptedClientResourceIds()
+      Assert.assertEquals(1, 
+          listener.events.get(0).getPreemptedClientResourceIds()
           .size());
       PlacedReservation reservation = llama.getReservation(reservationId);
       Assert.assertNotNull(reservation);
@@ -601,7 +650,7 @@ public class TestAbstractSingleQueueLlamaAM {
 
   @Test
   public void testLostPartialGangReservation() throws Exception {
-    DummySingleQueueLlamaAM llama = createLlamaAM();
+    SingleQueueLlamaAM llama = createLlamaAM();
     DummyLlamaAMListener listener = new DummyLlamaAMListener();
     try {
       llama.start();
@@ -614,8 +663,10 @@ public class TestAbstractSingleQueueLlamaAM {
       RMResourceChange change2 = RMResourceChange.createResourceChange
           (RESOURCE1.getClientResourceId(), PlacedResource.Status.LOST);
       llama.changesFromRM(Arrays.asList(change2));
-      Assert.assertEquals(1, listener.event.getRejectedReservationIds().size());
-      Assert.assertEquals(0, listener.event.getPreemptedClientResourceIds()
+      Assert.assertEquals(1, 
+          listener.events.get(0).getRejectedReservationIds().size());
+      Assert.assertEquals(0, 
+          listener.events.get(0).getPreemptedClientResourceIds()
           .size());
       Assert.assertNull(llama.getReservation(reservationId));
     } finally {
@@ -625,7 +676,7 @@ public class TestAbstractSingleQueueLlamaAM {
 
   @Test
   public void testLostPartialNonGangReservation() throws Exception {
-    DummySingleQueueLlamaAM llama = createLlamaAM();
+    SingleQueueLlamaAM llama = createLlamaAM();
     DummyLlamaAMListener listener = new DummyLlamaAMListener();
     try {
       llama.start();
@@ -637,10 +688,14 @@ public class TestAbstractSingleQueueLlamaAM {
       llama.changesFromRM(Arrays.asList(change1));
       RMResourceChange change2 = RMResourceChange.createResourceChange
           (RESOURCE1.getClientResourceId(), PlacedResource.Status.LOST);
+      listener.events.clear();
       llama.changesFromRM(Arrays.asList(change2));
-      Assert.assertEquals(1, listener.event.getLostClientResourcesIds().size());
-      Assert.assertEquals(0, listener.event.getRejectedReservationIds().size());
-      Assert.assertEquals(0, listener.event.getPreemptedReservationIds().size
+      Assert.assertEquals(1, 
+          listener.events.get(0).getLostClientResourcesIds().size());
+      Assert.assertEquals(0, 
+          listener.events.get(0).getRejectedReservationIds().size());
+      Assert.assertEquals(0, 
+          listener.events.get(0).getPreemptedReservationIds().size
           ());
       PlacedReservation reservation = llama.getReservation(reservationId);
       Assert.assertNotNull(reservation);
@@ -653,7 +708,7 @@ public class TestAbstractSingleQueueLlamaAM {
 
   @Test
   public void testLostAllocatedGangReservation() throws Exception {
-    DummySingleQueueLlamaAM llama = createLlamaAM();
+    SingleQueueLlamaAM llama = createLlamaAM();
     DummyLlamaAMListener listener = new DummyLlamaAMListener();
     try {
       llama.start();
@@ -667,11 +722,15 @@ public class TestAbstractSingleQueueLlamaAM {
       llama.changesFromRM(Arrays.asList(change1));
       RMResourceChange change2 = RMResourceChange.createResourceChange
           (RESOURCE1.getClientResourceId(), PlacedResource.Status.LOST);
+      listener.events.clear();
       llama.changesFromRM(Arrays.asList(change2));
-      Assert.assertEquals(0, listener.event.getRejectedReservationIds().size());
-      Assert.assertEquals(0, listener.event.getPreemptedReservationIds().size
+      Assert.assertEquals(0, 
+          listener.events.get(0).getRejectedReservationIds().size());
+      Assert.assertEquals(0, 
+          listener.events.get(0).getPreemptedReservationIds().size
           ());
-      Assert.assertEquals(1, listener.event.getLostClientResourcesIds().size());
+      Assert.assertEquals(1, 
+          listener.events.get(0).getLostClientResourcesIds().size());
       PlacedReservation reservation = llama.getReservation(reservationId);
       Assert.assertNotNull(reservation);
       Assert.assertEquals(PlacedReservation.Status.ALLOCATED, 
@@ -683,7 +742,7 @@ public class TestAbstractSingleQueueLlamaAM {
 
   @Test
   public void testLostAllocatedNonGangReservation() throws Exception {
-    DummySingleQueueLlamaAM llama = createLlamaAM();
+    SingleQueueLlamaAM llama = createLlamaAM();
     DummyLlamaAMListener listener = new DummyLlamaAMListener();
     try {
       llama.start();
@@ -697,11 +756,15 @@ public class TestAbstractSingleQueueLlamaAM {
       llama.changesFromRM(Arrays.asList(change1));
       RMResourceChange change2 = RMResourceChange.createResourceChange
           (RESOURCE1.getClientResourceId(), PlacedResource.Status.LOST);
+      listener.events.clear();
       llama.changesFromRM(Arrays.asList(change2));
-      Assert.assertEquals(0, listener.event.getRejectedReservationIds().size());
-      Assert.assertEquals(0, listener.event.getPreemptedReservationIds().size
+      Assert.assertEquals(0, 
+          listener.events.get(0).getRejectedReservationIds().size());
+      Assert.assertEquals(0, 
+          listener.events.get(0).getPreemptedReservationIds().size
           ());
-      Assert.assertEquals(1, listener.event.getLostClientResourcesIds().size());
+      Assert.assertEquals(1, 
+          listener.events.get(0).getLostClientResourcesIds().size());
       PlacedReservation reservation = llama.getReservation(reservationId);
       Assert.assertNotNull(reservation);
       Assert.assertEquals(PlacedReservation.Status.ALLOCATED, 
@@ -713,7 +776,7 @@ public class TestAbstractSingleQueueLlamaAM {
 
   @Test
   public void testUnknownResourceRmChange() throws Exception {
-    DummySingleQueueLlamaAM llama = createLlamaAM();
+    SingleQueueLlamaAM llama = createLlamaAM();
     DummyLlamaAMListener listener = new DummyLlamaAMListener();
     try {
       llama.start();
@@ -721,7 +784,7 @@ public class TestAbstractSingleQueueLlamaAM {
       RMResourceChange change1 = RMResourceChange.createResourceAllocation(
           RESOURCE1.getClientResourceId(), "cid1", 3, 4096, "a1");
       llama.changesFromRM(Arrays.asList(change1));
-      Assert.assertNull(listener.event);
+      Assert.assertTrue(listener.events.isEmpty());
     } finally {
       llama.stop();
     }
@@ -729,7 +792,7 @@ public class TestAbstractSingleQueueLlamaAM {
 
   @Test(expected = IllegalArgumentException.class)
   public void testRmChangesNull() throws Exception {
-    DummySingleQueueLlamaAM llama = createLlamaAM();
+    SingleQueueLlamaAM llama = createLlamaAM();
     try {
       llama.start();
       llama.changesFromRM(null);
@@ -740,11 +803,9 @@ public class TestAbstractSingleQueueLlamaAM {
 
   @Test
   public void testReleaseReservationsForClientId() throws Exception{
-    DummySingleQueueLlamaAM llama = createLlamaAM();
-    DummyLlamaAMListener listener = new DummyLlamaAMListener();
+    SingleQueueLlamaAM llama = createLlamaAM();
     try {
       llama.start();
-      llama.addListener(listener);
       UUID cId1 = UUID.randomUUID();
       UUID cId2 = UUID.randomUUID();
       UUID reservationId1 = llama.reserve(new Reservation(cId1, "queue", 
@@ -760,6 +821,35 @@ public class TestAbstractSingleQueueLlamaAM {
       Assert.assertNull(llama._getReservation(reservationId1));
       Assert.assertNull(llama._getReservation(reservationId2));
       Assert.assertNotNull(llama._getReservation(reservationId3));
+    } finally {
+      llama.stop();
+    }
+  }
+
+
+  @Test
+  public void testLoseAllReservations() throws Exception{
+    SingleQueueLlamaAM llama = createLlamaAM();
+    DummyLlamaAMListener listener = new DummyLlamaAMListener();
+    try {
+      llama.start();
+      llama.addListener(listener);
+      UUID cId1 = UUID.randomUUID();
+      UUID cId2 = UUID.randomUUID();
+      UUID reservationId1 = llama.reserve(new Reservation(cId1, "queue",
+          Arrays.asList(RESOURCE1), true));
+      UUID reservationId2 = llama.reserve(new Reservation(cId1, "queue",
+          Arrays.asList(RESOURCE2), true));
+      UUID reservationId3 = llama.reserve(new Reservation(cId2, "queue",
+          Arrays.asList(RESOURCE3), true));
+      llama.loseAllReservations();
+      Assert.assertNull(llama._getReservation(reservationId1));
+      Assert.assertNull(llama._getReservation(reservationId2));
+      Assert.assertNull(llama._getReservation(reservationId3));
+      Assert.assertEquals(2, listener.events.size());
+      Assert.assertEquals(3, 
+          listener.events.get(0).getRejectedReservationIds().size() + 
+              listener.events.get(1).getRejectedReservationIds().size());
     } finally {
       llama.stop();
     }

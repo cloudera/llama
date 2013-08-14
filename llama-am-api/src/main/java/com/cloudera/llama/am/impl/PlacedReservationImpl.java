@@ -17,10 +17,10 @@
  */
 package com.cloudera.llama.am.impl;
 
-import com.cloudera.llama.am.PlacedReservation;
 import com.cloudera.llama.am.PlacedResource;
 import com.cloudera.llama.am.Reservation;
 import com.cloudera.llama.am.Resource;
+import com.cloudera.llama.am.spi.RMPlacedReservation;
 
 import java.util.ArrayList;
 import java.util.List;

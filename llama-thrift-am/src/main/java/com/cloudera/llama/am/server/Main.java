@@ -17,7 +17,9 @@
  */
 package com.cloudera.llama.am.server;
 
+import com.cloudera.llama.am.LlamaAM;
 import com.cloudera.llama.am.server.thrift.LlamaAMThriftServer;
+import com.cloudera.llama.am.yarn.YarnRMLlamaAMAdapter;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.ReflectionUtils;
@@ -104,6 +106,8 @@ public class Main {
 
     LOG.info("Configuration directory: {}", confDir);
     Configuration llamaConf = loadConfiguration(confDir);
+    llamaConf.setIfUnset(LlamaAM.RM_ADAPTER_CLASS_KEY, 
+        YarnRMLlamaAMAdapter.class.getName());
     Class<? extends AbstractServer> klass = 
       llamaConf.getClass(SERVER_CLASS_KEY, LlamaAMThriftServer.class, 
           AbstractServer.class);

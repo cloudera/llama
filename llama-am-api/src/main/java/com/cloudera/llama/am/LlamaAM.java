@@ -17,11 +17,10 @@
  */
 package com.cloudera.llama.am;
 
-import com.cloudera.llama.am.impl.APIContractEnforcerLlamaAM;
-import com.cloudera.llama.am.impl.LlamaAMCreate;
+import com.cloudera.llama.am.impl.APIContractLlamaAM;
 import com.cloudera.llama.am.impl.MultiQueueLlamaAM;
+import com.cloudera.llama.am.impl.ParamChecker;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.util.ReflectionUtils;
 
 import java.util.List;
 import java.util.Map;
@@ -29,7 +28,10 @@ import java.util.UUID;
 
 public abstract class LlamaAM {
   public static final String PREFIX_KEY = "llama.am.";
-  public static final String CLASS_KEY = PREFIX_KEY + "class";
+
+  public static final String RM_ADAPTER_CLASS_KEY = PREFIX_KEY + 
+      "rm.adapter.class";
+
   public static final String INITIAL_QUEUES_KEY =  PREFIX_KEY + 
       "initial.queues";
 
@@ -43,11 +45,18 @@ public abstract class LlamaAM {
 
   public static LlamaAM create(Configuration conf) throws LlamaAMException {
     conf = cloneConfiguration(conf);
-    LlamaAM am = LlamaAMCreate.createMulti(conf);
-    return new APIContractEnforcerLlamaAM(am);
+    return new APIContractLlamaAM(new MultiQueueLlamaAM(conf));
   }
 
-  public abstract Configuration getConf();
+  private Configuration conf;
+  
+  protected LlamaAM(Configuration conf) {
+    this.conf = ParamChecker.notNull(conf, "conf");  
+  }
+  
+  public Configuration getConf() {
+    return conf;
+  } 
   
   public abstract void start() throws LlamaAMException;
 

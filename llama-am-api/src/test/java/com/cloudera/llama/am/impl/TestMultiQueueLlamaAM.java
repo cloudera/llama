@@ -21,15 +21,22 @@ import com.cloudera.llama.am.LlamaAM;
 import com.cloudera.llama.am.LlamaAMEvent;
 import com.cloudera.llama.am.LlamaAMException;
 import com.cloudera.llama.am.LlamaAMListener;
-import com.cloudera.llama.am.PlacedReservation;
+import com.cloudera.llama.am.PlacedResource;
 import com.cloudera.llama.am.Reservation;
+import com.cloudera.llama.am.Resource;
 import com.cloudera.llama.am.TestReservation;
+import com.cloudera.llama.am.spi.RMLlamaAMAdapter;
+import com.cloudera.llama.am.spi.RMLlamaAMCallback;
+import com.cloudera.llama.am.spi.RMPlacedReservation;
+import com.cloudera.llama.am.spi.RMPlacedResource;
+import com.cloudera.llama.am.spi.RMResourceChange;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -42,26 +49,22 @@ public class TestMultiQueueLlamaAM {
   
   static {
     EXPECTED.add("setConf");
-    EXPECTED.add("start");
-    EXPECTED.add("stop");
+    EXPECTED.add("setLlamaAMCallback");
+    EXPECTED.add("register");
+    EXPECTED.add("unregister");
     EXPECTED.add("getNodes");
     EXPECTED.add("reserve");
-    EXPECTED.add("releaseReservation");
-    EXPECTED.add("addListener");
-    EXPECTED.add("releaseReservationForClientId");
-    EXPECTED.add("getReservation");
-    
+    EXPECTED.add("release");
   }
-  public static class MyLlamaAM extends LlamaAM 
-    implements Configurable {
-    
+  
+  public static class MyRMLlamaAMAdapter implements RMLlamaAMAdapter, 
+      Configurable {
+    public static RMLlamaAMCallback callback;
     public static Set<String> methods = new HashSet<String>();
 
-    public static LlamaAMListener listener;
-    
     private Configuration conf;
     
-    public MyLlamaAM() {
+    public MyRMLlamaAMAdapter() {
       methods.clear();
     }
     
@@ -77,11 +80,22 @@ public class TestMultiQueueLlamaAM {
     }
 
     @Override
-    public void start() throws LlamaAMException {
-      methods.add("start");
-      if (conf.getBoolean("fail.start", false)) {
+    public void setLlamaAMCallback(RMLlamaAMCallback callback) {
+      MyRMLlamaAMAdapter.callback = callback;
+      methods.add("setLlamaAMCallback");
+    }
+
+    @Override
+    public void register(String queue) throws LlamaAMException {
+      methods.add("register");
+      if (conf.getBoolean("fail.register", false)) {
         throw new LlamaAMException("");
       }
+    }
+
+    @Override
+    public void unregister() {
+      methods.add("unregister");
     }
 
     @Override
@@ -92,55 +106,27 @@ public class TestMultiQueueLlamaAM {
     }
 
     @Override
-    public void stop() {
-      methods.add("stop");
-    }
-
-    @Override
-    public boolean isRunning() {
-      return false;
-    }
-
-    @Override
-    public void addListener(LlamaAMListener listener) {
-      MyLlamaAM.listener = listener;
-      methods.add("addListener");
-    }
-
-    @Override
-    public void removeListener(LlamaAMListener listener) {
-    }
-
-    @Override
-    public UUID reserve(Reservation reservation) 
-      throws LlamaAMException {
+    public void reserve(RMPlacedReservation reservation)
+        throws LlamaAMException {
       methods.add("reserve");
-      return UUID.randomUUID();
     }
 
     @Override
-    public void releaseReservation(UUID reservationId) throws LlamaAMException {
-      methods.add("releaseReservation");
-    }
-
-    @Override
-    public PlacedReservation getReservation(UUID reservationId)
+    public void release(Collection<RMPlacedResource> resources)
         throws LlamaAMException {
-      methods.add("getReservation");
-      return null;
+      methods.add("release");
+      if (conf.getBoolean("release.fail", false)) {
+        throw new LlamaAMException("");
+      }
     }
 
-    @Override
-    public void releaseReservationsForClientId(UUID clientId)
-        throws LlamaAMException {
-      methods.add("releaseReservationForClientId");
-    }
   }
   
   @Test
   public void testMultiQueueDelegation() throws Exception {
     Configuration conf = new Configuration(false);
-    conf.setClass(LlamaAM.CLASS_KEY, MyLlamaAM.class, LlamaAM.class);
+    conf.setClass(LlamaAM.RM_ADAPTER_CLASS_KEY, MyRMLlamaAMAdapter.class, 
+        RMLlamaAMAdapter.class);
     LlamaAM am = LlamaAM.create(conf);
     try {
       am.start();
@@ -159,7 +145,46 @@ public class TestMultiQueueLlamaAM {
       am.releaseReservationsForClientId(UUID.randomUUID());
       am.stop();
 
-      Assert.assertEquals(EXPECTED, MyLlamaAM.methods);
+      Assert.assertEquals(EXPECTED, MyRMLlamaAMAdapter.methods);
+    } finally {
+      am.stop();
+    }
+  }
+
+  @Test(expected = LlamaAMException.class)
+  public void testReleaseReservationForClientException() throws Exception {
+    Configuration conf = new Configuration(false);
+    conf.setClass(LlamaAM.RM_ADAPTER_CLASS_KEY, MyRMLlamaAMAdapter.class,
+        RMLlamaAMAdapter.class);
+    conf.setBoolean("release.fail", true);
+    LlamaAM am = LlamaAM.create(conf);
+    try {
+      am.start();
+      UUID cId = UUID.randomUUID();
+      am.reserve(new Reservation(cId, "q",
+          Arrays.asList(TestReservation.createResource()), true));
+      am.releaseReservationsForClientId(cId);
+    } finally {
+      am.stop();
+    }
+  }
+
+  @Test(expected = LlamaAMException.class)
+  public void testReleaseReservationForClientDiffQueuesException() 
+      throws Exception {
+    Configuration conf = new Configuration(false);
+    conf.setClass(LlamaAM.RM_ADAPTER_CLASS_KEY, MyRMLlamaAMAdapter.class,
+        RMLlamaAMAdapter.class);
+    conf.setBoolean("release.fail", true);
+    LlamaAM am = LlamaAM.create(conf);
+    try {
+      am.start();
+      UUID cId = UUID.randomUUID();
+      am.reserve(new Reservation(cId, "q",
+          Arrays.asList(TestReservation.createResource()), true));
+      am.reserve(new Reservation(cId, "q2",
+          Arrays.asList(TestReservation.createResource()), true));
+      am.releaseReservationsForClientId(cId);
     } finally {
       am.stop();
     }
@@ -168,8 +193,9 @@ public class TestMultiQueueLlamaAM {
   @Test(expected = LlamaAMException.class)
   public void testStartOfDelegatedLlamaAmFail() throws Exception {
     Configuration conf = new Configuration(false);
-    conf.setClass(LlamaAM.CLASS_KEY, MyLlamaAM.class, LlamaAM.class);
-    conf.setBoolean("fail.start", true);
+    conf.setClass(LlamaAM.RM_ADAPTER_CLASS_KEY, MyRMLlamaAMAdapter.class, 
+        RMLlamaAMAdapter.class);
+    conf.setBoolean("fail.register", true);
     conf.set(LlamaAM.INITIAL_QUEUES_KEY,"q");
     LlamaAM am = LlamaAM.create(conf);
     am.start();
@@ -178,7 +204,8 @@ public class TestMultiQueueLlamaAM {
   @Test(expected = LlamaAMException.class)
   public void testGetAnyLlamaFail() throws Exception {
     Configuration conf = new Configuration(false);
-    conf.setClass(LlamaAM.CLASS_KEY, MyLlamaAM.class, LlamaAM.class);
+    conf.setClass(LlamaAM.RM_ADAPTER_CLASS_KEY, MyRMLlamaAMAdapter.class, 
+        RMLlamaAMAdapter.class);
     LlamaAM am = LlamaAM.create(conf);
     am.start();
     am.getNodes();
@@ -187,7 +214,8 @@ public class TestMultiQueueLlamaAM {
   @Test
   public void testGetReservationUnknown() throws Exception {
     Configuration conf = new Configuration(false);
-    conf.setClass(LlamaAM.CLASS_KEY, MyLlamaAM.class, LlamaAM.class);
+    conf.setClass(LlamaAM.RM_ADAPTER_CLASS_KEY, MyRMLlamaAMAdapter.class, 
+        RMLlamaAMAdapter.class);
     LlamaAM am = LlamaAM.create(conf);
     am.start();
     Assert.assertNull(am.getReservation(UUID.randomUUID()));
@@ -196,7 +224,8 @@ public class TestMultiQueueLlamaAM {
   @Test
   public void testReleaseReservationUnknown() throws Exception {
     Configuration conf = new Configuration(false);
-    conf.setClass(LlamaAM.CLASS_KEY, MyLlamaAM.class, LlamaAM.class);
+    conf.setClass(LlamaAM.RM_ADAPTER_CLASS_KEY, MyRMLlamaAMAdapter.class,
+        RMLlamaAMAdapter.class);
     LlamaAM am = LlamaAM.create(conf);
     am.start();
     am.releaseReservation(UUID.randomUUID());
@@ -207,7 +236,8 @@ public class TestMultiQueueLlamaAM {
   @Test
   public void testMultiQueueListener() throws Exception {
     Configuration conf = new Configuration(false);
-    conf.setClass(LlamaAM.CLASS_KEY, MyLlamaAM.class, LlamaAM.class);
+    conf.setClass(LlamaAM.RM_ADAPTER_CLASS_KEY, MyRMLlamaAMAdapter.class, 
+        RMLlamaAMAdapter.class);
     LlamaAM am = LlamaAM.create(conf);
     try {
       am.start();
@@ -218,19 +248,21 @@ public class TestMultiQueueLlamaAM {
         }
       };
       UUID cId = UUID.randomUUID();
+      Resource resource = TestReservation.createResource();
       UUID id = am.reserve(new Reservation(cId, "q",
-          Arrays.asList(TestReservation.createResource()), true));
+          Arrays.asList(resource), true));
       am.getNodes();
       am.addListener(listener);
       am.getReservation(id);
+      Assert.assertFalse(listenerCalled);
+      MyRMLlamaAMAdapter.callback.changesFromRM(Arrays.asList(RMResourceChange
+          .createResourceChange(resource.getClientResourceId(),
+              PlacedResource.Status.REJECTED)));
+      Assert.assertTrue(listenerCalled);
       am.releaseReservation(id);
       am.releaseReservationsForClientId(UUID.randomUUID());
-      Assert.assertFalse(listenerCalled);
-      MyLlamaAM.listener.handle(new LlamaAMEventImpl(cId));
-      Assert.assertTrue(listenerCalled);
       am.removeListener(listener);
       listenerCalled = false;
-      MyLlamaAM.listener.handle(new LlamaAMEventImpl(cId));
       Assert.assertFalse(listenerCalled);
       am.stop();
     } finally {

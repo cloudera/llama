@@ -18,7 +18,7 @@
 package com.cloudera.llama.am.server;
 
 import com.cloudera.llama.am.LlamaAM;
-import com.cloudera.llama.am.mock.MockLlamaAM;
+import com.cloudera.llama.am.mock.MockRMLlamaAMAdapter;
 import com.cloudera.llama.am.server.thrift.ServerConfiguration;
 import junit.framework.Assert;
 import org.apache.commons.io.FileUtils;
@@ -57,10 +57,9 @@ public class TestMain {
     System.getProperties().remove(Main.LOG_DIR_SYS_PROP);
   }
 
-  private void createMainConf(String confDir) throws Exception{
+  private void createMainConf(String confDir, Configuration conf) throws Exception{
     System.setProperty(Main.CONF_DIR_SYS_PROP, confDir);
-    Configuration conf = new Configuration(false);
-    conf.setClass(LlamaAM.CLASS_KEY, MockLlamaAM.class, LlamaAM.class);
+    conf.setIfUnset(LlamaAM.RM_ADAPTER_CLASS_KEY, MockRMLlamaAMAdapter.class.getName());
     conf.set(ServerConfiguration.SERVER_ADDRESS_KEY, "localhost:0");
     Writer writer = new FileWriter(new File(confDir, "llama-site.xml"));
     conf.writeXml(writer);
@@ -70,7 +69,7 @@ public class TestMain {
   @Test
   public void testMainOK1() throws Exception {
     String testDir = createTestDir();
-    createMainConf(testDir);
+    createMainConf(testDir, new Configuration(false));
     final Main main = new Main();
     main.releaseRunningLatch();
     Assert.assertEquals(0, main.run(null));    
@@ -80,7 +79,7 @@ public class TestMain {
   @Test
   public void testMainOK2() throws Exception {
     String testDir = createTestDir();
-    createMainConf(testDir);
+    createMainConf(testDir, new Configuration(false));
     ClassLoader cl = Thread.currentThread().getContextClassLoader();
     InputStream is = cl.getResourceAsStream("log4j.properties");
     FileUtils.copyInputStreamToFile(is, new File(testDir,
@@ -95,6 +94,12 @@ public class TestMain {
 
   @Test
   public void testMainError() throws Exception {
+    String testDir = createTestDir();
+    Configuration conf = new Configuration(false);
+    conf.set(LlamaAM.RM_ADAPTER_CLASS_KEY, "x");
+    createMainConf(testDir, conf);
+    System.setProperty(Main.CONF_DIR_SYS_PROP, testDir);
+    System.setProperty(Main.LOG_DIR_SYS_PROP, testDir);
     Assert.assertNotSame(0, new Main().run(null));
   }
 
@@ -121,7 +126,7 @@ public class TestMain {
   @Test
   public void testServiceOK1() throws Exception {
     String testDir = createTestDir();
-    createMainConf(testDir);
+    createMainConf(testDir, new Configuration(false));
     System.setProperty(Main.CONF_DIR_SYS_PROP, testDir);
     System.setProperty(Main.LOG_DIR_SYS_PROP, testDir);
     Main.Service.verifyRequiredSysProps();

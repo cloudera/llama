@@ -15,23 +15,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.cloudera.llama.am.impl;
+package com.cloudera.llama.am.spi;
 
-import com.cloudera.llama.am.PlacedReservation;
 import com.cloudera.llama.am.Reservation;
 import com.cloudera.llama.am.Resource;
+import junit.framework.Assert;
+import org.junit.Test;
 
-import java.util.List;
+import java.util.Arrays;
+import java.util.UUID;
 
-public abstract class RMPlacedReservation extends PlacedReservation {
-
-  protected RMPlacedReservation(Reservation<Resource> reservation) {
-    super(reservation);
-  }
+public class TestRMPlacedReservation {
   
-  @SuppressWarnings("unchecked")
-  public List<RMPlacedResource> getRMResources() {
-    return (List<RMPlacedResource>) (List) getResources();
-  }
+  @Test
+  public void test() {
+    Resource resource = new Resource(UUID.randomUUID(), "l",
+        Resource.LocationEnforcement.MUST, 1, 2);
+    Reservation reservation = new Reservation(UUID.randomUUID(), "q", 
+        Arrays.asList(resource), false);
 
+    RMPlacedReservation pr = new RMPlacedReservation(reservation) {
+      @Override
+      public UUID getReservationId() {
+        return null;
+      }
+
+      @Override
+      public Status getStatus() {
+        return null;
+      }
+    };
+
+    Assert.assertEquals(1, pr.getResources().size());
+    Assert.assertEquals(resource, pr.getResources().get(0));
+    Assert.assertEquals(resource, pr.getRMResources().get(0));
+  }
 }

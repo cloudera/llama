@@ -29,12 +29,13 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.UUID;
 
-public class APIContractEnforcerLlamaAM extends LlamaAM {
+public class APIContractLlamaAM extends LlamaAM {
   private final Logger logger;
   private final LlamaAM llamaAM;
   private volatile boolean stopped;
 
-  public APIContractEnforcerLlamaAM(LlamaAM llamaAM) {
+  public APIContractLlamaAM(LlamaAM llamaAM) {
+    super(llamaAM.getConf());
     this.llamaAM = ParamChecker.notNull(llamaAM, "llamaAM");
     logger = LoggerFactory.getLogger(this.llamaAM.getClass());
   }

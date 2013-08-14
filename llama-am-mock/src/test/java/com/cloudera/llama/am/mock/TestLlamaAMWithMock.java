@@ -34,7 +34,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-public class TestMockResourceAM {
+public class TestLlamaAMWithMock {
 
   public static class MockListener implements LlamaAMListener {
     public List<LlamaAMEvent> events = Collections.synchronizedList(
@@ -53,7 +53,7 @@ public class TestMockResourceAM {
     conf.set("llama.am.mock.events.max.wait.ms", "10");
     conf.set("llama.am.mock.nodes", "h0,h1,h2,h3");
     conf.set(LlamaAM.INITIAL_QUEUES_KEY, "q1");
-    conf.set(LlamaAM.CLASS_KEY, MockLlamaAM.class.getName());
+    conf.set(LlamaAM.RM_ADAPTER_CLASS_KEY, MockRMLlamaAMAdapter.class.getName());
     return conf;
   }
 

@@ -19,9 +19,10 @@ package com.cloudera.llama.am.server.thrift;
 
 
 import com.cloudera.llama.am.LlamaAM;
-import com.cloudera.llama.am.mock.MockLlamaAM;
+import com.cloudera.llama.am.mock.MockRMLlamaAMAdapter;
 import com.cloudera.llama.am.mock.MockLlamaAMFlags;
 import com.cloudera.llama.am.server.TestMain;
+import com.cloudera.llama.am.spi.RMLlamaAMAdapter;
 import com.cloudera.llama.thrift.LlamaAMService;
 import com.cloudera.llama.thrift.LlamaNotificationService;
 import com.cloudera.llama.thrift.TLlamaAMGetNodesRequest;
@@ -73,12 +74,12 @@ public class TestLlamaAMThriftServer {
     Configuration conf = new Configuration(false);
     conf.set(ServerConfiguration.CONFIG_DIR_KEY, TestMain.createTestDir());
 
-    conf.setClass(LlamaAM.CLASS_KEY, MockLlamaAM.class, LlamaAM.class);
-    conf.set(MockLlamaAM.INITIAL_QUEUES_KEY, "q1,q2");
-    conf.set(MockLlamaAM.QUEUES_KEY, "q1,q2");
-    conf.set(MockLlamaAM.NODES_KEY, "n1,n2");
-    conf.setInt(MockLlamaAM.EVENTS_MIN_WAIT_KEY, 5);
-    conf.setInt(MockLlamaAM.EVENTS_MAX_WAIT_KEY, 10);
+    conf.setClass(LlamaAM.RM_ADAPTER_CLASS_KEY, MockRMLlamaAMAdapter.class, RMLlamaAMAdapter.class);
+    conf.set(LlamaAM.INITIAL_QUEUES_KEY, "q1,q2");
+    conf.set(MockRMLlamaAMAdapter.QUEUES_KEY, "q1,q2");
+    conf.set(MockRMLlamaAMAdapter.NODES_KEY, "n1,n2");
+    conf.setInt(MockRMLlamaAMAdapter.EVENTS_MIN_WAIT_KEY, 5);
+    conf.setInt(MockRMLlamaAMAdapter.EVENTS_MAX_WAIT_KEY, 10);
 
     conf.set(ServerConfiguration.SERVER_ADDRESS_KEY, "localhost:0");
     return conf;

@@ -20,11 +20,13 @@ package com.cloudera.llama.am.yarn;
 import com.cloudera.llama.am.LlamaAM;
 import com.cloudera.llama.am.LlamaAMException;
 import com.cloudera.llama.am.PlacedResource;
-import com.cloudera.llama.am.impl.AbstractSingleQueueLlamaAM;
 import com.cloudera.llama.am.impl.FastFormat;
-import com.cloudera.llama.am.impl.RMPlacedReservation;
-import com.cloudera.llama.am.impl.RMPlacedResource;
-import com.cloudera.llama.am.impl.RMResourceChange;
+import com.cloudera.llama.am.spi.RMLlamaAMAdapter;
+import com.cloudera.llama.am.spi.RMLlamaAMCallback;
+import com.cloudera.llama.am.spi.RMPlacedReservation;
+import com.cloudera.llama.am.spi.RMPlacedResource;
+import com.cloudera.llama.am.spi.RMResourceChange;
+import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.api.protocolrecords.RegisterApplicationMasterResponse;
@@ -49,6 +51,8 @@ import org.apache.hadoop.yarn.client.api.YarnClientApplication;
 import org.apache.hadoop.yarn.client.api.async.AMRMClientAsync;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.util.Records;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -66,8 +70,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-public class YarnLlamaAM extends AbstractSingleQueueLlamaAM  implements 
+public class YarnRMLlamaAMAdapter implements RMLlamaAMAdapter, Configurable, 
     AMRMClientAsync.CallbackHandler {
+  private static final Logger LOG = LoggerFactory.getLogger(YarnRMLlamaAMAdapter.class);
   
   public static final String PREFIX_KEY = LlamaAM.PREFIX_KEY + "yarn.";
 
@@ -94,6 +99,8 @@ public class YarnLlamaAM extends AbstractSingleQueueLlamaAM  implements
       + "container.handler.threads";
   public static final int CONTAINER_HANDLER_THREADS_DEFAULT = 10;
 
+  private Configuration conf;
+  private RMLlamaAMCallback llamaCallback;
   private YarnClient rmClient;
   private AMRMClientAsync<LlamaContainerRequest> amClient;
   private NMClient nmClient;
@@ -105,13 +112,28 @@ public class YarnLlamaAM extends AbstractSingleQueueLlamaAM  implements
   private BlockingQueue<ContainerHandler> containerHandlerQueue;
   private ThreadPoolExecutor containerHandlerExecutor;
 
-  public YarnLlamaAM() {
+  public YarnRMLlamaAMAdapter() {
     nodes = Collections.synchronizedSet(new HashSet<String>());
   }
 
   @Override
+  public void setConf(Configuration conf) {
+    this.conf = conf;
+  }
+
+  @Override
+  public Configuration getConf() {
+    return conf;
+  }
+
+  @Override
+  public void setLlamaAMCallback(RMLlamaAMCallback callback) {
+    llamaCallback = callback;
+  }
+
+  @Override
   @SuppressWarnings("unchecked")
-  protected void rmRegister(String queue) throws LlamaAMException {
+  public void register(String queue) throws LlamaAMException {
     try {
       Configuration yarnConf = new YarnConfiguration();
       for (Map.Entry entry : getConf()) {
@@ -235,7 +257,7 @@ public class YarnLlamaAM extends AbstractSingleQueueLlamaAM  implements
   }
 
   @Override
-  protected void rmUnregister() {
+  public void unregister() {
     stop(FinalApplicationStatus.SUCCEEDED, "Stopped by AM");
   }
   
@@ -248,7 +270,7 @@ public class YarnLlamaAM extends AbstractSingleQueueLlamaAM  implements
       try {
         amClient.unregisterApplicationMaster(status, msg, "");
       } catch (Exception ex) {
-        getLog().warn("Error un-registering AM client, " + ex, ex);
+        LOG.warn("Error un-registering AM client, " + ex, ex);
       }
       amClient.stop();
       amClient = null;
@@ -258,11 +280,11 @@ public class YarnLlamaAM extends AbstractSingleQueueLlamaAM  implements
         ApplicationReport report = monitorAppState(rmClient, appId, STOPPED);
         if (report.getFinalApplicationStatus()
             != FinalApplicationStatus.SUCCEEDED) {
-          getLog().warn("Problem stopping application, final status '{}'",
+          LOG.warn("Problem stopping application, final status '{}'",
               report.getFinalApplicationStatus());
         }
       } catch (Exception ex) {
-        getLog().warn("Error stopping application, " + ex, ex);
+        LOG.warn("Error stopping application, " + ex, ex);
       }
       rmClient.stop();
       rmClient = null;
@@ -274,7 +296,7 @@ public class YarnLlamaAM extends AbstractSingleQueueLlamaAM  implements
   }
 
   @Override  
-  protected List<String> rmGetNodes() throws LlamaAMException {
+  public List<String> getNodes() throws LlamaAMException {
     synchronized (nodes) {
       return new ArrayList<String>(nodes);
     }
@@ -306,7 +328,7 @@ public class YarnLlamaAM extends AbstractSingleQueueLlamaAM  implements
   }
   
   @Override
-  protected void rmReserve(RMPlacedReservation reservation)
+  public void reserve(RMPlacedReservation reservation)
       throws LlamaAMException {
     for (PlacedResource resource : reservation.getResources()) {
       if (!nodes.contains(resource.getLocation())) {
@@ -332,7 +354,7 @@ public class YarnLlamaAM extends AbstractSingleQueueLlamaAM  implements
   }
 
   @Override
-  protected void rmRelease(Collection<RMPlacedResource> resources)
+  public void release(Collection<RMPlacedResource> resources)
       throws LlamaAMException {
     for (RMPlacedResource resource : resources) {
       Object payload = resource.getRmPayload();
@@ -369,7 +391,7 @@ public class YarnLlamaAM extends AbstractSingleQueueLlamaAM  implements
             PlacedResource.Status.PREEMPTED));
       }
     }
-    changesFromRM(changes);
+    llamaCallback.changesFromRM(changes);
   }
 
   private enum Action { START, STOP }
@@ -401,7 +423,7 @@ public class YarnLlamaAM extends AbstractSingleQueueLlamaAM  implements
           nmClient.stopContainer(container.getId(), container.getNodeId());          
         }
       } catch (Exception ex) {
-        getLog().warn(
+        LOG.warn(
             "Could not {} container '{}' for resource '{}' at node '{}', {}'",
             action, container.getId(), clientResourceId, 
             container.getNodeId().getHost(), ex.toString(), ex);
@@ -409,7 +431,7 @@ public class YarnLlamaAM extends AbstractSingleQueueLlamaAM  implements
           List<RMResourceChange> changes = new ArrayList<RMResourceChange>();
           changes.add(RMResourceChange.createResourceChange(clientResourceId,
               PlacedResource.Status.LOST));
-          changesFromRM(changes);
+          llamaCallback.changesFromRM(changes);
         }
       }
     }
@@ -419,7 +441,7 @@ public class YarnLlamaAM extends AbstractSingleQueueLlamaAM  implements
     containerHandlerQueue.add(handler);
     int size = containerHandlerQueue.size();
     if (size > containerHandlerQueueThreshold) {
-      getLog().warn("Container handler queue over '{}' threshold at '{}'",
+      LOG.warn("Container handler queue over '{}' threshold at '{}'",
           containerHandlerQueueThreshold, size);
     }
   }
@@ -448,13 +470,13 @@ public class YarnLlamaAM extends AbstractSingleQueueLlamaAM  implements
             Action.START));
       }
     }
-    changesFromRM(changes);
+    llamaCallback.changesFromRM(changes);
   }
 
   @Override
   public void onShutdownRequest() {
-    loseAllReservations();
-    setRunning(false);
+    llamaCallback.loseAllReservations();
+    llamaCallback.setRunning(false);
     stop(FinalApplicationStatus.FAILED, "Shutdown by Yarn");
   }
 
@@ -477,9 +499,9 @@ public class YarnLlamaAM extends AbstractSingleQueueLlamaAM  implements
 
   @Override
   public void onError(Throwable ex) {
-    getLog().error("Error in Yarn client: {}", ex.toString(), ex);
-    setRunning(false);
-    loseAllReservations();
+    LOG.error("Error in Yarn client: {}", ex.toString(), ex);
+    llamaCallback.setRunning(false);
+    llamaCallback.loseAllReservations();
     stop(FinalApplicationStatus.FAILED, "Error in Yarn client: " + ex
         .toString());
   }

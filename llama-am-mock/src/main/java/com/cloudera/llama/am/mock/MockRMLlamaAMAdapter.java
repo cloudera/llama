@@ -21,34 +21,53 @@ import com.cloudera.llama.am.LlamaAM;
 import com.cloudera.llama.am.LlamaAMException;
 import com.cloudera.llama.am.PlacedReservation;
 import com.cloudera.llama.am.PlacedResource;
-import com.cloudera.llama.am.impl.AbstractSingleQueueLlamaAM;
 import com.cloudera.llama.am.impl.FastFormat;
-import com.cloudera.llama.am.impl.RMPlacedReservation;
-import com.cloudera.llama.am.impl.RMPlacedResource;
-import com.cloudera.llama.am.impl.RMResourceChange;
+import com.cloudera.llama.am.spi.RMLlamaAMAdapter;
+import com.cloudera.llama.am.spi.RMLlamaAMCallback;
+import com.cloudera.llama.am.spi.RMPlacedReservation;
+import com.cloudera.llama.am.spi.RMPlacedResource;
+import com.cloudera.llama.am.spi.RMResourceChange;
+import org.apache.hadoop.conf.Configurable;
+import org.apache.hadoop.conf.Configuration;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class MockLlamaAM extends AbstractSingleQueueLlamaAM {
+public class MockRMLlamaAMAdapter implements RMLlamaAMAdapter, Configurable {
   public static final String PREFIX_KEY = LlamaAM.PREFIX_KEY + "mock.";
-  public static final String EVENTS_MIN_WAIT_KEY = MockLlamaAM.PREFIX_KEY +
-      "events.min.wait.ms";
-  public static final String EVENTS_MAX_WAIT_KEY = MockLlamaAM.PREFIX_KEY +
-      "events.max.wait.ms";
-  public static final String QUEUES_KEY = MockLlamaAM.PREFIX_KEY + "queues";
-  public static final String NODES_KEY = MockLlamaAM.PREFIX_KEY + "nodes";
 
+  public static final String EVENTS_MIN_WAIT_KEY = 
+      MockRMLlamaAMAdapter.PREFIX_KEY + "events.min.wait.ms";
+  public static final int EVENTS_MIN_WAIT_DEFAULT = 1000; 
+
+  public static final String EVENTS_MAX_WAIT_KEY =
+      MockRMLlamaAMAdapter.PREFIX_KEY + "events.max.wait.ms";
+  public static final int EVENTS_MAX_WAIT_DEFAULT = 10000;
+
+  public static final String QUEUES_KEY = MockRMLlamaAMAdapter.PREFIX_KEY + 
+      "queues";
+  public static final Set<String> QUEUES_DEFAULT = new HashSet<String>();
+  
+  static {
+    QUEUES_DEFAULT.add("queue1");
+    QUEUES_DEFAULT.add("queue2");
+  }
+    
+  public static final String NODES_KEY = MockRMLlamaAMAdapter.PREFIX_KEY + 
+      "nodes";
+  public static final String NODES_DEFAULT = "node1,node2";
 
   private static final Map<String, PlacedResource.Status> MOCK_FLAGS = new 
       HashMap<String, PlacedResource.Status>();
@@ -98,26 +117,40 @@ public class MockLlamaAM extends AbstractSingleQueueLlamaAM {
   }
 
   private final AtomicLong counter = new AtomicLong();
+  private Configuration conf;
   private ScheduledExecutorService scheduler;
   private int minWait;
   private int maxWait;
   private List<String> nodes;
-  
+  private RMLlamaAMCallback callback;
+
   @Override
-  public void start() throws LlamaAMException {
-    super.start();
-    minWait = getConf().getInt(EVENTS_MIN_WAIT_KEY, 5000);
-    maxWait = getConf().getInt(EVENTS_MAX_WAIT_KEY, 10000);
-    nodes = Collections.unmodifiableList(Arrays.asList(getConf().
-        getStrings(NODES_KEY, "n1", "n2")));
-    scheduler = new ScheduledThreadPoolExecutor(1);
+  public void setConf(Configuration conf) {
+    this.conf = conf;
   }
 
+  @Override
+  public Configuration getConf() {
+    return conf;
+  }
 
   @Override
-  protected void rmRegister(String queue) throws LlamaAMException {
+  public void setLlamaAMCallback(RMLlamaAMCallback callback) {
+    this.callback = callback;
+  }
+
+  @Override
+  public void register(String queue) throws LlamaAMException {
+    minWait = getConf().getInt(EVENTS_MIN_WAIT_KEY, EVENTS_MIN_WAIT_DEFAULT);
+    maxWait = getConf().getInt(EVENTS_MAX_WAIT_KEY, EVENTS_MAX_WAIT_DEFAULT);
+    nodes = Collections.unmodifiableList(Arrays.asList(getConf().
+        getStrings(NODES_KEY, NODES_DEFAULT)));
+    scheduler = new ScheduledThreadPoolExecutor(1);
     Collection<String> validQueues = getConf().
         getTrimmedStringCollection(QUEUES_KEY);
+    if (validQueues.isEmpty()) {
+      validQueues = QUEUES_DEFAULT;
+    }
     if (!validQueues.contains(queue)) {
       throw new IllegalArgumentException(FastFormat.format("Invalid queue " +
           "'{}'", queue));
@@ -125,38 +158,33 @@ public class MockLlamaAM extends AbstractSingleQueueLlamaAM {
   }
 
   @Override
-  protected void rmUnregister() {
+  public void unregister() {
     scheduler.shutdownNow();
   }
 
   @Override
-  protected List<String> rmGetNodes() throws LlamaAMException {
+  public List<String> getNodes() throws LlamaAMException {
     return nodes;
   }
 
   @Override
-  protected void rmReserve(RMPlacedReservation reservation)
+  public void reserve(RMPlacedReservation reservation)
       throws LlamaAMException {
     schedule(this, reservation);
   }
 
   @Override
-  protected void rmRelease(Collection<RMPlacedResource> resources)
+  public void release(Collection<RMPlacedResource> resources)
       throws LlamaAMException {
   }
 
-  @Override
-  protected void changesFromRM(List<RMResourceChange> changes) {
-    super.changesFromRM(changes);
-  }
-
   private class MockRMAllocator implements Callable<Void> {
-    private MockLlamaAM llama;
+    private MockRMLlamaAMAdapter llama;
     private PlacedResource resource;
     private PlacedResource.Status status;
     private boolean initial;
     
-    public MockRMAllocator(MockLlamaAM llama, PlacedResource resource,
+    public MockRMAllocator(MockRMLlamaAMAdapter llama, PlacedResource resource,
         PlacedResource.Status status, boolean initial) {
       this.llama = llama;
       this.resource = resource;
@@ -169,13 +197,13 @@ public class MockLlamaAM extends AbstractSingleQueueLlamaAM {
           (resource.getClientResourceId(), "c" + counter.incrementAndGet
               (), resource.getCpuVCores(), resource.getMemoryMb(),
               getLocation(resource.getLocation()));
-      llama.changesFromRM(Arrays.asList(change));      
+      callback.changesFromRM(Arrays.asList(change));      
     }
     
     private void toStatus(PlacedResource.Status status) {
       RMResourceChange change = RMResourceChange.createResourceChange(
           resource.getClientResourceId(), status);
-      llama.changesFromRM(Arrays.asList(change));
+      callback.changesFromRM(Arrays.asList(change));
       
     }
     @Override
@@ -205,7 +233,8 @@ public class MockLlamaAM extends AbstractSingleQueueLlamaAM {
     }
   }
 
-  private void schedule(MockLlamaAM allocator, PlacedReservation reservation) {
+  private void schedule(MockRMLlamaAMAdapter allocator, 
+      PlacedReservation reservation) {
     for (PlacedResource resource : reservation.getResources()) {
       PlacedResource.Status status = getMockResourceStatus(
           resource.getLocation());

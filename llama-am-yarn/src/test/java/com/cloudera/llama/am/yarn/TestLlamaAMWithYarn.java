@@ -37,7 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class TestYarnLlamaAM {
+public class TestLlamaAMWithYarn {
 
   public static class MyListener implements LlamaAMListener {
     public List<LlamaAMEvent> events = Collections.synchronizedList(new
@@ -66,7 +66,7 @@ public class TestYarnLlamaAM {
   protected Configuration getConfiguration() {
     Configuration conf = new Configuration(false);
     conf.set(LlamaAM.INITIAL_QUEUES_KEY, "default");
-    conf.set(LlamaAM.CLASS_KEY, YarnLlamaAM.class.getName());
+    conf.set(LlamaAM.RM_ADAPTER_CLASS_KEY, YarnRMLlamaAMAdapter.class.getName());
     for (Map.Entry entry : miniYarn.getConfig()) {
       conf.set((String) entry.getKey(), (String)entry.getValue());
     }
