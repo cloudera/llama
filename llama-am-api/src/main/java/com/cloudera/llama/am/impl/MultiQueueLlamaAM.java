@@ -50,10 +50,10 @@ public class MultiQueueLlamaAM extends LlamaAM implements LlamaAMListener {
     ams = new HashMap<String, LlamaAM>();
     listeners = new HashSet<LlamaAMListener>();
     reservationToQueue = new ConcurrentHashMap<UUID, String>();
-    if (SingleQueueLlamaAM.getAdapterClass(conf) == null) {
+    if (SingleQueueLlamaAM.getRMConnectorClass(conf) == null) {
       throw new IllegalArgumentException(FastFormat.format(
-          "RMLlamaAMAdapter class not defined in the configuration under '{}'",
-          SingleQueueLlamaAM.RM_ADAPTER_CLASS_KEY));
+          "RMLlamaAMConnector class not defined in the configuration under '{}'",
+          SingleQueueLlamaAM.RM_CONNECTOR_CLASS_KEY));
     }
   }
 

@@ -17,7 +17,7 @@
  */
 package com.cloudera.llama.am;
 
-import com.cloudera.llama.am.spi.RMLlamaAMAdapter;
+import com.cloudera.llama.am.spi.RMLlamaAMConnector;
 import com.cloudera.llama.am.spi.RMLlamaAMCallback;
 import com.cloudera.llama.am.spi.RMPlacedReservation;
 import com.cloudera.llama.am.spi.RMPlacedResource;
@@ -32,10 +32,10 @@ import java.util.UUID;
 
 public class TestLlamaAM {
   
-  public static class MyRMLlamaAMAdapter implements RMLlamaAMAdapter {
+  public static class MyRMLlamaAMConnector implements RMLlamaAMConnector {
     static boolean created;
     
-    public MyRMLlamaAMAdapter() {
+    public MyRMLlamaAMConnector() {
       created = true;
     }
 
@@ -74,7 +74,7 @@ public class TestLlamaAM {
       am.reserve(new Reservation(UUID.randomUUID(), "q",
           Arrays.asList(new Resource(UUID.randomUUID(), "l",
               Resource.LocationEnforcement.MUST, 1, 1 )), false));
-      Assert.assertTrue(MyRMLlamaAMAdapter.created);
+      Assert.assertTrue(MyRMLlamaAMConnector.created);
     } finally {
       am.stop();
     }
@@ -88,8 +88,8 @@ public class TestLlamaAM {
   @Test
   public void testCreate() throws Exception{
     Configuration conf = new Configuration(false);
-    conf.setClass(LlamaAM.RM_ADAPTER_CLASS_KEY, MyRMLlamaAMAdapter.class, 
-        RMLlamaAMAdapter.class);
+    conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MyRMLlamaAMConnector.class, 
+        RMLlamaAMConnector.class);
     testCreate(conf);
   }
 

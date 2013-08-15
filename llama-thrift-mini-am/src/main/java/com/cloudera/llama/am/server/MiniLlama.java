@@ -19,12 +19,12 @@ package com.cloudera.llama.am.server;
 
 import com.cloudera.llama.am.LlamaAM;
 import com.cloudera.llama.am.impl.ParamChecker;
-import com.cloudera.llama.am.mock.MockRMLlamaAMAdapter;
+import com.cloudera.llama.am.mock.MockRMLlamaAMConnector;
 import com.cloudera.llama.am.server.thrift.LlamaAMThriftServer;
 import com.cloudera.llama.am.server.thrift.NodeMapper;
 import com.cloudera.llama.am.server.thrift.ServerConfiguration;
-import com.cloudera.llama.am.spi.RMLlamaAMAdapter;
-import com.cloudera.llama.am.yarn.YarnRMLlamaAMAdapter;
+import com.cloudera.llama.am.spi.RMLlamaAMConnector;
+import com.cloudera.llama.am.yarn.YarnRMLlamaAMConnector;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.server.datanode.DataNode;
@@ -66,12 +66,12 @@ public class MiniLlama {
     }
     Configuration conf = new Configuration(false);
     conf.set(ServerConfiguration.CONFIG_DIR_KEY, "");
-    conf.setClass(LlamaAM.RM_ADAPTER_CLASS_KEY, MockRMLlamaAMAdapter.class, RMLlamaAMAdapter.class);
+    conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MockRMLlamaAMConnector.class, RMLlamaAMConnector.class);
     conf.setStrings(LlamaAM.INITIAL_QUEUES_KEY, queues.toArray(new String[0]));
-    conf.setStrings(MockRMLlamaAMAdapter.QUEUES_KEY, queues.toArray(new String[0]));
-    conf.setStrings(MockRMLlamaAMAdapter.NODES_KEY, nodes.toArray(new String[0]));
-    conf.set(MockRMLlamaAMAdapter.EVENTS_MIN_WAIT_KEY, "1000");
-    conf.set(MockRMLlamaAMAdapter.EVENTS_MAX_WAIT_KEY, "10000");
+    conf.setStrings(MockRMLlamaAMConnector.QUEUES_KEY, queues.toArray(new String[0]));
+    conf.setStrings(MockRMLlamaAMConnector.NODES_KEY, nodes.toArray(new String[0]));
+    conf.set(MockRMLlamaAMConnector.EVENTS_MIN_WAIT_KEY, "1000");
+    conf.set(MockRMLlamaAMConnector.EVENTS_MAX_WAIT_KEY, "10000");
     conf.set(ServerConfiguration.SERVER_ADDRESS_KEY, "localhost:0");
     conf.setBoolean(START_MINI_CLUSTER, false);
     return conf;
@@ -85,7 +85,7 @@ public class MiniLlama {
     }
     Configuration conf = new Configuration(false);
     conf.set(ServerConfiguration.CONFIG_DIR_KEY, "");
-    conf.setClass(LlamaAM.RM_ADAPTER_CLASS_KEY, YarnRMLlamaAMAdapter.class, RMLlamaAMAdapter.class);
+    conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, YarnRMLlamaAMConnector.class, RMLlamaAMConnector.class);
     conf.setInt(MINI_CLUSTER_NODES_KEY, nodes);
     conf.set(ServerConfiguration.SERVER_ADDRESS_KEY, "localhost:0");
     conf.setBoolean(START_MINI_CLUSTER, true);
@@ -122,7 +122,7 @@ public class MiniLlama {
       dataNodes = new ArrayList<String>(mapping.keySet());
     } else {
       dataNodes = new ArrayList<String>(
-          conf.getStringCollection(MockRMLlamaAMAdapter.NODES_KEY));
+          conf.getStringCollection(MockRMLlamaAMConnector.NODES_KEY));
     }
     dataNodes = Collections.unmodifiableList(dataNodes);
     server.start();

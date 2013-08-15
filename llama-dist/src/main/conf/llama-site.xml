@@ -138,12 +138,12 @@
 
   <!-- LlamaAM configuration -->
   <property>
-    <name>llama.am.rm.adapter.class</name>
-    <value>com.cloudera.llama.am.yarn.YarnRMLlamaAMAdapter</value>
+    <name>llama.am.rm.connector.class</name>
+    <value>com.cloudera.llama.am.yarn.YarnRMLlamaAMConnector</value>
     <description>
       Backing LlamaAM implementation to use.
-      Available for functional testing: 
-        com.cloudera.llama.am.mock.MockRMLlamaAMAdapter
+      Available for functional testing:
+      com.cloudera.llama.am.mock.MockRMLlamaAMConnector
     </description>
   </property>
   <property>

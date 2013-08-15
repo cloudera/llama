@@ -22,7 +22,7 @@ import com.cloudera.llama.am.LlamaAMException;
 import java.util.Collection;
 import java.util.List;
 
-public interface RMLlamaAMAdapter {
+public interface RMLlamaAMConnector {
 
   public void setLlamaAMCallback(RMLlamaAMCallback callback);
 

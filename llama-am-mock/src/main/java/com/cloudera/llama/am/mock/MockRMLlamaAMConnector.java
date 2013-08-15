@@ -22,7 +22,7 @@ import com.cloudera.llama.am.LlamaAMException;
 import com.cloudera.llama.am.PlacedReservation;
 import com.cloudera.llama.am.PlacedResource;
 import com.cloudera.llama.am.impl.FastFormat;
-import com.cloudera.llama.am.spi.RMLlamaAMAdapter;
+import com.cloudera.llama.am.spi.RMLlamaAMConnector;
 import com.cloudera.llama.am.spi.RMLlamaAMCallback;
 import com.cloudera.llama.am.spi.RMPlacedReservation;
 import com.cloudera.llama.am.spi.RMPlacedResource;
@@ -45,18 +45,18 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class MockRMLlamaAMAdapter implements RMLlamaAMAdapter, Configurable {
+public class MockRMLlamaAMConnector implements RMLlamaAMConnector, Configurable {
   public static final String PREFIX_KEY = LlamaAM.PREFIX_KEY + "mock.";
 
   public static final String EVENTS_MIN_WAIT_KEY = 
-      MockRMLlamaAMAdapter.PREFIX_KEY + "events.min.wait.ms";
+      MockRMLlamaAMConnector.PREFIX_KEY + "events.min.wait.ms";
   public static final int EVENTS_MIN_WAIT_DEFAULT = 1000; 
 
   public static final String EVENTS_MAX_WAIT_KEY =
-      MockRMLlamaAMAdapter.PREFIX_KEY + "events.max.wait.ms";
+      MockRMLlamaAMConnector.PREFIX_KEY + "events.max.wait.ms";
   public static final int EVENTS_MAX_WAIT_DEFAULT = 10000;
 
-  public static final String QUEUES_KEY = MockRMLlamaAMAdapter.PREFIX_KEY + 
+  public static final String QUEUES_KEY = MockRMLlamaAMConnector.PREFIX_KEY + 
       "queues";
   public static final Set<String> QUEUES_DEFAULT = new HashSet<String>();
   
@@ -65,7 +65,7 @@ public class MockRMLlamaAMAdapter implements RMLlamaAMAdapter, Configurable {
     QUEUES_DEFAULT.add("queue2");
   }
     
-  public static final String NODES_KEY = MockRMLlamaAMAdapter.PREFIX_KEY + 
+  public static final String NODES_KEY = MockRMLlamaAMConnector.PREFIX_KEY + 
       "nodes";
   public static final String NODES_DEFAULT = "node1,node2";
 
@@ -179,12 +179,12 @@ public class MockRMLlamaAMAdapter implements RMLlamaAMAdapter, Configurable {
   }
 
   private class MockRMAllocator implements Callable<Void> {
-    private MockRMLlamaAMAdapter llama;
+    private MockRMLlamaAMConnector llama;
     private PlacedResource resource;
     private PlacedResource.Status status;
     private boolean initial;
     
-    public MockRMAllocator(MockRMLlamaAMAdapter llama, PlacedResource resource,
+    public MockRMAllocator(MockRMLlamaAMConnector llama, PlacedResource resource,
         PlacedResource.Status status, boolean initial) {
       this.llama = llama;
       this.resource = resource;
@@ -233,7 +233,7 @@ public class MockRMLlamaAMAdapter implements RMLlamaAMAdapter, Configurable {
     }
   }
 
-  private void schedule(MockRMLlamaAMAdapter allocator, 
+  private void schedule(MockRMLlamaAMConnector allocator, 
       PlacedReservation reservation) {
     for (PlacedResource resource : reservation.getResources()) {
       PlacedResource.Status status = getMockResourceStatus(

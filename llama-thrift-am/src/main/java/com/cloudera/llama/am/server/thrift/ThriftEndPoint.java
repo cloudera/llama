@@ -76,10 +76,7 @@ public class ThriftEndPoint {
         declarePrincipalHost = principalName.substring(i + 1);
         principalName = principalName.substring(0, i);
       }
-      String strAddress = conf.get(ServerConfiguration.SERVER_ADDRESS_KEY,
-          ServerConfiguration.SERVER_ADDRESS_DEFAULT);
-      InetSocketAddress address = NetUtils.createSocketAddr(strAddress);
-      String principalHost = address.getHostName();
+      String principalHost = getServerAddress(conf);
       if (!principalHost.equals(declarePrincipalHost)) {
         throw new RuntimeException(FastFormat.format(
             "Server address configured with '{}', " +
@@ -95,4 +92,12 @@ public class ThriftEndPoint {
     }
     return factory;
   }
+  
+  public static String getServerAddress(Configuration conf) {
+    String strAddress = conf.get(ServerConfiguration.SERVER_ADDRESS_KEY,
+    ServerConfiguration.SERVER_ADDRESS_DEFAULT);
+    InetSocketAddress address = NetUtils.createSocketAddr(strAddress);
+    return address.getHostName();
+  }
+
 }

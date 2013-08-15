@@ -18,7 +18,6 @@
 package com.cloudera.llama.am.spi;
 
 import com.cloudera.llama.am.PlacedResource;
-import com.cloudera.llama.am.spi.RMResourceChange;
 import junit.framework.Assert;
 import org.junit.Test;
 
@@ -34,7 +33,7 @@ public class TestRMResourceChange {
     c.toString();
     Assert.assertEquals(cId, c.getClientResourceId());
     Assert.assertEquals("id", c.getRmResourceId());
-    Assert.assertEquals(1, c.getvCpuCores());
+    Assert.assertEquals(1, c.getCpuVCores());
     Assert.assertEquals(2, c.getMemoryMb());
     Assert.assertEquals("l", c.getLocation());
     Assert.assertEquals(PlacedResource.Status.ALLOCATED, c.getStatus());
@@ -48,7 +47,7 @@ public class TestRMResourceChange {
     c.toString();
     Assert.assertEquals(cId, c.getClientResourceId());
     Assert.assertNull(c.getRmResourceId());
-    Assert.assertEquals(-1, c.getvCpuCores());
+    Assert.assertEquals(-1, c.getCpuVCores());
     Assert.assertEquals(-1, c.getMemoryMb());
     Assert.assertNull( c.getLocation());
     Assert.assertEquals(PlacedResource.Status.LOST, c.getStatus());

@@ -25,7 +25,7 @@ import com.cloudera.llama.am.PlacedResource;
 import com.cloudera.llama.am.Reservation;
 import com.cloudera.llama.am.Resource;
 import com.cloudera.llama.am.TestReservation;
-import com.cloudera.llama.am.spi.RMLlamaAMAdapter;
+import com.cloudera.llama.am.spi.RMLlamaAMConnector;
 import com.cloudera.llama.am.spi.RMLlamaAMCallback;
 import com.cloudera.llama.am.spi.RMPlacedReservation;
 import com.cloudera.llama.am.spi.RMPlacedResource;
@@ -57,14 +57,14 @@ public class TestMultiQueueLlamaAM {
     EXPECTED.add("release");
   }
   
-  public static class MyRMLlamaAMAdapter implements RMLlamaAMAdapter, 
+  public static class MyRMLlamaAMConnector implements RMLlamaAMConnector, 
       Configurable {
     public static RMLlamaAMCallback callback;
     public static Set<String> methods = new HashSet<String>();
 
     private Configuration conf;
     
-    public MyRMLlamaAMAdapter() {
+    public MyRMLlamaAMConnector() {
       methods.clear();
     }
     
@@ -81,7 +81,7 @@ public class TestMultiQueueLlamaAM {
 
     @Override
     public void setLlamaAMCallback(RMLlamaAMCallback callback) {
-      MyRMLlamaAMAdapter.callback = callback;
+      MyRMLlamaAMConnector.callback = callback;
       methods.add("setLlamaAMCallback");
     }
 
@@ -125,8 +125,8 @@ public class TestMultiQueueLlamaAM {
   @Test
   public void testMultiQueueDelegation() throws Exception {
     Configuration conf = new Configuration(false);
-    conf.setClass(LlamaAM.RM_ADAPTER_CLASS_KEY, MyRMLlamaAMAdapter.class, 
-        RMLlamaAMAdapter.class);
+    conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MyRMLlamaAMConnector.class, 
+        RMLlamaAMConnector.class);
     LlamaAM am = LlamaAM.create(conf);
     try {
       am.start();
@@ -145,7 +145,7 @@ public class TestMultiQueueLlamaAM {
       am.releaseReservationsForClientId(UUID.randomUUID());
       am.stop();
 
-      Assert.assertEquals(EXPECTED, MyRMLlamaAMAdapter.methods);
+      Assert.assertEquals(EXPECTED, MyRMLlamaAMConnector.methods);
     } finally {
       am.stop();
     }
@@ -154,8 +154,8 @@ public class TestMultiQueueLlamaAM {
   @Test(expected = LlamaAMException.class)
   public void testReleaseReservationForClientException() throws Exception {
     Configuration conf = new Configuration(false);
-    conf.setClass(LlamaAM.RM_ADAPTER_CLASS_KEY, MyRMLlamaAMAdapter.class,
-        RMLlamaAMAdapter.class);
+    conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MyRMLlamaAMConnector.class,
+        RMLlamaAMConnector.class);
     conf.setBoolean("release.fail", true);
     LlamaAM am = LlamaAM.create(conf);
     try {
@@ -173,8 +173,8 @@ public class TestMultiQueueLlamaAM {
   public void testReleaseReservationForClientDiffQueuesException() 
       throws Exception {
     Configuration conf = new Configuration(false);
-    conf.setClass(LlamaAM.RM_ADAPTER_CLASS_KEY, MyRMLlamaAMAdapter.class,
-        RMLlamaAMAdapter.class);
+    conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MyRMLlamaAMConnector.class,
+        RMLlamaAMConnector.class);
     conf.setBoolean("release.fail", true);
     LlamaAM am = LlamaAM.create(conf);
     try {
@@ -193,8 +193,8 @@ public class TestMultiQueueLlamaAM {
   @Test(expected = LlamaAMException.class)
   public void testStartOfDelegatedLlamaAmFail() throws Exception {
     Configuration conf = new Configuration(false);
-    conf.setClass(LlamaAM.RM_ADAPTER_CLASS_KEY, MyRMLlamaAMAdapter.class, 
-        RMLlamaAMAdapter.class);
+    conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MyRMLlamaAMConnector.class, 
+        RMLlamaAMConnector.class);
     conf.setBoolean("fail.register", true);
     conf.set(LlamaAM.INITIAL_QUEUES_KEY,"q");
     LlamaAM am = LlamaAM.create(conf);
@@ -204,8 +204,8 @@ public class TestMultiQueueLlamaAM {
   @Test(expected = LlamaAMException.class)
   public void testGetAnyLlamaFail() throws Exception {
     Configuration conf = new Configuration(false);
-    conf.setClass(LlamaAM.RM_ADAPTER_CLASS_KEY, MyRMLlamaAMAdapter.class, 
-        RMLlamaAMAdapter.class);
+    conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MyRMLlamaAMConnector.class, 
+        RMLlamaAMConnector.class);
     LlamaAM am = LlamaAM.create(conf);
     am.start();
     am.getNodes();
@@ -214,8 +214,8 @@ public class TestMultiQueueLlamaAM {
   @Test
   public void testGetReservationUnknown() throws Exception {
     Configuration conf = new Configuration(false);
-    conf.setClass(LlamaAM.RM_ADAPTER_CLASS_KEY, MyRMLlamaAMAdapter.class, 
-        RMLlamaAMAdapter.class);
+    conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MyRMLlamaAMConnector.class, 
+        RMLlamaAMConnector.class);
     LlamaAM am = LlamaAM.create(conf);
     am.start();
     Assert.assertNull(am.getReservation(UUID.randomUUID()));
@@ -224,8 +224,8 @@ public class TestMultiQueueLlamaAM {
   @Test
   public void testReleaseReservationUnknown() throws Exception {
     Configuration conf = new Configuration(false);
-    conf.setClass(LlamaAM.RM_ADAPTER_CLASS_KEY, MyRMLlamaAMAdapter.class,
-        RMLlamaAMAdapter.class);
+    conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MyRMLlamaAMConnector.class,
+        RMLlamaAMConnector.class);
     LlamaAM am = LlamaAM.create(conf);
     am.start();
     am.releaseReservation(UUID.randomUUID());
@@ -236,8 +236,8 @@ public class TestMultiQueueLlamaAM {
   @Test
   public void testMultiQueueListener() throws Exception {
     Configuration conf = new Configuration(false);
-    conf.setClass(LlamaAM.RM_ADAPTER_CLASS_KEY, MyRMLlamaAMAdapter.class, 
-        RMLlamaAMAdapter.class);
+    conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MyRMLlamaAMConnector.class, 
+        RMLlamaAMConnector.class);
     LlamaAM am = LlamaAM.create(conf);
     try {
       am.start();
@@ -255,7 +255,7 @@ public class TestMultiQueueLlamaAM {
       am.addListener(listener);
       am.getReservation(id);
       Assert.assertFalse(listenerCalled);
-      MyRMLlamaAMAdapter.callback.changesFromRM(Arrays.asList(RMResourceChange
+      MyRMLlamaAMConnector.callback.changesFromRM(Arrays.asList(RMResourceChange
           .createResourceChange(resource.getClientResourceId(),
               PlacedResource.Status.REJECTED)));
       Assert.assertTrue(listenerCalled);

@@ -21,7 +21,7 @@ import com.cloudera.llama.am.LlamaAM;
 import com.cloudera.llama.am.LlamaAMException;
 import com.cloudera.llama.am.PlacedResource;
 import com.cloudera.llama.am.impl.FastFormat;
-import com.cloudera.llama.am.spi.RMLlamaAMAdapter;
+import com.cloudera.llama.am.spi.RMLlamaAMConnector;
 import com.cloudera.llama.am.spi.RMLlamaAMCallback;
 import com.cloudera.llama.am.spi.RMPlacedReservation;
 import com.cloudera.llama.am.spi.RMPlacedResource;
@@ -72,9 +72,10 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-public class YarnRMLlamaAMAdapter implements RMLlamaAMAdapter, Configurable, 
+public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable, 
     AMRMClientAsync.CallbackHandler {
-  private static final Logger LOG = LoggerFactory.getLogger(YarnRMLlamaAMAdapter.class);
+  private static final Logger LOG = 
+      LoggerFactory.getLogger(YarnRMLlamaAMConnector.class);
   
   public static final String PREFIX_KEY = LlamaAM.PREFIX_KEY + "yarn.";
 
@@ -102,24 +103,29 @@ public class YarnRMLlamaAMAdapter implements RMLlamaAMAdapter, Configurable,
   public static final int CONTAINER_HANDLER_THREADS_DEFAULT = 10;
 
   public static final String HADOOP_USER_NAME_KEY = PREFIX_KEY + 
-        "hadoop.user.name";
+      "hadoop.user.name";
   public static final String HADOOP_USER_NAME_DEFAULT = "llama";
+
+  public static final String ADVERTISED_HOSTNAME_KEY = PREFIX_KEY + 
+      "advertised.hostname";
+  public static final String ADVERTISED_TRACKING_URL_KEY = PREFIX_KEY + 
+      "advertised.tracking.url";
+  public static final String NOT_AVAILABLE_VALUE = "*not available*";
 
   private Configuration conf;
   private RMLlamaAMCallback llamaCallback;
   private UserGroupInformation ugi;
-  private YarnClient rmClient;
-  private AMRMClientAsync<LlamaContainerRequest> amClient;
+  private YarnClient yarnClient;
+  private AMRMClientAsync<LlamaContainerRequest> amRmClientAsync;
   private NMClient nmClient;
   private ApplicationId appId;
   private final Set<String> nodes;
-  private int maxMem;
-  private int maxCPUs;
+  private Resource maxResource;
   private int containerHandlerQueueThreshold;
   private BlockingQueue<ContainerHandler> containerHandlerQueue;
   private ThreadPoolExecutor containerHandlerExecutor;
 
-  public YarnRMLlamaAMAdapter() {
+  public YarnRMLlamaAMConnector() {
     nodes = Collections.synchronizedSet(new HashSet<String>());
   }
 
@@ -163,7 +169,7 @@ public class YarnRMLlamaAMAdapter implements RMLlamaAMAdapter, Configurable,
       containerHandlerQueue = new LinkedBlockingQueue<ContainerHandler>();
       int threads = getConf().getInt(CONTAINER_HANDLER_THREADS_KEY, 
           CONTAINER_HANDLER_THREADS_DEFAULT);
-      //funny downcasting and upcasting because javac gets goofy here
+      // funny down-casting and up-casting because javac gets goofy here
       containerHandlerExecutor = new ThreadPoolExecutor(threads, threads, 0, 
           TimeUnit.SECONDS, (BlockingQueue<Runnable>) (BlockingQueue) 
           containerHandlerQueue);
@@ -178,26 +184,27 @@ public class YarnRMLlamaAMAdapter implements RMLlamaAMAdapter, Configurable,
     for (Map.Entry entry : getConf()) {
       yarnConf.set((String) entry.getKey(), (String) entry.getValue());
     }
-    rmClient = YarnClient.createYarnClient();
-    rmClient.init(yarnConf);
-    rmClient.start();
+    yarnClient = YarnClient.createYarnClient();
+    yarnClient.init(yarnConf);
+    yarnClient.start();
     nmClient = NMClient.createNMClient();
     nmClient.init(yarnConf);
     nmClient.start();
-    appId = _createApp(rmClient, queue);
-    _monitorAppState(rmClient, appId, ACCEPTED);
-    ugi.addToken(rmClient.getAMRMToken(appId));
+    appId = _createApp(yarnClient, queue);
+    _monitorAppState(yarnClient, appId, ACCEPTED);
+    ugi.addToken(yarnClient.getAMRMToken(appId));
     int heartbeatInterval = getConf().getInt(HEARTBEAT_INTERVAL_KEY, 
         HEARTBEAT_INTERNAL_DEFAULT);
-    amClient = AMRMClientAsync.createAMRMClientAsync(heartbeatInterval, 
-        YarnRMLlamaAMAdapter.this);
-    amClient.init(yarnConf);
-    amClient.start();
-    RegisterApplicationMasterResponse response = amClient
-        .registerApplicationMaster("", 0, "");
-    maxMem = response.getMaximumResourceCapability().getMemory();
-    maxCPUs = response.getMaximumResourceCapability().getVirtualCores();
-    for (NodeReport nodeReport : rmClient.getNodeReports()) {
+    amRmClientAsync = AMRMClientAsync.createAMRMClientAsync(heartbeatInterval, 
+        YarnRMLlamaAMConnector.this);
+    amRmClientAsync.init(yarnConf);
+    amRmClientAsync.start();
+    RegisterApplicationMasterResponse response = amRmClientAsync
+        .registerApplicationMaster(
+            getConf().get(ADVERTISED_HOSTNAME_KEY, NOT_AVAILABLE_VALUE), 0, 
+            getConf().get(ADVERTISED_TRACKING_URL_KEY, NOT_AVAILABLE_VALUE));
+    maxResource = response.getMaximumResourceCapability();
+    for (NodeReport nodeReport : yarnClient.getNodeReports()) {
       if (nodeReport.getNodeState() == NodeState.RUNNING) {
         nodes.add(nodeReport.getNodeId().getHost());
       }
@@ -296,18 +303,18 @@ public class YarnRMLlamaAMAdapter implements RMLlamaAMAdapter, Configurable,
       containerHandlerExecutor.shutdownNow();
       containerHandlerExecutor = null;
     }
-    if (amClient != null) {
+    if (amRmClientAsync != null) {
       try {
-        amClient.unregisterApplicationMaster(status, msg, "");
+        amRmClientAsync.unregisterApplicationMaster(status, msg, "");
       } catch (Exception ex) {
         LOG.warn("Error un-registering AM client, " + ex, ex);
       }
-      amClient.stop();
-      amClient = null;
+      amRmClientAsync.stop();
+      amRmClientAsync = null;
     }
-    if (rmClient != null) {
+    if (yarnClient != null) {
       try {
-        ApplicationReport report = _monitorAppState(rmClient, appId, STOPPED);
+        ApplicationReport report = _monitorAppState(yarnClient, appId, STOPPED);
         if (report.getFinalApplicationStatus()
             != FinalApplicationStatus.SUCCEEDED) {
           LOG.warn("Problem stopping application, final status '{}'",
@@ -316,8 +323,8 @@ public class YarnRMLlamaAMAdapter implements RMLlamaAMAdapter, Configurable,
       } catch (Exception ex) {
         LOG.warn("Error stopping application, " + ex, ex);
       }
-      rmClient.stop();
-      rmClient = null;
+      yarnClient.stop();
+      yarnClient = null;
     }
     if (nmClient != null) {
       //TODO this is introducing a deadlock
@@ -332,22 +339,41 @@ public class YarnRMLlamaAMAdapter implements RMLlamaAMAdapter, Configurable,
     }
   }
 
-  static class LlamaContainerRequest extends AMRMClient.ContainerRequest {
-    private static final Priority PRIORITY = Priority.newInstance(1);
-    private static final String[] RACKS = new String[0];
-    
-    public static Resource createResource(PlacedResource placedResource) {
-      return Resource.newInstance(placedResource.getMemoryMb(), 
-          placedResource.getCpuVCores());
-    }
-    
+  private static final Priority PRIORITY = Priority.newInstance(1);
+  private static final String[] RACKS = new String[0];
+  
+  private Resource createResource(PlacedResource resource) 
+      throws LlamaAMException {
+      if (!nodes.contains(resource.getLocation())) {
+        throw new LlamaAMException(FastFormat.format(
+            "Node '{}' is not available", resource.getLocation()));
+      }
+      if (resource.getMemoryMb() > maxResource.getMemory()) {
+        throw new LlamaAMException(FastFormat.format(
+            "Resource '{}' asking for '{}' memory exceeds maximum '{}'",
+            resource.getClientResourceId(), resource.getMemoryMb(),
+            maxResource.getMemory()));        
+      }
+      if (resource.getCpuVCores() > maxResource.getVirtualCores()) {
+        throw new LlamaAMException(FastFormat.format(
+        "Resource '{}' asking for '{}' CPUs exceeds maximum '{}'",
+            resource.getClientResourceId(), resource.getCpuVCores(), 
+            maxResource.getVirtualCores()));
+      }
+    return Resource.newInstance(resource.getMemoryMb(), 
+        resource.getCpuVCores());
+  }
+
+  class LlamaContainerRequest extends AMRMClient.ContainerRequest {    
     private RMPlacedResource placedResource;
     
-    public LlamaContainerRequest(RMPlacedResource placedResource) {
+    public LlamaContainerRequest(RMPlacedResource placedResource) 
+        throws LlamaAMException {
       super(createResource(placedResource), 
           new String[]{placedResource.getLocation()}, RACKS, PRIORITY,
-          (placedResource.getEnforcement() != com.cloudera.llama.am.Resource
-              .LocationEnforcement.MUST));
+          (placedResource.getEnforcement() != 
+              com.cloudera.llama.am.Resource.LocationEnforcement.MUST)
+      );
       this.placedResource = placedResource;
     }
     
@@ -358,25 +384,9 @@ public class YarnRMLlamaAMAdapter implements RMLlamaAMAdapter, Configurable,
   
   private void _reserve(RMPlacedReservation reservation) 
       throws LlamaAMException {
-    for (PlacedResource resource : reservation.getResources()) {
-      if (!nodes.contains(resource.getLocation())) {
-        throw new LlamaAMException(FastFormat.format(
-            "Node '{}' is not available", resource.getLocation()));
-      }
-      if (resource.getMemoryMb() > maxMem) {
-        throw new LlamaAMException(FastFormat.format(
-            "Resource '{}' asking for '{}' memory exceeds maximum '{}'",
-            resource.getClientResourceId(), resource.getMemoryMb(), maxMem));        
-      }
-      if (resource.getCpuVCores() > maxCPUs) {
-        throw new LlamaAMException(FastFormat.format(
-        "Resource '{}' asking for '{}' CPUs exceeds maximum '{}'",
-            resource.getClientResourceId(), resource.getCpuVCores(), maxCPUs));
-      }
-    }
     for (RMPlacedResource resource : reservation.getRMResources()) {
       LlamaContainerRequest request = new LlamaContainerRequest(resource);
-      amClient.addContainerRequest(request);
+      amRmClientAsync.addContainerRequest(request);
       resource.setRmPayload(request);
     }    
   }
@@ -407,12 +417,12 @@ public class YarnRMLlamaAMAdapter implements RMLlamaAMAdapter, Configurable,
       Object payload = resource.getRmPayload();
       if (payload != null) {
         if (payload instanceof LlamaContainerRequest) {
-          amClient.removeContainerRequest((LlamaContainerRequest) payload);          
+          amRmClientAsync.removeContainerRequest((LlamaContainerRequest) 
+              payload);          
         } else if (payload instanceof Container) {
           Container container = ((Container) payload);
           containerIdToClientResourceIdMap.remove(container.getId());
-          queue(new ContainerHandler(ugi, resource.getClientResourceId(), 
-              container, Action.STOP));
+          queue(new ContainerHandler(ugi, resource, container, Action.STOP));
         }
       }    
     }
@@ -468,10 +478,10 @@ public class YarnRMLlamaAMAdapter implements RMLlamaAMAdapter, Configurable,
     final private Container container;
     final private Action action;
     
-    public ContainerHandler(UserGroupInformation ugi, UUID clientResourceId, 
-        Container container, Action action) {
+    public ContainerHandler(UserGroupInformation ugi, 
+        RMPlacedResource placedResource, Container container, Action action) {
       this.ugi = ugi;
-      this.clientResourceId = clientResourceId;
+      this.clientResourceId = placedResource.getClientResourceId();
       this.container = container;
       this.action = action;
     }
@@ -520,29 +530,34 @@ public class YarnRMLlamaAMAdapter implements RMLlamaAMAdapter, Configurable,
     }
   }
 
+  private RMResourceChange createResourceAllocation(PlacedResource pr, 
+      Container container) {
+    return RMResourceChange.createResourceAllocation(pr.getClientResourceId(), 
+        container.getId().toString(), container.getResource().getVirtualCores(), 
+        container.getResource().getMemory(), container.getNodeId().getHost());
+  }
+  
   @Override
   public void onContainersAllocated(List<Container> containers) {
     List<RMResourceChange> changes = new ArrayList<RMResourceChange>();
     // no need to use a ugi.doAs() as this is called from within Yarn client
     for (Container container : containers) {
-      List<? extends Collection<LlamaContainerRequest>> list = 
-          amClient.getMatchingRequests(container.getPriority(),
+      List<? extends Collection<LlamaContainerRequest>> matchingContainerReqs = 
+          amRmClientAsync.getMatchingRequests(container.getPriority(),
           container.getNodeId().getHost(), container.getResource());
-      if (!list.isEmpty()) {
-        Collection<LlamaContainerRequest> coll = list.get(0);
+      
+      if (!matchingContainerReqs.isEmpty()) {
+        Collection<LlamaContainerRequest> coll = matchingContainerReqs.get(0);
         LlamaContainerRequest req = coll.iterator().next();
         RMPlacedResource pr = req.getPlacedResource();
+      
         pr.setRmPayload(container);
         containerIdToClientResourceIdMap.put(container.getId(), 
             pr.getClientResourceId());
-        changes.add(RMResourceChange.createResourceAllocation(pr
-            .getClientResourceId(), container.getId().toString(), 
-            container.getResource().getVirtualCores(), 
-            container.getResource().getMemory(), container.getNodeId()
-            .getHost()));
-        amClient.removeContainerRequest(req);
-        queue(new ContainerHandler(ugi, pr.getClientResourceId(), container, 
-            Action.START));
+        changes.add(createResourceAllocation(pr, container));
+        amRmClientAsync.removeContainerRequest(req);
+      
+        queue(new ContainerHandler(ugi, pr, container, Action.START));
       }
     }
     llamaCallback.changesFromRM(changes);
@@ -560,7 +575,7 @@ public class YarnRMLlamaAMAdapter implements RMLlamaAMAdapter, Configurable,
   public void onNodesUpdated(List<NodeReport> nodeReports) {
     for (NodeReport node : nodeReports) {
       String host = node.getNodeId().getHost();
-      if (node.getNodeState() ==  NodeState.RUNNING) {
+      if (node.getNodeState() == NodeState.RUNNING) {
         nodes.add(host);
       } else {
         nodes.remove(host);        

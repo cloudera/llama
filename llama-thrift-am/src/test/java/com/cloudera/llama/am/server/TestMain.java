@@ -18,7 +18,7 @@
 package com.cloudera.llama.am.server;
 
 import com.cloudera.llama.am.LlamaAM;
-import com.cloudera.llama.am.mock.MockRMLlamaAMAdapter;
+import com.cloudera.llama.am.mock.MockRMLlamaAMConnector;
 import com.cloudera.llama.am.server.thrift.ServerConfiguration;
 import junit.framework.Assert;
 import org.apache.commons.io.FileUtils;
@@ -59,7 +59,7 @@ public class TestMain {
 
   private void createMainConf(String confDir, Configuration conf) throws Exception{
     System.setProperty(Main.CONF_DIR_SYS_PROP, confDir);
-    conf.setIfUnset(LlamaAM.RM_ADAPTER_CLASS_KEY, MockRMLlamaAMAdapter.class.getName());
+    conf.setIfUnset(LlamaAM.RM_CONNECTOR_CLASS_KEY, MockRMLlamaAMConnector.class.getName());
     conf.set(ServerConfiguration.SERVER_ADDRESS_KEY, "localhost:0");
     Writer writer = new FileWriter(new File(confDir, "llama-site.xml"));
     conf.writeXml(writer);
@@ -96,7 +96,7 @@ public class TestMain {
   public void testMainError() throws Exception {
     String testDir = createTestDir();
     Configuration conf = new Configuration(false);
-    conf.set(LlamaAM.RM_ADAPTER_CLASS_KEY, "x");
+    conf.set(LlamaAM.RM_CONNECTOR_CLASS_KEY, "x");
     createMainConf(testDir, conf);
     System.setProperty(Main.CONF_DIR_SYS_PROP, testDir);
     System.setProperty(Main.LOG_DIR_SYS_PROP, testDir);

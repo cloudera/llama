@@ -93,7 +93,7 @@ public class TestLlamaAMWithYarn {
   protected static Configuration getLlamaConfiguration() {
     Configuration conf = new Configuration(false);
     conf.set(LlamaAM.INITIAL_QUEUES_KEY, "queue1,queue2");
-    conf.set(LlamaAM.RM_ADAPTER_CLASS_KEY, YarnRMLlamaAMAdapter.class.getName());
+    conf.set(LlamaAM.RM_CONNECTOR_CLASS_KEY, YarnRMLlamaAMConnector.class.getName());
     for (Map.Entry entry : miniYarn.getConfig()) {
       conf.set((String) entry.getKey(), (String)entry.getValue());
     }

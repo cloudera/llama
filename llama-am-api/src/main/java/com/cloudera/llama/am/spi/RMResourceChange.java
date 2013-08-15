@@ -26,18 +26,18 @@ public class RMResourceChange {
   private final UUID clientResourceId;
   private final String rmResourceId;
   private final PlacedResource.Status status;
-  private final int vCpuCores;
+  private final int cpuVCores;
   private final int memoryMb;
   private final String location;
 
   private RMResourceChange(UUID clientResourceId,
-      String rmResourceId, int vCpuCores, int memoryMb, String location, 
+      String rmResourceId, int cpuVCores, int memoryMb, String location, 
       PlacedResource.Status status) {
     this.clientResourceId = clientResourceId;
     this.rmResourceId = rmResourceId;
     this.status = status;
     this.location = location;
-    this.vCpuCores = vCpuCores;
+    this.cpuVCores = cpuVCores;
     this.memoryMb = memoryMb;
   }
 
@@ -64,8 +64,8 @@ public class RMResourceChange {
     return status;
   }
 
-  public int getvCpuCores() {
-    return vCpuCores;
+  public int getCpuVCores() {
+    return cpuVCores;
   }
 
   public int getMemoryMb() {
@@ -77,7 +77,7 @@ public class RMResourceChange {
   }
 
   private static final String TO_STRING_ALLOCATED_MSG = "resourceChange" +
-      "[clientResourceId: {} status: {} vCpuCores: {} memoryMb: {} " +
+      "[clientResourceId: {} status: {} cpuVCores: {} memoryMb: {} " +
       "location: {}]";
 
   private static final String TO_STRING_CHANGED_MSG = "resourceChange" +
@@ -87,7 +87,7 @@ public class RMResourceChange {
     String msg = (getStatus() == PlacedResource.Status.ALLOCATED)
                  ? TO_STRING_ALLOCATED_MSG : TO_STRING_CHANGED_MSG;
     return FastFormat.format(msg, getClientResourceId(), getStatus(), 
-        getvCpuCores(), getMemoryMb(), getLocation());
+        getCpuVCores(), getMemoryMb(), getLocation());
   }
 
 }

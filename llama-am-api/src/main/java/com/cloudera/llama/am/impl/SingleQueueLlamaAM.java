@@ -24,7 +24,7 @@ import com.cloudera.llama.am.PlacedReservation;
 import com.cloudera.llama.am.PlacedResource;
 import com.cloudera.llama.am.Reservation;
 import com.cloudera.llama.am.Resource;
-import com.cloudera.llama.am.spi.RMLlamaAMAdapter;
+import com.cloudera.llama.am.spi.RMLlamaAMConnector;
 import com.cloudera.llama.am.spi.RMLlamaAMCallback;
 import com.cloudera.llama.am.spi.RMPlacedResource;
 import com.cloudera.llama.am.spi.RMResourceChange;
@@ -47,12 +47,12 @@ public class SingleQueueLlamaAM extends LlamaAM implements RMLlamaAMCallback {
   private final Map<UUID, PlacedReservationImpl> reservationsMap;
   private final Map<UUID, PlacedResourceImpl> resourcesMap;
   private LlamaAMListener listener;
-  private RMLlamaAMAdapter rmAdapter;
+  private RMLlamaAMConnector rmConnector;
   private boolean running;
 
-  public static Class<? extends RMLlamaAMAdapter> getAdapterClass(
+  public static Class<? extends RMLlamaAMConnector> getRMConnectorClass(
       Configuration conf) {
-    return conf.getClass(RM_ADAPTER_CLASS_KEY, null, RMLlamaAMAdapter.class);
+    return conf.getClass(RM_CONNECTOR_CLASS_KEY, null, RMLlamaAMConnector.class);
   }
   
   public SingleQueueLlamaAM(Configuration conf, String queue) {
@@ -66,15 +66,15 @@ public class SingleQueueLlamaAM extends LlamaAM implements RMLlamaAMCallback {
 
   @Override
   public void start() throws LlamaAMException {
-    Class<? extends RMLlamaAMAdapter> klass = getAdapterClass(getConf());
-    rmAdapter = ReflectionUtils.newInstance(klass, getConf());
-    rmAdapter.setLlamaAMCallback(this);
-    rmAdapter.register(queue);
+    Class<? extends RMLlamaAMConnector> klass = getRMConnectorClass(getConf());
+    rmConnector = ReflectionUtils.newInstance(klass, getConf());
+    rmConnector.setLlamaAMCallback(this);
+    rmConnector.register(queue);
     setRunning(true);
   }
   
-  public RMLlamaAMAdapter getRmLlamaAdapter() {
-    return rmAdapter;
+  public RMLlamaAMConnector getRMConnector() {
+    return rmConnector;
   }
 
   @Override
@@ -85,14 +85,14 @@ public class SingleQueueLlamaAM extends LlamaAM implements RMLlamaAMCallback {
   @Override
   public synchronized void stop() {
     setRunning(false);
-    if (rmAdapter != null) {
-      rmAdapter.unregister();
+    if (rmConnector != null) {
+      rmConnector.unregister();
     }
   }
 
   @Override
   public List<String> getNodes() throws LlamaAMException {
-    return rmAdapter.getNodes();
+    return rmConnector.getNodes();
   }
 
   @Override
@@ -138,7 +138,7 @@ public class SingleQueueLlamaAM extends LlamaAM implements RMLlamaAMCallback {
   @Override
   public UUID reserve(final Reservation reservation) throws LlamaAMException {
     final PlacedReservationImpl impl = new PlacedReservationImpl(reservation);
-    rmAdapter.reserve(impl);
+    rmConnector.reserve(impl);
     synchronized (this) {
       _addReservation(impl);
     }
@@ -162,7 +162,7 @@ public class SingleQueueLlamaAM extends LlamaAM implements RMLlamaAMCallback {
       reservation = _deleteReservation(reservationId);
     }
     if (reservation != null) {
-      rmAdapter.release((List<RMPlacedResource>) (List) reservation
+      rmConnector.release((List<RMPlacedResource>) (List) reservation
           .getResources());
     } else {
       LOG.warn("Unknown reservationId '{}'", reservationId);
@@ -184,7 +184,7 @@ public class SingleQueueLlamaAM extends LlamaAM implements RMLlamaAMCallback {
       }
     }
     for (PlacedReservation reservation : reservations) {
-      rmAdapter.release((List<RMPlacedResource>) (List) reservation
+      rmConnector.release((List<RMPlacedResource>) (List) reservation
           .getResources());
     }
   }
@@ -238,7 +238,7 @@ public class SingleQueueLlamaAM extends LlamaAM implements RMLlamaAMCallback {
 
   private void _resourceAllocated(PlacedResourceImpl resource,
       RMResourceChange change, Map<UUID, LlamaAMEventImpl> eventsMap) {
-    resource.setAllocationInfo(change.getvCpuCores(), change.getMemoryMb(), 
+    resource.setAllocationInfo(change.getCpuVCores(), change.getMemoryMb(), 
         change.getLocation(), change.getRmResourceId());
     UUID reservationId = resource.getReservationId();
     PlacedReservationImpl reservation = reservationsMap.get(reservationId);
@@ -394,7 +394,7 @@ public class SingleQueueLlamaAM extends LlamaAM implements RMLlamaAMCallback {
     }
     if (!toRelease.isEmpty()) {
       try {
-        rmAdapter.release((List<RMPlacedResource>) (List) toRelease);
+        rmConnector.release((List<RMPlacedResource>) (List) toRelease);
       } catch (LlamaAMException ex) {
         LOG.warn("release() error: {}", ex.toString(), ex);
       }

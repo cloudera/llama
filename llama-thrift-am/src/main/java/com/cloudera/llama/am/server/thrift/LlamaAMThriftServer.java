@@ -18,6 +18,7 @@
 package com.cloudera.llama.am.server.thrift;
 
 import com.cloudera.llama.am.LlamaAM;
+import com.cloudera.llama.am.yarn.YarnRMLlamaAMConnector;
 import com.cloudera.llama.thrift.LlamaAMService;
 import org.apache.hadoop.util.ReflectionUtils;
 
@@ -42,7 +43,13 @@ public class LlamaAMThriftServer extends
           NodeMapper.class);
       nodeMapper = ReflectionUtils.newInstance(klass, getConf());
       clientNotificationService = new ClientNotificationService(getConf());
-      clientNotifier = new ClientNotifier(getConf(), nodeMapper, clientNotificationService);
+      clientNotifier = new ClientNotifier(getConf(), nodeMapper, 
+          clientNotificationService);
+
+      getConf().set(YarnRMLlamaAMConnector.ADVERTISED_HOSTNAME_KEY, 
+          ThriftEndPoint.getServerAddress(getConf()));
+      getConf().set(YarnRMLlamaAMConnector.ADVERTISED_TRACKING_URL_KEY, 
+          YarnRMLlamaAMConnector.NOT_AVAILABLE_VALUE);
       llamaAm = LlamaAM.create(getConf());      
       clientNotifier.start();
       llamaAm.start();

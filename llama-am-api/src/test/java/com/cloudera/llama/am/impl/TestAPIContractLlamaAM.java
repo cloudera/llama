@@ -37,12 +37,12 @@ import java.util.concurrent.Callable;
 
 public class TestAPIContractLlamaAM {
 
-  public static class MyRMLlamaAMAdapter extends LlamaAM {
+  public static class MyRMLlamaAMConnector extends LlamaAM {
     static boolean nullOnReserve;
 
     private boolean running;
     
-    public MyRMLlamaAMAdapter() {
+    public MyRMLlamaAMConnector() {
       super(new Configuration(false));
       nullOnReserve = false;
     }
@@ -105,7 +105,7 @@ public class TestAPIContractLlamaAM {
   }
   
   private LlamaAM createLlamaAM() throws Exception {
-    MyRMLlamaAMAdapter am = new MyRMLlamaAMAdapter();
+    MyRMLlamaAMConnector am = new MyRMLlamaAMConnector();
     return new APIContractLlamaAM(am);
   }
 
@@ -190,7 +190,7 @@ public class TestAPIContractLlamaAM {
   @Test(expected = IllegalStateException.class)
   public void testReserveNull() throws Exception {
     LlamaAM am = createLlamaAM();
-    MyRMLlamaAMAdapter.nullOnReserve = true;
+    MyRMLlamaAMConnector.nullOnReserve = true;
     try {
       am.start();
       am.reserve(createReservation());

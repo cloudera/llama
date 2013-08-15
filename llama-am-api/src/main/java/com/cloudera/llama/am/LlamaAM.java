@@ -29,8 +29,8 @@ import java.util.UUID;
 public abstract class LlamaAM {
   public static final String PREFIX_KEY = "llama.am.";
 
-  public static final String RM_ADAPTER_CLASS_KEY = PREFIX_KEY + 
-      "rm.adapter.class";
+  public static final String RM_CONNECTOR_CLASS_KEY = PREFIX_KEY + 
+      "rm.connector.class";
 
   public static final String INITIAL_QUEUES_KEY =  PREFIX_KEY + 
       "initial.queues";
