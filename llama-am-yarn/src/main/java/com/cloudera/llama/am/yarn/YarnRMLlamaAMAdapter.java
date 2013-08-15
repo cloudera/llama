@@ -54,6 +54,8 @@ import org.apache.hadoop.yarn.util.Records;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.security.PrivilegedAction;
+import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -95,12 +97,17 @@ public class YarnRMLlamaAMAdapter implements RMLlamaAMAdapter, Configurable,
       + "container.handler.queue.threshold";
   public static final int CONTAINER_HANDLER_QUEUE_THRESHOLD_DEFAULT = 10000;
 
-  public static final String CONTAINER_HANDLER_THREADS_KEY = PREFIX_KEY
-      + "container.handler.threads";
+  public static final String CONTAINER_HANDLER_THREADS_KEY = PREFIX_KEY + 
+      "container.handler.threads";
   public static final int CONTAINER_HANDLER_THREADS_DEFAULT = 10;
+
+  public static final String HADOOP_USER_NAME_KEY = PREFIX_KEY + 
+        "hadoop.user.name";
+  public static final String HADOOP_USER_NAME_DEFAULT = "llama";
 
   private Configuration conf;
   private RMLlamaAMCallback llamaCallback;
+  private UserGroupInformation ugi;
   private YarnClient rmClient;
   private AMRMClientAsync<LlamaContainerRequest> amClient;
   private NMClient nmClient;
@@ -131,39 +138,25 @@ public class YarnRMLlamaAMAdapter implements RMLlamaAMAdapter, Configurable,
     llamaCallback = callback;
   }
 
+  private UserGroupInformation createUGIForApp() throws Exception {
+    String userName = getConf().get(HADOOP_USER_NAME_KEY, 
+        HADOOP_USER_NAME_DEFAULT);
+    UserGroupInformation llamaUGI = UserGroupInformation.getLoginUser();
+    return UserGroupInformation.createProxyUser(userName, llamaUGI);
+  }
+    
   @Override
   @SuppressWarnings("unchecked")
-  public void register(String queue) throws LlamaAMException {
+  public void register(final String queue) throws LlamaAMException {
     try {
-      Configuration yarnConf = new YarnConfiguration();
-      for (Map.Entry entry : getConf()) {
-        yarnConf.set((String) entry.getKey(), (String)entry.getValue());
-      }
-      rmClient = YarnClient.createYarnClient();
-      rmClient.init(yarnConf);
-      rmClient.start();
-      nmClient = NMClient.createNMClient();
-      nmClient.init(yarnConf);
-      nmClient.start();
-      appId = createApp(rmClient, queue);
-      monitorAppState(rmClient, appId, ACCEPTED);
-      UserGroupInformation.getCurrentUser().addToken(rmClient.
-          getAMRMToken(appId));  
-      int heartbeatInterval = getConf().getInt(HEARTBEAT_INTERVAL_KEY,
-          HEARTBEAT_INTERNAL_DEFAULT);
-      amClient = AMRMClientAsync.createAMRMClientAsync(heartbeatInterval, this);
-      amClient.init(yarnConf);
-      amClient.start();
-      RegisterApplicationMasterResponse response = 
-          amClient.registerApplicationMaster("", 0, "");
-      maxMem = response.getMaximumResourceCapability().getMemory();
-      maxCPUs = response.getMaximumResourceCapability().getVirtualCores();
-      for (NodeReport nodeReport : rmClient.getNodeReports()) {
-        if (nodeReport.getNodeState() == NodeState.RUNNING) {
-          nodes.add(nodeReport.getNodeId().getHost());
+      ugi = createUGIForApp();
+      ugi.doAs(new PrivilegedExceptionAction<Void>() {
+        @Override
+        public Void run() throws Exception {
+          _initYarnApp(queue);
+          return null;
         }
-      }
-
+      });
       containerHandlerQueueThreshold = getConf().getInt(
           CONTAINER_HANDLER_QUEUE_THRESHOLD_KEY,
           CONTAINER_HANDLER_QUEUE_THRESHOLD_DEFAULT);
@@ -180,7 +173,38 @@ public class YarnRMLlamaAMAdapter implements RMLlamaAMAdapter, Configurable,
     }
   }
 
-  private ApplicationId createApp(YarnClient rmClient, String queue)  
+  private void _initYarnApp(String queue) throws Exception {
+    Configuration yarnConf = new YarnConfiguration();
+    for (Map.Entry entry : getConf()) {
+      yarnConf.set((String) entry.getKey(), (String) entry.getValue());
+    }
+    rmClient = YarnClient.createYarnClient();
+    rmClient.init(yarnConf);
+    rmClient.start();
+    nmClient = NMClient.createNMClient();
+    nmClient.init(yarnConf);
+    nmClient.start();
+    appId = _createApp(rmClient, queue);
+    _monitorAppState(rmClient, appId, ACCEPTED);
+    ugi.addToken(rmClient.getAMRMToken(appId));
+    int heartbeatInterval = getConf().getInt(HEARTBEAT_INTERVAL_KEY, 
+        HEARTBEAT_INTERNAL_DEFAULT);
+    amClient = AMRMClientAsync.createAMRMClientAsync(heartbeatInterval, 
+        YarnRMLlamaAMAdapter.this);
+    amClient.init(yarnConf);
+    amClient.start();
+    RegisterApplicationMasterResponse response = amClient
+        .registerApplicationMaster("", 0, "");
+    maxMem = response.getMaximumResourceCapability().getMemory();
+    maxCPUs = response.getMaximumResourceCapability().getVirtualCores();
+    for (NodeReport nodeReport : rmClient.getNodeReports()) {
+      if (nodeReport.getNodeState() == NodeState.RUNNING) {
+        nodes.add(nodeReport.getNodeId().getHost());
+      }
+    }
+  }
+
+  private ApplicationId _createApp(YarnClient rmClient, String queue)  
       throws LlamaAMException {
     try {
       // Create application
@@ -229,7 +253,7 @@ public class YarnRMLlamaAMAdapter implements RMLlamaAMAdapter, Configurable,
       YarnApplicationState.KILLED, YarnApplicationState.FAILED,
       YarnApplicationState.FINISHED);
 
-  private ApplicationReport monitorAppState(YarnClient rmClient, 
+  private ApplicationReport _monitorAppState(YarnClient rmClient,
       ApplicationId appId, Set<YarnApplicationState> states)
       throws LlamaAMException {
     try {
@@ -251,17 +275,23 @@ public class YarnRMLlamaAMAdapter implements RMLlamaAMAdapter, Configurable,
       }
       return report;
     } catch (Exception ex) {
-      stop(FinalApplicationStatus.FAILED, "Could not start, error: " + ex);
+      _stop(FinalApplicationStatus.FAILED, "Could not start, error: " + ex);
       throw new LlamaAMException(ex);
     }
   }
 
   @Override
   public void unregister() {
-    stop(FinalApplicationStatus.SUCCEEDED, "Stopped by AM");
+    ugi.doAs(new PrivilegedAction<Void>() {
+      @Override
+      public Void run() {
+        _stop(FinalApplicationStatus.SUCCEEDED, "Stopped by AM");
+        return null;
+      }
+    });
   }
   
-  private synchronized void stop(FinalApplicationStatus status, String msg) {
+  private synchronized void _stop(FinalApplicationStatus status, String msg) {
     if (containerHandlerExecutor != null) {
       containerHandlerExecutor.shutdownNow();
       containerHandlerExecutor = null;
@@ -277,7 +307,7 @@ public class YarnRMLlamaAMAdapter implements RMLlamaAMAdapter, Configurable,
     }
     if (rmClient != null) {
       try {
-        ApplicationReport report = monitorAppState(rmClient, appId, STOPPED);
+        ApplicationReport report = _monitorAppState(rmClient, appId, STOPPED);
         if (report.getFinalApplicationStatus()
             != FinalApplicationStatus.SUCCEEDED) {
           LOG.warn("Problem stopping application, final status '{}'",
@@ -302,7 +332,6 @@ public class YarnRMLlamaAMAdapter implements RMLlamaAMAdapter, Configurable,
     }
   }
 
-  
   static class LlamaContainerRequest extends AMRMClient.ContainerRequest {
     private static final Priority PRIORITY = Priority.newInstance(1);
     private static final String[] RACKS = new String[0];
@@ -327,8 +356,7 @@ public class YarnRMLlamaAMAdapter implements RMLlamaAMAdapter, Configurable,
     }
   }
   
-  @Override
-  public void reserve(RMPlacedReservation reservation)
+  private void _reserve(RMPlacedReservation reservation) 
       throws LlamaAMException {
     for (PlacedResource resource : reservation.getResources()) {
       if (!nodes.contains(resource.getLocation())) {
@@ -350,11 +378,30 @@ public class YarnRMLlamaAMAdapter implements RMLlamaAMAdapter, Configurable,
       LlamaContainerRequest request = new LlamaContainerRequest(resource);
       amClient.addContainerRequest(request);
       resource.setRmPayload(request);
-    }
+    }    
   }
 
   @Override
-  public void release(Collection<RMPlacedResource> resources)
+  public void reserve(final RMPlacedReservation reservation) 
+      throws LlamaAMException {
+    try {
+      ugi.doAs(new PrivilegedExceptionAction<Void>() {
+        @Override
+        public Void run() throws Exception {
+          _reserve(reservation);
+          return null;
+        }
+      });
+    } catch (Throwable ex) {
+      if (ex instanceof LlamaAMException) {
+        throw (LlamaAMException) ex;
+      } else {
+        throw new RuntimeException(ex);
+      }
+    }
+  }
+
+  private void _release(Collection<RMPlacedResource> resources)
       throws LlamaAMException {
     for (RMPlacedResource resource : resources) {
       Object payload = resource.getRmPayload();
@@ -364,13 +411,32 @@ public class YarnRMLlamaAMAdapter implements RMLlamaAMAdapter, Configurable,
         } else if (payload instanceof Container) {
           Container container = ((Container) payload);
           containerIdToClientResourceIdMap.remove(container.getId());
-          queue(new ContainerHandler(resource.getClientResourceId(), container, 
-              Action.STOP));
+          queue(new ContainerHandler(ugi, resource.getClientResourceId(), 
+              container, Action.STOP));
         }
+      }    
+    }
+  }
+    
+  @Override
+  public void release(final Collection<RMPlacedResource> resources)
+      throws LlamaAMException {
+    try {
+      ugi.doAs(new PrivilegedExceptionAction<Void>() {
+        @Override
+        public Void run() throws Exception {
+          _release(resources);
+          return null;
+        }
+      });
+    } catch (Throwable ex) {
+      if (ex instanceof LlamaAMException) {
+        throw (LlamaAMException) ex;
+      } else {
+        throw new RuntimeException(ex);
       }
     }
   }
-
 
   // YARN AMMRClientAsync#CallbackHandler methods
 
@@ -397,12 +463,14 @@ public class YarnRMLlamaAMAdapter implements RMLlamaAMAdapter, Configurable,
   private enum Action { START, STOP }
   
   class ContainerHandler implements Runnable {
-    private UUID clientResourceId;
-    private Container container;
-    private Action action;
+    final private UserGroupInformation ugi;
+    final private UUID clientResourceId;
+    final private Container container;
+    final private Action action;
     
-    public ContainerHandler( UUID clientResourceId, Container container, 
-        Action action) {
+    public ContainerHandler(UserGroupInformation ugi, UUID clientResourceId, 
+        Container container, Action action) {
+      this.ugi = ugi;
       this.clientResourceId = clientResourceId;
       this.container = container;
       this.action = action;
@@ -412,16 +480,22 @@ public class YarnRMLlamaAMAdapter implements RMLlamaAMAdapter, Configurable,
     @SuppressWarnings("unchecked")
     public void run() {
       try {
-        if (action == Action.START) {
-          ContainerLaunchContext ctx = 
-              Records.newRecord(ContainerLaunchContext.class);
-          ctx.setEnvironment(Collections.EMPTY_MAP);
-          ctx.setLocalResources(Collections.EMPTY_MAP);
-          ctx.setCommands(Arrays.asList("sleep", "10y"));
-          nmClient.startContainer(container, ctx);
-        } else {
-          nmClient.stopContainer(container.getId(), container.getNodeId());          
-        }
+        ugi.doAs(new PrivilegedExceptionAction<Void>() {
+          @Override
+          public Void run() throws Exception {
+            if (action == Action.START) {
+              ContainerLaunchContext ctx = 
+                  Records.newRecord(ContainerLaunchContext.class);
+              ctx.setEnvironment(Collections.EMPTY_MAP);
+              ctx.setLocalResources(Collections.EMPTY_MAP);
+              ctx.setCommands(Arrays.asList("sleep", "315360000")); //10 years
+              nmClient.startContainer(container, ctx);
+            } else {
+              nmClient.stopContainer(container.getId(), container.getNodeId());          
+            }
+            return null;
+          }
+        });
       } catch (Exception ex) {
         LOG.warn(
             "Could not {} container '{}' for resource '{}' at node '{}', {}'",
@@ -445,10 +519,11 @@ public class YarnRMLlamaAMAdapter implements RMLlamaAMAdapter, Configurable,
           containerHandlerQueueThreshold, size);
     }
   }
-  
+
   @Override
   public void onContainersAllocated(List<Container> containers) {
     List<RMResourceChange> changes = new ArrayList<RMResourceChange>();
+    // no need to use a ugi.doAs() as this is called from within Yarn client
     for (Container container : containers) {
       List<? extends Collection<LlamaContainerRequest>> list = 
           amClient.getMatchingRequests(container.getPriority(),
@@ -466,7 +541,7 @@ public class YarnRMLlamaAMAdapter implements RMLlamaAMAdapter, Configurable,
             container.getResource().getMemory(), container.getNodeId()
             .getHost()));
         amClient.removeContainerRequest(req);
-        queue(new ContainerHandler(pr.getClientResourceId(), container, 
+        queue(new ContainerHandler(ugi, pr.getClientResourceId(), container, 
             Action.START));
       }
     }
@@ -477,7 +552,8 @@ public class YarnRMLlamaAMAdapter implements RMLlamaAMAdapter, Configurable,
   public void onShutdownRequest() {
     llamaCallback.loseAllReservations();
     llamaCallback.setRunning(false);
-    stop(FinalApplicationStatus.FAILED, "Shutdown by Yarn");
+    // no need to use a ugi.doAs() as this is called from within Yarn client
+    _stop(FinalApplicationStatus.FAILED, "Shutdown by Yarn");
   }
 
   @Override
@@ -498,11 +574,12 @@ public class YarnRMLlamaAMAdapter implements RMLlamaAMAdapter, Configurable,
   }
 
   @Override
-  public void onError(Throwable ex) {
+  public void onError(final Throwable ex) {
     LOG.error("Error in Yarn client: {}", ex.toString(), ex);
     llamaCallback.setRunning(false);
     llamaCallback.loseAllReservations();
-    stop(FinalApplicationStatus.FAILED, "Error in Yarn client: " + ex
+    // no need to use a ugi.doAs() as this is called from within Yarn client
+    _stop(FinalApplicationStatus.FAILED, "Error in Yarn client: " + ex
         .toString());
   }
 

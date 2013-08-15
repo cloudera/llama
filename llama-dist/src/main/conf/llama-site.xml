@@ -188,6 +188,13 @@
 
   <!-- YarnLlamaAM configuration -->
   <property>
+    <name>llama.am.hadoop.user.name</name>
+    <value>llama</value>
+    <description>
+      User name use by Llama when interacting with Yarn.
+    </description>
+  </property>
+  <property>
     <name>llama.am.yarn.priority</name>
     <value>0</value>
     <description>

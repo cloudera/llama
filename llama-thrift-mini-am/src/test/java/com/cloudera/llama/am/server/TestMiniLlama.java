@@ -61,7 +61,7 @@ public class TestMiniLlama {
       throw new RuntimeException("File 'fair-scheduler-allocation.xml' is in " +
           "a JAR, it should be in a directory");      
     }
-    fsallocationFile = fsallocationFile.substring("file://".length());
+    fsallocationFile = fsallocationFile.substring("file:".length());
     Configuration conf = MiniLlama.createMiniClusterConf(1);
     conf.set("yarn.scheduler.fair.allocation.file", fsallocationFile);
     conf.set(LlamaAM.INITIAL_QUEUES_KEY, "default");

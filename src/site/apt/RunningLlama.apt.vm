@@ -47,9 +47,54 @@ Running Llama
     <<<{{{./llama-log4j.properties}conf/llama-log4j.properties}}>>> (changes 
     take effect within 1 second).
 
-    <<NOTE:>> These files have all configuration properties with their default 
-    values.
+  <<NOTE:>> These files have all configuration properties with their default 
+  values.
     
+* Hadoop Yarn Configuration (Required)
+    
+  The user running LlamaAM must be configured in Hadoop as a proxy user for 
+  itself.
+  
+  Without Hadoop security enabled, the user running the LlamaAM server is Unix 
+  user starting the LlamaAM server.
+  
+  With Hadoop security enabled, the user running the LlamaAM server is the 
+  short name of the Kerberos Principal used by the LlamaAM server (i.e. 
+  for a <<<llama/HOSTNAME>>> Kerberos principal, the short name is <<<llama>>>).
+  
+  Hadoop's <<<core-site.xml>>> must include the following 2 configuration
+  properties:
+  
++----+
+  <property>
+    <name>hadoop.proxyuser.#LLAMAUSER#.hosts</name>
+    <value>#HOSTNAME_RUNNING_LLAMA#</value>
+  </property>
+  <property>
+    <name>hadoop.proxyuser.#LLAMAUSER#.groups</name>
+    <value>#GROUP_LLAMA_USER_BELONGS_TO#</value>
+  </property>
++----+
+  
+  For example if the user running the LlamaAM server is <<<llama>>>, the LlamaAM
+  server is running in host <<<foo.com>>> and the <<<llama>>> user belongs 
+  to the <<<llamagroup>>> group, the 2 configuration properties would be:
+  
++----+
+  <property>
+    <name>hadoop.proxyuser.llama.hosts</name>
+    <value>foo.com</value>
+  </property>
+  <property>
+    <name>hadoop.proxyuser.llama.groups</name>
+    <value>llamagroup</value>
+  </property>
++----+
+
+  <<NOTE:>> For development and testing, if the values are set to <<<*>>> the 
+  LlamaAM server can be running from any host and there is no need to create a 
+  <<<llamagroup>>>.
+  
 * Run
 
   To start Llama:
@@ -93,10 +138,25 @@ $
   The properties to configure in the <<<llama-site.xml>>> file are (shown with 
   default values):
   
-  * llama.am.server.thrift.security=false
-  * llama.am.server.thrift.kerberos.keytab.file=llama.keytab
-  * llama.am.server.thrift.kerberos.server.principal.name=llama
-  * llama.am.server.thrift.kerberos.notification.principal.name=impala
+    * llama.am.server.thrift.security=false
+  
+    * llama.am.server.thrift.kerberos.keytab.file=llama.keytab
+  
+    * llama.am.server.thrift.kerberos.server.principal.name=llama/_HOST
+  
+    * llama.am.server.thrift.kerberos.notification.principal.name=impala
+  
+  The <<<_HOST>>> in the principal name gets resolved to the canonical hostname
+  of the machine where LlamaAM is running. To avoid misconfiguration problems, 
+  use the actual hostname instead <<<_HOST>>>. The hostname used should match
+  the hostname the server address resolves to. The server address is set in the
+  <<<llama.am.server.thrift.address>>> configuration property (the port number
+  will be ignored if present). 
+  
+  <<IMPORTANT:>> the default server address is <<<0.0.0.0>>>, if enabling 
+  security the address should be changed to a fixed IP or (better) a hostname. 
+  If set to a fixed IP, the hostname that IP resolves to must match the hostname 
+  in the Kerberos service principal.
   
   If the path specified in <<<llama.am.server.thrift.kerberos.keytab.file>>> is
   a relative path, the keytab file will be expected in the Llama configuration 

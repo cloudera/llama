@@ -17,6 +17,7 @@
  */
 package com.cloudera.llama.am.server.thrift;
 
+import com.cloudera.llama.am.impl.FastFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.thrift.transport.TSaslClientTransport;
@@ -68,17 +69,23 @@ public class ThriftEndPoint {
       TSaslServerTransport.Factory saslFactory = null;
       Map<String, String> saslProperties = new HashMap<String, String>();
       saslProperties.put(Sasl.QOP, "auth-conf");
-      String principalName = conf.get(
-          ServerConfiguration.SERVER_PRINCIPAL_NAME_KEY,
-          ServerConfiguration.SERVER_PRINCIPAL_NAME_DEFAULT);
+      String principalName = Security.resolveLlamaPrincipalName(conf);
+      String declarePrincipalHost = null;
       int i = principalName.indexOf("/");
       if (i > -1) {
+        declarePrincipalHost = principalName.substring(i + 1);
         principalName = principalName.substring(0, i);
       }
       String strAddress = conf.get(ServerConfiguration.SERVER_ADDRESS_KEY,
           ServerConfiguration.SERVER_ADDRESS_DEFAULT);
       InetSocketAddress address = NetUtils.createSocketAddr(strAddress);
       String principalHost = address.getHostName();
+      if (!principalHost.equals(declarePrincipalHost)) {
+        throw new RuntimeException(FastFormat.format(
+            "Server address configured with '{}', " +
+            "Kerberos service hostname configured with '{}'", 
+            principalHost, declarePrincipalHost));
+      }
       saslFactory = new TSaslServerTransport.Factory();
       saslFactory.addServerDefinition("GSSAPI", principalName, principalHost,
           saslProperties, new GssCallback());

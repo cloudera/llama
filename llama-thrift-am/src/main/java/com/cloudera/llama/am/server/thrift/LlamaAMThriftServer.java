@@ -35,6 +35,7 @@ public class LlamaAMThriftServer extends
   @Override
   protected void startService() {
     try {
+      Security.loginToHadoop(getConf());
       Class<? extends NodeMapper> klass = getConf().getClass(
           ServerConfiguration.NODE_NAME_MAPPING_CLASS_KEY,
           ServerConfiguration.NODE_NAME_MAPPING_CLASS_DEFAULT,

@@ -28,10 +28,15 @@ import com.cloudera.llama.am.yarn.YarnRMLlamaAMAdapter;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.server.datanode.DataNode;
+import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.authorize.ProxyUsers;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.yarn.api.records.NodeId;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.server.MiniYARNCluster;
 import org.apache.hadoop.yarn.server.nodemanager.NodeManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -41,6 +46,7 @@ import java.util.List;
 import java.util.Map;
 
 public class MiniLlama {
+  private static final Logger LOG = LoggerFactory.getLogger(MiniLlama.class);
 
   public static final String MINI_SERVER_CLASS_KEY = 
       "llama.am.server.mini.server.class";
@@ -147,17 +153,27 @@ public class MiniLlama {
       String testBuildData = new File("target").getAbsolutePath();
       System.setProperty(MiniDFSCluster.PROP_TEST_BUILD_DATA, testBuildData);
     }
-    miniHdfs = new MiniDFSCluster(new Configuration(), clusterNodes, true, 
-        null);
-    Configuration conf = miniHdfs.getConfiguration(0);
+
+    Configuration conf = new YarnConfiguration();
+    String llamaProxyUser = System.getProperty("user.name");
+    conf.set("hadoop.security.authentication", "simple");
+    conf.set("hadoop.proxyuser." + llamaProxyUser + ".hosts", "*");
+    conf.set("hadoop.proxyuser." + llamaProxyUser + ".groups", "*");
+    String[] userGroups = new String[]{"g"};
+    UserGroupInformation.createUserForTesting(llamaProxyUser, userGroups);
+
+    miniHdfs = new MiniDFSCluster(conf, clusterNodes, true, null);
+    conf = miniHdfs.getConfiguration(0);
     miniYarn = new MiniYARNCluster("minillama", clusterNodes, 1, 1);
     //TODO YARN-1008
     conf.setBoolean("TODO.USE.PORT.FOR.NODE.NAME", true);
     miniYarn.init(conf);
     miniYarn.start();
+    
+    ProxyUsers.refreshSuperUserGroupsConfiguration(conf);
+
     Map<String, String> mapping = new HashMap<String, String>();
-    System.out.println();
-    System.out.println("Nodes:");
+    LOG.info("Nodes:");
     for (int i = 0; i < clusterNodes; i++) {
       DataNode dn = miniHdfs.getDataNodes().get(i);
       String key = dn.getDatanodeId().getXferAddr();
@@ -166,7 +182,7 @@ public class MiniLlama {
       //TODO YARN-1008
       String value = nodeId.getHost();//+ ":" + nodeId.getPort();
       mapping.put(key,  value);
-      System.out.println("  DN: " + key);
+      LOG.info("  DN: " + key);
     }
     System.out.println();
     return mapping;

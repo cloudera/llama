@@ -23,6 +23,8 @@ import com.cloudera.llama.am.LlamaAMListener;
 import com.cloudera.llama.am.Reservation;
 import com.cloudera.llama.am.Resource;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.authorize.ProxyUsers;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.server.MiniYARNCluster;
 import org.junit.AfterClass;
@@ -30,6 +32,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -54,8 +57,32 @@ public class TestLlamaAMWithYarn {
   @BeforeClass
   public static void startYarn() throws Exception {
     miniYarn = new MiniYARNCluster("minillama", 1, 1, 1);
-    miniYarn.init(new YarnConfiguration());
+
+    Configuration conf = new YarnConfiguration();
+
+    //scheduler config
+    URL url = Thread.currentThread().getContextClassLoader().getResource(
+        "fair-scheduler-allocation.xml");
+    String fsallocationFile = url.toExternalForm();
+    if (!fsallocationFile.startsWith("file:")) {
+      throw new RuntimeException("File 'fair-scheduler-allocation.xml' is in " +
+          "a JAR, it should be in a directory");      
+    }
+    fsallocationFile = fsallocationFile.substring("file:".length());
+    conf.set("yarn.scheduler.fair.allocation.file", fsallocationFile);
+    
+    //proxy user config
+    String llamaProxyUser = System.getProperty("user.name");
+    conf.set("hadoop.security.authentication", "simple");
+    conf.set("hadoop.proxyuser." + llamaProxyUser + ".hosts", "*");
+    conf.set("hadoop.proxyuser." + llamaProxyUser + ".groups", "*");
+    String[] userGroups = new String[]{"g"};
+    UserGroupInformation.createUserForTesting(llamaProxyUser, userGroups);
+
+    miniYarn.init(conf);
     miniYarn.start();    
+
+    ProxyUsers.refreshSuperUserGroupsConfiguration(conf);
   }
   
   @AfterClass
@@ -63,9 +90,9 @@ public class TestLlamaAMWithYarn {
     miniYarn.stop();
   }
   
-  protected Configuration getConfiguration() {
+  protected static Configuration getLlamaConfiguration() {
     Configuration conf = new Configuration(false);
-    conf.set(LlamaAM.INITIAL_QUEUES_KEY, "default");
+    conf.set(LlamaAM.INITIAL_QUEUES_KEY, "queue1,queue2");
     conf.set(LlamaAM.RM_ADAPTER_CLASS_KEY, YarnRMLlamaAMAdapter.class.getName());
     for (Map.Entry entry : miniYarn.getConfig()) {
       conf.set((String) entry.getKey(), (String)entry.getValue());
@@ -76,7 +103,7 @@ public class TestLlamaAMWithYarn {
 
   @Test
   public void testReserve() throws Exception {
-    final LlamaAM llama = LlamaAM.create(getConfiguration());
+    final LlamaAM llama = LlamaAM.create(getLlamaConfiguration());
     MyListener listener = new MyListener();
     try {
       llama.start();

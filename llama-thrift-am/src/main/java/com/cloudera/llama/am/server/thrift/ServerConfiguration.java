@@ -69,7 +69,7 @@ public interface ServerConfiguration {
 
   public static String SERVER_PRINCIPAL_NAME_KEY = KEY_PREFIX +
       "kerberos.server.principal.name";
-  public static String SERVER_PRINCIPAL_NAME_DEFAULT = "llama";
+  public static String SERVER_PRINCIPAL_NAME_DEFAULT = "llama/_HOST";
 
   public static String NOTIFICATION_PRINCIPAL_NAME_KEY = KEY_PREFIX +
       "kerberos.notification.principal.name";

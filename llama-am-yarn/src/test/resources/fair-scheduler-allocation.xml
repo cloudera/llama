@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+
+<!--
+  This file contains pool and user allocations for the Fair Scheduler.
+  Its format is explained in the Fair Scheduler documentation at
+  http://hadoop.apache.org/docs/current/hadoop-yarn/hadoop-yarn-site/FairScheduler.html
+  The documentation also includes a sample config file.
+-->
+
+<allocations>
+  <queue name="queue1">
+  </queue>
+  <queue name="queue2">
+  </queue>
+  <queue name="queue3">
+  </queue>
+</allocations>

@@ -17,7 +17,10 @@
  */
 package com.cloudera.llama.am.server.thrift;
 
+import com.cloudera.llama.am.impl.FastFormat;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.net.NetUtils;
+import org.apache.hadoop.security.UserGroupInformation;
 
 import javax.security.auth.Subject;
 import javax.security.auth.kerberos.KerberosPrincipal;
@@ -25,6 +28,7 @@ import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 import java.io.File;
+import java.net.InetAddress;
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -33,6 +37,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Security {
+
+  private static final String SERVICE_HOST_WILDCARD = "_HOST";
 
   static class KerberosConfiguration extends 
       javax.security.auth.login.Configuration {
@@ -91,9 +97,7 @@ public class Security {
       throws Exception {
     Subject subject;
     if (isSecure(conf)) {
-      String principalName = conf.get(
-          ServerConfiguration.SERVER_PRINCIPAL_NAME_KEY,
-          ServerConfiguration.SERVER_PRINCIPAL_NAME_DEFAULT);
+      String principalName = resolveLlamaPrincipalName(conf);
       String keytab = conf.get(ServerConfiguration.KEYTAB_FILE_KEY,
           ServerConfiguration.KEYTAB_FILE_DEFAULT);
       if (!(keytab.charAt(0) == '/')) {
@@ -101,6 +105,10 @@ public class Security {
         keytab = new File(confDir, keytab).getAbsolutePath();
       }
       File keytabFile = new File(keytab);
+      if (!keytabFile.exists()) {
+        throw new RuntimeException(FastFormat.format(
+            "Keytab file '{}' does not exist", keytabFile));
+      }
       Set<Principal> principals = new HashSet<Principal>();
       principals.add(new KerberosPrincipal(principalName));
       subject = new Subject(false, principals, new HashSet<Object>(),
@@ -137,4 +145,38 @@ public class Security {
     }
   }
   
+  public static void loginToHadoop(Configuration conf) throws Exception {
+    if (UserGroupInformation.isLoginKeytabBased()) {
+      String principalName = resolveLlamaPrincipalName(conf);
+      String keytab = conf.get(ServerConfiguration.KEYTAB_FILE_KEY,
+          ServerConfiguration.KEYTAB_FILE_DEFAULT);
+      if (!(keytab.charAt(0) == '/')) {
+        String confDir = conf.get(ServerConfiguration.CONFIG_DIR_KEY);
+        keytab = new File(confDir, keytab).getAbsolutePath();
+      }
+      File keytabFile = new File(keytab).getAbsoluteFile();
+      if (!keytabFile.exists()) {
+        throw new RuntimeException(FastFormat.format(
+            "Keytab file '{}' does not exist", keytabFile));
+      }
+      UserGroupInformation.loginUserFromKeytab(principalName, 
+          keytabFile.getPath());
+    }
+  }
+  
+  public static String resolveLlamaPrincipalName(Configuration conf) {
+      String principalName = conf.get(
+          ServerConfiguration.SERVER_PRINCIPAL_NAME_KEY,
+          ServerConfiguration.SERVER_PRINCIPAL_NAME_DEFAULT);
+    int index = principalName.indexOf(SERVICE_HOST_WILDCARD);
+    if (index > -1) {
+      principalName = principalName.substring(0, index);
+      try {
+        principalName += InetAddress.getLocalHost().getCanonicalHostName();
+      } catch (Exception ex) {
+        throw new RuntimeException(ex);
+      }
+    }
+    return principalName;
+  }
 }
