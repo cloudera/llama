@@ -69,38 +69,45 @@
       <artifactId>llama-am-yarn</artifactId>
       <scope>compile</scope>
     </dependency>
+    <dependency>
+      <groupId>com.cloudera.llama</groupId>
+      <artifactId>llama-am-mock</artifactId>
+      <scope>compile</scope>
+    </dependency>
   </dependencies>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-assembly-plugin</artifactId>
-        <configuration>
-          <appendAssemblyId>false</appendAssemblyId>
-          <attach>false</attach>
-          <finalName>${project.artifactId}-${project.version}</finalName>
-          <descriptors>
-            <descriptor>src/main/assemblies/llama.xml</descriptor>
-          </descriptors>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
-  
   <profiles>
     <profile>
-      <id>distWithMock</id>
+      <id>dist</id>
       <activation>
         <activeByDefault>false</activeByDefault>
-      </activation>      
-      <dependencies>
-        <dependency>
-          <groupId>com.cloudera.llama</groupId>
-          <artifactId>llama-am-mock</artifactId>
-          <scope>compile</scope>
-        </dependency>
-      </dependencies>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>dist</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>single</goal>
+                </goals>
+                <configuration>
+                  <appendAssemblyId>true</appendAssemblyId>
+                  <attach>false</attach>
+                  <finalName>llama-${project.version}</finalName>
+                  <descriptors>
+                    <descriptor>src/main/assemblies/llama-standalone.xml</descriptor>
+                    <descriptor>src/main/assemblies/llama-packaging.xml</descriptor>
+                  </descriptors>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
     </profile>
   </profiles>
 

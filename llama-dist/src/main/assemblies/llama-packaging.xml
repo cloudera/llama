@@ -16,12 +16,27 @@
   limitations under the License.
 -->
 <assembly>
-  <id>client</id>
+  <id>packaging</id>
   <formats>
     <format>dir</format>
     <format>tar.gz</format>
   </formats>
-  <includeBaseDirectory>false</includeBaseDirectory>
+  <includeBaseDirectory>true</includeBaseDirectory>
+
+  <files>
+    <!-- script -->
+    <file>
+      <source>${basedir}/src/main/bin/llama-for-packaging</source>
+      <outputDirectory>/bin</outputDirectory>
+      <destName>llama</destName>
+      <fileMode>0755</fileMode>
+    </file>
+    <file>
+      <source>${basedir}/../README.txt</source>
+      <outputDirectory>/</outputDirectory>
+      <filtered>true</filtered>
+    </file>
+  </files>
 
   <fileSets>
 
@@ -32,20 +47,23 @@
       <includes>
         <include>*.txt</include>
       </includes>
+      <excludes>
+        <exclude>BUILDING.txt</exclude>
+        <exclude>README.txt</exclude>
+      </excludes>
     </fileSet>
 
     <!-- docs -->
     <fileSet>
-      <directory>${basedir}/../target/staging</directory>
+      <directory>${basedir}/../target/site</directory>
       <outputDirectory>/docs</outputDirectory>
     </fileSet>
 
-    <!-- scripts -->
+    <!-- libexed -->
     <fileSet>
       <directory>${basedir}/src/main</directory>
       <outputDirectory>/</outputDirectory>
       <includes>
-        <include>bin/*</include>
         <include>libexec/*</include>
       </includes>
       <fileMode>0755</fileMode>
@@ -56,6 +74,20 @@
       <directory>${basedir}/src/main/conf</directory>
       <outputDirectory>/conf</outputDirectory>
     </fileSet>
+
+    <!-- Sources -->
+    <fileSet>
+      <directory>${basedir}/../</directory>
+      <outputDirectory>/src</outputDirectory>
+      <excludes>
+        <exclude>**/target/**</exclude>
+        <exclude>**/targetd/**</exclude>
+        <exclude>**/*iml</exclude>
+        <exclude>.*</exclude>
+        <exclude>.*/**</exclude>
+      </excludes>
+    </fileSet>
+
   </fileSets>
 
   <dependencySets>
@@ -63,9 +95,14 @@
     <!-- JARs -->
     <dependencySet>
       <useProjectArtifact>false</useProjectArtifact>
+      <useTransitiveDependencies>true</useTransitiveDependencies>
+      <useTransitiveFiltering>true</useTransitiveFiltering>
       <outputDirectory>/lib</outputDirectory>
       <unpack>false</unpack>
       <scope>compile</scope>
+      <excludes>
+        <exclude>org.apache.hadoop:hadoop-client:*</exclude>
+      </excludes>
     </dependencySet>
   </dependencySets>
   

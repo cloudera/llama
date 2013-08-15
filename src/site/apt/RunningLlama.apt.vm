@@ -22,8 +22,17 @@ Running Llama
 
 * Install
 
-  Expand the Llama TARBALL distribution.
-  
+  Expand/Install one of the Llama TARBALL distribution files.
+
+  The standalone tarball, <<<llama-${project.version}-standalone.tar.gz>>>, 
+  has all hadoop client JARs embedded in it. Hadoop's <<<core-site.xml>>> and 
+  <<<yarn-site.xml>>> from your Hadoop cluster should be copied to Llama 
+  <<<conf/>>> directory for Llama to work.
+
+  The packaging tarball, <<<llama-${project.version}-packaging.tar.gz>>>, 
+  requires a local Hadoop client installed and configured to access the Hadoop 
+  cluster.    
+    
 * Llama Configuration
 
   Within Llama root directory:
@@ -40,12 +49,7 @@ Running Llama
 
     <<NOTE:>> These files have all configuration properties with their default 
     values.
-  
-  <<Yarn Configuration:>>
-  
-  Copy the <<<core-site.xml>>> and <<<yarn-site.xml>>> files from the Hadoop 
-  cluster in Llama's <<<conf/>>> directory.
-  
+    
 * Run
 
   To start Llama:

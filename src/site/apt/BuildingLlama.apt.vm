@@ -61,17 +61,22 @@ $  mvn site
 $  mvn site:run 
 +----+
 
-* Building a Distribution Tarball
+* Building a Distribution Tarball & a Packaging Tarball
 
 +----+
-$  mvn clean package site site:stage assembly:single
+$  mvn clean package site -Pdist
 +----+
 
-  To include the <<<MockLlamaAM>>> in the distribution use the 
-  <<<-PdistWithMock>>> profile when running Maven.
+  The standalone tarball will be available at 
+  <<<llama-dist/target/llama-${project.version}-standalone.tar.gz>>>. This 
+  tarball has all hadoop client JARs embedded in it. Hadoop's 
+  <<<core-site.xml>>> and <<<yarn-site.xml>>> from your Hadoop cluster should be
+  copied to Llama <<<conf/>>> directory for Llama to work.
 
-  The resulting tarball (and expanded version) will be available at 
-  <<<llama-dist/target/llama-dist-${project.version}.tar.gz>>>.
+  The packaging tarball will be available at 
+  <<<llama-dist/target/llama-${project.version}-packaging.tar.gz>>>. This
+  tarball requires a local Hadoop client installed and configured to access the
+  Hadoop cluster.
 
 * To Update the Version of the Project
 
