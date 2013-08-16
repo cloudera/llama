@@ -66,6 +66,7 @@ TODO: need license header
     
     <cdh.hadoop-snappy.version>0.0.1-cdh5.0.0-SNAPSHOT</cdh.hadoop-snappy.version>
     <cdh.cdh-parcel.version>5.0.0-SNAPSHOT</cdh.cdh-parcel.version>
+    <cdh.sentry.version>1.1.0-cdh5.0.0-SNAPSHOT</cdh.sentry.version>
     
     <!-- Versions of the dependencies we manage -->
     <cdh.avro.version>1.7.4</cdh.avro.version>
