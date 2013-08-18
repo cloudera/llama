@@ -5,7 +5,6 @@
     {"origin": { "fetch": "git://github.sf.cloudera.com/CDH/%(name)s.git" },
      "apache": { "fetch": "git://github.sf.cloudera.com/Mirrors/apache-%(name)s.git" },
      "common": { "fetch": "git://github.sf.cloudera.com/Mirrors/apache-hadoop-common.git" },
-     "sentry": { "fetch": "git://github.sf.cloudera.com/CDH/access.git" },
      "yahoo": { "fetch": "git://github.sf.cloudera.com/Mirrors/yahoo-%(name)s.git" }},
 
   "projects":
@@ -28,7 +27,7 @@
      "whirr": {"track-branch": "cdh5-0.8.2", "dir": "repos/cdh5/whirr", "remotes": ["origin"]},
      "hue": {"track-branch": "cdh5-3.0.0", "dir": "repos/cdh5/hue", "remotes": ["origin"]},
 
-     "sentry": {"track-branch": "cdh5-1.1.0", "dir": "repos/cdh5/sentry", "remotes": ["sentry"]},
+     "sentry": {"track-branch": "cdh5-1.1.0", "dir": "repos/cdh5/sentry", "remotes": ["origin"]},
      
      "solr": {"track-branch": "cdh5-4.4.0", "dir": "repos/cdh5/solr", "remotes": ["origin"], "remote-project-name": "lucene-solr"},
      "search": {"track-branch": "cdh5-1.0.0", "dir": "repos/cdh5/search", "remotes": ["origin"]},
