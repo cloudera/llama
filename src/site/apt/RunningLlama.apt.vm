@@ -20,7 +20,9 @@ Running Llama
 
 %{toc|section=1|fromDepth=2}
 
-* Install
+* Llama Application Master
+
+** Install Llama AM
 
   Expand/Install one of the Llama TARBALL distribution files.
 
@@ -33,7 +35,7 @@ Running Llama
   requires a local Hadoop client installed and configured to access the Hadoop 
   cluster.    
     
-* Llama Configuration
+** Llama AM Configuration
 
   Within Llama root directory:
   
@@ -50,7 +52,7 @@ Running Llama
   <<NOTE:>> These files have all configuration properties with their default 
   values.
     
-* Hadoop Yarn Configuration (Required)
+** Hadoop Yarn Configuration for Llama AM (Required)
     
   The user running LlamaAM must be configured in Hadoop as a proxy user for 
   itself.
@@ -95,7 +97,7 @@ Running Llama
   LlamaAM server can be running from any host and there is no need to create a 
   <<<llamagroup>>>.
   
-* Run
+** Run Llama AM
 
   To start Llama:
   
@@ -129,7 +131,7 @@ $ bin/llama
 $
 +----+
 
-* Security Configuration
+** Security Configuration for Llama AM
 
   If configuring Llama with security Enabled (Thrift with Kerberos SASL) you 
   need a running KDC, a service keytab (<<<llama/HOSTNAME>>>) and the
@@ -165,7 +167,29 @@ $
   When specifying the principal names use the short name only, do not include 
   the service hostname. The Thrift SASL implementation composes the complete 
   service principal name (<<<shortName>>>/<<<hostname>>>).
-  
+
+* Llama Node Manager Plugin
+
+** Install Llama NM Plugin
+
+  Expand/Install one of the Llama TARBALL distribution files.
+
+  The Llama installation has a <<<nodemanagerlib/>>> directory. The JARs within
+  this directory must be added to the classpath of all NodeManagers in the Yarn
+  cluster.
+
+** Llama NM Plugin Configuration
+
+  TBD
+
+** Hadoop Yarn Configuration for Llama NM Plugin (Required)
+
+  TBD
+
+** Security Configuration for Llama NM Plugin
+
+  TBD
+
 * Notes on Thrift
 
   Llama Thrift server supports unframed transport only (per Impala requirement).

@@ -50,6 +50,7 @@
     <module>llama-am-api</module>
     <module>llama-am-mock</module>
     <module>llama-am-yarn</module>
+    <module>llama-nm-yarn</module>
     <module>llama-thrift-am</module>
     <module>llama-thrift-mini-am</module>
     <module>llama-dist</module>
@@ -128,6 +129,11 @@
       <dependency>
         <groupId>com.cloudera.llama</groupId>
         <artifactId>llama-am-yarn</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.cloudera.llama</groupId>
+        <artifactId>llama-nm-yarn</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

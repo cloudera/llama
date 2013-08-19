@@ -26,10 +26,10 @@
     <version>1.0.0-cdh5.0.0-SNAPSHOT</version>
   </parent>
   <groupId>com.cloudera.llama</groupId>
-  <artifactId>llama-dist</artifactId>
+  <artifactId>llama-nm-yarn</artifactId>
   <version>1.0.0-cdh5.0.0-SNAPSHOT</version>
-  <description>Llama Dist</description>
-  <name>Llama Dist</name>
+  <description>Llama NM Plugin Yarn</description>
+  <name>Llama AM Plugin Yarn</name>
   <packaging>jar</packaging>
 
   <properties>
@@ -63,72 +63,38 @@
       <groupId>com.cloudera.llama</groupId>
       <artifactId>llama-thrift-api</artifactId>
       <scope>compile</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.httpcomponents</groupId>
-          <artifactId>httpcore</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.httpcomponents</groupId>
-          <artifactId>httpclient</artifactId>
-        </exclusion>
-      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-client</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>com.cloudera.llama</groupId>
-      <artifactId>llama-thrift-am</artifactId>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.cloudera.llama</groupId>
-      <artifactId>llama-am-yarn</artifactId>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.cloudera.llama</groupId>
-      <artifactId>llama-nm-yarn</artifactId>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.cloudera.llama</groupId>
-      <artifactId>llama-am-mock</artifactId>
-      <scope>compile</scope>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-minicluster</artifactId>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 
-  <profiles>
-    <profile>
-      <id>dist</id>
-      <activation>
-        <activeByDefault>false</activeByDefault>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-assembly-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>dist</id>
-                <phase>package</phase>
-                <goals>
-                  <goal>single</goal>
-                </goals>
-                <configuration>
-                  <appendAssemblyId>true</appendAssemblyId>
-                  <attach>false</attach>
-                  <finalName>llama-${project.version}</finalName>
-                  <descriptors>
-                    <descriptor>src/main/assemblies/llama-standalone.xml</descriptor>
-                    <descriptor>src/main/assemblies/llama-packaging.xml</descriptor>
-                  </descriptors>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <descriptors>
+            <descriptor>../src/main/assemblies/empty.xml</descriptor>
+          </descriptors>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 
 </project>

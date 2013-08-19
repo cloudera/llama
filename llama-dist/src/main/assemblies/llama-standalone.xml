@@ -92,8 +92,8 @@
 
   
   <dependencySets>
-    
-    <!-- JARs -->
+
+    <!-- Llama AM -->
     <dependencySet>
       <useProjectArtifact>false</useProjectArtifact>
       <useTransitiveDependencies>true</useTransitiveDependencies>
@@ -101,7 +101,31 @@
       <outputDirectory>/lib</outputDirectory>
       <unpack>false</unpack>
       <scope>compile</scope>
+      <excludes>
+        <exclude>com.cloudera.llama:llama-nm-yarn:*</exclude>
+      </excludes>
     </dependencySet>
+
+
+    <!-- Llama NM -->
+    <dependencySet>
+      <useProjectArtifact>false</useProjectArtifact>
+      <useTransitiveDependencies>true</useTransitiveDependencies>
+      <useTransitiveFiltering>true</useTransitiveFiltering>
+      <outputDirectory>/nodemanagerlib</outputDirectory>
+      <unpack>false</unpack>
+      <scope>compile</scope>
+      <includes>
+        <include>com.cloudera.llama:llama-thrift-api:*</include>
+        <include>com.cloudera.llama:llama-nm-yarn:*</include>
+      </includes>
+      <excludes>
+        <exclude>commons-lang:commons-lang:*</exclude>
+        <exclude>commons-codec:commons-codec:*</exclude>
+        <exclude>org.slf4j:slf4j-api:*</exclude>
+      </excludes>
+    </dependencySet>
+
   </dependencySets>
   
 </assembly>
