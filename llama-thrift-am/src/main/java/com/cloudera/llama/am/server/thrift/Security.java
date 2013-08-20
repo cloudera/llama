@@ -146,7 +146,7 @@ public class Security {
   }
   
   public static void loginToHadoop(Configuration conf) throws Exception {
-    if (UserGroupInformation.isLoginKeytabBased()) {
+    if (UserGroupInformation.isSecurityEnabled()) {
       String principalName = resolveLlamaPrincipalName(conf);
       String keytab = conf.get(ServerConfiguration.KEYTAB_FILE_KEY,
           ServerConfiguration.KEYTAB_FILE_DEFAULT);

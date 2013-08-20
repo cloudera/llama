@@ -118,7 +118,7 @@
   </property>
   <property>
     <name>llama.am.server.thrift.kerberos.server.principal.name</name>
-    <value>llama</value>
+    <value>llama/_HOST</value>
     <description>
       LlamaAM Kerberos principal name. This is the principal short name,
       without the service hostname. 
