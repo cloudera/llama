@@ -77,9 +77,8 @@ public class TestAPIContractLlamaAM {
     }
 
     @Override
-    public UUID reserve(Reservation reservation) 
+    public void reserve(UUID reservationId, Reservation reservation)
       throws LlamaAMException {
-      return (nullOnReserve) ? null : UUID.randomUUID();
     }
 
     @Override
@@ -93,8 +92,9 @@ public class TestAPIContractLlamaAM {
     }
 
     @Override
-    public void releaseReservationsForClientId(UUID clientId)
+    public List<UUID> releaseReservationsForClientId(UUID clientId)
         throws LlamaAMException {
+      return null;
     }
   }
 
@@ -133,7 +133,7 @@ public class TestAPIContractLlamaAM {
   }
 
   @Test
-  public void testRequestOK() throws Exception {
+  public void testReserveOK() throws Exception {
     LlamaAM am = createLlamaAM();
     try {
       am.start();
@@ -187,13 +187,25 @@ public class TestAPIContractLlamaAM {
     }
   }
 
-  @Test(expected = IllegalStateException.class)
-  public void testReserveNull() throws Exception {
+  @Test(expected = IllegalArgumentException.class)
+  public void testReserveNull1() throws Exception {
     LlamaAM am = createLlamaAM();
     MyRMLlamaAMConnector.nullOnReserve = true;
     try {
       am.start();
-      am.reserve(createReservation());
+      am.reserve(null, createReservation());
+    } finally {
+      am.stop();
+    }
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testReserveNull2() throws Exception {
+    LlamaAM am = createLlamaAM();
+    MyRMLlamaAMConnector.nullOnReserve = true;
+    try {
+      am.start();
+      am.reserve(UUID.randomUUID(), null);
     } finally {
       am.stop();
     }

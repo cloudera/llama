@@ -17,9 +17,7 @@
  */
 package com.cloudera.llama.am.impl;
 
-import com.cloudera.llama.am.LlamaAM;
 import com.cloudera.llama.am.LlamaAMException;
-import com.cloudera.llama.am.LlamaAMListener;
 import com.cloudera.llama.am.PlacedReservation;
 import com.cloudera.llama.am.PlacedResource;
 import com.cloudera.llama.am.Reservation;
@@ -30,8 +28,6 @@ import com.cloudera.llama.am.spi.RMPlacedResource;
 import com.cloudera.llama.am.spi.RMResourceChange;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ReflectionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,14 +35,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class SingleQueueLlamaAM extends LlamaAM implements RMLlamaAMCallback {
-  private static final Logger LOG = 
-      LoggerFactory.getLogger(SingleQueueLlamaAM.class);
+public class SingleQueueLlamaAM extends LlamaAMImpl implements
+    RMLlamaAMCallback {
   
   private final String queue;
   private final Map<UUID, PlacedReservationImpl> reservationsMap;
   private final Map<UUID, PlacedResourceImpl> resourcesMap;
-  private LlamaAMListener listener;
   private RMLlamaAMConnector rmConnector;
   private boolean running;
 
@@ -95,22 +89,6 @@ public class SingleQueueLlamaAM extends LlamaAM implements RMLlamaAMCallback {
     return rmConnector.getNodes();
   }
 
-  @Override
-  public void addListener(LlamaAMListener listener) {
-    this.listener = listener;
-  }
-
-  @Override
-  public void removeListener(LlamaAMListener listener) {
-    if (this.listener == listener) {
-      this.listener = null;
-    }
-  }
-
-  protected LlamaAMListener getListener() {
-    return listener;
-  }
-
   private void _addReservation(PlacedReservationImpl reservation) {
     UUID reservationId = reservation.getReservationId();
     reservationsMap.put(reservationId, reservation);
@@ -136,13 +114,14 @@ public class SingleQueueLlamaAM extends LlamaAM implements RMLlamaAMCallback {
   }
 
   @Override
-  public UUID reserve(final Reservation reservation) throws LlamaAMException {
-    final PlacedReservationImpl impl = new PlacedReservationImpl(reservation);
+  public void reserve(UUID reservationId, final Reservation reservation)
+      throws LlamaAMException {
+    final PlacedReservationImpl impl = new PlacedReservationImpl(reservationId,
+        reservation);
     rmConnector.reserve(impl);
     synchronized (this) {
       _addReservation(impl);
     }
-    return impl.getReservationId();
   }
 
   @Override
@@ -165,13 +144,13 @@ public class SingleQueueLlamaAM extends LlamaAM implements RMLlamaAMCallback {
       rmConnector.release((List<RMPlacedResource>) (List) reservation
           .getResources());
     } else {
-      LOG.warn("Unknown reservationId '{}'", reservationId);
+      getLog().warn("Unknown reservationId '{}'", reservationId);
     }
   }
 
   @Override
   @SuppressWarnings("unchecked")
-  public void releaseReservationsForClientId(UUID clientId)
+  public List<UUID> releaseReservationsForClientId(UUID clientId)
       throws LlamaAMException {
     List<PlacedReservation> reservations = new ArrayList<PlacedReservation>();
     synchronized (this) {
@@ -183,10 +162,13 @@ public class SingleQueueLlamaAM extends LlamaAM implements RMLlamaAMCallback {
         }
       }
     }
+    List<UUID> ids = new ArrayList<UUID>(reservations.size());
     for (PlacedReservation reservation : reservations) {
       rmConnector.release((List<RMPlacedResource>) (List) reservation
           .getResources());
+      ids.add(reservation.getReservationId());
     }
+    return ids;
   }
 
   // PRIVATE METHODS
@@ -208,7 +190,7 @@ public class SingleQueueLlamaAM extends LlamaAM implements RMLlamaAMCallback {
     UUID reservationId = resource.getReservationId();
     PlacedReservationImpl reservation = reservationsMap.get(reservationId);
     if (reservation == null) {
-      LOG.warn("Unknown Reservation '{}' during resource '{}' rejection " + 
+      getLog().warn("Unknown Reservation '{}' during resource '{}' rejection " + 
           "handling", reservationId, resource.getClientResourceId());
     } else {
       LlamaAMEventImpl event = getEventForClientId(eventsMap,
@@ -227,7 +209,7 @@ public class SingleQueueLlamaAM extends LlamaAM implements RMLlamaAMCallback {
               .getClientResourceId());
           break;
         case ALLOCATED:
-          LOG.warn("Illegal internal state, reservation '{}' is " + 
+          getLog().warn("Illegal internal state, reservation '{}' is " + 
               "ALLOCATED, resource cannot  be rejected '{}'", reservationId, 
               resource.getClientResourceId());
           break;
@@ -243,7 +225,7 @@ public class SingleQueueLlamaAM extends LlamaAM implements RMLlamaAMCallback {
     UUID reservationId = resource.getReservationId();
     PlacedReservationImpl reservation = reservationsMap.get(reservationId);
     if (reservation == null) {
-      LOG.warn("Reservation '{}' during resource allocation handling " +
+      getLog().warn("Reservation '{}' during resource allocation handling " +
           "for" + " '{}'", reservationId, resource.getClientResourceId());
     } else {
       LlamaAMEventImpl event = getEventForClientId(eventsMap,
@@ -278,7 +260,7 @@ public class SingleQueueLlamaAM extends LlamaAM implements RMLlamaAMCallback {
     UUID reservationId = resource.getReservationId();
     PlacedReservationImpl reservation = reservationsMap.get(reservationId);
     if (reservation == null) {
-      LOG.warn("Unknown Reservation '{}' during resource preemption " +
+      getLog().warn("Unknown Reservation '{}' during resource preemption " +
           "handling for" + " '{}'", reservationId, 
           resource.getClientResourceId());
     } else {
@@ -300,7 +282,7 @@ public class SingleQueueLlamaAM extends LlamaAM implements RMLlamaAMCallback {
           }
           break;
         case PENDING:
-          LOG.warn("Illegal internal state, reservation '{}' is PENDING, " +
+          getLog().warn("Illegal internal state, reservation '{}' is PENDING, " +
               "resource '{}' cannot  be preempted, releasing reservation ",
               reservationId, resource.getClientResourceId());
           _deleteReservation(reservationId);
@@ -319,7 +301,7 @@ public class SingleQueueLlamaAM extends LlamaAM implements RMLlamaAMCallback {
     UUID reservationId = resource.getReservationId();
     PlacedReservationImpl reservation = reservationsMap.get(reservationId);
     if (reservation == null) {
-      LOG.warn("Unknown Reservation '{}' during resource lost handling " +
+      getLog().warn("Unknown Reservation '{}' during resource lost handling " +
           "for '{}'", reservationId, resource.getClientResourceId());
     } else {
       LlamaAMEventImpl event = getEventForClientId(eventsMap,
@@ -339,7 +321,7 @@ public class SingleQueueLlamaAM extends LlamaAM implements RMLlamaAMCallback {
           }
           break;
         case PENDING:
-          LOG.warn("Illegal internal state, reservation '{}' is PENDING, " +
+          getLog().warn("Illegal internal state, reservation '{}' is PENDING, " +
               "resource '{}' cannot  be lost, releasing reservation ",
               reservationId, resource.getClientResourceId());
           _deleteReservation(reservationId);
@@ -359,9 +341,8 @@ public class SingleQueueLlamaAM extends LlamaAM implements RMLlamaAMCallback {
     if (changes == null) {
       throw new IllegalArgumentException("changes cannot be NULL");
     }
-    final boolean hasListener = listener != null;
-    LOG.trace("changesFromRM({})", changes);
-    Map<UUID, LlamaAMEventImpl> eventsMap = 
+    getLog().trace("changesFromRM({})", changes);
+    Map<UUID, LlamaAMEventImpl> eventsMap =
         new HashMap<UUID, LlamaAMEventImpl>();
     List<PlacedResourceImpl> toRelease = new ArrayList<PlacedResourceImpl>();
     synchronized (this) {
@@ -369,7 +350,7 @@ public class SingleQueueLlamaAM extends LlamaAM implements RMLlamaAMCallback {
         PlacedResourceImpl resource = resourcesMap.get(change
             .getClientResourceId());
         if (resource == null) {
-          LOG.warn("Unknown resource '{}'", change.getClientResourceId());
+          getLog().warn("Unknown resource '{}'", change.getClientResourceId());
         } else {
           List<PlacedResourceImpl> release = null;
           switch (change.getStatus()) {
@@ -396,20 +377,10 @@ public class SingleQueueLlamaAM extends LlamaAM implements RMLlamaAMCallback {
       try {
         rmConnector.release((List<RMPlacedResource>) (List) toRelease);
       } catch (LlamaAMException ex) {
-        LOG.warn("release() error: {}", ex.toString(), ex);
+        getLog().warn("release() error: {}", ex.toString(), ex);
       }
-    }  
-    if (hasListener && !eventsMap.isEmpty()) {
-        for (LlamaAMEventImpl event : eventsMap.values()) {
-          try {
-            if (!event.isEmpty()) {
-              listener.handle(event);
-            }
-          } catch (Throwable ex) {
-            LOG.warn("listener.handle() error: {}", ex.toString(), ex);
-          }
-        }
     }
+    dispatch(eventsMap.values());
   }
 
   @Override

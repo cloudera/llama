@@ -31,9 +31,9 @@ public class PlacedReservationImpl extends RMPlacedReservation {
   private Status status;
 
   @SuppressWarnings("unchecked")
-  public PlacedReservationImpl(Reservation reservation) {
+  public PlacedReservationImpl(UUID reservationId, Reservation reservation) {
     super(reservation);
-    reservationId = UUID.randomUUID();
+    this.reservationId = reservationId;
     status = Status.PENDING;
     for (PlacedResource resource : getResources()) {
       ((PlacedResourceImpl) resource).setReservationInfo(

@@ -24,9 +24,8 @@ import com.cloudera.llama.am.LlamaAMListener;
 import com.cloudera.llama.am.PlacedReservation;
 import com.cloudera.llama.am.Reservation;
 import org.apache.hadoop.conf.Configuration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -36,19 +35,14 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class MultiQueueLlamaAM extends LlamaAM implements LlamaAMListener {
-
-  private static Logger LOG = LoggerFactory.getLogger(MultiQueueLlamaAM.class);
-
+public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener {
   private final Map<String, LlamaAM> ams;
   private final ConcurrentHashMap<UUID, String> reservationToQueue;
-  private final Set<LlamaAMListener> listeners;
   private boolean running;
   
   public MultiQueueLlamaAM(Configuration conf) {
     super(conf);
     ams = new HashMap<String, LlamaAM>();
-    listeners = new HashSet<LlamaAMListener>();
     reservationToQueue = new ConcurrentHashMap<UUID, String>();
     if (SingleQueueLlamaAM.getRMConnectorClass(conf) == null) {
       throw new IllegalArgumentException(FastFormat.format(
@@ -61,11 +55,7 @@ public class MultiQueueLlamaAM extends LlamaAM implements LlamaAMListener {
 
   @Override
   public void handle(LlamaAMEvent event) {
-    synchronized (listeners) {
-      for (LlamaAMListener al : listeners) {
-        al.handle(event);
-      }
-    }
+    dispatch(event);
   }
 
   // LlamaAM API
@@ -77,7 +67,7 @@ public class MultiQueueLlamaAM extends LlamaAM implements LlamaAMListener {
       if (am == null) {
         am = new SingleQueueLlamaAM(getConf(), queue);
         am.start();
-        am.addListener(MultiQueueLlamaAM.this);
+        am.addListener(this);
         ams.put(queue, am);
       }
     }
@@ -137,27 +127,13 @@ public class MultiQueueLlamaAM extends LlamaAM implements LlamaAMListener {
     return am.getNodes();
   }
 
-  @Override
-  public void addListener(LlamaAMListener listener) {
-    synchronized (listeners) {
-      listeners.add(listener);
-    }
-  }
-
-  @Override
-  public void removeListener(LlamaAMListener listener) {
-    synchronized (listeners) {
-      listeners.remove(listener);
-    }
-  }
-
   @SuppressWarnings("deprecation")
   @Override
-  public UUID reserve(Reservation reservation) throws LlamaAMException {
+  public void reserve(UUID reservationId, Reservation reservation)
+      throws LlamaAMException {
     LlamaAM am = getLlamaAM(reservation.getQueue());
-    UUID reservationId = am.reserve(reservation);
+    am.reserve(reservationId, reservation);
     reservationToQueue.put(reservationId, reservation.getQueue());
-    return reservationId;
   }
 
   @SuppressWarnings("deprecation")
@@ -170,7 +146,8 @@ public class MultiQueueLlamaAM extends LlamaAM implements LlamaAMListener {
       LlamaAM am = getLlamaAM(queue);
       reservation = am.getReservation(reservationId);      
     } else {
-      LOG.warn("getReservation({}), reservationId not found", reservationId);
+      getLog().warn("getReservation({}), reservationId not found",
+          reservationId);
     }
     return reservation;
   }
@@ -183,20 +160,22 @@ public class MultiQueueLlamaAM extends LlamaAM implements LlamaAMListener {
       LlamaAM am = getLlamaAM(queue);
       am.releaseReservation(reservationId);
     } else {
-      LOG.warn("releaseReservation({}), reservationId not found", reservationId);
+      getLog().warn("releaseReservation({}), reservationId not found",
+          reservationId);
     }
   }
 
   @Override
-  public void releaseReservationsForClientId(UUID clientId)
+  public List<UUID> releaseReservationsForClientId(UUID clientId)
       throws LlamaAMException {
+    List<UUID> ids = new ArrayList<UUID>();
     LlamaAMException thrown = null;
     for (LlamaAM am : getLlamaAMs()) {
       try {
-        am.releaseReservationsForClientId(clientId);
+        ids.addAll(am.releaseReservationsForClientId(clientId));
       } catch (LlamaAMException ex) {
         if (thrown != null) {
-          LOG.error("releaseReservationsFoClientId({}), error: {}", clientId, 
+          getLog().error("releaseReservationsFoClientId({}), error: {}", clientId,
               ex.toString(), ex);
         }
         thrown = ex;
@@ -205,5 +184,6 @@ public class MultiQueueLlamaAM extends LlamaAM implements LlamaAMListener {
     if (thrown != null) {
       throw thrown;
     }
+    return ids;
   }
 }

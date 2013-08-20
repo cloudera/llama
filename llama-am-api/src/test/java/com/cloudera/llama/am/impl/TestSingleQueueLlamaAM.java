@@ -126,22 +126,6 @@ public class TestSingleQueueLlamaAM {
     llama.stop();
   }
 
-  @Test
-  public void testAddRemoveListener() throws Exception {
-    SingleQueueLlamaAM llama = createLlamaAM();
-    LlamaAMListener l = new LlamaAMListener() {
-      @Override
-      public void handle(LlamaAMEvent event) {
-      }
-    };
-    Assert.assertNull(llama.getListener());
-    llama.addListener(l);
-    Assert.assertNotNull(llama.getListener());
-    llama.removeListener(l);
-    Assert.assertNull(llama.getListener());
-    llama.removeListener(l);
-  }
-
   private static final Resource RESOURCE1 = new Resource(UUID.randomUUID(), 
       "n1", Resource.LocationEnforcement.DONT_CARE, 1, 1024);
 

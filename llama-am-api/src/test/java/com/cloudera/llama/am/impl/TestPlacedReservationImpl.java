@@ -38,7 +38,7 @@ public class TestPlacedReservationImpl {
     resources.add(r);
     UUID cId = UUID.randomUUID();
     Reservation pr = new Reservation(cId, "q", resources, true);
-    PlacedReservationImpl pri = new PlacedReservationImpl(pr);
+    PlacedReservationImpl pri = new PlacedReservationImpl(UUID.randomUUID(), pr);
     pr.toString();
     Assert.assertNotNull(pri.getReservationId());
     Assert.assertEquals(PlacedReservation.Status.PENDING, pri.getStatus());

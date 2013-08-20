@@ -65,8 +65,15 @@ public abstract class LlamaAM {
   public abstract boolean isRunning();
 
   public abstract List<String> getNodes() throws LlamaAMException;
-  
-  public abstract UUID reserve(Reservation reservation) throws LlamaAMException;
+
+  public abstract void reserve(UUID reservationId, Reservation reservation)
+      throws LlamaAMException;
+
+  public UUID reserve(Reservation reservation) throws LlamaAMException {
+    UUID reservationId = UUID.randomUUID();
+    reserve(reservationId, reservation);
+    return reservationId;
+  }
 
   public abstract PlacedReservation getReservation(UUID reservationId)
       throws LlamaAMException;
@@ -74,7 +81,7 @@ public abstract class LlamaAM {
   public abstract void releaseReservation(UUID reservationId) 
       throws LlamaAMException;
 
-  public abstract void releaseReservationsForClientId(UUID clientId)
+  public abstract List<UUID> releaseReservationsForClientId(UUID clientId)
     throws LlamaAMException;
   
   public abstract void addListener(LlamaAMListener listener);

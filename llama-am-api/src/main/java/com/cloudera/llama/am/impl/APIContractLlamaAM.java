@@ -109,15 +109,16 @@ public class APIContractLlamaAM extends LlamaAM {
   }
 
   @Override
-  public UUID reserve(Reservation reservation) throws LlamaAMException {
+  public void reserve(UUID reservationId, Reservation reservation)
+      throws LlamaAMException {
     checkIsRunning();
+    ParamChecker.notNull(reservationId, "reservationId");
     ParamChecker.notNull(reservation, "reservation");
-    UUID reservationId = llamaAM.reserve(reservation);
+    llamaAM.reserve(reservationId, reservation);
     if (reservationId == null) {
       throw new IllegalStateException("Internal error, cannot return NULL");
     }
     getLog().trace("reserve({}): {}", reservation, reservationId);
-    return reservationId;
   }
 
   @Override
@@ -139,11 +140,12 @@ public class APIContractLlamaAM extends LlamaAM {
   }
 
   @Override
-  public void releaseReservationsForClientId(UUID clientId)
+  public List<UUID> releaseReservationsForClientId(UUID clientId)
       throws LlamaAMException {
     checkIsRunning();
     ParamChecker.notNull(clientId, "clientId");
-    llamaAM.releaseReservationsForClientId(clientId);
+    List<UUID> ids = llamaAM.releaseReservationsForClientId(clientId);
     getLog().trace("releaseReservationsForClientId({})", clientId);
+    return ids;
   }
 }
