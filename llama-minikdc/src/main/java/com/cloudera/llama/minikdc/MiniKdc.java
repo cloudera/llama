@@ -52,6 +52,7 @@ import org.apache.directory.api.ldap.model.name.Dn;
 import org.apache.directory.api.ldap.model.schema.registries.SchemaLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.security.krb5.Config;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -432,6 +433,7 @@ public class MiniKdc {
     
     System.setProperty("sun.security.krb5.debug", conf.getProperty(DEBUG, 
         "false"));
+    Config.refresh();
     LOG.info("MiniKdc listening at port: {}", getPort());
     LOG.info("MiniKdc setting JVM krb5.conf to: {}", 
         krb5conf.getAbsolutePath());
