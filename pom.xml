@@ -60,7 +60,7 @@
   <properties>
     <buildDirectory>target</buildDirectory>
     
-    <javaVersion>1.6</javaVersion>
+    <javaVersion>1.7</javaVersion>
 
     <clover.license.file>${user.home}/.clover.license</clover.license.file>
 
