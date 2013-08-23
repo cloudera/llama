@@ -196,6 +196,8 @@ mr1-srpm : EXTRA_VAR_DEFS=%define hadoop_common_version $(strip $(HADOOP_COMMON_
 # $1 is the target prefix, $2 is the variable prefix
 define PACKAGE
 
+$(2)_BASE_REF ?= $($(2)_BUILD_REF)
+
 # The default PKG_NAME will be the target prefix
 $(2)_NAME           ?= $(1)
 
@@ -212,7 +214,11 @@ ifneq (, $(CDH_VERSION_STRING))
 endif
 $(2)_FULL_VERSION  ?= $$($(2)_BASE_VERSION)
 $(2)_PKG_VERSION   ?= $(shell cd $($(2)_GIT_REPO) && $(BASE_DIR)/tools/branch-tool version --prefix=$(CDH) $(NO_PATCH_COUNT))
+
+ifneq ($(2)_BUILD_REF,$(2)_BASE_REF)
 $(2)_BUILD_REF      := $(notdir $(shell cd $($(2)_GIT_REPO) && git symbolic-ref --quiet HEAD))
+endif
+
 
 $(2)_BUILD_DIR      = $(BUILD_DIR)/$(CDH)/$(1)/$$($(2)_FULL_VERSION)/
 $(2)_OUTPUT_DIR      = $(OUTPUT_DIR)/$(CDH)/$(1)

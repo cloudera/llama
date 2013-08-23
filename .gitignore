@@ -8,3 +8,4 @@ sbuild
 */#*
 my.properties
 /README.html
+/config.mk

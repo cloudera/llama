@@ -16,7 +16,10 @@ def git(cmdv):
   return stdout.strip()
 
 def git_merge_base(a, b):
-  return git(["merge-base", a, b])
+  try:
+    return git(["merge-base", a, b])
+  except:
+    return git(["merge-base", a, a])
 
 def git_rev_list(a, b):
   res = git(["rev-list", a + '..' + b])
@@ -57,7 +60,8 @@ def cdh_best_branch(r):
 
   # The best branch is the one with the shortest version number
   branches.sort(cmp=lambda a,b: len(remove_underscore_suffix(a)) - len(remove_underscore_suffix(b)))
-
+  if len(branches) == 0:
+    return 'master'
   return branches[0]
 
 def cdh_ancestor_branch(branch, prefix='cdh'):
@@ -70,6 +74,9 @@ def cdh_ancestor_branch(branch, prefix='cdh'):
 
   See unit tests for some examples.
   """
+  if branch == 'master':
+    return 'master'
+
   if not branch.startswith(prefix + '-'):
     raise Exception("Not a %s-* branch: %s" % (prefix, branch))
   
@@ -88,7 +95,7 @@ def cdh_get_version(rev, no_patch_count, prefix='cdh'):
     cur_branch = remove_underscore_suffix(rev)
   else:
     cur_branch = remove_underscore_suffix(cdh_best_branch(rev))
-  assert cur_branch.startswith(prefix + separator)
+  assert cur_branch == 'master' or cur_branch.startswith(prefix + separator)
     
   base_version = re.sub('^' + prefix + separator, '', cur_branch)
   if no_patch_count:
