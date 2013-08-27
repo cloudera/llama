@@ -244,5 +244,15 @@
       Number of threads used to do container requests to Yarn Node Managers.
     </description>
   </property>
+  <property>
+    <name>llama.am.yarn.include.port.in.node.name</name>
+    <value>false</value>
+    <description>
+      If the node name should include the port or not. This property should
+      only be set to true for testing.
+    </description>
+  </property>
+
+
 
 </configuration>

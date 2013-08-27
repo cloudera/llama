@@ -17,6 +17,7 @@
  */
 package com.cloudera.llama.am.server.thrift;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class HostnameOnlyNodeMapper implements NodeMapper {
@@ -33,7 +34,11 @@ public class HostnameOnlyNodeMapper implements NodeMapper {
 
   @Override
   public List<String> getNodeManagers(List<String> dataNodes) {
-    return dataNodes;
+    List<String> list = new ArrayList<String>(dataNodes.size());
+    for (String node : dataNodes) {
+      list.add(getNodeManager(node));
+    }
+    return list;
   }
 
   @Override
@@ -43,6 +48,11 @@ public class HostnameOnlyNodeMapper implements NodeMapper {
 
   @Override
   public List<String> getDataNodes(List<String> nodeManagers) {
-    return nodeManagers;
+    List<String> list = new ArrayList<String>(nodeManagers.size());
+    for (String node : nodeManagers) {
+      list.add(getDataNode(node));
+    }
+    return list;
   }
+
 }

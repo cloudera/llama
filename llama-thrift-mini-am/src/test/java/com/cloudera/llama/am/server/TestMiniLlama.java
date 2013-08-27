@@ -38,6 +38,7 @@ import org.junit.Test;
 
 import java.net.URL;
 import java.util.Arrays;
+import java.util.HashSet;
 
 public class TestMiniLlama {
 
@@ -62,7 +63,7 @@ public class TestMiniLlama {
           "a JAR, it should be in a directory");      
     }
     fsallocationFile = fsallocationFile.substring("file:".length());
-    Configuration conf = MiniLlama.createMiniClusterConf(1);
+    Configuration conf = MiniLlama.createMiniClusterConf(2);
     conf.set("yarn.scheduler.fair.allocation.file", fsallocationFile);
     conf.set(LlamaAM.INITIAL_QUEUES_KEY, "default");
     testMiniLlama(conf);
@@ -99,7 +100,8 @@ public class TestMiniLlama {
       tgnReq.setAm_handle(trRes.getAm_handle());
       TLlamaAMGetNodesResponse tgnRes = client.GetNodes(tgnReq);
       Assert.assertEquals(TStatusCode.OK, tgnRes.getStatus().getStatus_code());
-      Assert.assertEquals(server.getDataNodes(), tgnRes.getNodes());
+      Assert.assertEquals(new HashSet<String>(server.getDataNodes()),
+          new HashSet<String>(tgnRes.getNodes()));
 
       //unregister
       TLlamaAMUnregisterRequest turReq = new TLlamaAMUnregisterRequest();

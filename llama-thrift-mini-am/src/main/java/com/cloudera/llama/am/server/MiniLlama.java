@@ -78,11 +78,7 @@ public class MiniLlama {
   }
 
   public static Configuration createMiniClusterConf(int nodes) {
-    ParamChecker.greaterThan(nodes, 1, "nodes");
-    if (nodes > 1) {
-      throw new IllegalArgumentException(
-          "More than one node is not supported until YARN-1008 is committed");
-    }
+    ParamChecker.greaterThan(nodes, 0, "nodes");
     Configuration conf = new Configuration(false);
     conf.set(ServerConfiguration.CONFIG_DIR_KEY, "");
     conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, YarnRMLlamaAMConnector.class, RMLlamaAMConnector.class);
@@ -165,8 +161,8 @@ public class MiniLlama {
     miniHdfs = new MiniDFSCluster(conf, clusterNodes, true, null);
     conf = miniHdfs.getConfiguration(0);
     miniYarn = new MiniYARNCluster("minillama", clusterNodes, 1, 1);
-    //TODO YARN-1008
-    conf.setBoolean("TODO.USE.PORT.FOR.NODE.NAME", true);
+    conf.setBoolean(YarnConfiguration.RM_SCHEDULER_INCLUDE_PORT_IN_NODE_NAME,
+        true);
     miniYarn.init(conf);
     miniYarn.start();
     
@@ -179,8 +175,7 @@ public class MiniLlama {
       String key = dn.getDatanodeId().getXferAddr();
       NodeManager nm = miniYarn.getNodeManager(i);
       NodeId nodeId = nm.getNMContext().getNodeId();
-      //TODO YARN-1008
-      String value = nodeId.getHost();//+ ":" + nodeId.getPort();
+      String value = nodeId.getHost() + ":" + nodeId.getPort();
       mapping.put(key,  value);
       LOG.info("  DN: " + key);
     }

@@ -48,12 +48,12 @@ public class ParamChecker {
   }
 
   public static int greaterEqualZero(int i, String paramName) {
-    return greaterThan(i, 0, paramName);
+    return greaterThan(i, -1, paramName);
   }
 
   public static int greaterThan(int i, int base, String paramName) {
-    if (i < base) {
-      throw new IllegalArgumentException(paramName + " cannot be less than " + 
+    if (i <= base) {
+      throw new IllegalArgumentException(paramName + " must be greater than " +
           base);
     }
     return i;

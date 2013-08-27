@@ -39,6 +39,7 @@ import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.api.records.ContainerLaunchContext;
 import org.apache.hadoop.yarn.api.records.ContainerStatus;
 import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
+import org.apache.hadoop.yarn.api.records.NodeId;
 import org.apache.hadoop.yarn.api.records.NodeReport;
 import org.apache.hadoop.yarn.api.records.NodeState;
 import org.apache.hadoop.yarn.api.records.Priority;
@@ -79,20 +80,20 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
   
   public static final String PREFIX_KEY = LlamaAM.PREFIX_KEY + "yarn.";
 
-  private static final String AM_PRIORITY_KEY = PREFIX_KEY + "priority";
-  private static final int AM_PRIORITY_DEFAULT = 0;
+  public static final String AM_PRIORITY_KEY = PREFIX_KEY + "priority";
+  public static final int AM_PRIORITY_DEFAULT = 0;
 
-  private static final String APP_MONITOR_TIMEOUT_KEY = PREFIX_KEY + 
-      "app.monitor.timeout.ms";  
-  private static final long APP_MONITOR_TIMEOUT_DEFAULT = 30000;
+  public static final String APP_MONITOR_TIMEOUT_KEY = PREFIX_KEY +
+      "app.monitor.timeout.ms";
+  public static final long APP_MONITOR_TIMEOUT_DEFAULT = 30000;
 
-  private static final String APP_MONITOR_POLLING_KEY = PREFIX_KEY + 
+  public static final String APP_MONITOR_POLLING_KEY = PREFIX_KEY +
       "app.monitor.polling.ms";
-  private static final long APP_MONITOR_POLLING_DEFAULT = 200;
+  public static final long APP_MONITOR_POLLING_DEFAULT = 200;
 
-  private static final String HEARTBEAT_INTERVAL_KEY = PREFIX_KEY + 
+  public static final String HEARTBEAT_INTERVAL_KEY = PREFIX_KEY +
       "app.heartbeat.interval.ms";
-  private static final int HEARTBEAT_INTERNAL_DEFAULT = 200;
+  public static final int HEARTBEAT_INTERNAL_DEFAULT = 200;
 
   public static final String CONTAINER_HANDLER_QUEUE_THRESHOLD_KEY = PREFIX_KEY
       + "container.handler.queue.threshold";
@@ -102,7 +103,7 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
       "container.handler.threads";
   public static final int CONTAINER_HANDLER_THREADS_DEFAULT = 10;
 
-  public static final String HADOOP_USER_NAME_KEY = PREFIX_KEY + 
+  public static final String HADOOP_USER_NAME_KEY = PREFIX_KEY +
       "hadoop.user.name";
   public static final String HADOOP_USER_NAME_DEFAULT = "llama";
 
@@ -113,6 +114,7 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
   public static final String NOT_AVAILABLE_VALUE = "*not available*";
 
   private Configuration conf;
+  private boolean includePortInNodeName;
   private RMLlamaAMCallback llamaCallback;
   private UserGroupInformation ugi;
   private YarnClient yarnClient;
@@ -132,6 +134,9 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
   @Override
   public void setConf(Configuration conf) {
     this.conf = conf;
+    includePortInNodeName = getConf().getBoolean
+        (YarnConfiguration.RM_SCHEDULER_INCLUDE_PORT_IN_NODE_NAME,
+            YarnConfiguration.DEFAULT_RM_SCHEDULER_USE_PORT_FOR_NODE_NAME);
   }
 
   @Override
@@ -179,6 +184,11 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
     }
   }
 
+  public String getNodeName(NodeId nodeId) {
+    return (includePortInNodeName) ? nodeId.getHost() + ":" + nodeId.getPort()
+                                   : nodeId.getHost();
+  }
+
   private void _initYarnApp(String queue) throws Exception {
     Configuration yarnConf = new YarnConfiguration();
     for (Map.Entry entry : getConf()) {
@@ -206,7 +216,7 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
     maxResource = response.getMaximumResourceCapability();
     for (NodeReport nodeReport : yarnClient.getNodeReports()) {
       if (nodeReport.getNodeState() == NodeState.RUNNING) {
-        nodes.add(nodeReport.getNodeId().getHost());
+        nodes.add(getNodeName(nodeReport.getNodeId()));
       }
     }
   }
@@ -509,8 +519,8 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
       } catch (Exception ex) {
         LOG.warn(
             "Could not {} container '{}' for resource '{}' at node '{}', {}'",
-            action, container.getId(), clientResourceId, 
-            container.getNodeId().getHost(), ex.toString(), ex);
+            action, container.getId(), clientResourceId,
+            getNodeName(container.getNodeId()), ex.toString(), ex);
         if (action == Action.START) {
           List<RMResourceChange> changes = new ArrayList<RMResourceChange>();
           changes.add(RMResourceChange.createResourceChange(clientResourceId,
@@ -534,7 +544,7 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
       Container container) {
     return RMResourceChange.createResourceAllocation(pr.getClientResourceId(), 
         container.getId().toString(), container.getResource().getVirtualCores(), 
-        container.getResource().getMemory(), container.getNodeId().getHost());
+        container.getResource().getMemory(), getNodeName(container.getNodeId()));
   }
   
   @Override
@@ -544,7 +554,7 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
     for (Container container : containers) {
       List<? extends Collection<LlamaContainerRequest>> matchingContainerReqs = 
           amRmClientAsync.getMatchingRequests(container.getPriority(),
-          container.getNodeId().getHost(), container.getResource());
+          getNodeName(container.getNodeId()), container.getResource());
       
       if (!matchingContainerReqs.isEmpty()) {
         Collection<LlamaContainerRequest> coll = matchingContainerReqs.get(0);
@@ -574,11 +584,10 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
   @Override
   public void onNodesUpdated(List<NodeReport> nodeReports) {
     for (NodeReport node : nodeReports) {
-      String host = node.getNodeId().getHost();
       if (node.getNodeState() == NodeState.RUNNING) {
-        nodes.add(host);
+        nodes.add(getNodeName(node.getNodeId()));
       } else {
-        nodes.remove(host);        
+        nodes.remove(getNodeName(node.getNodeId()));
       }
     }
   }
