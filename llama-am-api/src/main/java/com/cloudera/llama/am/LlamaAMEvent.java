@@ -23,7 +23,9 @@ import java.util.UUID;
 public interface LlamaAMEvent {
 
   public UUID getClientId();
-  
+
+  public boolean isEmpty();
+
   public List<UUID> getAllocatedReservationIds();
 
   public List<PlacedResource> getAllocatedResources();

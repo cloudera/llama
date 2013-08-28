@@ -34,17 +34,20 @@ public class LlamaAMEventImpl implements LlamaAMEvent {
   private final List<UUID> rejectedReservationIds = new ArrayList<UUID>();
   private final List<UUID> preemptedReservationIds = new ArrayList<UUID>();
   private final List<UUID> preemptedResourceIds = new ArrayList<UUID>();
+  private final List<PlacedResource> allocatedGangResources = new
+      ArrayList<PlacedResource>();
 
   public LlamaAMEventImpl(UUID clientId) {
     this.clientId = clientId;
   }
-  
+
+  @Override
   public boolean isEmpty() {
-    return allocatedReservationIds.isEmpty() && 
+    return allocatedReservationIds.isEmpty() &&
         allocatedResources.isEmpty() &&
-        rejectedClientResourceIds.isEmpty() && 
+        rejectedClientResourceIds.isEmpty() &&
         lostClientResourceIds.isEmpty() &&
-        rejectedReservationIds.isEmpty() && 
+        rejectedReservationIds.isEmpty() &&
         preemptedReservationIds.isEmpty() &&
         preemptedResourceIds.isEmpty();
   }
@@ -88,4 +91,9 @@ public class LlamaAMEventImpl implements LlamaAMEvent {
   public List<UUID> getPreemptedClientResourceIds() {
     return preemptedResourceIds;
   }
+
+  public List<PlacedResource> getAllocatedGangResources() {
+    return allocatedGangResources;
+  }
+
 }

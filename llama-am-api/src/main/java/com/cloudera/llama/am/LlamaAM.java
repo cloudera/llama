@@ -18,6 +18,7 @@
 package com.cloudera.llama.am;
 
 import com.cloudera.llama.am.impl.APIContractLlamaAM;
+import com.cloudera.llama.am.impl.GangAntiDeadlockLlamaAM;
 import com.cloudera.llama.am.impl.MultiQueueLlamaAM;
 import com.cloudera.llama.am.impl.ParamChecker;
 import org.apache.hadoop.conf.Configuration;
@@ -35,6 +36,28 @@ public abstract class LlamaAM {
   public static final String INITIAL_QUEUES_KEY =  PREFIX_KEY + 
       "initial.queues";
 
+  public static final String GANG_ANTI_DEADLOCK_ENABLED_KEY = PREFIX_KEY +
+      "gang.anti.deadlock.enabled";
+  public static final boolean GANG_ANTI_DEADLOCK_ENABLED_DEFAULT = false;
+
+  public static final String GANG_ANTI_DEADLOCK_NO_ALLOCATION_LIMIT_KEY =
+      PREFIX_KEY + "gang.anti.deadlock.no.allocation.limit.ms";
+  public static final long GANG_ANTI_DEADLOCK_NO_ALLOCATION_LIMIT_DEFAULT =
+      30000;
+
+  public static final String GANG_ANTI_DEADLOCK_BACKOFF_PERCENT_KEY =
+      PREFIX_KEY + "gang.anti.deadlock.backoff.percent";
+  public static final int GANG_ANTI_DEADLOCK_BACKOFF_PERCENT_DEFAULT =
+      30;
+
+  public static final String GANG_ANTI_DEADLOCK_BACKOFF_MIN_DELAY_KEY =
+      PREFIX_KEY + "gang.anti.deadlock.backoff.min.delay.ms";
+  public static final long GANG_ANTI_DEADLOCK_BACKOFF_MIN_DELAY_DEFAULT = 10000;
+
+  public static final String GANG_ANTI_DEADLOCK_BACKOFF_MAX_DELAY_KEY =
+      PREFIX_KEY + "gang.anti.deadlock.backoff.max.delay.ms";
+  public static final long GANG_ANTI_DEADLOCK_BACKOFF_MAX_DELAY_DEFAULT = 30000;
+
   private static Configuration cloneConfiguration(Configuration conf) {
     Configuration clone = new Configuration(false);
     for (Map.Entry<String, String> entry : conf) {
@@ -45,7 +68,12 @@ public abstract class LlamaAM {
 
   public static LlamaAM create(Configuration conf) throws LlamaAMException {
     conf = cloneConfiguration(conf);
-    return new APIContractLlamaAM(new MultiQueueLlamaAM(conf));
+    LlamaAM am = new MultiQueueLlamaAM(conf);
+    if (conf.getBoolean(GANG_ANTI_DEADLOCK_ENABLED_KEY,
+        GANG_ANTI_DEADLOCK_ENABLED_DEFAULT)) {
+      am = new GangAntiDeadlockLlamaAM(conf, am);
+    }
+    return new APIContractLlamaAM(am);
   }
 
   private Configuration conf;

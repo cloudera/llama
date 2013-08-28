@@ -90,11 +90,13 @@ public class ClientNotifier implements LlamaAMListener {
   
   @Override
   public void handle(LlamaAMEvent event) {
-    eventsQueue.add(new Notifier(event));
-    int size = eventsQueue.size();
-    if (size > queueThreshold) {
-      LOG.warn("Outbound events queue over '{}' threshold at '{}", 
-          queueThreshold, size);
+    if (!event.isEmpty()) {
+      eventsQueue.add(new Notifier(event));
+      int size = eventsQueue.size();
+      if (size > queueThreshold) {
+        LOG.warn("Outbound events queue over '{}' threshold at '{}",
+            queueThreshold, size);
+      }
     }
   }
 

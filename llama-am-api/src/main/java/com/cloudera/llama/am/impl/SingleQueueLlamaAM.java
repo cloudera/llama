@@ -244,6 +244,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
         } else {
           event.getAllocatedResources().add(resource);          
         }
+        event.getAllocatedGangResources().add(resource);
       } else {
         reservation.setStatus(PlacedReservation.Status.PARTIAL);
         if (!reservation.isGang()) {
