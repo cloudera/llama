@@ -14,7 +14,7 @@
                       "remote-project-name": "hadoop" },
 
      "zookeeper": {"track-branch": "cdh5-3.4.5", "dir": "repos/cdh5/zookeeper", "remotes": ["origin", "apache"]},
-     "hbase": {"track-branch": "cdh5-0.95.1", "dir": "repos/cdh5/hbase", "remotes": ["origin","apache"]},
+     "hbase": {"track-branch": "cdh5-0.95.2", "dir": "repos/cdh5/hbase", "remotes": ["origin","apache"]},
      "sqoop": {"track-branch": "cdh5-1.4.4", "dir": "repos/cdh5/sqoop", "remotes": ["origin"]},
      "sqoop2": {"track-branch": "cdh5-1.99.2", "dir": "repos/cdh5/sqoop2", "remotes": ["origin"]},
      "pig": {"track-branch": "cdh5-0.11.0", "dir": "repos/cdh5/pig", "remotes": ["origin", "apache"]},
