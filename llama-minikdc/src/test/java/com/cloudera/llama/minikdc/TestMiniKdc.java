@@ -166,7 +166,7 @@ public class TestMiniKdc {
           subject.getPrincipals().iterator().next().getClass());
       Assert.assertEquals(principal + "@" + kdc.getRealm(),
           subject.getPrincipals().iterator().next().getName());
-      loginContext.login();
+      loginContext.logout();
 
     } finally {
       if (loginContext != null) {

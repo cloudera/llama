@@ -77,7 +77,7 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
     <hadoop.version>${cdh.hadoop.version}</hadoop.version>
-    <apacheds.version>2.0.0-M14</apacheds.version>
+    <apacheds.version>2.0.0-M15</apacheds.version>
   </properties>
 
   <repositories>
