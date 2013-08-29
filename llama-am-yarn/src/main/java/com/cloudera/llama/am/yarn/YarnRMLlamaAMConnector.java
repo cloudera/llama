@@ -219,6 +219,7 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
         nodes.add(getNodeName(nodeReport.getNodeId()));
       }
     }
+    LOG.debug("Started AM '{}' for '{}' queue", appId, queue);
   }
 
   private ApplicationId _createApp(YarnClient rmClient, String queue)  
@@ -314,6 +315,7 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
       containerHandlerExecutor = null;
     }
     if (amRmClientAsync != null) {
+      LOG.debug("Stopping AM '{}'", appId);
       try {
         amRmClientAsync.unregisterApplicationMaster(status, msg, "");
       } catch (Exception ex) {
@@ -395,6 +397,7 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
   private void _reserve(RMPlacedReservation reservation) 
       throws LlamaAMException {
     for (RMPlacedResource resource : reservation.getRMResources()) {
+      LOG.debug("Adding container request for '{}'", resource);
       LlamaContainerRequest request = new LlamaContainerRequest(resource);
       amRmClientAsync.addContainerRequest(request);
       resource.setRmPayload(request);
@@ -426,6 +429,7 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
     for (RMPlacedResource resource : resources) {
       Object payload = resource.getRmPayload();
       if (payload != null) {
+        LOG.debug("Releasing container request for '{}'", resource);
         if (payload instanceof LlamaContainerRequest) {
           amRmClientAsync.removeContainerRequest((LlamaContainerRequest) 
               payload);          
@@ -434,7 +438,10 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
           containerIdToClientResourceIdMap.remove(container.getId());
           queue(new ContainerHandler(ugi, resource, container, Action.STOP));
         }
-      }    
+      } else {
+        LOG.debug("Missing RM payload, ignoring release of container " +
+            "request for '{}'", resource);
+      }
     }
   }
     
@@ -469,9 +476,10 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
     for (ContainerStatus containerStatus : containerStatuses) {
       ContainerId containerId = containerStatus.getContainerId();
       UUID clientResourceId = containerIdToClientResourceIdMap.
-          remove(containerId);      
+          remove(containerId);
       if (clientResourceId != null) {
-        //TODO this is not correct, we cannot differentiate between preempted 
+        LOG.warn("Container for resource '{}' is gone", clientResourceId);
+        //TODO this is not correct, we cannot differentiate between preempted
         // and lost, YARN-1049
         changes.add(RMResourceChange.createResourceChange(clientResourceId,
             PlacedResource.Status.PREEMPTED));
@@ -504,6 +512,9 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
           @Override
           public Void run() throws Exception {
             if (action == Action.START) {
+              LOG.debug("Starting container '{}' process for resource '{}' " +
+                  "at node '{}'", container.getId(), clientResourceId,
+                  container.getNodeId());
               ContainerLaunchContext ctx = 
                   Records.newRecord(ContainerLaunchContext.class);
               ctx.setEnvironment(Collections.EMPTY_MAP);
@@ -518,7 +529,7 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
         });
       } catch (Exception ex) {
         LOG.warn(
-            "Could not {} container '{}' for resource '{}' at node '{}', {}'",
+            "Could not {} container '{}' for resource '{}' at node '{}': {}'",
             action, container.getId(), clientResourceId,
             getNodeName(container.getNodeId()), ex.toString(), ex);
         if (action == Action.START) {
@@ -560,7 +571,10 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
         Collection<LlamaContainerRequest> coll = matchingContainerReqs.get(0);
         LlamaContainerRequest req = coll.iterator().next();
         RMPlacedResource pr = req.getPlacedResource();
-      
+
+        LOG.debug("New allocation for '{}' container '{}', node '{}'",
+            pr, container.getId(), container.getNodeId());
+
         pr.setRmPayload(container);
         containerIdToClientResourceIdMap.put(container.getId(), 
             pr.getClientResourceId());
@@ -577,16 +591,22 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
   public void onShutdownRequest() {
     llamaCallback.loseAllReservations();
     llamaCallback.setRunning(false);
+
+    LOG.warn("Yarn requested AM to shutdown");
+
     // no need to use a ugi.doAs() as this is called from within Yarn client
     _stop(FinalApplicationStatus.FAILED, "Shutdown by Yarn");
   }
 
   @Override
   public void onNodesUpdated(List<NodeReport> nodeReports) {
+    LOG.debug("Received nodes update for {} nodes", nodeReports.size());
     for (NodeReport node : nodeReports) {
       if (node.getNodeState() == NodeState.RUNNING) {
+        LOG.debug("Added node {}", node.getNodeId());
         nodes.add(getNodeName(node.getNodeId()));
       } else {
+        LOG.debug("Removed node {}", node.getNodeId());
         nodes.remove(getNodeName(node.getNodeId()));
       }
     }

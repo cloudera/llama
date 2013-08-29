@@ -91,7 +91,10 @@ public class TestLlamaAMWithYarn {
   }
   
   private void stopYarn() {
-    miniYarn.stop();
+    if (miniYarn != null) {
+      miniYarn.stop();
+      miniYarn = null;
+    }
   }
   
   protected static Configuration getLlamaConfiguration() {
