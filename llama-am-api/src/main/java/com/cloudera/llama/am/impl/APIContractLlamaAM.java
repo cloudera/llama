@@ -115,9 +115,6 @@ public class APIContractLlamaAM extends LlamaAM {
     ParamChecker.notNull(reservationId, "reservationId");
     ParamChecker.notNull(reservation, "reservation");
     llamaAM.reserve(reservationId, reservation);
-    if (reservationId == null) {
-      throw new IllegalStateException("Internal error, cannot return NULL");
-    }
     getLog().trace("reserve({}): {}", reservation, reservationId);
   }
 
