@@ -37,10 +37,18 @@ import java.util.UUID;
 
 public class SingleQueueLlamaAM extends LlamaAMImpl implements
     RMLlamaAMCallback {
-  
+
+  public interface Callback {
+
+    public void discardReservation(UUID reservationId);
+
+    public void discardAM(String queue);
+  }
+
   private final String queue;
   private final Map<UUID, PlacedReservationImpl> reservationsMap;
   private final Map<UUID, PlacedResourceImpl> resourcesMap;
+  private final Callback callback;
   private RMLlamaAMConnector rmConnector;
   private boolean running;
 
@@ -49,11 +57,13 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
     return conf.getClass(RM_CONNECTOR_CLASS_KEY, null, RMLlamaAMConnector.class);
   }
   
-  public SingleQueueLlamaAM(Configuration conf, String queue) {
+  public SingleQueueLlamaAM(Configuration conf, String queue,
+      Callback callback) {
     super(conf);
     this.queue = queue;
     reservationsMap = new HashMap<UUID, PlacedReservationImpl>();
     resourcesMap = new HashMap<UUID, PlacedResourceImpl>();
+    this.callback = callback;
   }
 
   // LlamaAM API
@@ -64,7 +74,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
     rmConnector = ReflectionUtils.newInstance(klass, getConf());
     rmConnector.setLlamaAMCallback(this);
     rmConnector.register(queue);
-    setRunning(true);
+    running = true;
   }
   
   public RMLlamaAMConnector getRMConnector() {
@@ -78,7 +88,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
 
   @Override
   public synchronized void stop() {
-    setRunning(false);
+    running = false;
     if (rmConnector != null) {
       rmConnector.unregister();
     }
@@ -110,6 +120,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
         resourcesMap.remove(resource.getClientResourceId());
       }
     }
+    callback.discardReservation(reservationId);
     return reservation;
   }
 
@@ -172,7 +183,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
   }
 
   // PRIVATE METHODS
-  
+
   private LlamaAMEventImpl getEventForClientId(Map<UUID,
       LlamaAMEventImpl> eventsMap, UUID clientId) {
     LlamaAMEventImpl event = eventsMap.get(clientId);
@@ -322,9 +333,9 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
           }
           break;
         case PENDING:
-          getLog().warn("Illegal internal state, reservation '{}' is PENDING, " +
-              "resource '{}' cannot  be lost, releasing reservation ",
-              reservationId, resource.getClientResourceId());
+          getLog().warn("RM lost reservation '{}' with resource '{}', " +
+              "rejecting reservation", reservationId,
+              resource.getClientResourceId());
           _deleteReservation(reservationId);
           toRelease = reservation.getResourceImpls();
           event.getRejectedReservationIds().add(reservationId);
@@ -384,8 +395,8 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
     dispatch(eventsMap.values());
   }
 
-  @Override
-  public void loseAllReservations() {
+  //visible for testing only
+  void loseAllReservations() {
     synchronized (this) {
       List<UUID> clientResourceIds = 
           new ArrayList<UUID>(resourcesMap.keySet());
@@ -399,8 +410,10 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
   }
   
   @Override
-  public void setRunning(boolean running) {
-    this.running = running;
+  public void stoppedByRM() {
+    getLog().warn("Stopped by '{}'", rmConnector.getClass().getSimpleName());
+    loseAllReservations();
+    callback.discardAM(queue);
   }
   
 }

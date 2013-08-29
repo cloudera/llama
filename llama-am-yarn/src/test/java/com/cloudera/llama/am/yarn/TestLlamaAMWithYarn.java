@@ -27,9 +27,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.ProxyUsers;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.server.MiniYARNCluster;
-import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.net.URL;
@@ -54,26 +52,24 @@ public class TestLlamaAMWithYarn {
 
   private static MiniYARNCluster miniYarn;
 
-  private void startYarn(boolean usePortInName) throws Exception {
-    miniYarn = new MiniYARNCluster("minillama", 1, 1, 1);
-
+  private Configuration createMiniYarnConfig(boolean usePortInName)
+      throws Exception {
     Configuration conf = new YarnConfiguration();
-
     //scheduler config
-    URL url = Thread.currentThread().getContextClassLoader().getResource(
-        "fair-scheduler-allocation.xml");
+    URL url = Thread.currentThread().getContextClassLoader().
+        getResource("fair-scheduler-allocation.xml");
     if (url == null) {
-      throw new RuntimeException(
-          "'fair-scheduler-allocation.xml' file not found in classpath");
+      throw new RuntimeException("'fair-scheduler-allocation.xml' file not " +
+          "found in classpath");
     }
     String fsallocationFile = url.toExternalForm();
     if (!fsallocationFile.startsWith("file:")) {
       throw new RuntimeException("File 'fair-scheduler-allocation.xml' is in " +
-          "a JAR, it should be in a directory");      
+          "a JAR, it should be in a directory");
     }
     fsallocationFile = fsallocationFile.substring("file:".length());
     conf.set("yarn.scheduler.fair.allocation.file", fsallocationFile);
-    
+
     //proxy user config
     String llamaProxyUser = System.getProperty("user.name");
     conf.set("hadoop.security.authentication", "simple");
@@ -81,12 +77,15 @@ public class TestLlamaAMWithYarn {
     conf.set("hadoop.proxyuser." + llamaProxyUser + ".groups", "*");
     String[] userGroups = new String[]{"g"};
     UserGroupInformation.createUserForTesting(llamaProxyUser, userGroups);
-
     conf.setBoolean(YarnConfiguration.RM_SCHEDULER_INCLUDE_PORT_IN_NODE_NAME,
         usePortInName);
-    miniYarn.init(conf);
-    miniYarn.start();    
+    return conf;
+  }
 
+  private void startYarn(Configuration conf) throws Exception {
+    miniYarn = new MiniYARNCluster("minillama", 1, 1, 1);
+    miniYarn.init(conf);
+    miniYarn.start();
     ProxyUsers.refreshSuperUserGroupsConfiguration(conf);
   }
   
@@ -96,7 +95,14 @@ public class TestLlamaAMWithYarn {
       miniYarn = null;
     }
   }
-  
+
+  private void restartMiniYarn() throws Exception {
+    Configuration conf = miniYarn.getConfig();
+    conf.setBoolean(YarnConfiguration.YARN_MINICLUSTER_FIXED_PORTS, true);
+    stopYarn();
+    startYarn(conf);
+  }
+
   protected static Configuration getLlamaConfiguration() {
     Configuration conf = new Configuration(false);
     conf.set(LlamaAM.INITIAL_QUEUES_KEY, "queue1,queue2");
@@ -111,7 +117,7 @@ public class TestLlamaAMWithYarn {
 
   private void testReserve(boolean usePortInName) throws Exception {
     try {
-      startYarn(usePortInName);
+      startYarn(createMiniYarnConfig(usePortInName));
       LlamaAM llama = LlamaAM.create(getLlamaConfiguration());
       MyListener listener = new MyListener();
       try {
@@ -126,7 +132,6 @@ public class TestLlamaAMWithYarn {
         while (listener.events.isEmpty()) {
           Thread.sleep(100);
         }
-        System.out.println(listener.events);
       } finally {
         llama.stop();
       }
@@ -143,6 +148,41 @@ public class TestLlamaAMWithYarn {
   @Test(timeout = 60000)
   public void testReserveWithoutPortInName() throws Exception {
     testReserve(false);
+  }
+
+  @Test(timeout = 600000)
+  public void testYarnRestart() throws Exception {
+    try {
+      startYarn(createMiniYarnConfig(false));
+      LlamaAM llama = LlamaAM.create(getLlamaConfiguration());
+      MyListener listener = new MyListener();
+      try {
+        llama.start();
+        llama.addListener(listener);
+        List<String> nodes = llama.getNodes();
+        Assert.assertFalse(nodes.isEmpty());
+        Resource a1 = new Resource(UUID.randomUUID(), nodes.get(0),
+            Resource.LocationEnforcement.MUST, 1, 1024);
+        llama.reserve(new Reservation(UUID.randomUUID(), "queue1",
+            Arrays.asList(a1), true));
+        while (listener.events.isEmpty()) {
+          Thread.sleep(100);
+        }
+        restartMiniYarn();
+        listener.events.clear();
+        llama.reserve(new Reservation(UUID.randomUUID(), "queue1",
+            Arrays.asList(a1), true));
+        while (listener.events.isEmpty()) {
+          Thread.sleep(100);
+        }
+        LlamaAMEvent event = listener.events.get(0);
+        Assert.assertEquals(1, event.getRejectedReservationIds().size());
+      } finally {
+        llama.stop();
+      }
+    } finally {
+      stopYarn();
+    }
   }
 
 }

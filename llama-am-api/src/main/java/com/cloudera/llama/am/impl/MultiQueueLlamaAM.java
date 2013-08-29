@@ -35,7 +35,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener {
+public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
+  SingleQueueLlamaAM.Callback {
   private final Map<String, LlamaAM> ams;
   private final ConcurrentHashMap<UUID, String> reservationToQueue;
   private boolean running;
@@ -65,7 +66,7 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener {
     synchronized (ams) {
       am = ams.get(queue);
       if (am == null) {
-        am = new SingleQueueLlamaAM(getConf(), queue);
+        am = new SingleQueueLlamaAM(getConf(), queue, this);
         am.start();
         am.addListener(this);
         ams.put(queue, am);
@@ -175,8 +176,8 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener {
         ids.addAll(am.releaseReservationsForClientId(clientId));
       } catch (LlamaAMException ex) {
         if (thrown != null) {
-          getLog().error("releaseReservationsFoClientId({}), error: {}", clientId,
-              ex.toString(), ex);
+          getLog().error("releaseReservationsFoClientId({}), error: {}",
+              clientId, ex.toString(), ex);
         }
         thrown = ex;
       }
@@ -186,4 +187,25 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener {
     }
     return ids;
   }
+
+  @Override
+  public void discardAM(String queue) {
+    getLog().warn("discarding queue '{}' and all its reservations", queue);
+    synchronized (ams) {
+      ams.remove(queue);
+      Iterator<Map.Entry<UUID, String>> i =
+          reservationToQueue.entrySet().iterator();
+      while (i.hasNext()) {
+        if (i.next().getValue().equals(queue)) {
+          i.remove();
+        }
+      }
+    }
+  }
+
+  @Override
+  public void discardReservation(UUID reservationId) {
+    reservationToQueue.remove(reservationId);
+  }
+
 }

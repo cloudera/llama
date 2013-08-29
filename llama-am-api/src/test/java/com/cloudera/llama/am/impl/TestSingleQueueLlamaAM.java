@@ -96,11 +96,24 @@ public class TestSingleQueueLlamaAM {
     }
   }
 
+  public static class DummySingleQueueLlamaAMCallback implements
+      SingleQueueLlamaAM.Callback {
+
+    @Override
+    public void discardReservation(UUID reservationId) {
+    }
+
+    @Override
+    public void discardAM(String queue) {
+    }
+  }
+
   private SingleQueueLlamaAM createLlamaAM() {
     Configuration conf = new Configuration(false);
     conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MyRMLlamaAMConnector.class, 
         RMLlamaAMConnector.class);
-    return new SingleQueueLlamaAM(conf, "queue");
+    return new SingleQueueLlamaAM(conf, "queue",
+        new DummySingleQueueLlamaAMCallback());
   }
 
   @Test

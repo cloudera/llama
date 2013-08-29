@@ -21,9 +21,7 @@ import java.util.List;
 
 public interface RMLlamaAMCallback {
   
-  public void setRunning(boolean running);
-
-  public void loseAllReservations();
+  public void stoppedByRM();
 
   public void changesFromRM(final List<RMResourceChange> changes);
 

@@ -589,8 +589,7 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
 
   @Override
   public void onShutdownRequest() {
-    llamaCallback.loseAllReservations();
-    llamaCallback.setRunning(false);
+    llamaCallback.stoppedByRM();
 
     LOG.warn("Yarn requested AM to shutdown");
 
@@ -620,8 +619,7 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
   @Override
   public void onError(final Throwable ex) {
     LOG.error("Error in Yarn client: {}", ex.toString(), ex);
-    llamaCallback.setRunning(false);
-    llamaCallback.loseAllReservations();
+    llamaCallback.stoppedByRM();
     // no need to use a ugi.doAs() as this is called from within Yarn client
     _stop(FinalApplicationStatus.FAILED, "Error in Yarn client: " + ex
         .toString());
