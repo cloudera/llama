@@ -71,6 +71,7 @@ TODO: need license header
     
     <!-- Versions of the dependencies we manage -->
     <cdh.avro.version>1.7.4</cdh.avro.version>
+    <cdh.tika.version>1.3</cdh.tika.version>
    <!-- Use this property in your subprojects's pom. -->
     <cdh.thrift.version>0.9.0</cdh.thrift.version>
 
