@@ -64,7 +64,7 @@ $  mvn site:run
 * Building a Distribution Tarball & a Packaging Tarball
 
 +----+
-$  mvn clean package site -Pdist
+$  mvn clean package -Pdist
 +----+
 
   The standalone tarball will be available at 

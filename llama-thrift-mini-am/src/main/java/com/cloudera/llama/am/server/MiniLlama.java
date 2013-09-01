@@ -46,6 +46,38 @@ import java.util.List;
 import java.util.Map;
 
 public class MiniLlama {
+
+  public static void main(String[] args) throws Exception {
+    System.setProperty("log4j.configuration", "minillama-log4j.properties");
+    if (args.length != 1) {
+      throw new IllegalArgumentException(
+          "Expected 1 argument, number of nodes for HDFS/Yarn minicluster");
+    }
+    int nodes = Integer.parseInt(args[0]);
+    Configuration conf = new Configuration(false);
+    conf.addResource("llama-site.xml");
+    conf = createMiniClusterConf(conf, nodes);
+    final MiniLlama llama = new MiniLlama(conf);
+    llama.start();
+    LOG.info("**************************************************************"
+        + "*******************************************************");
+    LOG.info("Mini Llama running with HDFS/Yarn minicluster with {} nodes, " +
+        "HDFS URI: {} Llama URI: {}", nodes,
+        new YarnConfiguration().get("fs.defaultFS"),
+        llama.getAddressHost() + ":" + llama.getAddressPort());
+    LOG.info("*************************************************************" +
+        "********************************************************");
+    Runtime.getRuntime().addShutdownHook(new Thread() {
+      @Override
+      public void run() {
+        llama.stop();
+      }
+    });
+    synchronized (MiniLlama.class) {
+      MiniLlama.class.wait();
+    }
+  }
+
   private static final Logger LOG = LoggerFactory.getLogger(MiniLlama.class);
 
   public static final String MINI_SERVER_CLASS_KEY = 
@@ -66,10 +98,13 @@ public class MiniLlama {
     }
     Configuration conf = new Configuration(false);
     conf.set(ServerConfiguration.CONFIG_DIR_KEY, "");
-    conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MockRMLlamaAMConnector.class, RMLlamaAMConnector.class);
+    conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MockRMLlamaAMConnector.class,
+        RMLlamaAMConnector.class);
     conf.setStrings(LlamaAM.INITIAL_QUEUES_KEY, queues.toArray(new String[0]));
-    conf.setStrings(MockRMLlamaAMConnector.QUEUES_KEY, queues.toArray(new String[0]));
-    conf.setStrings(MockRMLlamaAMConnector.NODES_KEY, nodes.toArray(new String[0]));
+    conf.setStrings(MockRMLlamaAMConnector.QUEUES_KEY,
+        queues.toArray(new String[0]));
+    conf.setStrings(MockRMLlamaAMConnector.NODES_KEY,
+        nodes.toArray(new String[0]));
     conf.set(MockRMLlamaAMConnector.EVENTS_MIN_WAIT_KEY, "1000");
     conf.set(MockRMLlamaAMConnector.EVENTS_MAX_WAIT_KEY, "10000");
     conf.set(ServerConfiguration.SERVER_ADDRESS_KEY, "localhost:0");
@@ -77,15 +112,21 @@ public class MiniLlama {
     return conf;
   }
 
-  public static Configuration createMiniClusterConf(int nodes) {
+  public static Configuration createMiniClusterConf(Configuration conf,
+      int nodes) {
+    ParamChecker.notNull(conf, "conf");
     ParamChecker.greaterThan(nodes, 0, "nodes");
-    Configuration conf = new Configuration(false);
     conf.set(ServerConfiguration.CONFIG_DIR_KEY, "");
-    conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, YarnRMLlamaAMConnector.class, RMLlamaAMConnector.class);
+    conf.setIfUnset(LlamaAM.RM_CONNECTOR_CLASS_KEY, YarnRMLlamaAMConnector
+        .class.getName());
     conf.setInt(MINI_CLUSTER_NODES_KEY, nodes);
-    conf.set(ServerConfiguration.SERVER_ADDRESS_KEY, "localhost:0");
+    conf.setIfUnset(ServerConfiguration.SERVER_ADDRESS_KEY, "localhost:0");
     conf.setBoolean(START_MINI_CLUSTER, true);
     return conf;
+  }
+
+  public static Configuration createMiniClusterConf(int nodes) {
+    return createMiniClusterConf(new Configuration(false), nodes);
   }
 
   private final Configuration conf;
@@ -158,7 +199,21 @@ public class MiniLlama {
     String[] userGroups = new String[]{"g"};
     UserGroupInformation.createUserForTesting(llamaProxyUser, userGroups);
 
-    miniHdfs = new MiniDFSCluster(conf, clusterNodes, true, null);
+    int hdfsPort = 0;
+    String fsUri = conf.get("fs.defaultFS");
+    if (fsUri != null && !fsUri.equals("file:///")) {
+      int i = fsUri.lastIndexOf(":");
+      if (i > -1) {
+        try {
+          hdfsPort = Integer.parseInt(fsUri.substring(i + 1));
+        } catch (Exception ex) {
+          throw new RuntimeException("Could not parse port from Hadoop's " +
+              "'fs.defaultFS property: " + fsUri);
+        }
+      }
+    }
+    miniHdfs = new MiniDFSCluster(hdfsPort, conf, clusterNodes, true, true,
+        null, null);
     conf = miniHdfs.getConfiguration(0);
     miniYarn = new MiniYARNCluster("minillama", clusterNodes, 1, 1);
     conf.setBoolean(YarnConfiguration.RM_SCHEDULER_INCLUDE_PORT_IN_NODE_NAME,

@@ -94,6 +94,11 @@
       <artifactId>llama-am-mock</artifactId>
       <scope>compile</scope>
     </dependency>
+    <dependency>
+      <groupId>com.cloudera.llama</groupId>
+      <artifactId>llama-thrift-mini-am</artifactId>
+      <scope>compile</scope>
+    </dependency>
   </dependencies>
 
   <profiles>

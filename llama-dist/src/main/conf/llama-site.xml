@@ -154,6 +154,10 @@
     </description>
   </property>
 
+  <!-- Gang anti-deadlock configuration -->
+
+  <!-- TBD -->
+
   <!-- MockLlamaAM configuration -->
   <property>
     <name>llama.am.mock.nodes</name>

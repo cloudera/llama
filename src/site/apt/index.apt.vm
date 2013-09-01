@@ -23,4 +23,7 @@ Llama Overview
   
   Llama provides a Thrift API for Impala to request/release and use allocations 
   outside of Yarn-managed container processes.
-  
+
+* Llama Thrift API
+
+  {{{./Llama.thrift}Llama Thrift definition}}

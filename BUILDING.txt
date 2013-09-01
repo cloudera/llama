@@ -8,7 +8,7 @@ Llama
 
   JDK 1.6+
   Maven 3.0.4+
-  Thrift compiler 0.9.9
+  Thrift compiler 0.9.0
 
 * Build commands:
 

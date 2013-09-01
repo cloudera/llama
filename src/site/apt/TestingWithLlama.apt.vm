@@ -11,22 +11,16 @@
 ~~ limitations under the License.
 
   ---
-  Llama, Integrating
+  Llama, Testing with
   ---
   ---
   ${maven.build.timestamp}
 
-Integrating Llama
+Testing with Llama
 
 %{toc|section=1|fromDepth=2}
 
-* Using Thrift API
-
-  {{{./Llama.thrift}Llama Thrift definition}}
-
-  Llama Thrift server supports unframed transport only.
-  
-* Using MiniLlama for Testcases
+* Using MiniLlama from within Java Testcases
   
   Add the following dependency in your project
   
@@ -42,7 +36,7 @@ Integrating Llama
   The Maven repository where SNAPSHOT artifacts are currently deployed is 
   <<<{{https://repository.cloudera.com/artifactory/libs-snapshot-local}}>>>
 
-  <<IMPORTANT:>> By default, MiniLlama uses an ephemeral port bound to 
+  <<IMPORTANT:>> By default, MiniLlama uses an ephemeral port bound to
   <<<localhost>>> only.
 
 **  Testcase boiler plate code:
@@ -76,7 +70,7 @@ public class TestMiniLlamaWithMock {
 }
 +----+
 
-** Using MiniLlama with MockLlamaAM:
+** Using MiniLlama with MockLlamaAM
   
   You need to create a Mock configuration.
   
@@ -97,13 +91,13 @@ public class TestMiniLlamaWithMock {
 }
 +----+
 
-** Using MiniLlama with YarnLlamaAM:
+** Using MiniLlama with YarnLlamaAM
   
   Using MiniLlama with the YarnLlamAM will also start a Hadoop HDFS/Yarn 
   minicluster. You need to specify how many nodes (number of DataNodes and 
   NodeManagers) for the Hadoop HDFS/Yarn minicluster.
   
-  <<<NOTE:>>> Until {{{https://issues.apache.org/jira/browse/YARN-1008}YARN-1008}} 
+  <<NOTE:>> Until {{{https://issues.apache.org/jira/browse/YARN-1008}YARN-1008}}
   is integrated, only one node miniclusters are supported.
   
   You must have in your classpath (in a directory, not in a JAR) a 
@@ -146,3 +140,53 @@ public class TestMiniLlamaWithMock {
   </queue>
 </allocations>
 +----+
+
+* Using MiniLlama from the Command Line
+
+  <<IMPORTANT:>> MiniLlama from the Command Line is only available from the
+  standalone TARBALL, it is not available in the packaging TARBALL.
+
+** Install MiniLlama
+
+  Expand the <<<llama-${project.version}-standalone.tar.gz>>> TARBALL.
+
+** Configure MiniLlama
+
+  MiniLlama uses the following 2 configuration files from Llama installation
+  directory:
+
+  * <<<conf/llama-site.xml>>>
+
+  * <<<conf/minillama-log4j.properties>>>
+
+** Run MiniLlama
+
+  To run MiniLlama use the <<<minillama>>> script:
+
++---+
+$ bin/minillama --hadoop-conf=/Users/tucu/myhadoopconf --hadoop-nodes=3
++---+
+
+  The 2 options shown are required.
+
+  The <<<--hadoop-conf>>> option must point to a Hadoop configuration defining
+  the configuration for the HDFS minicluster and Yarn minicluster.
+
+  <<IMPORTANT:>> Hadoop core or hdfs configuration files must define the
+  <<<fs.defaultFS>>> property.
+
+  <<IMPORTANT:>> The yarn configuration must define the scheduler configuration
+  and it should not include Map-Reduce's <<<ShuffleHandler>>> auxiliary service
+  to avoid port conflicts.
+
+  The <<<--hadoop-nodes>>> option indicates how many DataNodes and NodeManagers
+  the minicluster should have.
+
+  Once HDFS, Yarn and Llama are running the logs will output the following
+  message:
+
++---+
+2013-09-02 09:14:47,227 INFO  [main] server.MiniLlama (MiniLlama.java:main(62)) - *********************************************************************************************************************
+2013-09-02 09:14:47,244 INFO  [main] server.MiniLlama (MiniLlama.java:main(64)) - Mini Llama running with HDFS/Yarn minicluster with 2 nodes, HDFS URI: hdfs://localhost:8020 Llama URI: 0.0.0.0:15000
+2013-09-02 09:14:47,244 INFO  [main] server.MiniLlama (MiniLlama.java:main(68)) - *********************************************************************************************************************
++---+

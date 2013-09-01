@@ -73,6 +73,9 @@
     <fileSet>
       <directory>${basedir}/src/main/conf</directory>
       <outputDirectory>/conf</outputDirectory>
+      <excludes>
+        <exclude>minillama-log4j.properties</exclude>
+      </excludes>
     </fileSet>
 
     <!-- Sources -->
@@ -103,6 +106,7 @@
       <excludes>
         <exclude>org.apache.hadoop:hadoop-client:*</exclude>
         <exclude>com.cloudera.llama:llama-nm-yarn:*</exclude>
+        <exclude>com.cloudera.llama:llama-thrift-mini-am:*</exclude>
       </excludes>
     </dependencySet>
 
@@ -119,6 +123,7 @@
         <include>com.cloudera.llama:llama-nm-yarn:*</include>
       </includes>
       <excludes>
+        <exclude>com.cloudera.llama:llama-thrift-mini-am:*</exclude>
         <exclude>commons-lang:commons-lang:*</exclude>
         <exclude>commons-codec:commons-codec:*</exclude>
         <exclude>org.slf4j:slf4j-api:*</exclude>
