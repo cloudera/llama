@@ -64,4 +64,4 @@ export HADOOP_USER_CLASSPATH_FIRST=true
 export HADOOP_CLASSPATH="${HADOOP_CLASSPATH}:${CLASSPATH}"
 export HADOOP_CLIENT_OPTS="${HADOOP_CLIENT_OPTS} ${LLAMA_AM_SERVER_OPTS}"
 export HADOOP_CLIENT_OPTS="${HADOOP_CLIENT_OPTS} -Dllama.server.conf.dir=${LLAMA_AM_SERVER_CONF} -Dllama.server.log.dir=${LLAMA_AM_SERVER_LOG}"
-exec hadoop com.cloudera.llama.am.LlamaAMMain$Service
+exec $HADOOP_HOME/bin/hadoop com.cloudera.llama.am.LlamaAMMain$Service
