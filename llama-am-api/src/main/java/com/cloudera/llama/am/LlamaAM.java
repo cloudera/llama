@@ -38,7 +38,7 @@ public abstract class LlamaAM {
 
   public static final String GANG_ANTI_DEADLOCK_ENABLED_KEY = PREFIX_KEY +
       "gang.anti.deadlock.enabled";
-  public static final boolean GANG_ANTI_DEADLOCK_ENABLED_DEFAULT = false;
+  public static final boolean GANG_ANTI_DEADLOCK_ENABLED_DEFAULT = true;
 
   public static final String GANG_ANTI_DEADLOCK_NO_ALLOCATION_LIMIT_KEY =
       PREFIX_KEY + "gang.anti.deadlock.no.allocation.limit.ms";

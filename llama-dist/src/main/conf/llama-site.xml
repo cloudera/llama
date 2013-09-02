@@ -172,7 +172,55 @@
 
   <!-- Gang anti-deadlock configuration -->
 
-  <!-- TBD -->
+  <property>
+    <name>llama.am.gang.anti.deadlock.enabled</name>
+    <value>true</value>
+    <description>
+      Enables Llama AM gang scheduling anti deadlock detection.
+    </description>
+  </property>
+
+  <property>
+    <name>llama.am.gang.anti.deadlock.no.allocation.limit.ms</name>
+    <value>30000</value>
+    <description>
+      Interval of time without any new allocation that will trigger the Llama AM
+      anti-deadlock logic.
+    </description>
+  </property>
+
+  <property>
+    <name>llama.am.gang.anti.deadlock.backoff.percent</name>
+    <value>30</value>
+    <description>
+      Percentage of resources that will be backed off by the Llama AM
+      anti-deadlock logic.
+      Random reservations will be backed off until the percentage of backed off
+      resources reaches this percentage.
+    </description>
+  </property>
+
+  <property>
+    <name>llama.am.gang.anti.deadlock.backoff.min.delay.ms</name>
+    <value>10000</value>
+    <description>
+      Minimum amount of time the backed off reservations will be in 'backed off'
+      state.
+      The actual amount time is a random value between the minimum and the
+      maximum.
+    </description>
+  </property>
+
+  <property>
+    <name>llama.am.gang.anti.deadlock.backoff.max.delay.ms</name>
+    <value>30000</value>
+    <description>
+      Maximum amount of time the backed off reservations will be in 'backed off'
+      state.
+      The actual amount time is a random value between the minimum and the
+      maximum.
+    </description>
+  </property>
 
   <!-- MockLlamaAM configuration -->
   <property>
@@ -264,15 +312,5 @@
       Number of threads used to do container requests to Yarn Node Managers.
     </description>
   </property>
-  <property>
-    <name>llama.am.yarn.include.port.in.node.name</name>
-    <value>false</value>
-    <description>
-      If the node name should include the port or not. This property should
-      only be set to true for testing.
-    </description>
-  </property>
-
-
 
 </configuration>

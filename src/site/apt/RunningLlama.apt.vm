@@ -179,7 +179,36 @@ $
 
   The JMX servlet is available at <<</jmx>>>, for example
   <<<http://localhost:15001/jmx>>>.
-  
+
+** Gang Scheduling Anti-Deadlock Detection
+
+  Llama implements client side gang scheduling by waiting for all resources
+  of a gang reservation to be granted before notifying Impala.
+
+  To avoid deadlocks among multiple reservations waiting for resources held by
+  each other, Llama implements the following anti-deadlock logic. If no new
+  resources are allocated for all gang reservations in a configured amount of
+  time, a back off policy is triggered. The backoff policy will transparently
+  cancel random gang reservations until a configured percentage of canceled
+  resources is reached. The canceled reservations will be backed off for a
+  random delay between a configured minimum and maximum delay. Once the random
+  elapses, the reservation will be automatically submitted.
+
+  The anti-deadlock detection logic is completely transparent to Llama clients.
+
+  The Llama configuration properties for anti-deadlock detection and their
+  default values are
+
+  * llama.am.gang.anti.deadlock.enabled = true
+
+  * llama.am.gang.anti.deadlock.no.allocation.limit.ms = 30000
+
+  * llama.am.gang.anti.deadlock.backoff.percent = 30
+
+  * llama.am.gang.anti.deadlock.backoff.min.delay.ms = 10000
+
+  * llama.am.gang.anti.deadlock.backoff.max.delay.ms = 30000
+
 * Llama Node Manager Plugin
 
 ** Install Llama NM Plugin
