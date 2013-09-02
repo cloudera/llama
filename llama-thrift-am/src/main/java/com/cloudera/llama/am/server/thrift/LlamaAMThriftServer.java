@@ -36,7 +36,6 @@ public class LlamaAMThriftServer extends
     ThriftServer<LlamaAMService.Processor> {
   private LlamaAM llamaAm;
   private ClientNotificationService clientNotificationService;
-  private ClientNotifier clientNotifier;
   private NodeMapper nodeMapper;
   private String httpJmxEndPoint;
 
@@ -100,16 +99,15 @@ public class LlamaAMThriftServer extends
           ServerConfiguration.NODE_NAME_MAPPING_CLASS_DEFAULT,
           NodeMapper.class);
       nodeMapper = ReflectionUtils.newInstance(klass, getConf());
-      clientNotificationService = new ClientNotificationService(getConf());
-      clientNotifier = new ClientNotifier(getConf(), nodeMapper, 
-          clientNotificationService);
+      clientNotificationService = new ClientNotificationService(getConf(),
+          nodeMapper);
+      clientNotificationService.start();
 
       getConf().set(YarnRMLlamaAMConnector.ADVERTISED_HOSTNAME_KEY, 
           ThriftEndPoint.getServerAddress(getConf()));
       getConf().set(YarnRMLlamaAMConnector.ADVERTISED_TRACKING_URL_KEY, 
           YarnRMLlamaAMConnector.NOT_AVAILABLE_VALUE);
       llamaAm = LlamaAM.create(getConf());      
-      clientNotifier.start();
       llamaAm.start();
     } catch (Exception ex) {
       throw new RuntimeException(ex);
@@ -119,13 +117,13 @@ public class LlamaAMThriftServer extends
   @Override
   protected void stopService() {
     llamaAm.stop();
-    clientNotifier.stop();
+    clientNotificationService.stop();
   }
 
   @Override
   protected LlamaAMService.Processor createServiceProcessor() {
     LlamaAMService.Iface handler = new LlamaAMServiceImpl(llamaAm, nodeMapper,
-        clientNotificationService, clientNotifier);
+        clientNotificationService);
     return new LlamaAMService.Processor<LlamaAMService.Iface>(handler);
   }
 

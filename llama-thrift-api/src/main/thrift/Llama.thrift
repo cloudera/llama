@@ -183,13 +183,14 @@ service LlamaNMService {
 struct TLlamaAMNotificationRequest {
   1: required TLlamaServiceVersion     version;
   2: required TUniqueId                am_handle;
-  3: required list<TUniqueId>          allocated_reservation_ids;
-  4: required list<TAllocatedResource> allocated_resources;
-  5: required list<TUniqueId>          rejected_reservation_ids;
-  6: required list<TUniqueId>          rejected_client_resource_ids;
-  7: required list<TUniqueId>          lost_client_resource_ids;
-  8: required list<TUniqueId>          preempted_reservation_ids;
-  9: required list<TUniqueId>          preempted_client_resource_ids;
+  3: required bool                     heartbeat;
+  4: required list<TUniqueId>          allocated_reservation_ids;
+  5: required list<TAllocatedResource> allocated_resources;
+  6: required list<TUniqueId>          rejected_reservation_ids;
+  7: required list<TUniqueId>          rejected_client_resource_ids;
+  8: required list<TUniqueId>          lost_client_resource_ids;
+  9: required list<TUniqueId>          preempted_reservation_ids;
+  10: required list<TUniqueId>          preempted_client_resource_ids;
 }
 
 struct TLlamaAMNotificationResponse {

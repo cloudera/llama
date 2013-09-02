@@ -34,6 +34,7 @@ public class ClientCaller {
   private TTransport tTransport;
   private LlamaNotificationService.Iface client;
   private boolean lastSuccessful;
+  private long lastCall;
   
   public ClientCaller(Configuration conf, String clientId, UUID handle, 
       String host, int port) {
@@ -42,12 +43,17 @@ public class ClientCaller {
     this.handle = handle;
     this.host = host;
     this.port = port;
+    lastCall = System.currentTimeMillis();
   }
   
   public String getClientId() {
     return clientId;
   }
-  
+
+  public UUID getHandle() {
+    return handle;
+  }
+
   public static abstract class Callable<T> implements 
       java.util.concurrent.Callable<T> {
     private String clientId;
@@ -73,6 +79,7 @@ public class ClientCaller {
       throws ClientException {
     T ret;
     try {
+      lastCall = System.currentTimeMillis();
       if (!lastSuccessful) {
         client = createClient();
       }
@@ -102,5 +109,9 @@ public class ClientCaller {
     tTransport = null;
     client = null;
   }
-  
+
+  public synchronized long getLastCall() {
+    return lastCall;
+  }
+
 }

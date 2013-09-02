@@ -32,6 +32,7 @@ import com.cloudera.llama.thrift.TUniqueId;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -118,12 +119,29 @@ public class TypeUtils {
     }
     return tResources;    
   }
-  
+
+  public static TLlamaAMNotificationRequest createHearbeat(UUID clientId) {
+    TLlamaAMNotificationRequest request = new TLlamaAMNotificationRequest();
+    request.setVersion(TLlamaServiceVersion.V1);
+    request.setAm_handle(toTUniqueId(clientId));
+    request.setHeartbeat(true);
+
+    request.setAllocated_reservation_ids(Collections.EMPTY_LIST);
+    request.setAllocated_resources(Collections.EMPTY_LIST);
+    request.setRejected_reservation_ids(Collections.EMPTY_LIST);
+    request.setRejected_client_resource_ids(Collections.EMPTY_LIST);
+    request.setLost_client_resource_ids(Collections.EMPTY_LIST);
+    request.setPreempted_reservation_ids(Collections.EMPTY_LIST);
+    request.setPreempted_client_resource_ids(Collections.EMPTY_LIST);
+    return request;
+  }
+
   public static TLlamaAMNotificationRequest toAMNotification(
       LlamaAMEvent event, NodeMapper nodeMapper) {
     TLlamaAMNotificationRequest request = new TLlamaAMNotificationRequest();
     request.setVersion(TLlamaServiceVersion.V1);
     request.setAm_handle(toTUniqueId(event.getClientId()));
+    request.setHeartbeat(false);
 
     request.setAllocated_reservation_ids(toTUniqueIds(
         event.getAllocatedReservationIds()));

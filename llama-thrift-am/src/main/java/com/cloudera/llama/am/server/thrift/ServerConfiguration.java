@@ -59,6 +59,10 @@ public interface ServerConfiguration {
       "client.notifier.retry.interval.ms";
   public static int CLIENT_NOTIFIER_RETRY_INTERVAL_DEFAULT = 5000;
 
+  public static String CLIENT_NOTIFIER_HEARTBEAT_KEY = KEY_PREFIX +
+      "client.notifier.heartbeat.ms";
+  public static int CLIENT_NOTIFIER_HEARTBEAT_DEFAULT = 30000;
+
   public static String NODE_NAME_MAPPING_CLASS_KEY = KEY_PREFIX +
       "node.name.mapping.class";
   public static Class<? extends NodeMapper> NODE_NAME_MAPPING_CLASS_DEFAULT = 

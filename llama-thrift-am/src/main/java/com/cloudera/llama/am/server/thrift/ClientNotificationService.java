@@ -17,6 +17,8 @@
  */
 package com.cloudera.llama.am.server.thrift;
 
+import com.cloudera.llama.am.LlamaAMEvent;
+import com.cloudera.llama.am.LlamaAMListener;
 import com.cloudera.llama.am.impl.FastFormat;
 import org.apache.hadoop.conf.Configuration;
 
@@ -24,8 +26,8 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class ClientNotificationService implements 
-    ClientNotifier.MaxFailuresListener {
+public class ClientNotificationService implements ClientNotifier.ClientRegistry,
+    LlamaAMListener {
   
   private class Entry {
     private final String clientId;
@@ -42,15 +44,25 @@ public class ClientNotificationService implements
   }
 
   private final Configuration conf;
+  private final ClientNotifier clientNotifier;
   private final ReentrantReadWriteLock lock;
   private final ConcurrentHashMap<UUID, Entry> clients;
   private final ConcurrentHashMap<String, UUID> reverseMap;
 
-  public ClientNotificationService(Configuration conf) {
+  public ClientNotificationService(Configuration conf, NodeMapper nodeMapper) {
     this.conf = conf;
     lock = new ReentrantReadWriteLock();
     clients = new ConcurrentHashMap<UUID, Entry>();
     reverseMap = new ConcurrentHashMap<String, UUID>();
+    clientNotifier = new ClientNotifier(conf, nodeMapper, this);
+  }
+
+  public void start() throws Exception {
+    clientNotifier.start();
+  }
+
+  public void stop() {
+    clientNotifier.stop();
   }
 
   public synchronized UUID register(String clientId, String host, int port) 
@@ -62,6 +74,7 @@ public class ClientNotificationService implements
         handle = UUID.randomUUID();
         clients.put(handle, new Entry(clientId, handle, host, port));
         reverseMap.put(clientId, handle);
+        clientNotifier.registerClientForHeartbeats(handle);
       } else {
         Entry entry = clients.get(handle);
         if (!entry.host.equals(host) || entry.port != port ) {
@@ -117,6 +130,11 @@ public class ClientNotificationService implements
   @Override
   public void onMaxFailures(UUID handle) {
     unregister(handle);
+  }
+
+  @Override
+  public void handle(LlamaAMEvent event) {
+    clientNotifier.handle(event);
   }
 
 }

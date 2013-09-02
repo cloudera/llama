@@ -27,12 +27,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.security.auth.Subject;
-import java.security.PrivilegedAction;
 import java.security.PrivilegedExceptionAction;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.DelayQueue;
-import java.util.concurrent.Delayed;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -40,24 +38,27 @@ public class ClientNotifier implements LlamaAMListener {
   private static final Logger LOG = LoggerFactory.getLogger(
       ClientNotifier.class);
 
-  public interface MaxFailuresListener {
-    void onMaxFailures(UUID handle);
+  public interface ClientRegistry {
+    public ClientCaller getClientCaller(UUID handle);
+    public void onMaxFailures(UUID handle);
   }
 
   private final Configuration conf;
-  private final ClientNotificationService clientNotificationService;
   private final NodeMapper nodeMapper;
+  private final ClientRegistry clientRegistry;
   private int queueThreshold;
   private int maxRetries;
   private int retryInverval;
-  private DelayQueue<Notifier> eventsQueue;
+  private int clientHeartbeat;
+  private DelayQueue<DelayedRunnable> eventsQueue;
   private ThreadPoolExecutor executor;
   private Subject subject;
   
-  public ClientNotifier(Configuration conf, NodeMapper nodeMapper, 
-      ClientNotificationService clientNotificationService) {
+  public ClientNotifier(Configuration conf, NodeMapper nodeMapper,
+      ClientRegistry clientRegistry) {
     this.conf = conf;
     this.nodeMapper = nodeMapper;
+    this.clientRegistry = clientRegistry;
     queueThreshold = conf.getInt(
         ServerConfiguration.CLIENT_NOTIFIER_QUEUE_THRESHOLD_KEY,
         ServerConfiguration.CLIENT_NOTIFIER_QUEUE_THRESHOLD_DEFAULT);
@@ -67,12 +68,14 @@ public class ClientNotifier implements LlamaAMListener {
     retryInverval = conf.getInt(
         ServerConfiguration.CLIENT_NOTIFIER_RETRY_INTERVAL_KEY,
         ServerConfiguration.CLIENT_NOTIFIER_RETRY_INTERVAL_DEFAULT);
-    this.clientNotificationService = clientNotificationService;
+    clientHeartbeat = conf.getInt(
+        ServerConfiguration.CLIENT_NOTIFIER_HEARTBEAT_KEY,
+        ServerConfiguration.CLIENT_NOTIFIER_HEARTBEAT_DEFAULT);
   }
 
   @SuppressWarnings("unchecked")
   public void start() throws Exception {
-    eventsQueue = new DelayQueue<Notifier>();
+    eventsQueue = new DelayQueue<DelayedRunnable>();
     int threads = conf.getInt(
         ServerConfiguration.CLIENT_NOTIFIER_THREADS_KEY,
         ServerConfiguration.CLIENT_NOTIFER_THREADS_DEFAULT);
@@ -87,100 +90,124 @@ public class ClientNotifier implements LlamaAMListener {
     executor.shutdownNow();
     Security.logout(subject);
   }
-  
-  @Override
-  public void handle(LlamaAMEvent event) {
-    if (!event.isEmpty()) {
-      eventsQueue.add(new Notifier(event));
-      int size = eventsQueue.size();
-      if (size > queueThreshold) {
-        LOG.warn("Outbound events queue over '{}' threshold at '{}",
-            queueThreshold, size);
-      }
+
+  private void queueNotifier(Notifier notifier) {
+    eventsQueue.add(notifier);
+    int size = eventsQueue.size();
+    if (size > queueThreshold) {
+      LOG.warn("Outbound events queue over '{}' threshold at '{}",
+          queueThreshold, size);
     }
   }
 
-  public class Notifier implements Runnable, Delayed {
-    private LlamaAMEvent event;
-    private int retries;
-    private int relativeDelay;
-    private long absoluteDelay;
+  public void registerClientForHeartbeats(UUID handle) {
+    queueNotifier(new Notifier(handle));
+  }
 
-    public Notifier(LlamaAMEvent event) {
-      this.event = event;
+  @Override
+  public void handle(LlamaAMEvent event) {
+    if (!event.isEmpty()) {
+      queueNotifier(new Notifier(event.getClientId(),
+          TypeUtils.toAMNotification(event, nodeMapper)));
+    }
+  }
+
+  private void notify(final ClientCaller clientCaller,
+      final TLlamaAMNotificationRequest request)
+      throws Exception {
+      Subject.doAs(subject, new PrivilegedExceptionAction<Object>() {
+        @Override
+        public Object run() throws Exception {
+          clientCaller.execute(new ClientCaller.Callable<Void>() {
+            @Override
+            public Void call() throws ClientException {
+              try {
+                TLlamaAMNotificationResponse response =
+                    getClient().AMNotification(request);
+                if (!TypeUtils.isOK(response.getStatus())) {
+                  LOG.warn("Client notification rejected status '{}', " +
+                      "reason: {}", response.getStatus().getStatus_code(),
+                      response.getStatus().getError_msgs());
+                }
+              } catch (TException ex) {
+                throw new ClientException(ex);
+              }
+              return null;
+            }
+          });
+          return null;
+        }
+      });
+  }
+
+  public class Notifier extends DelayedRunnable {
+    private UUID handle;
+    private TLlamaAMNotificationRequest notification;
+    private int retries;
+
+    public Notifier(UUID handle) {
+      super(clientHeartbeat);
+      this.handle = handle;
+      this.notification = null;
       retries = 0;
-      relativeDelay = 0;
-      absoluteDelay = System.currentTimeMillis();
+    }
+
+    public Notifier(UUID handle, TLlamaAMNotificationRequest notification) {
+      super(0);
+      this.handle = handle;
+      this.notification = notification;
+      retries = 0;
+    }
+
+    protected void doNotification(ClientCaller clientCaller) throws Exception {
+      if (notification != null) {
+        LOG.debug("Doing notification for clientId '{}', retry count '{}'",
+            clientCaller.getClientId(), retries);
+        ClientNotifier.this.notify(clientCaller, notification);
+      } else {
+        LOG.debug("Doing heartbeat for clientId '{}', retry count '{}'\",",
+            clientCaller.getClientId(), retries);
+        long lastCall = System.currentTimeMillis() - clientCaller.getLastCall();
+        if (lastCall > clientHeartbeat) {
+          TLlamaAMNotificationRequest request = TypeUtils.createHearbeat(handle);
+          ClientNotifier.this.notify(clientCaller, request);
+          setDelay(clientHeartbeat);
+        } else {
+          setDelay(clientHeartbeat - lastCall);
+        }
+        ClientNotifier.this.eventsQueue.add(this);
+      }
+      retries = 0;
     }
 
     @Override
     public void run() {
-      UUID handle = event.getClientId();
       String clientId = null;
       try {
-        final ClientCaller clientCaller = 
-            clientNotificationService.getClientCaller(handle);
+        ClientCaller clientCaller = clientRegistry.getClientCaller(handle);
         if (clientCaller != null) {
           clientId = clientCaller.getClientId();
-          final TLlamaAMNotificationRequest request = 
-              TypeUtils.toAMNotification(event, nodeMapper);
-          Subject.doAs(subject, new PrivilegedExceptionAction<Object>() {
-            @Override
-            public Object run() throws Exception {
-              clientCaller.execute(new ClientCaller.Callable<Void>() {
-                @Override
-                public Void call() throws ClientException {
-                  try {
-                    TLlamaAMNotificationResponse response =
-                        getClient().AMNotification(request);
-                    if (!TypeUtils.isOK(response.getStatus())) {
-                      LOG.warn(
-                          "Client notification rejected status '{}', reason: {}",
-                          response.getStatus().getStatus_code(),
-                          response.getStatus().getError_msgs());
-                    }
-                  } catch (TException ex) {
-                    throw new ClientException(ex);
-                  }
-                  return null;
-                }
-              });
-              return null; 
-            }
-          });
+          doNotification(clientCaller);
         } else {
-          LOG.warn("Handle '{}' not known, client notification discarded", 
+          LOG.warn("Handle '{}' not known, client notification discarded",
               handle);
         }
       } catch (Exception ex) {
-        if (retries >= ClientNotifier.this.maxRetries) {
+        if (retries < maxRetries) {
           retries++;
-          LOG.warn("Notification to '{}' failed on '{}' attempt, retrying in " +
-              "'{}' ms, error: {}", new Object[] {clientId, retries, 
-              ClientNotifier.this.retryInverval, ex.toString(), ex});
-          relativeDelay = ClientNotifier.this.retryInverval;
-          absoluteDelay = System.currentTimeMillis();
-          ClientNotifier.this.eventsQueue.add(this);
+          LOG.warn("Notification to '{}' failed on '{}' attempt, " +
+              "retrying in " + "'{}' ms, error: {}", new Object[]{clientId,
+              retries, retryInverval, ex.toString(), ex});
+          setDelay(retryInverval);
+          eventsQueue.add(this);
         } else {
           LOG.warn("Notification to '{}' failed on '{}' attempt, releasing " +
-              "client, error: {}", new Object[] {clientId, retries, 
+              "client, error: {}", new Object[]{clientId, retries,
               ex.toString(), ex});
-          clientNotificationService.onMaxFailures(handle);
+          clientRegistry.onMaxFailures(handle);
         }
       }
     }
-
-    @Override
-    public long getDelay(TimeUnit unit) {
-      return unit.convert(relativeDelay, TimeUnit.MILLISECONDS);
-    }
-
-    @Override
-    public int compareTo(Delayed o) {
-      Notifier other = (Notifier) o;
-      return (int) ((absoluteDelay + relativeDelay) -
-          (other.absoluteDelay + other.relativeDelay));
-    }
   }
-  
+
 }

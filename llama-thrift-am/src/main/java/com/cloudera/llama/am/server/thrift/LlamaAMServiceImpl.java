@@ -49,12 +49,11 @@ public class LlamaAMServiceImpl implements LlamaAMService.Iface {
 
   @SuppressWarnings("unchecked")
   public LlamaAMServiceImpl(LlamaAM llamaAM, NodeMapper nodeMapper, 
-      ClientNotificationService clientNotificationService, 
-      ClientNotifier clientNotifier) {
+      ClientNotificationService clientNotificationService) {
     this.llamaAM = llamaAM;
     this.nodeMapper = nodeMapper;
     this.clientNotificationService = clientNotificationService;
-    llamaAM.addListener(clientNotifier);
+    llamaAM.addListener(clientNotificationService);
   }
 
   @Override
