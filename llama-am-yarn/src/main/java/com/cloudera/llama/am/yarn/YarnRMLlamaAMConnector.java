@@ -201,7 +201,7 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
     nmClient.init(yarnConf);
     nmClient.start();
     appId = _createApp(yarnClient, queue);
-    _monitorAppState(yarnClient, appId, ACCEPTED);
+    _monitorAppState(yarnClient, appId, ACCEPTED, false);
     ugi.addToken(yarnClient.getAMRMToken(appId));
     int heartbeatInterval = getConf().getInt(HEARTBEAT_INTERVAL_KEY, 
         HEARTBEAT_INTERNAL_DEFAULT);
@@ -272,7 +272,8 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
       YarnApplicationState.FINISHED);
 
   private ApplicationReport _monitorAppState(YarnClient rmClient,
-      ApplicationId appId, Set<YarnApplicationState> states)
+      ApplicationId appId, Set<YarnApplicationState> states,
+      boolean calledFromStopped)
       throws LlamaAMException {
     try {
       long timeout = getConf().getLong(APP_MONITOR_TIMEOUT_KEY, 
@@ -293,7 +294,9 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
       }
       return report;
     } catch (Exception ex) {
-      _stop(FinalApplicationStatus.FAILED, "Could not start, error: " + ex);
+      if (!calledFromStopped) {
+        _stop(FinalApplicationStatus.FAILED, "Could not start, error: " + ex);
+      }
       throw new LlamaAMException(ex);
     }
   }
@@ -326,7 +329,8 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
     }
     if (yarnClient != null) {
       try {
-        ApplicationReport report = _monitorAppState(yarnClient, appId, STOPPED);
+        ApplicationReport report = _monitorAppState(yarnClient, appId, STOPPED,
+            true);
         if (report.getFinalApplicationStatus()
             != FinalApplicationStatus.SUCCEEDED) {
           LOG.warn("Problem stopping application, final status '{}'",
