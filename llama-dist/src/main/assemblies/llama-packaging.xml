@@ -107,6 +107,13 @@
         <exclude>org.apache.hadoop:hadoop-client:*</exclude>
         <exclude>com.cloudera.llama:llama-nm-yarn:*</exclude>
         <exclude>com.cloudera.llama:llama-thrift-mini-am:*</exclude>
+        <exclude>commons-lang:commons-lang:*</exclude>
+        <exclude>commons-codec:commons-codec:*</exclude>
+        <exclude>org.slf4j:slf4j-api:*</exclude>
+        <exclude>javax.servlet:servlet-api:*</exclude>
+        <exclude>org.mortbay.jetty:jetty:*</exclude>
+        <exclude>log4j:log4j:*</exclude>
+        <exclude>org.slf4j:slf4j-log4j12:*</exclude>
       </excludes>
     </dependencySet>
 
@@ -127,6 +134,8 @@
         <exclude>commons-lang:commons-lang:*</exclude>
         <exclude>commons-codec:commons-codec:*</exclude>
         <exclude>org.slf4j:slf4j-api:*</exclude>
+        <exclude>javax.servlet:servlet-api:*</exclude>
+        <exclude>org.mortbay.jetty:jetty:*</exclude>
       </excludes>
     </dependencySet>
   </dependencySets>

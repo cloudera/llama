@@ -17,12 +17,13 @@
  */
 package com.cloudera.llama.am.server;
 
+import com.codahale.metrics.MetricRegistry;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class AbstractServer<T> implements Configurable {
+public abstract class AbstractServer implements Configurable {
   private final Logger log;  
   private final String serviceName;
   private Configuration llamaConf;
@@ -90,7 +91,7 @@ public abstract class AbstractServer<T> implements Configurable {
       }
     }
     runLevel = 4;
-    getLog().info("Server listening on: {}:{}", getAddressHost(), 
+    getLog().info("Server listening at: {}:{}", getAddressHost(),
         getAddressPort());
     getLog().info("Llama started!");
   }
@@ -119,8 +120,8 @@ public abstract class AbstractServer<T> implements Configurable {
         getLog().trace("Stopping service '{}'", serviceName);
         stopService();
       } catch (Throwable ex) {
-        getLog().warn("Failed to stop service '{}': {}", new Object[] {
-            serviceName, ex.toString(), ex});
+        getLog().warn("Failed to stop service '{}': {}", serviceName,
+            ex.toString(), ex);
       }
     }
     if (runLevel >= 2) {
@@ -142,16 +143,22 @@ public abstract class AbstractServer<T> implements Configurable {
     getLog().info("Llama shutdown!");
     runLevel = -1;
   }
-  
+
+  private MetricRegistry metrics = new MetricRegistry();
+
   protected void startMetrics() {
-    getLog().warn("METRICS TBD");
+    metrics = new MetricRegistry();
+  }
+
+  protected MetricRegistry getMetrics() {
+    return metrics;
   }
 
   protected void stopMetrics() {
+    metrics = null;
   }
 
   protected void startJMX() {
-    getLog().warn("JMX TBD");
   }
 
   protected void stopJMX() {

@@ -99,6 +99,22 @@
     </description>
   </property>
 
+  <!-- LlamaAM Thrift server JMX configuration -->
+  <property>
+    <name>llama.am.server.thrift.http.jmx.address</name>
+    <value>0.0.0.0:15001</value>
+    <description>The address the LlamaAM server exposes its HTTP JSON JMX
+      servlet at.
+      If 0.0.0.0 is specified as IP, the server will listen in all available
+      network addresses.
+      If the port is not specified, the default port is 15001.
+      The HTTP JSON JMX servlet is exposed over HTTP at '/jmx', i.e.:
+        http://localhost:15001/jmx
+      If the specified port is 0, an ephemeral port will be used, the port in
+      use will be printed in the logs at startup.
+    </description>
+  </property>
+
   <!-- LlamaAM Thrift server Security configuration -->
   <property>
     <name>llama.am.server.thrift.security</name>

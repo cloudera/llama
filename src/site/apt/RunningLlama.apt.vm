@@ -168,6 +168,18 @@ $
   the service hostname. The Thrift SASL implementation composes the complete 
   service principal name (<<<shortName>>>/<<<hostname>>>).
 
+** HTTP JSON JMX Endpoint
+
+  Llama AM exposes a HTTP JSON JMX endpoint (it uses Hadoop's HTTP JSON JMX
+  servlet).
+
+  The <<<llama.am.server.thrift.http.jmx.address>>> configuration property
+  defines the address the JMX servlet is bound to, by default is
+  <<<0.0.0.0:15001>>>.
+
+  The JMX servlet is available at <<</jmx>>>, for example
+  <<<http://localhost:15001/jmx>>>.
+  
 * Llama Node Manager Plugin
 
 ** Install Llama NM Plugin

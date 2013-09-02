@@ -54,6 +54,8 @@ import org.apache.thrift.transport.TTransport;
 import org.junit.Test;
 
 import javax.security.auth.Subject;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -74,7 +76,8 @@ public class TestLlamaAMThriftServer {
     Configuration conf = new Configuration(false);
     conf.set(ServerConfiguration.CONFIG_DIR_KEY, TestMain.createTestDir());
 
-    conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MockRMLlamaAMConnector.class, RMLlamaAMConnector.class);
+    conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MockRMLlamaAMConnector.class,
+        RMLlamaAMConnector.class);
     conf.set(LlamaAM.INITIAL_QUEUES_KEY, "q1,q2");
     conf.set(MockRMLlamaAMConnector.QUEUES_KEY, "q1,q2");
     conf.set(MockRMLlamaAMConnector.NODES_KEY, "n1,n2");
@@ -82,6 +85,7 @@ public class TestLlamaAMThriftServer {
     conf.setInt(MockRMLlamaAMConnector.EVENTS_MAX_WAIT_KEY, 10);
 
     conf.set(ServerConfiguration.SERVER_ADDRESS_KEY, "localhost:0");
+    conf.set(ServerConfiguration.HTTP_JMX_ADDRESS_KEY, "localhost:0");
     return conf;
   }
 
@@ -93,6 +97,10 @@ public class TestLlamaAMThriftServer {
       server.start();
       Assert.assertNotSame(0, server.getAddressPort());
       Assert.assertEquals("localhost", server.getAddressHost());
+      Assert.assertNotNull(server.getHttpJmxEndPoint());
+      HttpURLConnection conn = (HttpURLConnection)
+          new URL(server.getHttpJmxEndPoint()).openConnection();
+      Assert.assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
     } finally {
       server.stop();
     }

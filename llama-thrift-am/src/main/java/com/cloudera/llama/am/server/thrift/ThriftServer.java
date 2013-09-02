@@ -29,8 +29,8 @@ import org.apache.thrift.transport.TTransportFactory;
 import javax.security.auth.Subject;
 import java.security.PrivilegedExceptionAction;
 
-public abstract class ThriftServer<T extends TProcessor> extends 
-    AbstractServer<T> { 
+public abstract class ThriftServer<T extends TProcessor> extends
+    AbstractServer {
   private TServer tServer;
   private TServerSocket tServerSocket;
   private Subject subject;
