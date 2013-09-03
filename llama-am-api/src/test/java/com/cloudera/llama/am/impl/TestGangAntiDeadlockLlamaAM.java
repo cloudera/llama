@@ -84,6 +84,7 @@ public class TestGangAntiDeadlockLlamaAM {
   }
 
   public class MyLlamaAM extends LlamaAMImpl {
+    private boolean running;
     Set<String> invoked;
     Map<UUID, PlacedReservation> reservations;
 
@@ -95,18 +96,20 @@ public class TestGangAntiDeadlockLlamaAM {
 
     @Override
     public void start() throws LlamaAMException {
+      running = true;
       invoked.add("start");
     }
 
     @Override
     public void stop() {
+      running = false;
       invoked.add("stop");
     }
 
     @Override
     public boolean isRunning() {
       invoked.add("isRunning");
-      return true;
+      return running;
     }
 
     @Override
@@ -195,7 +198,9 @@ public class TestGangAntiDeadlockLlamaAM {
     MyLlamaAM am = new MyLlamaAM(conf);
     GangAntiDeadlockLlamaAM gAm = new GangAntiDeadlockLlamaAM(conf, am);
 
+    Assert.assertFalse(gAm.isRunning());
     gAm.start();
+    Assert.assertTrue(gAm.isRunning());
     gAm.getNodes();
     gAm.addListener(null);
     gAm.removeListener(null);
@@ -216,6 +221,7 @@ public class TestGangAntiDeadlockLlamaAM {
     Assert.assertFalse(am.reservations.containsKey(id));
     gAm.releaseReservationsForClientId(UUID.randomUUID());
     gAm.stop();
+    Assert.assertFalse(gAm.isRunning());
 
     Assert.assertEquals(EXPECTED, am.invoked);
   }
