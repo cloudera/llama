@@ -37,7 +37,8 @@ public class LlamaAMThriftServer extends
   private LlamaAM llamaAm;
   private ClientNotificationService clientNotificationService;
   private NodeMapper nodeMapper;
-  private String httpJmxEndPoint;
+  private String httpJmx;
+  private String httpLlama;
 
   public LlamaAMThriftServer() {
     super("LlamaAM");
@@ -49,6 +50,22 @@ public class LlamaAMThriftServer extends
   protected void startJMX() {
     reporter = JmxReporter.forRegistry(getMetrics()).build();
     reporter.start();
+  }
+
+  protected String getHttpJmxEndPoint() {
+    return httpJmx;
+  }
+
+  protected String getHttpLlamaUI() {
+    return httpLlama;
+  }
+
+  protected void stopJMX() {
+    reporter.stop();
+    reporter.close();
+  }
+
+  private void startHttpServer() {
     httpServer = new Server();
     String strAddress = getConf().get(ServerConfiguration.HTTP_JMX_ADDRESS_KEY,
         ServerConfiguration.HTTP_JMX_ADDRESS_DEFAULT);
@@ -63,35 +80,33 @@ public class LlamaAMThriftServer extends
     context.setContextPath("");
     context.setAttribute("hadoop.conf", new Configuration());
     context.addServlet(JMXJsonServlet.class, "/jmx");
+    context.addServlet(LlamaServlet.class, "/*");
     httpServer.addHandler(context);
 
     try {
       httpServer.start();
-      httpJmxEndPoint = "http://" + connector.getHost() + ":" +
+      httpJmx = "http://" + connector.getHost() + ":" +
           connector.getLocalPort() + "/jmx";
-      getLog().info("HTTP JSON JMX endpoint at: {}", httpJmxEndPoint);
+      httpLlama = "http://" + connector.getHost() + ":" +
+          connector.getLocalPort() + "/llama";
+
+      getLog().info("HTTP JSON JMX     : {}", httpJmx);
+      getLog().info("HTTP Llama Web UI : {}", httpLlama);
     } catch (Throwable ex) {
       throw new RuntimeException(ex);
     }
   }
 
-  protected String getHttpJmxEndPoint() {
-    return httpJmxEndPoint;
-  }
-
-  protected void stopJMX() {
+  private void stopHttpServer() {
     try {
       httpServer.stop();
     } catch (Throwable ex) {
-      getLog().warn("Error while shutting down HTTP JSON JMX, {}",
-          ex.toString(), ex);
+      getLog().warn("Error shutting down HTTP server, {}", ex.toString(), ex);
     }
-    reporter.stop();
-    reporter.close();
   }
-
   @Override
   protected void startService() {
+    startHttpServer();
     try {
       Security.loginToHadoop(getConf());
       Class<? extends NodeMapper> klass = getConf().getClass(
@@ -105,8 +120,8 @@ public class LlamaAMThriftServer extends
 
       getConf().set(YarnRMLlamaAMConnector.ADVERTISED_HOSTNAME_KEY, 
           ThriftEndPoint.getServerAddress(getConf()));
-      getConf().set(YarnRMLlamaAMConnector.ADVERTISED_TRACKING_URL_KEY, 
-          YarnRMLlamaAMConnector.NOT_AVAILABLE_VALUE);
+      getConf().set(YarnRMLlamaAMConnector.ADVERTISED_TRACKING_URL_KEY,
+          getHttpLlamaUI());
       llamaAm = LlamaAM.create(getConf());      
       llamaAm.start();
     } catch (Exception ex) {
@@ -118,6 +133,7 @@ public class LlamaAMThriftServer extends
   protected void stopService() {
     llamaAm.stop();
     clientNotificationService.stop();
+    stopHttpServer();
   }
 
   @Override
