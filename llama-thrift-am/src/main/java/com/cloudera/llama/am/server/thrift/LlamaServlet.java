@@ -27,20 +27,31 @@ import java.io.IOException;
 
 public class LlamaServlet extends HttpServlet {
 
+  //TODO: FIX THIS, this is a nasty hack so the page works when proxy-fied by
+  // Yarn
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp)
       throws ServletException, IOException {
     ClassLoader cl = Thread.currentThread().getContextClassLoader();
     if (req.getPathInfo() != null){
       if (req.getPathInfo().equals("/llama")) {
+        resp.sendRedirect("/llama/index.html");
+      } else if (req.getPathInfo().equals("/llama/")) {
+        resp.sendRedirect("/llama/index.html");
+      } else if (req.getPathInfo().equals("/llama/llama")) {
+        resp.sendRedirect("/llama/index.html");
+      } else if (req.getPathInfo().equals("/llama/index.html")) {
+        resp.setContentType("text/html");
         resp.setStatus(HttpServletResponse.SC_OK);
         IOUtils.copyBytes(cl.getResourceAsStream("llama.html"),
             resp.getOutputStream(), 1024);
-      } else if (req.getPathInfo().equals("/llama.png")) {
+      } else if (req.getPathInfo().equals("/llama/llama.png")) {
+        resp.setContentType("image/png");
         resp.setStatus(HttpServletResponse.SC_OK);
         IOUtils.copyBytes(cl.getResourceAsStream("llama.png"),
             resp.getOutputStream(), 1024);
-      } else if (req.getPathInfo().equals("/monkey.gif")) {
+      } else if (req.getPathInfo().equals("/llama/monkey.gif")) {
+        resp.setContentType("image/gif");
         resp.setStatus(HttpServletResponse.SC_OK);
         IOUtils.copyBytes(cl.getResourceAsStream("monkey.gif"),
             resp.getOutputStream(), 1024);

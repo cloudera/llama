@@ -100,12 +100,11 @@ public class TestLlamaAMThriftServer {
       conn = (HttpURLConnection) new URL(server.getHttpLlamaUI()).
           openConnection();
       Assert.assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
-      conn = (HttpURLConnection) new URL(server.getHttpLlamaUI() + ".png").
-          openConnection();
+      conn = (HttpURLConnection) new URL(server.getHttpLlamaUI() +
+          "/llama.png").openConnection();
       Assert.assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
-      conn = (HttpURLConnection)
-          new URL(server.getHttpLlamaUI().replace("/llama", "/monkey.gif")).
-          openConnection();
+      conn = (HttpURLConnection) new URL(server.getHttpLlamaUI() +
+          "/monkey.gif").openConnection();
       Assert.assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
     } finally {
       server.stop();

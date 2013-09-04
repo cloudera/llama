@@ -27,6 +27,7 @@ import org.apache.thrift.transport.TServerSocket;
 import org.apache.thrift.transport.TTransportFactory;
 
 import javax.security.auth.Subject;
+import java.net.InetAddress;
 import java.security.PrivilegedExceptionAction;
 
 public abstract class ThriftServer<T extends TProcessor> extends
@@ -91,8 +92,8 @@ public abstract class ThriftServer<T extends TProcessor> extends
   @Override
   public String getAddressHost() {
     return (tServerSocket != null && tServerSocket.getServerSocket().isBound()) 
-           ? tServerSocket.getServerSocket().getInetAddress().getHostName() 
-           : null;
+           ? getHostname(tServerSocket.getServerSocket().getInetAddress().
+        getHostName()) : null;
   }
 
   @Override
@@ -102,5 +103,21 @@ public abstract class ThriftServer<T extends TProcessor> extends
   }
   
   protected abstract T createServiceProcessor();
+
+  static String getHostname(String address) {
+    try {
+      if (address.startsWith("0.0.0.0")) {
+        address = InetAddress.getLocalHost().getCanonicalHostName();
+      } else {
+        int i = address.indexOf(":");
+        if (i > -1) {
+          address = address.substring(0, i);
+        }
+      }
+      return address;
+    } catch (Exception ex) {
+      throw new RuntimeException(ex);
+    }
+  }
 
 }

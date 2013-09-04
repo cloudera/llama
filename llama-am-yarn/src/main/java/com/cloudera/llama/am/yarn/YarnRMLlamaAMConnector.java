@@ -109,9 +109,10 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
 
   public static final String ADVERTISED_HOSTNAME_KEY = PREFIX_KEY + 
       "advertised.hostname";
-  public static final String ADVERTISED_TRACKING_URL_KEY = PREFIX_KEY + 
+  public static final String ADVERTISED_PORT_KEY = PREFIX_KEY +
+      "advertised.port";
+  public static final String ADVERTISED_TRACKING_URL_KEY = PREFIX_KEY +
       "advertised.tracking.url";
-  public static final String NOT_AVAILABLE_VALUE = "*not available*";
 
   private Configuration conf;
   private boolean includePortInNodeName;
@@ -209,10 +210,12 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
         YarnRMLlamaAMConnector.this);
     amRmClientAsync.init(yarnConf);
     amRmClientAsync.start();
+    String urlWithoutScheme = getConf().get(ADVERTISED_TRACKING_URL_KEY,
+        "http://").substring("http://".length());
     RegisterApplicationMasterResponse response = amRmClientAsync
         .registerApplicationMaster(
-            getConf().get(ADVERTISED_HOSTNAME_KEY, NOT_AVAILABLE_VALUE), 0, 
-            getConf().get(ADVERTISED_TRACKING_URL_KEY, NOT_AVAILABLE_VALUE));
+            getConf().get(ADVERTISED_HOSTNAME_KEY, ""),
+            getConf().getInt(ADVERTISED_PORT_KEY, 0), urlWithoutScheme);
     maxResource = response.getMaximumResourceCapability();
     for (NodeReport nodeReport : yarnClient.getNodeReports()) {
       if (nodeReport.getNodeState() == NodeState.RUNNING) {
@@ -238,7 +241,9 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
       appContext.setApplicationId(appId);
 
       // set the application name
-      appContext.setApplicationName("LlamaAM");
+      appContext.setApplicationName("Llama for " + queue);
+
+      appContext.setApplicationType("LLAMA");
 
       // Set the priority for the application master
       Priority pri = Records.newRecord(Priority.class);

@@ -85,9 +85,9 @@ public class LlamaAMThriftServer extends
 
     try {
       httpServer.start();
-      httpJmx = "http://" + connector.getHost() + ":" +
+      httpJmx = "http://" + getHostname(connector.getHost()) + ":" +
           connector.getLocalPort() + "/jmx";
-      httpLlama = "http://" + connector.getHost() + ":" +
+      httpLlama = "http://" + getHostname(connector.getHost()) + ":" +
           connector.getLocalPort() + "/llama";
 
       getLog().info("HTTP JSON JMX     : {}", httpJmx);
@@ -118,8 +118,10 @@ public class LlamaAMThriftServer extends
           nodeMapper);
       clientNotificationService.start();
 
-      getConf().set(YarnRMLlamaAMConnector.ADVERTISED_HOSTNAME_KEY, 
+      getConf().set(YarnRMLlamaAMConnector.ADVERTISED_HOSTNAME_KEY,
           ThriftEndPoint.getServerAddress(getConf()));
+      getConf().setInt(YarnRMLlamaAMConnector.ADVERTISED_PORT_KEY,
+          ThriftEndPoint.getServerPort(getConf()));
       getConf().set(YarnRMLlamaAMConnector.ADVERTISED_TRACKING_URL_KEY,
           getHttpLlamaUI());
       llamaAm = LlamaAM.create(getConf());      
