@@ -77,7 +77,7 @@ public class TestClientNotifier {
   @Test
   public void testHeartbeats() throws Exception {
     Configuration conf = new Configuration(false);
-    conf.setInt(ServerConfiguration.CLIENT_NOTIFIER_HEARTBEAT_KEY, 100);
+    conf.setInt(ServerConfiguration.CLIENT_NOTIFIER_HEARTBEAT_KEY, 300);
     String clientId = "cId";
     UUID handle = UUID.randomUUID();
     MyClientRegistry cr = new MyClientRegistry(conf, clientId, handle,
@@ -89,11 +89,11 @@ public class TestClientNotifier {
       cn.start();
       cn.registerClientForHeartbeats(handle);
       Assert.assertEquals(0, notificationServer.notifications.size());
-      Thread.sleep(150); //adding 50ms extra
+      Thread.sleep(350); //adding 50ms extra
       Assert.assertEquals(1, notificationServer.notifications.size());
       Assert.assertTrue(notificationServer.notifications.get(0).isHeartbeat());
       notificationServer.notifications.clear();
-      Thread.sleep(150); //adding 50ms extra
+      Thread.sleep(350); //adding 50ms extra
       Assert.assertEquals(1, notificationServer.notifications.size());
       Assert.assertTrue(notificationServer.notifications.get(0).isHeartbeat());
     } finally {
