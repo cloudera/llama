@@ -23,6 +23,13 @@ import com.cloudera.llama.am.yarn.YarnRMLlamaAMConnector;
 import com.cloudera.llama.server.AbstractServer;
 import com.cloudera.llama.server.NodeMapper;
 import com.cloudera.llama.server.ServerConfiguration;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.server.datanode.DataNode;
@@ -46,16 +53,17 @@ import java.util.Map;
 public class MiniLlama {
 
   public static void main(String[] args) throws Exception {
-    System.setProperty("log4j.configuration", "llama-log4j.properties");
-    if (args.length != 1) {
-      throw new IllegalArgumentException(
-          "Expected 1 argument, number of nodes for HDFS/Yarn minicluster");
+    CommandLine cli = parseArguments(args);
+    if (cli == null) {
+      return;
     }
-    int nodes = Integer.parseInt(args[0]);
+    System.setProperty("log4j.configuration", "minillama-log4j.properties");
     Configuration conf = new Configuration(false);
     conf.addResource("llama-site.xml");
+    int nodes = intArgument(cli, "nodes", 1);
     conf = createMiniClusterConf(conf, nodes);
     final MiniLlama llama = new MiniLlama(conf);
+    llama.skipDfsFormat(cli.hasOption("noformat"));
     llama.start();
     LOG.info("**************************************************************"
         + "*******************************************************");
@@ -76,13 +84,66 @@ public class MiniLlama {
     }
   }
 
-  private static final Logger LOG = LoggerFactory.getLogger(MiniLlama.class);
+  /**
+   * Creates configuration options object.
+   */
+  @SuppressWarnings("static-access")
+  static Options makeOptions() {
+    Options options = new Options();
+    options
+        .addOption("nodes", true, "How many nodes to use (default 1)")
+        .addOption("noformat", false, "Do not format the DFS (default false)")
+        .addOption(
+            OptionBuilder.withDescription("Prints option help.").create("help"));
+    return options;
+  }
 
-  public static final String MINI_SERVER_CLASS_KEY =
-      "llama.am.server.mini.server.class";
+  /**
+   * Parses arguments.
+   *
+   * @param args
+   *          Command-line arguments.
+   * @return a the parsed args on successful parse; null to indicate that the
+   *         program should exit.
+   */
+  static CommandLine parseArguments(String[] args) {
+    Options options = makeOptions();
+    CommandLine cli;
+    try {
+      CommandLineParser parser = new GnuParser();
+      cli = parser.parse(options, args);
+    } catch (ParseException e) {
+      LOG.warn("options parsing failed:  " + e.getMessage());
+      new HelpFormatter().printHelp("...", options);
+      return null;
+    }
 
-  private static final String MINI_CLUSTER_NODES_KEY =
-      "llama.am.server.mini.cluster.nodes";
+    if (cli.hasOption("help")) {
+      new HelpFormatter().printHelp("...", options);
+      return null;
+    }
+    if (cli.getArgs().length > 0) {
+      //TODO: check this with casey
+      for (String arg : cli.getArgs()) {
+        System.err.println("Unrecognized option: " + arg);
+        new HelpFormatter().printHelp("...", options);
+        return null;
+      }
+    }
+    return cli;
+  }
+
+  /**
+   * Extracts an integer argument with specified default value.
+   */
+  static int intArgument(CommandLine cli, String argName, int default_) {
+    String o = cli.getOptionValue(argName);
+    if (o == null) {
+      return default_;
+    } else {
+      return Integer.parseInt(o);
+    }
+  }
 
   private static ServerConfiguration S_CONF = new AMServerConfiguration(
       new Configuration(false));
@@ -104,7 +165,16 @@ public class MiniLlama {
     return createMiniClusterConf(new Configuration(false), nodes);
   }
 
+  private static final Logger LOG = LoggerFactory.getLogger(MiniLlama.class);
+
+  public static final String MINI_SERVER_CLASS_KEY = 
+      "llama.am.server.mini.server.class";
+
+  private static final String MINI_CLUSTER_NODES_KEY =
+      "llama.am.server.mini.cluster.nodes";
+
   private final Configuration conf;
+  private boolean skipDfsFormat = false;
   private final AbstractServer server;
   private List<String> dataNodes;
   private MiniDFSCluster miniHdfs;
@@ -120,6 +190,10 @@ public class MiniLlama {
 
   public Configuration getConf() {
     return conf;
+  }
+
+  public void skipDfsFormat(boolean skipDfsFormat) {
+    this.skipDfsFormat = skipDfsFormat;
   }
 
   public void start() throws Exception {
@@ -181,8 +255,8 @@ public class MiniLlama {
         }
       }
     }
-    miniHdfs = new MiniDFSCluster(hdfsPort, conf, clusterNodes, true, true,
-        null, null);
+    miniHdfs = new MiniDFSCluster(hdfsPort, conf, clusterNodes, !skipDfsFormat,
+        true, null, null);
     conf = miniHdfs.getConfiguration(0);
     miniYarn = new MiniYARNCluster("minillama", clusterNodes, 1, 1);
     conf.setBoolean(YarnConfiguration.RM_SCHEDULER_INCLUDE_PORT_IN_NODE_NAME,

@@ -40,7 +40,10 @@ do
     hadoopconf=${i#*=}
     ;;
   --hadoop-nodes=*)
-    hadoopnodes=${i#*=}
+    hadoopnodes="-nodes ${i#*=}"
+    ;;
+  --no-format)
+    noformat="-noformat"
     ;;
   --verbose)
     verbose=true
@@ -59,6 +62,7 @@ if [[ "${hadoopconf}" == "" || "${hadoopnodes}" == "" ]] ; then
   echo "Usage: minillama <OPTIONS>"
   echo "                 --hadoop-conf=<HADOOP_CONF_DIR>"
   echo "                 --hadoop-nodes=<CLUSTER_SIZE>"
+  echo "                 --no-format"
   echo "                 [--verbose]"
   echo
   exit 1
@@ -84,4 +88,4 @@ then
 fi
 
 ${JAVA_BIN} ${MINI_LLAMA_OPTS} -cp ${CLASSPATH} \
-  com.cloudera.llama.am.MiniLlama ${hadoopnodes}
+  com.cloudera.llama.am.MiniLlama ${hadoopnodes} ${noformat}
