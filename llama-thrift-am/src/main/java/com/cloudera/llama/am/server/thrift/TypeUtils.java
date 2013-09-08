@@ -18,6 +18,7 @@
 package com.cloudera.llama.am.server.thrift;
 
 import com.cloudera.llama.am.LlamaAMEvent;
+import com.cloudera.llama.am.LlamaAMException;
 import com.cloudera.llama.am.PlacedResource;
 import com.cloudera.llama.am.Reservation;
 import com.cloudera.llama.am.Resource;
@@ -39,15 +40,17 @@ import java.util.UUID;
 public class TypeUtils {
   public static final TStatus OK = new TStatus().setStatus_code(TStatusCode.OK);
 
-  public static TStatus createRuntimeError(String ... msg) {
+  public static TStatus createRuntimeError(Throwable ex) {
     TStatus error = new TStatus().setStatus_code(TStatusCode.RUNTIME_ERROR);
-    error.setError_msgs(Arrays.asList(msg));
+    error.setError_msgs(Arrays.asList(ExceptionUtils.getRootCause(ex, 
+        LlamaAMException.class).toString()));
     return error;
   }
 
-  public static TStatus createInternalError(String ... msg) {
+  public static TStatus createInternalError(Throwable ex) {
     TStatus error = new TStatus().setStatus_code(TStatusCode.INTERNAL_ERROR);
-    error.setError_msgs(Arrays.asList(msg));
+    error.setError_msgs(Arrays.asList(ExceptionUtils.getRootCause(ex, 
+        LlamaAMException.class).toString()));
     return error;
   }
 

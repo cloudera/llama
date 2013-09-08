@@ -316,6 +316,29 @@ public class TestLlamaAMThriftServer {
           Thread.sleep(300);
           Assert.assertEquals(1, callbackServer.notifications.size());
 
+          //invalid reservation
+          tresReq = new TLlamaAMReservationRequest();
+          tresReq.setVersion(TLlamaServiceVersion.V1);
+          tresReq.setAm_handle(trRes.getAm_handle());
+          tresReq.setQueue("q1");
+          tResource = new TResource();
+          tResource.setClient_resource_id(TypeUtils.toTUniqueId(UUID
+              .randomUUID()));
+          tResource.setAskedLocation(MockLlamaAMFlags.ALLOCATE + "n1");
+          tResource.setV_cpu_cores((short) 0);
+          tResource.setMemory_mb(0);
+          tResource.setEnforcement(TLocationEnforcement.MUST);
+          tresReq.setResources(Arrays.asList(tResource));
+          tresReq.setGang(true);
+          tresRes = client.Reserve(tresReq);
+          Assert.assertEquals(TStatusCode.RUNTIME_ERROR, tresRes.getStatus()
+              .getStatus_code());
+          Assert.assertTrue(tresRes.getStatus().getError_msgs().get(0).
+              contains("IllegalArgumentException"));
+          //check notification delivery
+          Thread.sleep(300);
+          Assert.assertEquals(1, callbackServer.notifications.size());
+
           //unregister
           TLlamaAMUnregisterRequest turReq = new TLlamaAMUnregisterRequest();
           turReq.setVersion(TLlamaServiceVersion.V1);

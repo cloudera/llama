@@ -67,12 +67,9 @@ public class LlamaAMServiceImpl implements LlamaAMService.Iface {
           tAddress.getHostname(), tAddress.getPort());
       response.setStatus(TypeUtils.OK);
       response.setAm_handle(TypeUtils.toTUniqueId(handle));
-    } catch (ClientRegistryException ex) {
-      LOG.warn("Register() client error: {}", ex.toString(), ex);
-      response.setStatus(TypeUtils.createRuntimeError(ex.getMessage()));      
-    } catch (Exception ex) {
-      LOG.warn("Register() internal error: {}", ex.toString(), ex);
-      response.setStatus(TypeUtils.createInternalError(ex.getMessage()));
+    } catch (Throwable ex) {
+      LOG.warn("Register() error: {}", ex.toString(), ex);
+      response.setStatus(TypeUtils.createRuntimeError(ex));      
     }
     return response;
   }
@@ -97,7 +94,7 @@ public class LlamaAMServiceImpl implements LlamaAMService.Iface {
       response.setStatus(TypeUtils.OK);
     } catch (Exception ex) {
       LOG.warn("Unregister() internal error: {}", ex.toString(), ex);
-      response.setStatus(TypeUtils.createInternalError(ex.getMessage()));
+      response.setStatus(TypeUtils.createRuntimeError(ex));
     }
     return response;
   }
@@ -113,12 +110,9 @@ public class LlamaAMServiceImpl implements LlamaAMService.Iface {
       UUID reservationId = llamaAM.reserve(reservation);
       response.setReservation_id(TypeUtils.toTUniqueId(reservationId));
       response.setStatus(TypeUtils.OK);
-    } catch (ClientRegistryException ex) {
-      LOG.warn("Reserve() client error: {}", ex.toString(), ex);
-      response.setStatus(TypeUtils.createRuntimeError(ex.getMessage()));
-    } catch (Exception ex) {
-      LOG.warn("Reserve() internal error: {}", ex.toString(), ex);
-      response.setStatus(TypeUtils.createInternalError(ex.getMessage()));
+    } catch (Throwable ex) {
+      LOG.warn("Reserve() error: {}", ex.toString(), ex);
+      response.setStatus(TypeUtils.createRuntimeError(ex));
     }
     return response;
   }
@@ -133,12 +127,9 @@ public class LlamaAMServiceImpl implements LlamaAMService.Iface {
         UUID reservationId = TypeUtils.toUUID(request.getReservation_id());
         llamaAM.releaseReservation(reservationId);
         response.setStatus(TypeUtils.OK);
-    } catch (ClientRegistryException ex) {
-      LOG.warn("Release() client error: {}", ex.toString(), ex);
-      response.setStatus(TypeUtils.createRuntimeError(ex.getMessage()));
-    } catch (Exception ex) {
-      LOG.warn("Release() internal error: {}", ex.toString(), ex);
-      response.setStatus(TypeUtils.createInternalError(ex.getMessage()));
+    } catch (Throwable ex) {
+      LOG.warn("Release() error: {}", ex.toString(), ex);
+      response.setStatus(TypeUtils.createRuntimeError(ex));
     }
     return response;
   }
@@ -153,12 +144,9 @@ public class LlamaAMServiceImpl implements LlamaAMService.Iface {
       List<String> nodes = nodeMapper.getDataNodes(llamaAM.getNodes());
       response.setNodes(nodes);
       response.setStatus(TypeUtils.OK);
-    } catch (ClientRegistryException ex) {
-      LOG.warn("GetNodes() client error: {}", ex.toString(), ex);
-      response.setStatus(TypeUtils.createRuntimeError(ex.getMessage()));
-    } catch (Exception ex) {
-      LOG.warn("GetNodes() internal error: {}", ex.toString(), ex);
-      response.setStatus(TypeUtils.createInternalError(ex.getMessage()));
+    } catch (Throwable ex) {
+      LOG.warn("GetNodes() error: {}", ex.toString(), ex);
+      response.setStatus(TypeUtils.createRuntimeError(ex));
     }
     return response;
   }
