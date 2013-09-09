@@ -24,13 +24,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class Reservation <T extends Resource> {
+public class Reservation<T extends Resource> {
   private final UUID clientId;
   private final String queue;
   private final List<T> resources;
   private final boolean gang;
 
-  public Reservation(UUID clientId, String queue, 
+  public Reservation(UUID clientId, String queue,
       List<? extends Resource> resources, boolean gang) {
     this.clientId = ParamChecker.notNull(clientId, "clientId");
     this.queue = ParamChecker.notEmpty(queue, "queue");
@@ -42,7 +42,7 @@ public class Reservation <T extends Resource> {
 
   @SuppressWarnings("unchecked")
   protected Reservation(Reservation reservation) {
-    this(reservation.getClientId(), reservation.getQueue(), 
+    this(reservation.getClientId(), reservation.getQueue(),
         reservation.getResources(), reservation.isGang());
   }
 
@@ -54,7 +54,7 @@ public class Reservation <T extends Resource> {
   public UUID getClientId() {
     return clientId;
   }
-  
+
   public String getQueue() {
     return queue;
   }
@@ -71,7 +71,7 @@ public class Reservation <T extends Resource> {
       "queue: {} resources: {} gang: {}]";
 
   public String toString() {
-    return FastFormat.format(TO_STRING_MSG, getClientId(), getQueue(), 
+    return FastFormat.format(TO_STRING_MSG, getClientId(), getQueue(),
         getResources(), isGang());
   }
 

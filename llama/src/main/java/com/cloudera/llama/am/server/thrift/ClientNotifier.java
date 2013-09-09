@@ -39,7 +39,9 @@ public class ClientNotifier implements LlamaAMListener {
       ClientNotifier.class);
 
   public interface ClientRegistry {
+    
     public ClientCaller getClientCaller(UUID handle);
+
     public void onMaxFailures(UUID handle);
   }
 
@@ -53,7 +55,7 @@ public class ClientNotifier implements LlamaAMListener {
   private DelayQueue<DelayedRunnable> eventsQueue;
   private ThreadPoolExecutor executor;
   private Subject subject;
-  
+
   public ClientNotifier(Configuration conf, NodeMapper nodeMapper,
       ClientRegistry clientRegistry) {
     this.conf = conf;
@@ -85,7 +87,7 @@ public class ClientNotifier implements LlamaAMListener {
     executor.prestartAllCoreThreads();
     subject = Security.loginClientSubject(conf);
   }
-  
+
   public void stop() {
     executor.shutdownNow();
     Security.logout(subject);
@@ -115,29 +117,29 @@ public class ClientNotifier implements LlamaAMListener {
   private void notify(final ClientCaller clientCaller,
       final TLlamaAMNotificationRequest request)
       throws Exception {
-      Subject.doAs(subject, new PrivilegedExceptionAction<Object>() {
-        @Override
-        public Object run() throws Exception {
-          clientCaller.execute(new ClientCaller.Callable<Void>() {
-            @Override
-            public Void call() throws ClientException {
-              try {
-                TLlamaAMNotificationResponse response =
-                    getClient().AMNotification(request);
-                if (!TypeUtils.isOK(response.getStatus())) {
-                  LOG.warn("Client notification rejected status '{}', " +
-                      "reason: {}", response.getStatus().getStatus_code(),
-                      response.getStatus().getError_msgs());
-                }
-              } catch (TException ex) {
-                throw new ClientException(ex);
+    Subject.doAs(subject, new PrivilegedExceptionAction<Object>() {
+      @Override
+      public Object run() throws Exception {
+        clientCaller.execute(new ClientCaller.Callable<Void>() {
+          @Override
+          public Void call() throws ClientException {
+            try {
+              TLlamaAMNotificationResponse response =
+                  getClient().AMNotification(request);
+              if (!TypeUtils.isOK(response.getStatus())) {
+                LOG.warn("Client notification rejected status '{}', " +
+                    "reason: {}", response.getStatus().getStatus_code(),
+                    response.getStatus().getError_msgs());
               }
-              return null;
+            } catch (TException ex) {
+              throw new ClientException(ex);
             }
-          });
-          return null;
-        }
-      });
+            return null;
+          }
+        });
+        return null;
+      }
+    });
   }
 
   public class Notifier extends DelayedRunnable {
@@ -196,14 +198,14 @@ public class ClientNotifier implements LlamaAMListener {
         if (retries < maxRetries) {
           retries++;
           LOG.warn("Notification to '{}' failed on '{}' attempt, " +
-              "retrying in " + "'{}' ms, error: {}", new Object[]{clientId,
-              retries, retryInverval, ex.toString(), ex});
+              "retrying in " + "'{}' ms, error: {}", 
+              new Object[]{clientId, retries, retryInverval, ex.toString(), ex});
           setDelay(retryInverval);
           eventsQueue.add(this);
         } else {
           LOG.warn("Notification to '{}' failed on '{}' attempt, releasing " +
-              "client, error: {}", new Object[]{clientId, retries,
-              ex.toString(), ex});
+              "client, error: {}", 
+              new Object[]{clientId, retries, ex.toString(), ex});
           clientRegistry.onMaxFailures(handle);
         }
       }

@@ -52,7 +52,7 @@ public class TestMiniLlama {
     String fsallocationFile = url.toExternalForm();
     if (!fsallocationFile.startsWith("file:")) {
       throw new RuntimeException("File 'fair-scheduler-allocation.xml' is in " +
-          "a JAR, it should be in a directory");      
+          "a JAR, it should be in a directory");
     }
     fsallocationFile = fsallocationFile.substring("file:".length());
     Configuration conf = MiniLlama.createMiniClusterConf(2);
@@ -104,7 +104,7 @@ public class TestMiniLlama {
 
     } finally {
       server.stop();
-    }      
+    }
   }
-  
+
 }

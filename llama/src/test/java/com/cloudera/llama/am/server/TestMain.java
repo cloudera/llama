@@ -35,7 +35,7 @@ import java.util.UUID;
 
 public class TestMain {
   public static final String LLAMA_BUILD_DIR = "test.llama.build.dir";
-  
+
   public static String createTestDir() {
     File dir = new File(System.getProperty(LLAMA_BUILD_DIR, "target"));
     dir = new File(dir, UUID.randomUUID().toString()).getAbsoluteFile();
@@ -57,7 +57,8 @@ public class TestMain {
     System.getProperties().remove(Main.LOG_DIR_SYS_PROP);
   }
 
-  private void createMainConf(String confDir, Configuration conf) throws Exception{
+  private void createMainConf(String confDir, Configuration conf)
+      throws Exception {
     System.setProperty(Main.CONF_DIR_SYS_PROP, confDir);
     conf.setIfUnset(LlamaAM.RM_CONNECTOR_CLASS_KEY, MockRMLlamaAMConnector
         .class.getName());
@@ -67,14 +68,14 @@ public class TestMain {
     conf.writeXml(writer);
     writer.close();
   }
-  
+
   @Test
   public void testMainOK1() throws Exception {
     String testDir = createTestDir();
     createMainConf(testDir, new Configuration(false));
     final Main main = new Main();
     main.releaseRunningLatch();
-    Assert.assertEquals(0, main.run(null));    
+    Assert.assertEquals(0, main.run(null));
     main.waitStopLach();
   }
 
@@ -116,7 +117,7 @@ public class TestMain {
     System.setProperty(Main.CONF_DIR_SYS_PROP, testDir);
     Main.Service.verifyRequiredSysProps();
   }
-  
+
   @Test(expected = RuntimeException.class)
   public void testServiceError3() throws Exception {
     String testDir = createTestDir();

@@ -42,14 +42,14 @@ public class TypeUtils {
 
   public static TStatus createRuntimeError(Throwable ex) {
     TStatus error = new TStatus().setStatus_code(TStatusCode.RUNTIME_ERROR);
-    error.setError_msgs(Arrays.asList(ExceptionUtils.getRootCause(ex, 
+    error.setError_msgs(Arrays.asList(ExceptionUtils.getRootCause(ex,
         LlamaAMException.class).toString()));
     return error;
   }
 
   public static TStatus createInternalError(Throwable ex) {
     TStatus error = new TStatus().setStatus_code(TStatusCode.INTERNAL_ERROR);
-    error.setError_msgs(Arrays.asList(ExceptionUtils.getRootCause(ex, 
+    error.setError_msgs(Arrays.asList(ExceptionUtils.getRootCause(ex,
         LlamaAMException.class).toString()));
     return error;
   }
@@ -76,51 +76,51 @@ public class TypeUtils {
     int vCpuCores = resource.getV_cpu_cores();
     int memoryMb = resource.getMemory_mb();
     String location = nodeMapper.getNodeManager(resource.getAskedLocation());
-    Resource.LocationEnforcement enforcement = 
+    Resource.LocationEnforcement enforcement =
         Resource.LocationEnforcement.valueOf(resource.getEnforcement().
             toString());
     return new Resource(clientId, location, enforcement, vCpuCores, memoryMb);
   }
-  
+
   public static List<Resource> toResourceList(List<TResource> tResources,
       NodeMapper nodeMapper) {
     List<Resource> resources = new ArrayList<Resource>(tResources.size());
     for (TResource tResource : tResources) {
-      resources.add(toResource(tResource, nodeMapper)); 
+      resources.add(toResource(tResource, nodeMapper));
     }
     return resources;
   }
 
-  public static Reservation toReservation(TLlamaAMReservationRequest request, 
+  public static Reservation toReservation(TLlamaAMReservationRequest request,
       NodeMapper nodeMapper) {
     UUID handle = toUUID(request.getAm_handle());
     String queue = request.getQueue();
     boolean isGang = request.isGang();
-    List<Resource> resources = toResourceList(request.getResources(), 
+    List<Resource> resources = toResourceList(request.getResources(),
         nodeMapper);
-    return new Reservation(handle, queue, resources, isGang);  
+    return new Reservation(handle, queue, resources, isGang);
   }
-  
-  public static TAllocatedResource toTAllocatedResource(PlacedResource 
+
+  public static TAllocatedResource toTAllocatedResource(PlacedResource
       resource, NodeMapper nodeMapper) {
     TAllocatedResource tResource = new TAllocatedResource();
     tResource.setReservation_id(toTUniqueId(resource.getReservationId()));
     tResource.setClient_resource_id(toTUniqueId(resource.getClientResourceId()));
     tResource.setRm_resource_id(resource.getRmResourceId());
-    tResource.setV_cpu_cores((short)resource.getActualCpuVCores());
+    tResource.setV_cpu_cores((short) resource.getActualCpuVCores());
     tResource.setMemory_mb(resource.getActualMemoryMb());
     tResource.setLocation(nodeMapper.getDataNode(resource.getActualLocation()));
     return tResource;
   }
-  
+
   public static List<TAllocatedResource> toTAllocatedResources(
       List<PlacedResource> resources, NodeMapper nodeMapper) {
-    List<TAllocatedResource> tResources = 
+    List<TAllocatedResource> tResources =
         new ArrayList<TAllocatedResource>(resources.size());
     for (PlacedResource resource : resources) {
       tResources.add(toTAllocatedResource(resource, nodeMapper));
     }
-    return tResources;    
+    return tResources;
   }
 
   public static TLlamaAMNotificationRequest createHearbeat(UUID clientId) {
@@ -160,7 +160,7 @@ public class TypeUtils {
         event.getPreemptedReservationIds()));
     request.setPreempted_client_resource_ids(toTUniqueIds(
         event.getPreemptedClientResourceIds()));
-    return request; 
+    return request;
   }
 
   public static boolean isOK(TStatus status) {

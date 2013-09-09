@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TestParamChecker {
-  
+
   @Test
   public void testNotNullOK() {
     Object o = new Object();

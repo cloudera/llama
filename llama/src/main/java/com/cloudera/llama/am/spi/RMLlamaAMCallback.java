@@ -20,7 +20,7 @@ package com.cloudera.llama.am.spi;
 import java.util.List;
 
 public interface RMLlamaAMCallback {
-  
+
   public void stoppedByRM();
 
   public void changesFromRM(final List<RMResourceChange> changes);

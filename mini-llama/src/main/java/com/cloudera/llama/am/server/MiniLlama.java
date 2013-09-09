@@ -78,10 +78,10 @@ public class MiniLlama {
 
   private static final Logger LOG = LoggerFactory.getLogger(MiniLlama.class);
 
-  public static final String MINI_SERVER_CLASS_KEY = 
+  public static final String MINI_SERVER_CLASS_KEY =
       "llama.am.server.mini.server.class";
 
-  private static final String MINI_CLUSTER_NODES_KEY = 
+  private static final String MINI_CLUSTER_NODES_KEY =
       "llama.am.server.mini.cluster.nodes";
 
   public static Configuration createMiniClusterConf(Configuration conf,
@@ -108,7 +108,7 @@ public class MiniLlama {
 
   public MiniLlama(Configuration conf) {
     ParamChecker.notNull(conf, "conf");
-    Class<? extends AbstractServer> klass = conf.getClass(MINI_SERVER_CLASS_KEY, 
+    Class<? extends AbstractServer> klass = conf.getClass(MINI_SERVER_CLASS_KEY,
         LlamaAMThriftServer.class, AbstractServer.class);
     server = ReflectionUtils.newInstance(klass, conf);
     this.conf = server.getConf();
@@ -124,7 +124,7 @@ public class MiniLlama {
         MiniClusterNodeMapper.class, NodeMapper.class);
     MiniClusterNodeMapper.addMapping(getConf(), mapping);
     for (Map.Entry entry : miniYarn.getConfig()) {
-      conf.set((String) entry.getKey(), (String)entry.getValue());
+      conf.set((String) entry.getKey(), (String) entry.getValue());
     }
     dataNodes = new ArrayList<String>(mapping.keySet());
     dataNodes = Collections.unmodifiableList(dataNodes);
@@ -147,7 +147,7 @@ public class MiniLlama {
   public List<String> getDataNodes() {
     return dataNodes;
   }
-  
+
   private Map<String, String> startMiniHadoop() throws Exception {
     int clusterNodes = getConf().getInt(MINI_CLUSTER_NODES_KEY, 1);
     if (System.getProperty(MiniDFSCluster.PROP_TEST_BUILD_DATA) == null) {
@@ -184,7 +184,7 @@ public class MiniLlama {
         true);
     miniYarn.init(conf);
     miniYarn.start();
-    
+
     ProxyUsers.refreshSuperUserGroupsConfiguration(conf);
 
     Map<String, String> mapping = new HashMap<String, String>();
@@ -195,7 +195,7 @@ public class MiniLlama {
       NodeManager nm = miniYarn.getNodeManager(i);
       NodeId nodeId = nm.getNMContext().getNodeId();
       String value = nodeId.getHost() + ":" + nodeId.getPort();
-      mapping.put(key,  value);
+      mapping.put(key, value);
       LOG.info("  DN: " + key);
     }
     System.out.println();

@@ -24,7 +24,7 @@ import java.util.UUID;
 public class TestPlacedResource {
 
   public static class MyPlacedResource extends PlacedResource {
-    
+
     protected MyPlacedResource(Resource resource) {
       super(resource);
     }
@@ -75,5 +75,5 @@ public class TestPlacedResource {
     PlacedResource pr = new MyPlacedResource(TestReservation.createResource());
     pr.toString();
   }
-    
+
 }

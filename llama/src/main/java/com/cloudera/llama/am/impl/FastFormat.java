@@ -26,7 +26,7 @@ import org.slf4j.helpers.MessageFormatter;
 public class FastFormat {
 
   /**
-   * Returns a message created using the specified message pattern and 
+   * Returns a message created using the specified message pattern and
    * arguments.
    *
    * @param messagePattern message pattern, with '{}' for arguments placement

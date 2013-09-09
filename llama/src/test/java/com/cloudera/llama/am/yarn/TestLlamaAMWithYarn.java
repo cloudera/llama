@@ -88,7 +88,7 @@ public class TestLlamaAMWithYarn {
     miniYarn.start();
     ProxyUsers.refreshSuperUserGroupsConfiguration(conf);
   }
-  
+
   private void stopYarn() {
     if (miniYarn != null) {
       miniYarn.stop();
@@ -109,7 +109,7 @@ public class TestLlamaAMWithYarn {
     conf.set(LlamaAM.RM_CONNECTOR_CLASS_KEY, YarnRMLlamaAMConnector.class
         .getName());
     for (Map.Entry entry : miniYarn.getConfig()) {
-      conf.set((String) entry.getKey(), (String)entry.getValue());
+      conf.set((String) entry.getKey(), (String) entry.getValue());
     }
     return conf;
   }
@@ -125,7 +125,7 @@ public class TestLlamaAMWithYarn {
         llama.addListener(listener);
         List<String> nodes = llama.getNodes();
         Assert.assertFalse(nodes.isEmpty());
-        Resource a1 = new Resource(UUID.randomUUID(),nodes.get(0),
+        Resource a1 = new Resource(UUID.randomUUID(), nodes.get(0),
             Resource.LocationEnforcement.MUST, 1, 1024);
         llama.reserve(new Reservation(UUID.randomUUID(), "queue1",
             Arrays.asList(a1), true));

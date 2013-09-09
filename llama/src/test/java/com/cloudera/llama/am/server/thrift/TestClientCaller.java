@@ -30,36 +30,35 @@ public class TestClientCaller {
   static boolean createClient;
 
   public static class MyClientCaller extends ClientCaller {
-    
+
     public MyClientCaller(String clientId, UUID handle,
         String host, int port) {
       super(new Configuration(false), clientId, handle, host, port);
     }
 
-    @Override
-    LlamaNotificationService.Iface createClient() throws Exception {
+    @Override LlamaNotificationService.Iface createClient() throws Exception {
       createClient = true;
       return Mockito.mock(LlamaNotificationService.Iface.class);
     }
   }
-    
+
   @Test
   public void testClientCallerOK() throws Exception {
     final String cId = "id";
     final UUID handle = UUID.randomUUID();
     ClientCaller cc = new MyClientCaller(cId, handle, "h", 0);
     Assert.assertEquals(cId, cc.getClientId());
-    
-    ClientCaller.Callable<Boolean> callable = 
+
+    ClientCaller.Callable<Boolean> callable =
         new ClientCaller.Callable<Boolean>() {
-      @Override
-      public Boolean call() throws ClientException {
-        Assert.assertEquals(cId, getClientId());
-        Assert.assertEquals(handle, getHandle());
-        Assert.assertNotNull(getClient());
-        return Boolean.TRUE;
-      }
-    };
+          @Override
+          public Boolean call() throws ClientException {
+            Assert.assertEquals(cId, getClientId());
+            Assert.assertEquals(handle, getHandle());
+            Assert.assertNotNull(getClient());
+            return Boolean.TRUE;
+          }
+        };
     createClient = false;
     Assert.assertTrue(cc.execute(callable));
     Assert.assertTrue(createClient);
@@ -89,12 +88,12 @@ public class TestClientCaller {
       Assert.assertTrue(createClient);
       createClient = false;
       callable = new ClientCaller.Callable<Void>() {
-            @Override
-            public Void call() throws ClientException {
-              return null;
-            }
-          };
-      cc.execute(callable);      
+        @Override
+        public Void call() throws ClientException {
+          return null;
+        }
+      };
+      cc.execute(callable);
       Assert.assertTrue(createClient);
     }
   }

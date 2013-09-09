@@ -22,17 +22,17 @@ import com.cloudera.llama.am.api.Resource;
 
 public abstract class RMPlacedResource extends PlacedResource {
   private Object rmPayload;
-  
+
   protected RMPlacedResource(Resource reservation) {
     super(reservation);
   }
-  
+
   public void setRmPayload(Object rmPayload) {
     this.rmPayload = rmPayload;
   }
-  
+
   public Object getRmPayload() {
     return rmPayload;
   }
-  
+
 }

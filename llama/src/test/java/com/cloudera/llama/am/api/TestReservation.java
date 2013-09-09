@@ -17,8 +17,6 @@
  */
 package com.cloudera.llama.am.api;
 
-import com.cloudera.llama.am.api.Reservation;
-import com.cloudera.llama.am.api.Resource;
 import junit.framework.Assert;
 import org.junit.Test;
 
@@ -27,7 +25,7 @@ import java.util.List;
 import java.util.UUID;
 
 public class TestReservation {
-  
+
   @Test(expected = IllegalArgumentException.class)
   public void testConstructorFail1() {
     new Reservation(null, null, null, false);
@@ -57,10 +55,10 @@ public class TestReservation {
   }
 
   public static Resource createResource() {
-    return new Resource(UUID.randomUUID(), "l", 
-        Resource.LocationEnforcement.MUST, 1, 2);    
+    return new Resource(UUID.randomUUID(), "l",
+        Resource.LocationEnforcement.MUST, 1, 2);
   }
-  
+
   @Test
   public void testConstructor() {
     List<Resource> resources = new ArrayList<Resource>();
@@ -86,5 +84,5 @@ public class TestReservation {
     Assert.assertNotSame(resources, r.getResources());
     Assert.assertEquals(true, r.isGang());
   }
-  
+
 }

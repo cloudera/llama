@@ -21,8 +21,8 @@ import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.LlamaAMException;
 import com.cloudera.llama.am.api.PlacedResource;
 import com.cloudera.llama.am.impl.FastFormat;
-import com.cloudera.llama.am.spi.RMLlamaAMConnector;
 import com.cloudera.llama.am.spi.RMLlamaAMCallback;
+import com.cloudera.llama.am.spi.RMLlamaAMConnector;
 import com.cloudera.llama.am.spi.RMPlacedReservation;
 import com.cloudera.llama.am.spi.RMPlacedResource;
 import com.cloudera.llama.am.spi.RMResourceChange;
@@ -30,7 +30,6 @@ import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.api.protocolrecords.RegisterApplicationMasterResponse;
-
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ApplicationReport;
 import org.apache.hadoop.yarn.api.records.ApplicationSubmissionContext;
@@ -73,11 +72,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable, 
+public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
     AMRMClientAsync.CallbackHandler {
-  private static final Logger LOG = 
+  private static final Logger LOG =
       LoggerFactory.getLogger(YarnRMLlamaAMConnector.class);
-  
+
   public static final String PREFIX_KEY = LlamaAM.PREFIX_KEY + "yarn.";
 
   public static final String AM_PRIORITY_KEY = PREFIX_KEY + "priority";
@@ -99,7 +98,7 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
       + "container.handler.queue.threshold";
   public static final int CONTAINER_HANDLER_QUEUE_THRESHOLD_DEFAULT = 10000;
 
-  public static final String CONTAINER_HANDLER_THREADS_KEY = PREFIX_KEY + 
+  public static final String CONTAINER_HANDLER_THREADS_KEY = PREFIX_KEY +
       "container.handler.threads";
   public static final int CONTAINER_HANDLER_THREADS_DEFAULT = 10;
 
@@ -107,7 +106,7 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
       "hadoop.user.name";
   public static final String HADOOP_USER_NAME_DEFAULT = "llama";
 
-  public static final String ADVERTISED_HOSTNAME_KEY = PREFIX_KEY + 
+  public static final String ADVERTISED_HOSTNAME_KEY = PREFIX_KEY +
       "advertised.hostname";
   public static final String ADVERTISED_PORT_KEY = PREFIX_KEY +
       "advertised.port";
@@ -151,12 +150,12 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
   }
 
   private UserGroupInformation createUGIForApp() throws Exception {
-    String userName = getConf().get(HADOOP_USER_NAME_KEY, 
+    String userName = getConf().get(HADOOP_USER_NAME_KEY,
         HADOOP_USER_NAME_DEFAULT);
     UserGroupInformation llamaUGI = UserGroupInformation.getLoginUser();
     return UserGroupInformation.createProxyUser(userName, llamaUGI);
   }
-    
+
   @Override
   @SuppressWarnings("unchecked")
   public void register(final String queue) throws LlamaAMException {
@@ -173,11 +172,11 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
           CONTAINER_HANDLER_QUEUE_THRESHOLD_KEY,
           CONTAINER_HANDLER_QUEUE_THRESHOLD_DEFAULT);
       containerHandlerQueue = new LinkedBlockingQueue<ContainerHandler>();
-      int threads = getConf().getInt(CONTAINER_HANDLER_THREADS_KEY, 
+      int threads = getConf().getInt(CONTAINER_HANDLER_THREADS_KEY,
           CONTAINER_HANDLER_THREADS_DEFAULT);
       // funny down-casting and up-casting because javac gets goofy here
-      containerHandlerExecutor = new ThreadPoolExecutor(threads, threads, 0, 
-          TimeUnit.SECONDS, (BlockingQueue<Runnable>) (BlockingQueue) 
+      containerHandlerExecutor = new ThreadPoolExecutor(threads, threads, 0,
+          TimeUnit.SECONDS, (BlockingQueue<Runnable>) (BlockingQueue)
           containerHandlerQueue);
       containerHandlerExecutor.prestartAllCoreThreads();
     } catch (Exception ex) {
@@ -204,9 +203,9 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
     appId = _createApp(yarnClient, queue);
     _monitorAppState(yarnClient, appId, ACCEPTED, false);
     ugi.addToken(yarnClient.getAMRMToken(appId));
-    int heartbeatInterval = getConf().getInt(HEARTBEAT_INTERVAL_KEY, 
+    int heartbeatInterval = getConf().getInt(HEARTBEAT_INTERVAL_KEY,
         HEARTBEAT_INTERNAL_DEFAULT);
-    amRmClientAsync = AMRMClientAsync.createAMRMClientAsync(heartbeatInterval, 
+    amRmClientAsync = AMRMClientAsync.createAMRMClientAsync(heartbeatInterval,
         YarnRMLlamaAMConnector.this);
     amRmClientAsync.init(yarnConf);
     amRmClientAsync.start();
@@ -225,7 +224,7 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
     LOG.debug("Started AM '{}' for '{}' queue", appId, queue);
   }
 
-  private ApplicationId _createApp(YarnClient rmClient, String queue)  
+  private ApplicationId _createApp(YarnClient rmClient, String queue)
       throws LlamaAMException {
     try {
       // Create application
@@ -263,7 +262,7 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
       appContext.setUnmanagedAM(true);
 
       // Submit the application to the applications manager
-      return  rmClient.submitApplication(appContext);
+      return rmClient.submitApplication(appContext);
     } catch (Exception ex) {
       throw new LlamaAMException(ex);
     }
@@ -281,10 +280,10 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
       boolean calledFromStopped)
       throws LlamaAMException {
     try {
-      long timeout = getConf().getLong(APP_MONITOR_TIMEOUT_KEY, 
+      long timeout = getConf().getLong(APP_MONITOR_TIMEOUT_KEY,
           APP_MONITOR_TIMEOUT_DEFAULT);
 
-      long polling = getConf().getLong(APP_MONITOR_POLLING_KEY, 
+      long polling = getConf().getLong(APP_MONITOR_POLLING_KEY,
           APP_MONITOR_POLLING_DEFAULT);
 
       long start = System.currentTimeMillis();
@@ -316,7 +315,7 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
       }
     });
   }
-  
+
   private synchronized void _stop(FinalApplicationStatus status, String msg) {
     if (containerHandlerExecutor != null) {
       containerHandlerExecutor.shutdownNow();
@@ -353,7 +352,7 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
     }
   }
 
-  @Override  
+  @Override
   public List<String> getNodes() throws LlamaAMException {
     synchronized (nodes) {
       return new ArrayList<String>(nodes);
@@ -362,59 +361,59 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
 
   private static final Priority PRIORITY = Priority.newInstance(1);
   private static final String[] RACKS = new String[0];
-  
-  private Resource createResource(PlacedResource resource) 
+
+  private Resource createResource(PlacedResource resource)
       throws LlamaAMException {
-      if (!nodes.contains(resource.getLocation())) {
-        throw new LlamaAMException(FastFormat.format(
-            "Node '{}' is not available", resource.getLocation()));
-      }
-      if (resource.getMemoryMb() > maxResource.getMemory()) {
-        throw new LlamaAMException(FastFormat.format(
-            "Resource '{}' asking for '{}' memory exceeds maximum '{}'",
-            resource.getClientResourceId(), resource.getMemoryMb(),
-            maxResource.getMemory()));        
-      }
-      if (resource.getCpuVCores() > maxResource.getVirtualCores()) {
-        throw new LlamaAMException(FastFormat.format(
-        "Resource '{}' asking for '{}' CPUs exceeds maximum '{}'",
-            resource.getClientResourceId(), resource.getCpuVCores(), 
-            maxResource.getVirtualCores()));
-      }
-    return Resource.newInstance(resource.getMemoryMb(), 
+    if (!nodes.contains(resource.getLocation())) {
+      throw new LlamaAMException(FastFormat.format(
+          "Node '{}' is not available", resource.getLocation()));
+    }
+    if (resource.getMemoryMb() > maxResource.getMemory()) {
+      throw new LlamaAMException(FastFormat.format(
+          "Resource '{}' asking for '{}' memory exceeds maximum '{}'",
+          resource.getClientResourceId(), resource.getMemoryMb(),
+          maxResource.getMemory()));
+    }
+    if (resource.getCpuVCores() > maxResource.getVirtualCores()) {
+      throw new LlamaAMException(FastFormat.format(
+          "Resource '{}' asking for '{}' CPUs exceeds maximum '{}'",
+          resource.getClientResourceId(), resource.getCpuVCores(),
+          maxResource.getVirtualCores()));
+    }
+    return Resource.newInstance(resource.getMemoryMb(),
         resource.getCpuVCores());
   }
 
-  class LlamaContainerRequest extends AMRMClient.ContainerRequest {    
+  class LlamaContainerRequest extends AMRMClient.ContainerRequest {
     private RMPlacedResource placedResource;
-    
-    public LlamaContainerRequest(RMPlacedResource placedResource) 
+
+    public LlamaContainerRequest(RMPlacedResource placedResource)
         throws LlamaAMException {
-      super(createResource(placedResource), 
+      super(createResource(placedResource),
           new String[]{placedResource.getLocation()}, RACKS, PRIORITY,
-          (placedResource.getEnforcement() != 
+          (placedResource.getEnforcement() !=
               com.cloudera.llama.am.api.Resource.LocationEnforcement.MUST)
       );
       this.placedResource = placedResource;
     }
-    
+
     public RMPlacedResource getPlacedResource() {
       return placedResource;
     }
   }
-  
-  private void _reserve(RMPlacedReservation reservation) 
+
+  private void _reserve(RMPlacedReservation reservation)
       throws LlamaAMException {
     for (RMPlacedResource resource : reservation.getRMResources()) {
       LOG.debug("Adding container request for '{}'", resource);
       LlamaContainerRequest request = new LlamaContainerRequest(resource);
       amRmClientAsync.addContainerRequest(request);
       resource.setRmPayload(request);
-    }    
+    }
   }
 
   @Override
-  public void reserve(final RMPlacedReservation reservation) 
+  public void reserve(final RMPlacedReservation reservation)
       throws LlamaAMException {
     try {
       ugi.doAs(new PrivilegedExceptionAction<Void>() {
@@ -440,8 +439,8 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
       if (payload != null) {
         LOG.debug("Releasing container request for '{}'", resource);
         if (payload instanceof LlamaContainerRequest) {
-          amRmClientAsync.removeContainerRequest((LlamaContainerRequest) 
-              payload);          
+          amRmClientAsync.removeContainerRequest((LlamaContainerRequest)
+              payload);
         } else if (payload instanceof Container) {
           Container container = ((Container) payload);
           containerIdToClientResourceIdMap.remove(container.getId());
@@ -453,7 +452,7 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
       }
     }
   }
-    
+
   @Override
   public void release(final Collection<RMPlacedResource> resources)
       throws LlamaAMException {
@@ -497,22 +496,22 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
     llamaCallback.changesFromRM(changes);
   }
 
-  private enum Action { START, STOP }
-  
+  private enum Action {START, STOP}
+
   class ContainerHandler implements Runnable {
     final private UserGroupInformation ugi;
     final private UUID clientResourceId;
     final private Container container;
     final private Action action;
-    
-    public ContainerHandler(UserGroupInformation ugi, 
+
+    public ContainerHandler(UserGroupInformation ugi,
         RMPlacedResource placedResource, Container container, Action action) {
       this.ugi = ugi;
       this.clientResourceId = placedResource.getClientResourceId();
       this.container = container;
       this.action = action;
     }
-    
+
     @Override
     @SuppressWarnings("unchecked")
     public void run() {
@@ -524,14 +523,14 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
               LOG.debug("Starting container '{}' process for resource '{}' " +
                   "at node '{}'", container.getId(), clientResourceId,
                   container.getNodeId());
-              ContainerLaunchContext ctx = 
+              ContainerLaunchContext ctx =
                   Records.newRecord(ContainerLaunchContext.class);
               ctx.setEnvironment(Collections.EMPTY_MAP);
               ctx.setLocalResources(Collections.EMPTY_MAP);
               ctx.setCommands(Arrays.asList("sleep", "315360000")); //10 years
               nmClient.startContainer(container, ctx);
             } else {
-              nmClient.stopContainer(container.getId(), container.getNodeId());          
+              nmClient.stopContainer(container.getId(), container.getNodeId());
             }
             return null;
           }
@@ -550,7 +549,7 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
       }
     }
   }
-  
+
   private void queue(ContainerHandler handler) {
     containerHandlerQueue.add(handler);
     int size = containerHandlerQueue.size();
@@ -560,22 +559,22 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
     }
   }
 
-  private RMResourceChange createResourceAllocation(PlacedResource pr, 
+  private RMResourceChange createResourceAllocation(PlacedResource pr,
       Container container) {
-    return RMResourceChange.createResourceAllocation(pr.getClientResourceId(), 
-        container.getId().toString(), container.getResource().getVirtualCores(), 
+    return RMResourceChange.createResourceAllocation(pr.getClientResourceId(),
+        container.getId().toString(), container.getResource().getVirtualCores(),
         container.getResource().getMemory(), getNodeName(container.getNodeId()));
   }
-  
+
   @Override
   public void onContainersAllocated(List<Container> containers) {
     List<RMResourceChange> changes = new ArrayList<RMResourceChange>();
     // no need to use a ugi.doAs() as this is called from within Yarn client
     for (Container container : containers) {
-      List<? extends Collection<LlamaContainerRequest>> matchingContainerReqs = 
+      List<? extends Collection<LlamaContainerRequest>> matchingContainerReqs =
           amRmClientAsync.getMatchingRequests(container.getPriority(),
-          getNodeName(container.getNodeId()), container.getResource());
-      
+              getNodeName(container.getNodeId()), container.getResource());
+
       if (!matchingContainerReqs.isEmpty()) {
         Collection<LlamaContainerRequest> coll = matchingContainerReqs.get(0);
         LlamaContainerRequest req = coll.iterator().next();
@@ -585,11 +584,11 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
             pr, container.getId(), container.getNodeId());
 
         pr.setRmPayload(container);
-        containerIdToClientResourceIdMap.put(container.getId(), 
+        containerIdToClientResourceIdMap.put(container.getId(),
             pr.getClientResourceId());
         changes.add(createResourceAllocation(pr, container));
         amRmClientAsync.removeContainerRequest(req);
-      
+
         queue(new ContainerHandler(ugi, pr, container, Action.START));
       }
     }

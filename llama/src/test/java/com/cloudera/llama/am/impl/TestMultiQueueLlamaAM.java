@@ -25,8 +25,8 @@ import com.cloudera.llama.am.api.PlacedResource;
 import com.cloudera.llama.am.api.Reservation;
 import com.cloudera.llama.am.api.Resource;
 import com.cloudera.llama.am.api.TestReservation;
-import com.cloudera.llama.am.spi.RMLlamaAMConnector;
 import com.cloudera.llama.am.spi.RMLlamaAMCallback;
+import com.cloudera.llama.am.spi.RMLlamaAMConnector;
 import com.cloudera.llama.am.spi.RMPlacedReservation;
 import com.cloudera.llama.am.spi.RMPlacedResource;
 import com.cloudera.llama.am.spi.RMResourceChange;
@@ -46,7 +46,7 @@ import java.util.UUID;
 public class TestMultiQueueLlamaAM {
 
   private static Set<String> EXPECTED = new HashSet<String>();
-  
+
   static {
     EXPECTED.add("setConf");
     EXPECTED.add("setLlamaAMCallback");
@@ -56,18 +56,18 @@ public class TestMultiQueueLlamaAM {
     EXPECTED.add("reserve");
     EXPECTED.add("release");
   }
-  
-  public static class MyRMLlamaAMConnector implements RMLlamaAMConnector, 
+
+  public static class MyRMLlamaAMConnector implements RMLlamaAMConnector,
       Configurable {
     public static RMLlamaAMCallback callback;
     public static Set<String> methods = new HashSet<String>();
 
     private Configuration conf;
-    
+
     public MyRMLlamaAMConnector() {
       methods.clear();
     }
-    
+
     @Override
     public void setConf(Configuration conf) {
       methods.add("setConf");
@@ -121,11 +121,11 @@ public class TestMultiQueueLlamaAM {
     }
 
   }
-  
+
   @Test
   public void testMultiQueueDelegation() throws Exception {
     Configuration conf = new Configuration(false);
-    conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MyRMLlamaAMConnector.class, 
+    conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MyRMLlamaAMConnector.class,
         RMLlamaAMConnector.class);
     LlamaAM am = LlamaAM.create(conf);
     try {
@@ -170,7 +170,7 @@ public class TestMultiQueueLlamaAM {
   }
 
   @Test(expected = LlamaAMException.class)
-  public void testReleaseReservationForClientDiffQueuesException() 
+  public void testReleaseReservationForClientDiffQueuesException()
       throws Exception {
     Configuration conf = new Configuration(false);
     conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MyRMLlamaAMConnector.class,
@@ -193,10 +193,10 @@ public class TestMultiQueueLlamaAM {
   @Test(expected = LlamaAMException.class)
   public void testStartOfDelegatedLlamaAmFail() throws Exception {
     Configuration conf = new Configuration(false);
-    conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MyRMLlamaAMConnector.class, 
+    conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MyRMLlamaAMConnector.class,
         RMLlamaAMConnector.class);
     conf.setBoolean("fail.register", true);
-    conf.set(LlamaAM.INITIAL_QUEUES_KEY,"q");
+    conf.set(LlamaAM.INITIAL_QUEUES_KEY, "q");
     LlamaAM am = LlamaAM.create(conf);
     am.start();
   }
@@ -204,7 +204,7 @@ public class TestMultiQueueLlamaAM {
   @Test(expected = LlamaAMException.class)
   public void testGetAnyLlamaFail() throws Exception {
     Configuration conf = new Configuration(false);
-    conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MyRMLlamaAMConnector.class, 
+    conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MyRMLlamaAMConnector.class,
         RMLlamaAMConnector.class);
     LlamaAM am = LlamaAM.create(conf);
     am.start();
@@ -214,7 +214,7 @@ public class TestMultiQueueLlamaAM {
   @Test
   public void testGetReservationUnknown() throws Exception {
     Configuration conf = new Configuration(false);
-    conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MyRMLlamaAMConnector.class, 
+    conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MyRMLlamaAMConnector.class,
         RMLlamaAMConnector.class);
     LlamaAM am = LlamaAM.create(conf);
     am.start();
@@ -232,11 +232,11 @@ public class TestMultiQueueLlamaAM {
   }
 
   private boolean listenerCalled;
-  
+
   @Test
   public void testMultiQueueListener() throws Exception {
     Configuration conf = new Configuration(false);
-    conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MyRMLlamaAMConnector.class, 
+    conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MyRMLlamaAMConnector.class,
         RMLlamaAMConnector.class);
     LlamaAM am = LlamaAM.create(conf);
     try {

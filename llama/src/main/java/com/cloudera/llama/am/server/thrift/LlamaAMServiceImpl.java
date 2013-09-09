@@ -48,7 +48,7 @@ public class LlamaAMServiceImpl implements LlamaAMService.Iface {
   private final ClientNotificationService clientNotificationService;
 
   @SuppressWarnings("unchecked")
-  public LlamaAMServiceImpl(LlamaAM llamaAM, NodeMapper nodeMapper, 
+  public LlamaAMServiceImpl(LlamaAM llamaAM, NodeMapper nodeMapper,
       ClientNotificationService clientNotificationService) {
     this.llamaAM = llamaAM;
     this.nodeMapper = nodeMapper;
@@ -63,13 +63,13 @@ public class LlamaAMServiceImpl implements LlamaAMService.Iface {
     try {
       String clientId = request.getClient_id();
       TNetworkAddress tAddress = request.getNotification_callback_service();
-      UUID handle = clientNotificationService.register(clientId, 
+      UUID handle = clientNotificationService.register(clientId,
           tAddress.getHostname(), tAddress.getPort());
       response.setStatus(TypeUtils.OK);
       response.setAm_handle(TypeUtils.toTUniqueId(handle));
     } catch (Throwable ex) {
       LOG.warn("Register() error: {}", ex.toString(), ex);
-      response.setStatus(TypeUtils.createRuntimeError(ex));      
+      response.setStatus(TypeUtils.createRuntimeError(ex));
     }
     return response;
   }
@@ -85,9 +85,9 @@ public class LlamaAMServiceImpl implements LlamaAMService.Iface {
           llamaAM.releaseReservationsForClientId(handle);
         } catch (LlamaAMException ex) {
           LOG.warn("Unregister() internal error releasing LlamaAM " +
-              "reservations for handle '{}' : ", new Object[]{ handle, 
-              ex.toString(), ex});
-        }        
+              "reservations for handle '{}' : ", new Object[]{handle,
+                                                              ex.toString(), ex});
+        }
       } else {
         LOG.warn("Unregister() unknown handle '{}'", handle);
       }
@@ -124,9 +124,9 @@ public class LlamaAMServiceImpl implements LlamaAMService.Iface {
     try {
       UUID handle = TypeUtils.toUUID(request.getAm_handle());
       clientNotificationService.validateHandle(handle);
-        UUID reservationId = TypeUtils.toUUID(request.getReservation_id());
-        llamaAM.releaseReservation(reservationId);
-        response.setStatus(TypeUtils.OK);
+      UUID reservationId = TypeUtils.toUUID(request.getReservation_id());
+      llamaAM.releaseReservation(reservationId);
+      response.setStatus(TypeUtils.OK);
     } catch (Throwable ex) {
       LOG.warn("Release() error: {}", ex.toString(), ex);
       response.setStatus(TypeUtils.createRuntimeError(ex));
@@ -150,5 +150,5 @@ public class LlamaAMServiceImpl implements LlamaAMService.Iface {
     }
     return response;
   }
-  
+
 }

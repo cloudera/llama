@@ -21,12 +21,12 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class TestClientException {
-  
+
   @Test
   public void testException() {
     Exception cause = new Exception("foo");
     ClientException ex = new ClientException(cause);
-    Assert.assertEquals(cause, ex.getCause());    
+    Assert.assertEquals(cause, ex.getCause());
   }
-  
+
 }

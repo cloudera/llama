@@ -28,7 +28,7 @@ public class TestPlacedReservation {
 
   public static class MyPlacedReservation extends PlacedReservation {
     private UUID id;
-    
+
     protected MyPlacedReservation(UUID id, Reservation<Resource> reservation) {
       super(reservation);
       this.id = id;
@@ -56,8 +56,8 @@ public class TestPlacedReservation {
     PlacedReservation r1 = new MyPlacedReservation(id1, r);
     r1.toString();
   }
-  
-    @Test
+
+  @Test
   public void testHashEquality() {
     List<Resource> resources = new ArrayList<Resource>();
     resources.add(TestReservation.createResource());
@@ -78,5 +78,5 @@ public class TestPlacedReservation {
     Assert.assertNotSame(r1.hashCode(), r3.hashCode());
     Assert.assertNotSame(r2.hashCode(), r3.hashCode());
   }
-  
+
 }

@@ -19,8 +19,8 @@ package com.cloudera.llama.am.server.thrift;
 
 
 import com.cloudera.llama.am.api.LlamaAM;
-import com.cloudera.llama.am.mock.mock.MockRMLlamaAMConnector;
 import com.cloudera.llama.am.mock.mock.MockLlamaAMFlags;
+import com.cloudera.llama.am.mock.mock.MockRMLlamaAMConnector;
 import com.cloudera.llama.am.server.TestMain;
 import com.cloudera.llama.am.spi.RMLlamaAMConnector;
 import com.cloudera.llama.thrift.LlamaAMService;
@@ -55,7 +55,7 @@ import java.util.Arrays;
 import java.util.UUID;
 
 public class TestLlamaAMThriftServer {
-  
+
   protected Configuration createCallbackConfiguration() throws Exception {
     Configuration conf = new Configuration(false);
     conf.set(ServerConfiguration.CONFIG_DIR_KEY, TestMain.createTestDir());
@@ -64,7 +64,7 @@ public class TestLlamaAMThriftServer {
     return conf;
   }
 
- 
+
   protected Configuration createLlamaConfiguration() throws Exception {
     Configuration conf = new Configuration(false);
     conf.set(ServerConfiguration.CONFIG_DIR_KEY, TestMain.createTestDir());
@@ -84,7 +84,7 @@ public class TestLlamaAMThriftServer {
 
   @Test
   public void testStartStop() throws Exception {
-    LlamaAMThriftServer server = new LlamaAMThriftServer(); 
+    LlamaAMThriftServer server = new LlamaAMThriftServer();
     try {
       server.setConf(createLlamaConfiguration());
       server.start();
@@ -129,28 +129,28 @@ public class TestLlamaAMThriftServer {
           TLlamaAMRegisterRequest trReq = new TLlamaAMRegisterRequest();
           trReq.setVersion(TLlamaServiceVersion.V1);
           trReq.setClient_id("c1");
-          TNetworkAddress  tAddress = new TNetworkAddress();
+          TNetworkAddress tAddress = new TNetworkAddress();
           tAddress.setHostname("localhost");
           tAddress.setPort(0);
           trReq.setNotification_callback_service(tAddress);
-    
+
           //register
           TLlamaAMRegisterResponse trRes = client.Register(trReq);
           Assert.assertEquals(TStatusCode.OK, trRes.getStatus().getStatus_code());
           Assert.assertNotNull(trRes.getAm_handle());
           Assert.assertNotNull(TypeUtils.toUUID(trRes.getAm_handle()));
-    
+
           //valid re-register
           trRes = client.Register(trReq);
           Assert.assertEquals(TStatusCode.OK, trRes.getStatus().getStatus_code());
           Assert.assertNotNull(trRes.getAm_handle());
           Assert.assertNotNull(TypeUtils.toUUID(trRes.getAm_handle()));
-    
+
           //invalid re-register different address
           tAddress.setPort(1);
           trRes = client.Register(trReq);
           Assert.assertEquals(TStatusCode.RUNTIME_ERROR, trRes.getStatus().
-          getStatus_code());
+              getStatus_code());
           return null;
         }
       });
@@ -158,20 +158,20 @@ public class TestLlamaAMThriftServer {
       server.stop();
     }
   }
-  
-  protected LlamaAMService.Client createClient(LlamaAMThriftServer server) 
+
+  protected LlamaAMService.Client createClient(LlamaAMThriftServer server)
       throws Exception {
     TTransport transport = new TSocket(server.getAddressHost(),
         server.getAddressPort());
     transport.open();
     TProtocol protocol = new TBinaryProtocol(transport);
-    return new LlamaAMService.Client(protocol);    
+    return new LlamaAMService.Client(protocol);
   }
 
   protected Subject getClientSubject() throws Exception {
     return new Subject();
   }
-  
+
   @Test
   public void testUnregister() throws Exception {
     final LlamaAMThriftServer server = new LlamaAMThriftServer();
@@ -187,7 +187,7 @@ public class TestLlamaAMThriftServer {
           TLlamaAMRegisterRequest trReq = new TLlamaAMRegisterRequest();
           trReq.setVersion(TLlamaServiceVersion.V1);
           trReq.setClient_id("c1");
-          TNetworkAddress  tAddress = new TNetworkAddress();
+          TNetworkAddress tAddress = new TNetworkAddress();
           tAddress.setHostname("localhost");
           tAddress.setPort(0);
           trReq.setNotification_callback_service(tAddress);
@@ -235,20 +235,20 @@ public class TestLlamaAMThriftServer {
         @Override
         public Object run() throws Exception {
           LlamaAMService.Client client = createClient(server);
-    
+
           TLlamaAMRegisterRequest trReq = new TLlamaAMRegisterRequest();
           trReq.setVersion(TLlamaServiceVersion.V1);
           trReq.setClient_id("c1");
-          TNetworkAddress  tAddress = new TNetworkAddress();
+          TNetworkAddress tAddress = new TNetworkAddress();
           tAddress.setHostname("localhost");
           tAddress.setPort(0);
           trReq.setNotification_callback_service(tAddress);
-    
+
           //register
           TLlamaAMRegisterResponse trRes = client.Register(trReq);
           Assert.assertEquals(TStatusCode.OK, trRes.getStatus().
               getStatus_code());
-    
+
           //getNodes
           TLlamaAMGetNodesRequest tgnReq = new TLlamaAMGetNodesRequest();
           tgnReq.setVersion(TLlamaServiceVersion.V1);
@@ -256,7 +256,7 @@ public class TestLlamaAMThriftServer {
           TLlamaAMGetNodesResponse tgnRes = client.GetNodes(tgnReq);
           Assert.assertEquals(TStatusCode.OK, tgnRes.getStatus().getStatus_code());
           Assert.assertEquals(Arrays.asList("n1", "n2"), tgnRes.getNodes());
-    
+
           //unregister
           TLlamaAMUnregisterRequest turReq = new TLlamaAMUnregisterRequest();
           turReq.setVersion(TLlamaServiceVersion.V1);
@@ -285,20 +285,20 @@ public class TestLlamaAMThriftServer {
         @Override
         public Object run() throws Exception {
           LlamaAMService.Client client = createClient(server);
-    
+
           TLlamaAMRegisterRequest trReq = new TLlamaAMRegisterRequest();
           trReq.setVersion(TLlamaServiceVersion.V1);
           trReq.setClient_id("c1");
-          TNetworkAddress  tAddress = new TNetworkAddress();
+          TNetworkAddress tAddress = new TNetworkAddress();
           tAddress.setHostname(callbackServer.getAddressHost());
           tAddress.setPort(callbackServer.getAddressPort());
           trReq.setNotification_callback_service(tAddress);
-    
+
           //register
           TLlamaAMRegisterResponse trRes = client.Register(trReq);
           Assert.assertEquals(TStatusCode.OK, trRes.getStatus().
               getStatus_code());
-    
+
           //valid reservation
           TLlamaAMReservationRequest tresReq = new TLlamaAMReservationRequest();
           tresReq.setVersion(TLlamaServiceVersion.V1);
@@ -370,20 +370,20 @@ public class TestLlamaAMThriftServer {
         @Override
         public Object run() throws Exception {
           LlamaAMService.Client client = createClient(server);
-    
+
           TLlamaAMRegisterRequest trReq = new TLlamaAMRegisterRequest();
           trReq.setVersion(TLlamaServiceVersion.V1);
           trReq.setClient_id("c1");
-          TNetworkAddress  tAddress = new TNetworkAddress();
+          TNetworkAddress tAddress = new TNetworkAddress();
           tAddress.setHostname(callbackServer.getAddressHost());
           tAddress.setPort(callbackServer.getAddressPort());
           trReq.setNotification_callback_service(tAddress);
-    
+
           //register
           TLlamaAMRegisterResponse trRes = client.Register(trReq);
           Assert.assertEquals(TStatusCode.OK, trRes.getStatus().
               getStatus_code());
-    
+
           //reservation
           TLlamaAMReservationRequest tresReq = new TLlamaAMReservationRequest();
           tresReq.setVersion(TLlamaServiceVersion.V1);
@@ -399,11 +399,11 @@ public class TestLlamaAMThriftServer {
           tresReq.setGang(true);
           TLlamaAMReservationResponse tresRes = client.Reserve(tresReq);
           Assert.assertEquals(TStatusCode.OK, tresRes.getStatus().getStatus_code());
-    
+
           //check notification delivery
           Thread.sleep(300);
           Assert.assertEquals(1, callbackServer.notifications.size());
-    
+
           //release
           TLlamaAMReleaseRequest trelReq = new TLlamaAMReleaseRequest();
           trelReq.setVersion(TLlamaServiceVersion.V1);
@@ -411,7 +411,7 @@ public class TestLlamaAMThriftServer {
           trelReq.setReservation_id(tresRes.getReservation_id());
           TLlamaAMReleaseResponse trelRes = client.Release(trelReq);
           Assert.assertEquals(TStatusCode.OK, trelRes.getStatus().getStatus_code());
-    
+
           //unregister
           TLlamaAMUnregisterRequest turReq = new TLlamaAMUnregisterRequest();
           turReq.setVersion(TLlamaServiceVersion.V1);

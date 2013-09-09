@@ -32,9 +32,9 @@ public abstract class PlacedResource extends Resource {
   }
 
   public abstract UUID getClientId();
-  
+
   public abstract String getQueue();
-  
+
   public abstract UUID getReservationId();
 
   public abstract String getRmResourceId();
@@ -55,9 +55,9 @@ public abstract class PlacedResource extends Resource {
 
   @Override
   public String toString() {
-    return FastFormat.format(TO_STRING_MSG, getClientResourceId(), 
+    return FastFormat.format(TO_STRING_MSG, getClientResourceId(),
         getCpuVCores(), getMemoryMb(), getLocation(), getEnforcement(), 
-        getClientId(), getQueue(), getReservationId(), getRmResourceId(), 
+        getClientId(), getQueue(), getReservationId(), getRmResourceId(),
         getActualCpuVCores(), getActualMemoryMb(), getActualLocation(), 
         getStatus());
   }

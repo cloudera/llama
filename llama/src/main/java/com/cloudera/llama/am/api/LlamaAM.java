@@ -30,10 +30,10 @@ import java.util.UUID;
 public abstract class LlamaAM {
   public static final String PREFIX_KEY = "llama.am.";
 
-  public static final String RM_CONNECTOR_CLASS_KEY = PREFIX_KEY + 
+  public static final String RM_CONNECTOR_CLASS_KEY = PREFIX_KEY +
       "rm.connector.class";
 
-  public static final String INITIAL_QUEUES_KEY =  PREFIX_KEY + 
+  public static final String INITIAL_QUEUES_KEY = PREFIX_KEY +
       "initial.queues";
 
   public static final String GANG_ANTI_DEADLOCK_ENABLED_KEY = PREFIX_KEY +
@@ -77,19 +77,19 @@ public abstract class LlamaAM {
   }
 
   private Configuration conf;
-  
+
   protected LlamaAM(Configuration conf) {
-    this.conf = ParamChecker.notNull(conf, "conf");  
+    this.conf = ParamChecker.notNull(conf, "conf");
   }
-  
+
   public Configuration getConf() {
     return conf;
-  } 
-  
+  }
+
   public abstract void start() throws LlamaAMException;
 
   public abstract void stop();
-  
+
   public abstract boolean isRunning();
 
   public abstract List<String> getNodes() throws LlamaAMException;
@@ -106,12 +106,12 @@ public abstract class LlamaAM {
   public abstract PlacedReservation getReservation(UUID reservationId)
       throws LlamaAMException;
 
-  public abstract void releaseReservation(UUID reservationId) 
+  public abstract void releaseReservation(UUID reservationId)
       throws LlamaAMException;
 
   public abstract List<UUID> releaseReservationsForClientId(UUID clientId)
-    throws LlamaAMException;
-  
+      throws LlamaAMException;
+
   public abstract void addListener(LlamaAMListener listener);
 
   public abstract void removeListener(LlamaAMListener listener);

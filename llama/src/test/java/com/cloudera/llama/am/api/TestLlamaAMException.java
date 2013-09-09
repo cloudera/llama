@@ -17,12 +17,11 @@
  */
 package com.cloudera.llama.am.api;
 
-import com.cloudera.llama.am.api.LlamaAMException;
 import junit.framework.Assert;
 import org.junit.Test;
 
 public class TestLlamaAMException {
-  
+
   @Test
   public void testException1() {
     Throwable t = new Throwable();

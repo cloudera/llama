@@ -77,8 +77,7 @@ public class TestGangAntiDeadlockLlamaAM {
       super(conf, llamaAM);
     }
 
-    @Override
-    void startDeadlockResolverThread() {
+    @Override void startDeadlockResolverThread() {
     }
 
   }
@@ -168,7 +167,7 @@ public class TestGangAntiDeadlockLlamaAM {
   private Reservation createReservation(UUID clientId, int resources,
       boolean gang) {
     List<Resource> list = new ArrayList<Resource>();
-    for (int i = 0; i < resources; i ++) {
+    for (int i = 0; i < resources; i++) {
       list.add(TestReservation.createResource());
     }
     return new Reservation(clientId, "q", list, gang);
@@ -302,11 +301,11 @@ public class TestGangAntiDeadlockLlamaAM {
       UUID clientId = UUID.randomUUID();
       Reservation<Resource> reservation1 = createReservation(clientId, 1, true);
       UUID id1 = gAm.reserve(reservation1);
-      Reservation<Resource> reservation2 = createReservation(clientId,1, true);
+      Reservation<Resource> reservation2 = createReservation(clientId, 1, true);
       UUID id2 = gAm.reserve(reservation2);
-      Reservation<Resource> reservation3 = createReservation(clientId,1, true);
+      Reservation<Resource> reservation3 = createReservation(clientId, 1, true);
       UUID id3 = gAm.reserve(reservation3);
-      Reservation<Resource> reservation4 = createReservation(clientId,1, true);
+      Reservation<Resource> reservation4 = createReservation(clientId, 1, true);
       UUID id4 = gAm.reserve(reservation4);
 
       Assert.assertNotNull(gAm.getReservation(id1));

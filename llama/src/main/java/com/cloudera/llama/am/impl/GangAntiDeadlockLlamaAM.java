@@ -48,7 +48,7 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
 
     public BackedOffReservation(PlacedReservation reservation, long delay) {
       this.reservation = reservation;
-      this.delayedUntil = System.currentTimeMillis() +  delay;
+      this.delayedUntil = System.currentTimeMillis() + delay;
     }
 
     public PlacedReservation getReservation() {
@@ -63,7 +63,7 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
 
     @Override
     public int compareTo(Delayed o) {
-      return (int) (delayedUntil - ((BackedOffReservation)o).delayedUntil);
+      return (int) (delayedUntil - ((BackedOffReservation) o).delayedUntil);
     }
   }
 
@@ -302,11 +302,11 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
         if (reservation != null) {
           try {
             getLog().warn("Backing off gang reservation {} with {} resources",
-                reservation.getReservationId(), reservation.getResources().size
-                ());
+                reservation.getReservationId(),
+                reservation.getResources().size());
             am.releaseReservation(reservation.getReservationId());
-            backedOffReservations.add(new BackedOffReservation(reservation,
-                getBackOffDelay()));
+            backedOffReservations.add(
+                new BackedOffReservation(reservation, getBackOffDelay()));
             submittedReservations.remove(reservationId);
             submitted.remove(reservationId);
           } catch (LlamaAMException ex) {

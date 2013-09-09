@@ -26,7 +26,7 @@ public class HostnameOnlyNodeMapper implements NodeMapper {
     int index = name.indexOf(":");
     return (index == -1) ? name : name.substring(0, index);
   }
-  
+
   @Override
   public String getNodeManager(String dataNode) {
     return removePortIfPresent(dataNode);

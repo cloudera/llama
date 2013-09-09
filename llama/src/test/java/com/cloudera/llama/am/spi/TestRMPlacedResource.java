@@ -24,7 +24,7 @@ import org.junit.Test;
 import java.util.UUID;
 
 public class TestRMPlacedResource {
-  
+
   @Test
   public void test() {
     Resource resource = new Resource(UUID.randomUUID(), "l",
@@ -77,6 +77,6 @@ public class TestRMPlacedResource {
     Assert.assertNull(pr.getRmPayload());
     Object o = new Object();
     pr.setRmPayload(o);
-    Assert.assertEquals(o, pr.getRmPayload());    
+    Assert.assertEquals(o, pr.getRmPayload());
   }
 }

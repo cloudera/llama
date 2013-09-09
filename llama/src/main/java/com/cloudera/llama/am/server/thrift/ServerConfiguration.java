@@ -21,14 +21,14 @@ import com.cloudera.llama.am.server.Main;
 
 public interface ServerConfiguration {
   public static String CONFIG_DIR_KEY = Main.CONF_DIR_SYS_PROP;
-  
+
   public static String KEY_PREFIX = "llama.am.server.thrift.";
 
-  public static String SERVER_MIN_THREADS_KEY = KEY_PREFIX + 
+  public static String SERVER_MIN_THREADS_KEY = KEY_PREFIX +
       "server.min.threads";
   public static int SERVER_MIN_THREADS_DEFAULT = 10;
 
-  public static String SERVER_MAX_THREADS_KEY = KEY_PREFIX + 
+  public static String SERVER_MAX_THREADS_KEY = KEY_PREFIX +
       "server.max.threads";
   public static int SERVER_MAX_THREADS_DEFAULT = 50;
 
@@ -43,19 +43,19 @@ public interface ServerConfiguration {
   public static String HTTP_ADDRESS_DEFAULT = "0.0.0.0";
   public static int HTTP_PORT_DEFAULT = 15001;
 
-  public static String CLIENT_NOTIFIER_QUEUE_THRESHOLD_KEY = KEY_PREFIX + 
+  public static String CLIENT_NOTIFIER_QUEUE_THRESHOLD_KEY = KEY_PREFIX +
       "client.notifier.queue.threshold";
   public static int CLIENT_NOTIFIER_QUEUE_THRESHOLD_DEFAULT = 10000;
 
-  public static String CLIENT_NOTIFIER_THREADS_KEY = KEY_PREFIX + 
+  public static String CLIENT_NOTIFIER_THREADS_KEY = KEY_PREFIX +
       "client.notifier.threads";
   public static int CLIENT_NOTIFER_THREADS_DEFAULT = 10;
 
-  public static String CLIENT_NOTIFIER_MAX_RETRIES_KEY = KEY_PREFIX + 
+  public static String CLIENT_NOTIFIER_MAX_RETRIES_KEY = KEY_PREFIX +
       "client.notifier.max.retries";
   public static int CLIENT_NOTIFIER_MAX_RETRIES_DEFAULT = 5;
 
-  public static String CLIENT_NOTIFIER_RETRY_INTERVAL_KEY = KEY_PREFIX + 
+  public static String CLIENT_NOTIFIER_RETRY_INTERVAL_KEY = KEY_PREFIX +
       "client.notifier.retry.interval.ms";
   public static int CLIENT_NOTIFIER_RETRY_INTERVAL_DEFAULT = 5000;
 
@@ -65,7 +65,7 @@ public interface ServerConfiguration {
 
   public static String NODE_NAME_MAPPING_CLASS_KEY = KEY_PREFIX +
       "node.name.mapping.class";
-  public static Class<? extends NodeMapper> NODE_NAME_MAPPING_CLASS_DEFAULT = 
+  public static Class<? extends NodeMapper> NODE_NAME_MAPPING_CLASS_DEFAULT =
       HostnameOnlyNodeMapper.class;
 
   public static String TRANSPORT_TIMEOUT_KEY = KEY_PREFIX +

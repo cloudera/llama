@@ -46,7 +46,7 @@ public class PlacedResourceImpl extends RMPlacedResource {
     this.reservationId = reservationId;
     this.queue = queue;
   }
-  
+
   @Override
   public UUID getClientId() {
     return clientId;

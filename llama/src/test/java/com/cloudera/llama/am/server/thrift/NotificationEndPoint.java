@@ -41,27 +41,27 @@ class NotificationEndPoint extends
   protected LlamaNotificationService.Processor createServiceProcessor() {
     LlamaNotificationService.Iface handler =
         new LlamaNotificationService.Iface() {
-      @Override
-      public TLlamaAMNotificationResponse AMNotification(
-          TLlamaAMNotificationRequest request) throws TException {
-        if (delayResponse == 0) {
-          notifications.add(request);
-        } else {
-          try {
-            Thread.sleep(delayResponse);
-          } catch (InterruptedException ex) {
-            //NOP
+          @Override
+          public TLlamaAMNotificationResponse AMNotification(
+              TLlamaAMNotificationRequest request) throws TException {
+            if (delayResponse == 0) {
+              notifications.add(request);
+            } else {
+              try {
+                Thread.sleep(delayResponse);
+              } catch (InterruptedException ex) {
+                //NOP
+              }
+            }
+            return new TLlamaAMNotificationResponse().setStatus(TypeUtils.OK);
           }
-        }
-        return new TLlamaAMNotificationResponse().setStatus(TypeUtils.OK);
-      }
 
-      @Override
-      public TLlamaNMNotificationResponse NMNotification(
-          TLlamaNMNotificationRequest request) throws TException {
-        throw new UnsupportedOperationException();
-      }
-    };
+          @Override
+          public TLlamaNMNotificationResponse NMNotification(
+              TLlamaNMNotificationRequest request) throws TException {
+            throw new UnsupportedOperationException();
+          }
+        };
     return new LlamaNotificationService.Processor<LlamaNotificationService
         .Iface>(handler);
   }

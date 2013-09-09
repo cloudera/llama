@@ -80,6 +80,7 @@ public class TestLlamaAMImpl {
   public class MyListener implements LlamaAMListener {
     LlamaAMEvent event;
     boolean throwEx;
+
     @Override
     public void handle(LlamaAMEvent event) {
       this.event = event;

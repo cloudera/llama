@@ -26,12 +26,12 @@ import java.util.Arrays;
 import java.util.UUID;
 
 public class TestRMPlacedReservation {
-  
+
   @Test
   public void test() {
     Resource resource = new Resource(UUID.randomUUID(), "l",
         Resource.LocationEnforcement.MUST, 1, 2);
-    Reservation reservation = new Reservation(UUID.randomUUID(), "q", 
+    Reservation reservation = new Reservation(UUID.randomUUID(), "q",
         Arrays.asList(resource), false);
 
     RMPlacedReservation pr = new RMPlacedReservation(reservation) {

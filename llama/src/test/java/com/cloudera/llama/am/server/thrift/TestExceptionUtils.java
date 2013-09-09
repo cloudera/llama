@@ -21,7 +21,7 @@ import junit.framework.Assert;
 import org.junit.Test;
 
 public class TestExceptionUtils {
-  
+
   @Test(expected = IllegalArgumentException.class)
   public void testNullEx() {
     Assert.assertNull(ExceptionUtils.getRootCause(null, null));
@@ -48,8 +48,8 @@ public class TestExceptionUtils {
   @Test
   public void testCauseIsRoot() {
     RuntimeException rex = new RuntimeException();
-    Exception ex = new Exception(rex);    
-    Assert.assertEquals(rex, ExceptionUtils.getRootCause(ex, 
+    Exception ex = new Exception(rex);
+    Assert.assertEquals(rex, ExceptionUtils.getRootCause(ex,
         RuntimeException.class));
   }
 

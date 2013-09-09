@@ -21,7 +21,7 @@ import junit.framework.Assert;
 import org.junit.Test;
 
 public class TestFastFormat {
-  
+
   @Test
   public void testFormat() {
     Assert.assertEquals("12", FastFormat.format("{}{}", 1, 2));

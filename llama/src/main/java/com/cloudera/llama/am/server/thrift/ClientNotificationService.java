@@ -28,7 +28,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class ClientNotificationService implements ClientNotifier.ClientRegistry,
     LlamaAMListener {
-  
+
   private class Entry {
     private final String clientId;
     private final String host;
@@ -65,8 +65,8 @@ public class ClientNotificationService implements ClientNotifier.ClientRegistry,
     clientNotifier.stop();
   }
 
-  public synchronized UUID register(String clientId, String host, int port) 
-    throws ClientRegistryException {
+  public synchronized UUID register(String clientId, String host, int port)
+      throws ClientRegistryException {
     lock.writeLock().lock();
     try {
       UUID handle = reverseMap.get(clientId);
@@ -77,9 +77,9 @@ public class ClientNotificationService implements ClientNotifier.ClientRegistry,
         clientNotifier.registerClientForHeartbeats(handle);
       } else {
         Entry entry = clients.get(handle);
-        if (!entry.host.equals(host) || entry.port != port ) {
+        if (!entry.host.equals(host) || entry.port != port) {
           throw new ClientRegistryException(FastFormat.format("ClientId '{}' " +
-              "already registered with a different notification address", 
+              "already registered with a different notification address",
               clientId));
         }
       }
@@ -105,7 +105,7 @@ public class ClientNotificationService implements ClientNotifier.ClientRegistry,
     return ret;
   }
 
-  public void validateHandle(UUID handle) throws ClientRegistryException{
+  public void validateHandle(UUID handle) throws ClientRegistryException {
     lock.readLock().lock();
     try {
       if (!clients.containsKey(handle)) {
@@ -116,7 +116,7 @@ public class ClientNotificationService implements ClientNotifier.ClientRegistry,
       lock.readLock().unlock();
     }
   }
-  
+
   public ClientCaller getClientCaller(UUID handle) {
     lock.readLock().lock();
     try {

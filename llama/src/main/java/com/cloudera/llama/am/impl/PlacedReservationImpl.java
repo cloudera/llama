@@ -42,7 +42,7 @@ public class PlacedReservationImpl extends RMPlacedReservation {
   }
 
   @Override
-  protected List<PlacedResource> copyResources(List<? extends Resource> 
+  protected List<PlacedResource> copyResources(List<? extends Resource>
       resources) {
     List<PlacedResource> list = new ArrayList<PlacedResource>();
     for (Resource resource : resources) {
@@ -76,8 +76,7 @@ public class PlacedReservationImpl extends RMPlacedReservation {
     return status;
   }
 
-  @SuppressWarnings("unchecked")
-  List<PlacedResourceImpl> getResourceImpls() {
+  @SuppressWarnings("unchecked") List<PlacedResourceImpl> getResourceImpls() {
     return (List<PlacedResourceImpl>) (List) getResources();
   }
 

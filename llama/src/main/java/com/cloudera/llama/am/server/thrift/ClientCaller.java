@@ -25,7 +25,7 @@ import org.apache.thrift.transport.TTransport;
 
 import java.util.UUID;
 
-public class ClientCaller {  
+public class ClientCaller {
   private final Configuration conf;
   private final String clientId;
   private final UUID handle;
@@ -35,8 +35,8 @@ public class ClientCaller {
   private LlamaNotificationService.Iface client;
   private boolean lastSuccessful;
   private long lastCall;
-  
-  public ClientCaller(Configuration conf, String clientId, UUID handle, 
+
+  public ClientCaller(Configuration conf, String clientId, UUID handle,
       String host, int port) {
     this.conf = conf;
     this.clientId = clientId;
@@ -45,7 +45,7 @@ public class ClientCaller {
     this.port = port;
     lastCall = System.currentTimeMillis();
   }
-  
+
   public String getClientId() {
     return clientId;
   }
@@ -54,7 +54,7 @@ public class ClientCaller {
     return handle;
   }
 
-  public static abstract class Callable<T> implements 
+  public static abstract class Callable<T> implements
       java.util.concurrent.Callable<T> {
     private String clientId;
     private UUID handle;
@@ -63,19 +63,19 @@ public class ClientCaller {
     protected UUID getHandle() {
       return handle;
     }
-    
+
     protected String getClientId() {
       return clientId;
     }
-    
+
     protected LlamaNotificationService.Iface getClient() {
       return client;
     }
 
     public abstract T call() throws ClientException;
   }
-  
-  public synchronized <T> T execute(Callable<T> callable) 
+
+  public synchronized <T> T execute(Callable<T> callable)
       throws ClientException {
     T ret;
     try {
@@ -95,13 +95,13 @@ public class ClientCaller {
     return ret;
   }
 
-  LlamaNotificationService.Iface createClient() throws Exception {    
+  LlamaNotificationService.Iface createClient() throws Exception {
     tTransport = ThriftEndPoint.createClientTransport(conf, host, port);
-    tTransport.open();    
+    tTransport.open();
     TProtocol protocol = new TBinaryProtocol(tTransport);
     return new LlamaNotificationService.Client(protocol);
   }
-  
+
   public synchronized void cleanUpClient() {
     if (tTransport != null) {
       tTransport.close();

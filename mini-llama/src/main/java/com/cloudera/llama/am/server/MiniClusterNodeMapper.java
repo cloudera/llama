@@ -31,10 +31,10 @@ import java.util.Map;
 import java.util.Properties;
 
 public class MiniClusterNodeMapper implements NodeMapper, Configurable {
-  
-  public static final String MAPPING_KEY = 
+
+  public static final String MAPPING_KEY =
       "llama.minicluster.node.mapper.mapping";
-  
+
   public static void addMapping(Configuration conf,
       Map<String, String> mapping) {
     try {
@@ -48,14 +48,14 @@ public class MiniClusterNodeMapper implements NodeMapper, Configurable {
       throw new RuntimeException(ex);
     }
   }
-  
+
   private Configuration conf;
   private Map<String, String> dn2nm;
   private Map<String, String> nm2dn;
-  
+
   @Override
   @SuppressWarnings("unchecked")
-  public void setConf(Configuration conf) {  
+  public void setConf(Configuration conf) {
     this.conf = conf;
     try {
       String str = conf.get(MAPPING_KEY);
@@ -63,7 +63,7 @@ public class MiniClusterNodeMapper implements NodeMapper, Configurable {
         StringReader reader = new StringReader(str);
         Properties props = new Properties();
         props.load(reader);
-        dn2nm = new HashMap<String, String>((Map)props);
+        dn2nm = new HashMap<String, String>((Map) props);
         nm2dn = new HashMap<String, String>();
         for (Map.Entry<String, String> entry : dn2nm.entrySet()) {
           nm2dn.put(entry.getValue(), entry.getKey());
@@ -119,5 +119,5 @@ public class MiniClusterNodeMapper implements NodeMapper, Configurable {
     }
     return list;
   }
-  
+
 }

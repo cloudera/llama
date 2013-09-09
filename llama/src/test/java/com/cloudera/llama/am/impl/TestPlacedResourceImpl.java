@@ -29,7 +29,7 @@ public class TestPlacedResourceImpl {
   @Test
   public void testMethods() {
     PlacedResourceImpl r = new PlacedResourceImpl(TestReservation.
-        createResource());    
+        createResource());
     r.toString();
     Assert.assertEquals(PlacedResource.Status.PENDING, r.getStatus());
     Assert.assertNull(r.getClientId());

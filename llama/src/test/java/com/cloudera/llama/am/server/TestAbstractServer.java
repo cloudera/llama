@@ -26,14 +26,14 @@ import java.util.Set;
 
 public class TestAbstractServer {
   private static final Set<String> STEPS = new HashSet<String>();
-  
+
   static {
     STEPS.add("metrics");
     STEPS.add("jmx");
     STEPS.add("service");
     STEPS.add("transport");
   }
-  
+
   public static class MyServer extends AbstractServer {
     private volatile boolean started = false;
 
@@ -140,7 +140,7 @@ public class TestAbstractServer {
       server.start();
       server.start();
     } finally {
-    server.stop();
+      server.stop();
     }
   }
 

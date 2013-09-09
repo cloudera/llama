@@ -40,7 +40,7 @@ public class ParamChecker {
     notNull(l, paramName);
     for (T t : l) {
       if (t == null) {
-        throw new IllegalArgumentException(paramName + 
+        throw new IllegalArgumentException(paramName +
             " cannot have NULL elements");
       }
     }
@@ -53,7 +53,7 @@ public class ParamChecker {
 
   public static int greaterThan(int i, int base, String paramName) {
     if (i <= base) {
-      throw new IllegalArgumentException(paramName + " must be greater than " +
+      throw new IllegalArgumentException(paramName + " must be greater than " + 
           base);
     }
     return i;

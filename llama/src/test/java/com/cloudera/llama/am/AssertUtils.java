@@ -23,16 +23,15 @@ import junit.framework.AssertionFailedError;
 import java.util.concurrent.Callable;
 
 public class AssertUtils {
-  public static void assertException(Callable<?> callable, 
-                                     Class<? extends Exception> exClass) 
-    {
+  public static void assertException(Callable<?> callable,
+      Class<? extends Exception> exClass) {
     try {
       callable.call();
       Assert.fail("No exception, expected " + exClass.getName());
     } catch (AssertionFailedError ex) {
       throw ex;
     } catch (Throwable ex) {
-      Assert.assertEquals( exClass, ex.getClass());
+      Assert.assertEquals(exClass, ex.getClass());
     }
   }
 }

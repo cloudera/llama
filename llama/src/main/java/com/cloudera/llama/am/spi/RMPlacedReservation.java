@@ -28,7 +28,7 @@ public abstract class RMPlacedReservation extends PlacedReservation {
   protected RMPlacedReservation(Reservation<Resource> reservation) {
     super(reservation);
   }
-  
+
   @SuppressWarnings("unchecked")
   public List<RMPlacedResource> getRMResources() {
     return (List<RMPlacedResource>) (List) getResources();

@@ -27,18 +27,18 @@ public class Resource {
   public enum LocationEnforcement {
     MUST, PREFERRED, DONT_CARE
   }
-  
+
   private final UUID clientResourceId;
   private final String location;
   private final LocationEnforcement enforcement;
   private final int cpuVCores;
   private final int memoryMb;
-  
-  public Resource(UUID clientResourceId, String location, 
-                  LocationEnforcement enforcement,
-                  int cpuVCores, int memoryMb) {
-    this.clientResourceId = ParamChecker.notNull(clientResourceId, 
-      "clientResourceId");
+
+  public Resource(UUID clientResourceId, String location,
+      LocationEnforcement enforcement,
+      int cpuVCores, int memoryMb) {
+    this.clientResourceId = ParamChecker.notNull(clientResourceId,
+        "clientResourceId");
     this.location = ParamChecker.notEmpty(location, "location");
     this.enforcement = ParamChecker.notNull(enforcement, "enforcement");
     this.cpuVCores = ParamChecker.greaterEqualZero(cpuVCores, "cpuVCores");
@@ -49,14 +49,14 @@ public class Resource {
 
   protected Resource(Resource resource) {
     this(resource.getClientResourceId(), resource.getLocation(),
-      resource.getEnforcement(), 
-      resource.getCpuVCores(), resource.getMemoryMb());
+        resource.getEnforcement(),
+        resource.getCpuVCores(), resource.getMemoryMb());
   }
-  
+
   public UUID getClientResourceId() {
     return clientResourceId;
   }
-  
+
   public String getLocation() {
     return location;
   }
@@ -80,8 +80,8 @@ public class Resource {
 
   @Override
   public boolean equals(Object obj) {
-    return (obj != null) && (obj instanceof Resource) && 
-      clientResourceId.equals(((Resource) obj).clientResourceId);
+    return (obj != null) && (obj instanceof Resource) &&
+        clientResourceId.equals(((Resource) obj).clientResourceId);
   }
 
   private static final String TO_STRING_MSG = "resource[" +
@@ -89,7 +89,7 @@ public class Resource {
       "enforcement: {}]";
 
   public String toString() {
-    return FastFormat.format(TO_STRING_MSG, getClientResourceId(), 
+    return FastFormat.format(TO_STRING_MSG, getClientResourceId(),
         getCpuVCores(), getMemoryMb(), getLocation(), getEnforcement());
   }
 

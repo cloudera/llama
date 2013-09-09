@@ -32,7 +32,7 @@ import org.mortbay.jetty.servlet.Context;
 
 import java.net.InetSocketAddress;
 
-public class LlamaAMThriftServer extends 
+public class LlamaAMThriftServer extends
     ThriftServer<LlamaAMService.Processor> {
   private LlamaAM llamaAm;
   private ClientNotificationService clientNotificationService;
@@ -104,6 +104,7 @@ public class LlamaAMThriftServer extends
       getLog().warn("Error shutting down HTTP server, {}", ex.toString(), ex);
     }
   }
+
   @Override
   protected void startService() {
     startHttpServer();
@@ -124,7 +125,7 @@ public class LlamaAMThriftServer extends
           ThriftEndPoint.getServerPort(getConf()));
       getConf().set(YarnRMLlamaAMConnector.ADVERTISED_TRACKING_URL_KEY,
           getHttpLlamaUI());
-      llamaAm = LlamaAM.create(getConf());      
+      llamaAm = LlamaAM.create(getConf());
       llamaAm.start();
     } catch (Exception ex) {
       throw new RuntimeException(ex);

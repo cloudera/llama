@@ -19,7 +19,6 @@ package com.cloudera.llama.am.server.thrift;
 
 import com.cloudera.llama.am.impl.FastFormat;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.UserGroupInformation;
 
 import javax.security.auth.Subject;
@@ -40,13 +39,13 @@ public class Security {
 
   private static final String SERVICE_HOST_WILDCARD = "_HOST";
 
-  static class KerberosConfiguration extends 
+  static class KerberosConfiguration extends
       javax.security.auth.login.Configuration {
     private String principal;
     private String keytab;
     private boolean isInitiator;
 
-    KerberosConfiguration(String principal, File keytab, 
+    KerberosConfiguration(String principal, File keytab,
         boolean client) {
       this.principal = principal;
       this.keytab = keytab.getAbsolutePath();
@@ -75,7 +74,7 @@ public class Security {
       if (ticketCache != null) {
         options.put("ticketCache", ticketCache);
       }
-      options.put("debug", System.getProperty("sun.security.krb5.debug=true", 
+      options.put("debug", System.getProperty("sun.security.krb5.debug=true",
           "false"));
 
       return new AppConfigurationEntry[]{
@@ -86,14 +85,14 @@ public class Security {
   }
 
   public static boolean isSecure(Configuration conf) {
-    return conf.getBoolean(ServerConfiguration.SECURITY_ENABLED_KEY, 
+    return conf.getBoolean(ServerConfiguration.SECURITY_ENABLED_KEY,
         ServerConfiguration.SECURITY_ENABLED_DEFAULT);
   }
-  
-  private static final Map<Subject, LoginContext> SUBJECT_LOGIN_CTX_MAP = 
+
+  private static final Map<Subject, LoginContext> SUBJECT_LOGIN_CTX_MAP =
       new ConcurrentHashMap<Subject, LoginContext>();
-  
-  static Subject loginSubject(Configuration conf, boolean isClient) 
+
+  static Subject loginSubject(Configuration conf, boolean isClient)
       throws Exception {
     Subject subject;
     if (isSecure(conf)) {
@@ -123,9 +122,9 @@ public class Security {
     }
     return subject;
   }
- 
-  public static Subject loginServerSubject(Configuration conf) 
-    throws Exception {
+
+  public static Subject loginServerSubject(Configuration conf)
+      throws Exception {
     return loginSubject(conf, false);
   }
 
@@ -144,7 +143,7 @@ public class Security {
       }
     }
   }
-  
+
   public static void loginToHadoop(Configuration conf) throws Exception {
     if (UserGroupInformation.isSecurityEnabled()) {
       String principalName = resolveLlamaPrincipalName(conf);
@@ -159,15 +158,15 @@ public class Security {
         throw new RuntimeException(FastFormat.format(
             "Keytab file '{}' does not exist", keytabFile));
       }
-      UserGroupInformation.loginUserFromKeytab(principalName, 
+      UserGroupInformation.loginUserFromKeytab(principalName,
           keytabFile.getPath());
     }
   }
-  
+
   public static String resolveLlamaPrincipalName(Configuration conf) {
-      String principalName = conf.get(
-          ServerConfiguration.SERVER_PRINCIPAL_NAME_KEY,
-          ServerConfiguration.SERVER_PRINCIPAL_NAME_DEFAULT);
+    String principalName = conf.get(
+        ServerConfiguration.SERVER_PRINCIPAL_NAME_KEY,
+        ServerConfiguration.SERVER_PRINCIPAL_NAME_DEFAULT);
     int index = principalName.indexOf(SERVICE_HOST_WILDCARD);
     if (index > -1) {
       principalName = principalName.substring(0, index);

@@ -24,12 +24,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class AbstractServer implements Configurable {
-  private final Logger log;  
+  private final Logger log;
   private final String serviceName;
   private Configuration llamaConf;
   private int runLevel = 0;
   private int exitCode = 0;
-  
+
   protected AbstractServer(String serviceName) {
     log = LoggerFactory.getLogger(getClass());
     this.serviceName = serviceName;
@@ -38,7 +38,7 @@ public abstract class AbstractServer implements Configurable {
   protected Logger getLog() {
     return log;
   }
-  
+
   @Override
   public void setConf(Configuration conf) {
     llamaConf = conf;
@@ -167,14 +167,14 @@ public abstract class AbstractServer implements Configurable {
   protected abstract void startService();
 
   protected abstract void stopService();
-  
+
   //blocking
   protected abstract void startTransport();
 
   protected abstract void stopTransport();
 
   public abstract String getAddressHost();
-  
+
   public abstract int getAddressPort();
 
 }

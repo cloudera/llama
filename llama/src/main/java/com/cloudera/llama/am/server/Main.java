@@ -35,11 +35,11 @@ import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 
 public class Main {
-  static final String TEST_LLAMA_JVM_EXIT_SYS_PROP = 
+  static final String TEST_LLAMA_JVM_EXIT_SYS_PROP =
       "test.llama.disable.jvm.exit";
 
   public static final String SERVER_CLASS_KEY = "llama.am.server.class";
-  
+
   public static final String CONF_DIR_SYS_PROP = "llama.am.server.conf.dir";
   public static final String LOG_DIR_SYS_PROP = "llama.am.server.log.dir";
 
@@ -49,7 +49,7 @@ public class Main {
       verifySystemPropertyDir(CONF_DIR_SYS_PROP, true);
       verifySystemPropertyDir(LOG_DIR_SYS_PROP, false);
     }
-    
+
     public static void main(String[] args) throws Exception {
       verifyRequiredSysProps();
       Main.main(args);
@@ -69,13 +69,13 @@ public class Main {
     }
   }
 
-  private static final String BUILD_INFO_PROPERTIES = 
-    "llama-build-info.properties";
+  private static final String BUILD_INFO_PROPERTIES =
+      "llama-build-info.properties";
   private static final String LOG4J_PROPERTIES = "llama-log4j.properties";
   private static final String SITE_XML = "llama-site.xml";
-  
+
   private static Logger LOG;
-    
+
   public static void main(String[] args) throws Exception {
     Main main = new Main();
     int exit = main.run(args);
@@ -96,9 +96,9 @@ public class Main {
   //Used for testing only
   void waitStopLach() throws InterruptedException {
     stopLatch.await();
-    
+
   }
-  
+
   public int run(String[] args) throws Exception {
     String confDir = System.getProperty(CONF_DIR_SYS_PROP);
     initLogging(confDir);
@@ -106,11 +106,11 @@ public class Main {
 
     LOG.info("Configuration directory: {}", confDir);
     Configuration llamaConf = loadConfiguration(confDir);
-    llamaConf.setIfUnset(LlamaAM.RM_CONNECTOR_CLASS_KEY, 
+    llamaConf.setIfUnset(LlamaAM.RM_CONNECTOR_CLASS_KEY,
         YarnRMLlamaAMConnector.class.getName());
-    Class<? extends AbstractServer> klass = 
-      llamaConf.getClass(SERVER_CLASS_KEY, LlamaAMThriftServer.class, 
-          AbstractServer.class);
+    Class<? extends AbstractServer> klass =
+        llamaConf.getClass(SERVER_CLASS_KEY, LlamaAMThriftServer.class,
+            AbstractServer.class);
     LOG.info("Server: {}", klass.getName());
     LOG.info("-----------------------------------------------------------------");
     AbstractServer server = ReflectionUtils.newInstance(klass, llamaConf);
@@ -158,21 +158,21 @@ public class Main {
         props.load(is);
         is.close();
       } catch (Exception ex) {
-        LOG.warn("Could not read '{}' from classpath: {}", new Object[] {
-          BUILD_INFO_PROPERTIES, ex.toString(), ex});
+        LOG.warn("Could not read '{}' from classpath: {}", new Object[]{
+            BUILD_INFO_PROPERTIES, ex.toString(), ex});
       }
     }
     LOG.info("-----------------------------------------------------------------");
     LOG.info("  Java runtime version : {}",
         System.getProperty("java.runtime.version"));
-    LOG.info("  Llama version        : {}", props.getProperty("llama.version", 
-      "?"));
-    LOG.info("  Llama built date     : {}", props.getProperty("llama.built.date", 
-      "?"));
-    LOG.info("  Llama built by       : {}", props.getProperty("llama.built.by", 
-      "?"));
-    LOG.info("  Llama revision       : {}", props.getProperty("llama.revision", 
-      "?"));
+    LOG.info("  Llama version        : {}", props.getProperty("llama.version",
+        "?"));
+    LOG.info("  Llama built date     : {}", props.getProperty("llama.built.date",
+        "?"));
+    LOG.info("  Llama built by       : {}", props.getProperty("llama.built.by",
+        "?"));
+    LOG.info("  Llama revision       : {}", props.getProperty("llama.revision",
+        "?"));
     LOG.info("  Hadoop version       : {}", VersionInfo.getVersion());
     LOG.info("-----------------------------------------------------------------");
   }
@@ -182,7 +182,7 @@ public class Main {
     confDir = (confDir != null) ? confDir : "";
     File file = new File(confDir, SITE_XML);
     if (!file.exists()) {
-      LOG.warn("Llama configuration file '{}' not found in '{}'", SITE_XML, 
+      LOG.warn("Llama configuration file '{}' not found in '{}'", SITE_XML,
           confDir);
     } else {
       llamaConf.addResource(new Path(file.getAbsolutePath()));
@@ -190,9 +190,9 @@ public class Main {
     llamaConf.set(CONF_DIR_SYS_PROP, confDir);
     return llamaConf;
   }
-  
+
   private static void addShutdownHook(final AbstractServer server) {
-    if (!System.getProperty(TEST_LLAMA_JVM_EXIT_SYS_PROP, 
+    if (!System.getProperty(TEST_LLAMA_JVM_EXIT_SYS_PROP,
         "false").equals("true")) {
       Runtime.getRuntime().addShutdownHook(new Thread() {
         @Override

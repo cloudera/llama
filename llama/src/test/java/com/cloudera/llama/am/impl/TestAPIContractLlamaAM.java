@@ -41,12 +41,12 @@ public class TestAPIContractLlamaAM {
     static boolean nullOnReserve;
 
     private boolean running;
-    
+
     public MyRMLlamaAMConnector() {
       super(new Configuration(false));
       nullOnReserve = false;
     }
-    
+
     @Override
     public void addListener(LlamaAMListener listener) {
     }
@@ -78,7 +78,7 @@ public class TestAPIContractLlamaAM {
 
     @Override
     public void reserve(UUID reservationId, Reservation reservation)
-      throws LlamaAMException {
+        throws LlamaAMException {
     }
 
     @Override
@@ -103,7 +103,7 @@ public class TestAPIContractLlamaAM {
     resources.add(TestReservation.createResource());
     return new Reservation(UUID.randomUUID(), "q", resources, false);
   }
-  
+
   private LlamaAM createLlamaAM() throws Exception {
     MyRMLlamaAMConnector am = new MyRMLlamaAMConnector();
     return new APIContractLlamaAM(am);
@@ -220,9 +220,9 @@ public class TestAPIContractLlamaAM {
       am.start();
     } finally {
       am.stop();
-    }    
+    }
   }
-  
+
   @Test
   public void testMethodsPostClose() throws Exception {
     final LlamaAM am = createLlamaAM();

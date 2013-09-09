@@ -27,8 +27,8 @@ public class TestRMResourceChange {
 
   @Test
   public void testAllocate() {
-    UUID cId = UUID.randomUUID();    
-    RMResourceChange c = RMResourceChange.createResourceAllocation(cId, "id", 1, 
+    UUID cId = UUID.randomUUID();
+    RMResourceChange c = RMResourceChange.createResourceAllocation(cId, "id", 1,
         2, "l");
     c.toString();
     Assert.assertEquals(cId, c.getClientResourceId());
@@ -42,14 +42,14 @@ public class TestRMResourceChange {
   @Test
   public void testNonAllocate() {
     UUID cId = UUID.randomUUID();
-    RMResourceChange c = RMResourceChange.createResourceChange(cId, 
+    RMResourceChange c = RMResourceChange.createResourceChange(cId,
         PlacedResource.Status.LOST);
     c.toString();
     Assert.assertEquals(cId, c.getClientResourceId());
     Assert.assertNull(c.getRmResourceId());
     Assert.assertEquals(-1, c.getCpuVCores());
     Assert.assertEquals(-1, c.getMemoryMb());
-    Assert.assertNull( c.getLocation());
+    Assert.assertNull(c.getLocation());
     Assert.assertEquals(PlacedResource.Status.LOST, c.getStatus());
   }
 }

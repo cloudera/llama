@@ -44,19 +44,19 @@ import java.util.Set;
 
 public class TestSecureLlamaAMThriftServer extends TestLlamaAMThriftServer {
   private MiniKdc miniKdc;
-  
+
   @Before
   public void startKdc() throws Exception {
-    miniKdc = new MiniKdc(MiniKdc.createConf(), 
-        new File(TestMain.createTestDir()));  
+    miniKdc = new MiniKdc(MiniKdc.createConf(),
+        new File(TestMain.createTestDir()));
     miniKdc.start();
   }
-  
+
   @After
   public void stopKdc() {
     miniKdc.stop();
   }
-  
+
   @Override
   protected Configuration createCallbackConfiguration() throws Exception {
     Configuration conf = super.createCallbackConfiguration();
@@ -66,7 +66,7 @@ public class TestSecureLlamaAMThriftServer extends TestLlamaAMThriftServer {
     File keytab = new File(confDir, "notification.keytab");
     miniKdc.createPrincipal(keytab, "notification/localhost");
     conf.set(ServerConfiguration.KEYTAB_FILE_KEY, keytab.getAbsolutePath());
-    conf.set(ServerConfiguration.SERVER_PRINCIPAL_NAME_KEY, 
+    conf.set(ServerConfiguration.SERVER_PRINCIPAL_NAME_KEY,
         "notification/localhost");
     conf.set(ServerConfiguration.SERVER_ADDRESS_DEFAULT, "localhost:0");
     return conf;
@@ -84,7 +84,7 @@ public class TestSecureLlamaAMThriftServer extends TestLlamaAMThriftServer {
     conf.set(ServerConfiguration.SERVER_PRINCIPAL_NAME_KEY,
         "llama/localhost");
     conf.set(ServerConfiguration.SERVER_ADDRESS_DEFAULT, "localhost:0");
-    conf.set(ServerConfiguration.NOTIFICATION_PRINCIPAL_NAME_KEY, 
+    conf.set(ServerConfiguration.NOTIFICATION_PRINCIPAL_NAME_KEY,
         "notification");
     return conf;
   }
@@ -95,7 +95,7 @@ public class TestSecureLlamaAMThriftServer extends TestLlamaAMThriftServer {
         server.getAddressPort());
     Map<String, String> saslProperties = new HashMap<String, String>();
     saslProperties.put(Sasl.QOP, "auth-conf");
-    transport = new TSaslClientTransport("GSSAPI", null, "llama", 
+    transport = new TSaslClientTransport("GSSAPI", null, "llama",
         server.getAddressHost(), saslProperties, null, transport);
     transport.open();
     TProtocol protocol = new TBinaryProtocol(transport);

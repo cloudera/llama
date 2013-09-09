@@ -55,5 +55,5 @@ public class TestPlacedReservationImpl {
     pri.setStatus(PlacedReservation.Status.ALLOCATED);
     Assert.assertEquals(PlacedReservation.Status.ALLOCATED, pri.getStatus());
   }
-    
+
 }

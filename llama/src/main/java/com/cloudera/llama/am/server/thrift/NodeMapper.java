@@ -20,9 +20,9 @@ package com.cloudera.llama.am.server.thrift;
 import java.util.List;
 
 public interface NodeMapper {
-  
+
   public String getNodeManager(String dataNode);
- 
+
   public List<String> getNodeManagers(List<String> dataNodes);
 
   public String getDataNode(String nodeManager);

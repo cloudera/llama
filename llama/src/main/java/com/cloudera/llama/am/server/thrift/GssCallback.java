@@ -26,8 +26,8 @@ import javax.security.sasl.AuthorizeCallback;
 public class GssCallback extends SaslRpcServer.SaslGssCallbackHandler {
 
   @Override
-  public void handle(Callback[] callbacks) throws
-      UnsupportedCallbackException {
+  public void handle(Callback[] callbacks)
+      throws UnsupportedCallbackException {
     AuthorizeCallback ac = null;
     for (Callback callback : callbacks) {
       if (callback instanceof AuthorizeCallback) {

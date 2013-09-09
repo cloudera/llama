@@ -17,7 +17,6 @@
  */
 package com.cloudera.llama.am.api;
 
-import com.cloudera.llama.am.api.Resource;
 import junit.framework.Assert;
 import org.junit.Test;
 
@@ -42,19 +41,19 @@ public class TestResource {
 
   @Test(expected = IllegalArgumentException.class)
   public void testConstructorFail4() throws Exception {
-    new Resource(UUID.randomUUID(), "l", Resource.LocationEnforcement.MUST, 0, 
+    new Resource(UUID.randomUUID(), "l", Resource.LocationEnforcement.MUST, 0,
         0);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testConstructorFail5() throws Exception {
-    new Resource(UUID.randomUUID(), "l", Resource.LocationEnforcement.MUST, -1, 
+    new Resource(UUID.randomUUID(), "l", Resource.LocationEnforcement.MUST, -1,
         0);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testConstructorFail6() throws Exception {
-    new Resource(UUID.randomUUID(), "l", Resource.LocationEnforcement.MUST, 0, 
+    new Resource(UUID.randomUUID(), "l", Resource.LocationEnforcement.MUST, 0,
         -1);
   }
 
@@ -75,13 +74,13 @@ public class TestResource {
     Assert.assertEquals(r1.getEnforcement(), r2.getEnforcement());
     Assert.assertEquals(r1.getCpuVCores(), r2.getCpuVCores());
     Assert.assertEquals(r1.getMemoryMb(), r2.getMemoryMb());
-    
+
   }
 
   @Test
   public void testGetters() throws Exception {
     UUID cId = UUID.randomUUID();
-    Resource r = new Resource(cId, "l", Resource.LocationEnforcement.MUST, 1, 
+    Resource r = new Resource(cId, "l", Resource.LocationEnforcement.MUST, 1,
         2);
     r.toString();
     Assert.assertEquals(cId, r.getClientResourceId());
@@ -98,7 +97,7 @@ public class TestResource {
         2);
     Resource r2 = new Resource(cId, "l", Resource.LocationEnforcement.MUST, 1,
         2);
-    Resource r3 = new Resource(UUID.randomUUID(), "l", 
+    Resource r3 = new Resource(UUID.randomUUID(), "l",
         Resource.LocationEnforcement.MUST, 1, 2);
     Assert.assertTrue(r1.equals(r1));
     Assert.assertTrue(r1.equals(r2));

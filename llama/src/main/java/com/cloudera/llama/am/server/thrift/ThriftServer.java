@@ -46,7 +46,7 @@ public abstract class ThriftServer<T extends TProcessor> extends
   public void setConf(Configuration conf) {
     if (conf.get(ServerConfiguration.CONFIG_DIR_KEY) == null) {
       throw new RuntimeException(FastFormat.format(
-          "Required configuration property '{}' missing", 
+          "Required configuration property '{}' missing",
           ServerConfiguration.CONFIG_DIR_KEY));
     }
     super.setConf(conf);
@@ -94,11 +94,11 @@ public abstract class ThriftServer<T extends TProcessor> extends
   @Override
   public synchronized String getAddressHost() {
     if (hostname == null) {
-     hostname = (tServerSocket != null && 
-         tServerSocket.getServerSocket().isBound()) 
-                ? getHostname(tServerSocket.getServerSocket().
-                    getInetAddress().getHostName()) 
-                : null;
+      hostname = (tServerSocket != null &&
+          tServerSocket.getServerSocket().isBound())
+                 ? getHostname(tServerSocket.getServerSocket().
+          getInetAddress().getHostName())
+                 : null;
     }
     return hostname;
   }
@@ -112,7 +112,7 @@ public abstract class ThriftServer<T extends TProcessor> extends
     }
     return port;
   }
-  
+
   protected abstract T createServiceProcessor();
 
   static String getHostname(String address) {

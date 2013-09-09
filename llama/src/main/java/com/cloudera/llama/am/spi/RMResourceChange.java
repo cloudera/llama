@@ -31,7 +31,7 @@ public class RMResourceChange {
   private final String location;
 
   private RMResourceChange(UUID clientResourceId,
-      String rmResourceId, int cpuVCores, int memoryMb, String location, 
+      String rmResourceId, int cpuVCores, int memoryMb, String location,
       PlacedResource.Status status) {
     this.clientResourceId = clientResourceId;
     this.rmResourceId = rmResourceId;
@@ -86,7 +86,7 @@ public class RMResourceChange {
   public String toString() {
     String msg = (getStatus() == PlacedResource.Status.ALLOCATED)
                  ? TO_STRING_ALLOCATED_MSG : TO_STRING_CHANGED_MSG;
-    return FastFormat.format(msg, getClientResourceId(), getStatus(), 
+    return FastFormat.format(msg, getClientResourceId(), getStatus(),
         getCpuVCores(), getMemoryMb(), getLocation());
   }
 

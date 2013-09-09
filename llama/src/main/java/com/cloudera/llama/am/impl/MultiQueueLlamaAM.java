@@ -36,11 +36,11 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
-  SingleQueueLlamaAM.Callback {
+    SingleQueueLlamaAM.Callback {
   private final Map<String, LlamaAM> ams;
   private final ConcurrentHashMap<UUID, String> reservationToQueue;
   private boolean running;
-  
+
   public MultiQueueLlamaAM(Configuration conf) {
     super(conf);
     ams = new HashMap<String, LlamaAM>();
@@ -80,7 +80,7 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
       return new HashSet<LlamaAM>(ams.values());
     }
   }
-  
+
   private LlamaAM getAnyLlama() throws LlamaAMException {
     LlamaAM am;
     synchronized (ams) {
@@ -91,12 +91,13 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
         throw new LlamaAMException("There is not active LlamaAM for any queue");
       }
     }
-    return am;    
+    return am;
   }
 
   @Override
   public void start() throws LlamaAMException {
-    for (String queue : getConf().getTrimmedStringCollection(INITIAL_QUEUES_KEY)) {
+    for (String queue :
+        getConf().getTrimmedStringCollection(INITIAL_QUEUES_KEY)) {
       try {
         getLlamaAM(queue);
       } catch (LlamaAMException ex) {
@@ -145,7 +146,7 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
     String queue = reservationToQueue.get(reservationId);
     if (queue != null) {
       LlamaAM am = getLlamaAM(queue);
-      reservation = am.getReservation(reservationId);      
+      reservation = am.getReservation(reservationId);
     } else {
       getLog().warn("getReservation({}), reservationId not found",
           reservationId);

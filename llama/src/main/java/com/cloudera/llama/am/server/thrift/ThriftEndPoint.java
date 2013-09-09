@@ -51,18 +51,18 @@ public class ThriftEndPoint {
     }
     return tTransport;
   }
-  
-  public static TServerSocket createTServerSocket(Configuration conf) 
-    throws Exception {
-    String strAddress = conf.get(ServerConfiguration.SERVER_ADDRESS_KEY, 
+
+  public static TServerSocket createTServerSocket(Configuration conf)
+      throws Exception {
+    String strAddress = conf.get(ServerConfiguration.SERVER_ADDRESS_KEY,
         ServerConfiguration.SERVER_ADDRESS_DEFAULT);
-    int timeout = conf.getInt(ServerConfiguration.TRANSPORT_TIMEOUT_KEY, 
+    int timeout = conf.getInt(ServerConfiguration.TRANSPORT_TIMEOUT_KEY,
         ServerConfiguration.TRANSPORT_TIMEOUT_DEFAULT);
     InetSocketAddress address = NetUtils.createSocketAddr(strAddress,
         ServerConfiguration.SERVER_PORT_DEFAULT);
-    return new TServerSocket(address, timeout);    
+    return new TServerSocket(address, timeout);
   }
- 
+
   public static TTransportFactory createTTransportFactory(Configuration conf) {
     TTransportFactory factory;
     if (Security.isSecure(conf)) {
@@ -80,7 +80,7 @@ public class ThriftEndPoint {
       if (!principalHost.equals(declarePrincipalHost)) {
         throw new RuntimeException(FastFormat.format(
             "Server address configured with '{}', " +
-            "Kerberos service hostname configured with '{}'", 
+                "Kerberos service hostname configured with '{}'",
             principalHost, declarePrincipalHost));
       }
       saslFactory = new TSaslServerTransport.Factory();
@@ -92,10 +92,10 @@ public class ThriftEndPoint {
     }
     return factory;
   }
-  
+
   public static String getServerAddress(Configuration conf) {
     String strAddress = conf.get(ServerConfiguration.SERVER_ADDRESS_KEY,
-    ServerConfiguration.SERVER_ADDRESS_DEFAULT);
+        ServerConfiguration.SERVER_ADDRESS_DEFAULT);
     InetSocketAddress address = NetUtils.createSocketAddr(strAddress,
         ServerConfiguration.SERVER_PORT_DEFAULT);
     return address.getHostName();

@@ -20,8 +20,8 @@ package com.cloudera.llama.am.server.thrift;
 import com.cloudera.llama.am.impl.ParamChecker;
 
 public class ExceptionUtils {
-  
-  public static Throwable getRootCause(Throwable ex, 
+
+  public static Throwable getRootCause(Throwable ex,
       Class<? extends Throwable> rootCauseClassIfPresent) {
     ParamChecker.notNull(ex, "ex");
     ParamChecker.notNull(rootCauseClassIfPresent, "rootCauseClassIfPresent");
@@ -29,7 +29,8 @@ public class ExceptionUtils {
     while (rootCause == null && ex != null) {
       if (rootCauseClassIfPresent.isInstance(ex)) {
         rootCause = ex;
-      } if (ex.getCause() == null) {
+      }
+      if (ex.getCause() == null) {
         rootCause = ex;
       } else {
         ex = ex.getCause();
@@ -37,5 +38,5 @@ public class ExceptionUtils {
     }
     return rootCause;
   }
-  
+
 }

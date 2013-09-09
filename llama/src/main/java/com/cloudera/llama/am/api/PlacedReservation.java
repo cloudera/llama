@@ -35,12 +35,12 @@ public abstract class PlacedReservation extends Reservation<PlacedResource> {
 
   public abstract Status getStatus();
 
-  private static final String TO_STRING_MSG = "placedReservation[clientId: {}" + 
+  private static final String TO_STRING_MSG = "placedReservation[clientId: {}" +
       " queue: {} resources: {} gang: {} reservationId: {} status: {}]";
 
   @Override
   public String toString() {
-    return FastFormat.format(TO_STRING_MSG, getClientId(), getQueue(), 
+    return FastFormat.format(TO_STRING_MSG, getClientId(), getQueue(),
         getResources(), isGang(), getReservationId(), getStatus());
   }
 
