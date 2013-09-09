@@ -39,11 +39,6 @@
       <outputDirectory>/conf</outputDirectory>
       <filtered>true</filtered>
     </file>
-    <!--<file>-->
-      <!--<source>${project.build.directory}/${project.artifactId}-${project.version}.jar</source>-->
-      <!--<outputDirectory>/lib</outputDirectory>-->
-      <!--<filtered>true</filtered>-->
-    <!--</file>-->
   </files>
 
   <fileSets>

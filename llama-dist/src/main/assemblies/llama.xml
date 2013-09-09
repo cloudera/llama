@@ -72,9 +72,6 @@
     <fileSet>
       <directory>${basedir}/src/main/conf</directory>
       <outputDirectory>/conf</outputDirectory>
-      <excludes>
-        <exclude>minillama-log4j.properties</exclude>
-      </excludes>
     </fileSet>
 
     <!-- Sources -->
@@ -102,20 +99,6 @@
       <outputDirectory>/lib</outputDirectory>
       <unpack>false</unpack>
       <scope>compile</scope>
-      
-      <excludes>
-        <!-- Refer to llama/pom.xml dependencies section -->
-        <!-- for details on why we do this exclusions    -->
-        <exclude>org.apache.hadoop:hadoop-client:*</exclude>
-        <exclude>log4j:log4j:*</exclude>
-        <exclude>javax.servlet:servlet-api:*</exclude>
-        <exclude>org.mortbay.jetty:jetty:*</exclude>
-
-        <!--Until we have SLF4J 1.7.5 in Hadoop we need to have these JARs -->
-        <!--<exclude>org.slf4j:slf4j-api:*</exclude>-->
-        <!--<exclude>org.slf4j:slf4j-log4j12:*</exclude>-->
-      </excludes>
-      
     </dependencySet>
 
   </dependencySets>
