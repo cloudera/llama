@@ -34,8 +34,10 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 public class TestLlamaAMWithYarn {
@@ -184,5 +186,51 @@ public class TestLlamaAMWithYarn {
       stopYarn();
     }
   }
+
+  @Test
+  public void testReserveAllEnforcements() throws Exception {
+    try {
+      startYarn(createMiniYarnConfig(false));
+      LlamaAM llama = LlamaAM.create(getLlamaConfiguration());
+      MyListener listener = new MyListener();
+      try {
+        llama.start();
+        llama.addListener(listener);
+        List<String> nodes = llama.getNodes();
+        Assert.assertFalse(nodes.isEmpty());
+        Resource r = new Resource(UUID.randomUUID(), nodes.get(0),
+            Resource.LocationEnforcement.MUST, 1, 1024);
+        UUID pr1 = llama.reserve(new Reservation(UUID.randomUUID(), "queue1",
+            Arrays.asList(r), true));
+        r = new Resource(UUID.randomUUID(), nodes.get(0),
+            Resource.LocationEnforcement.PREFERRED, 1, 1024);
+        UUID pr2 = llama.reserve(new Reservation(UUID.randomUUID(), "queue1",
+            Arrays.asList(r), true));
+        r = new Resource(UUID.randomUUID(), nodes.get(0),
+            Resource.LocationEnforcement.DONT_CARE, 1, 1024);
+        UUID pr3 = llama.reserve(new Reservation(UUID.randomUUID(), "queue1",
+            Arrays.asList(r), true));
+        while (listener.events.size() < 3) {
+          Thread.sleep(100);
+        }
+        
+        Set<UUID> expected = new HashSet<UUID>();
+        expected.add(pr1);
+        expected.add(pr2);
+        expected.add(pr3);
+        
+        Set<UUID> got = new HashSet<UUID>();
+        for (LlamaAMEvent event : listener.events) {
+          got.addAll(event.getAllocatedReservationIds());
+        }
+        Assert.assertEquals(expected, got);
+      } finally {
+        llama.stop();
+      }
+    } finally {
+      stopYarn();
+    }
+  }
+
 
 }

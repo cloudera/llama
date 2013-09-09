@@ -61,6 +61,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -359,7 +360,24 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
     }
   }
 
-  private static final Priority PRIORITY = Priority.newInstance(1);
+  private static final 
+  Map<com.cloudera.llama.am.api.Resource.LocationEnforcement, Priority> 
+      REQ_PRIORITY 
+        = new HashMap<com.cloudera.llama.am.api.Resource.LocationEnforcement, 
+                     Priority>();
+
+  static {
+    REQ_PRIORITY.put(
+        com.cloudera.llama.am.api.Resource.LocationEnforcement.DONT_CARE,
+        Priority.newInstance(3));
+    REQ_PRIORITY.put(
+        com.cloudera.llama.am.api.Resource.LocationEnforcement.PREFERRED,
+        Priority.newInstance(2));
+    REQ_PRIORITY.put(
+        com.cloudera.llama.am.api.Resource.LocationEnforcement.MUST,
+        Priority.newInstance(1));
+  }
+
   private static final String[] RACKS = new String[0];
 
   private Resource createResource(PlacedResource resource)
@@ -390,7 +408,8 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
     public LlamaContainerRequest(RMPlacedResource placedResource)
         throws LlamaAMException {
       super(createResource(placedResource),
-          new String[]{placedResource.getLocation()}, RACKS, PRIORITY,
+          new String[]{placedResource.getLocation()}, RACKS,
+          REQ_PRIORITY.get(placedResource.getEnforcement()),
           (placedResource.getEnforcement() !=
               com.cloudera.llama.am.api.Resource.LocationEnforcement.MUST)
       );
