@@ -75,6 +75,8 @@ TODO: need license header
    <!-- Use this property in your subprojects's pom. -->
     <cdh.thrift.version>0.9.0</cdh.thrift.version>
 
+    <cdh.slf4j.version>1.7.5</cdh.slf4j.version>
+
     <cdh.protobuf.version>2.5.0</cdh.protobuf.version> 
   </properties>
   
@@ -1015,12 +1017,12 @@ TODO: need license header
       <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-api</artifactId>
-        <version>1.6.1</version>
+        <version>${cdh.slf4j.version}</version>
       </dependency>
       <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-log4j12</artifactId>
-        <version>1.6.1</version>
+        <version>${cdh.slf4j.version}</version>
       </dependency>
       <dependency>
         <groupId>org.eclipse.jdt</groupId>
@@ -1216,7 +1218,7 @@ TODO: need license header
       <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>jul-to-slf4j</artifactId>
-        <version>1.6.1</version>
+        <version>${cdh.slf4j.version}</version>
       </dependency>
       <dependency>
         <groupId>com.sun.jersey.contribs</groupId>
