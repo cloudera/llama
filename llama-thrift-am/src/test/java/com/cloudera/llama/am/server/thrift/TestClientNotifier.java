@@ -37,7 +37,7 @@ public class TestClientNotifier {
     Configuration conf = new Configuration(false);
     conf.set(ServerConfiguration.CONFIG_DIR_KEY, TestMain.createTestDir());
     conf.set(ServerConfiguration.SERVER_ADDRESS_KEY, "localhost:0");
-    conf.set(ServerConfiguration.HTTP_JMX_ADDRESS_KEY, "localhost:0");
+    conf.set(ServerConfiguration.HTTP_ADDRESS_KEY, "localhost:0");
     notificationServer = new NotificationEndPoint();
     notificationServer.setConf(conf);
     notificationServer.start();

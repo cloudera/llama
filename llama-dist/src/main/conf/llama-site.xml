@@ -99,12 +99,12 @@
     </description>
   </property>
 
-  <!-- LlamaAM Thrift server JMX configuration -->
+  <!-- LlamaAM Thrift server HTTP configuration -->
   <property>
-    <name>llama.am.server.thrift.http.jmx.address</name>
+    <name>llama.am.server.thrift.http.address</name>
     <value>0.0.0.0:15001</value>
-    <description>The address the LlamaAM server exposes its HTTP JSON JMX
-      servlet at.
+    <description>The address the LlamaAM server exposes its HTTP server for
+      JMX and the Web UI.
       If 0.0.0.0 is specified as IP, the server will listen in all available
       network addresses.
       If the port is not specified, the default port is 15001.
@@ -136,8 +136,10 @@
     <name>llama.am.server.thrift.kerberos.server.principal.name</name>
     <value>llama/_HOST</value>
     <description>
-      LlamaAM Kerberos principal name. This is the principal short name,
-      without the service hostname. 
+      LlamaAM Kerberos principal name. 
+      The _HOST string is replaced with the canonical hostname.
+      It is recommended to explicitly set the hostname to avoid issues do to
+      OS network configuration changes.
     </description>
   </property>
   <property>

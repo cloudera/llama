@@ -67,10 +67,10 @@ public class LlamaAMThriftServer extends
 
   private void startHttpServer() {
     httpServer = new Server();
-    String strAddress = getConf().get(ServerConfiguration.HTTP_JMX_ADDRESS_KEY,
-        ServerConfiguration.HTTP_JMX_ADDRESS_DEFAULT);
+    String strAddress = getConf().get(ServerConfiguration.HTTP_ADDRESS_KEY,
+        ServerConfiguration.HTTP_ADDRESS_DEFAULT);
     InetSocketAddress address = NetUtils.createSocketAddr(strAddress,
-        ServerConfiguration.HTTP_JMX_PORT_DEFAULT);
+        ServerConfiguration.HTTP_PORT_DEFAULT);
     Connector connector = new SocketConnector();
     connector.setHost(address.getHostName());
     connector.setPort(address.getPort());

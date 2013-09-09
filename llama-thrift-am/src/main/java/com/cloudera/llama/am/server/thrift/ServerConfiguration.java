@@ -39,9 +39,9 @@ public interface ServerConfiguration {
   public static String SERVER_ADDRESS_DEFAULT = "0.0.0.0";
   public static int SERVER_PORT_DEFAULT = 15000;
 
-  public static String HTTP_JMX_ADDRESS_KEY = KEY_PREFIX + "http.jmx.address";
-  public static String HTTP_JMX_ADDRESS_DEFAULT = "0.0.0.0";
-  public static int HTTP_JMX_PORT_DEFAULT = 15001;
+  public static String HTTP_ADDRESS_KEY = KEY_PREFIX + "http.address";
+  public static String HTTP_ADDRESS_DEFAULT = "0.0.0.0";
+  public static int HTTP_PORT_DEFAULT = 15001;
 
   public static String CLIENT_NOTIFIER_QUEUE_THRESHOLD_KEY = KEY_PREFIX + 
       "client.notifier.queue.threshold";

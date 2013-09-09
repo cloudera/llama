@@ -60,7 +60,7 @@ public class TestLlamaAMThriftServer {
     Configuration conf = new Configuration(false);
     conf.set(ServerConfiguration.CONFIG_DIR_KEY, TestMain.createTestDir());
     conf.set(ServerConfiguration.SERVER_ADDRESS_KEY, "localhost:0");
-    conf.set(ServerConfiguration.HTTP_JMX_ADDRESS_KEY, "localhost:0");
+    conf.set(ServerConfiguration.HTTP_ADDRESS_KEY, "localhost:0");
     return conf;
   }
 
@@ -78,7 +78,7 @@ public class TestLlamaAMThriftServer {
     conf.setInt(MockRMLlamaAMConnector.EVENTS_MAX_WAIT_KEY, 10);
 
     conf.set(ServerConfiguration.SERVER_ADDRESS_KEY, "localhost:0");
-    conf.set(ServerConfiguration.HTTP_JMX_ADDRESS_KEY, "localhost:0");
+    conf.set(ServerConfiguration.HTTP_ADDRESS_KEY, "localhost:0");
     return conf;
   }
 
