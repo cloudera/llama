@@ -94,11 +94,12 @@ public class TestLlamaAMThriftServer {
       HttpURLConnection conn = (HttpURLConnection)
           new URL(server.getHttpJmxEndPoint()).openConnection();
       Assert.assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+
       Assert.assertNotNull(server.getHttpLlamaUI());
       conn = (HttpURLConnection) new URL(server.getHttpLlamaUI()).
           openConnection();
       Assert.assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
-      conn = (HttpURLConnection) new URL(server.getHttpLlamaUI()).
+      conn = (HttpURLConnection) new URL(server.getHttpLlamaUI() + "foo").
           openConnection();
       Assert.assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
       conn = (HttpURLConnection) new URL(server.getHttpLlamaUI() +

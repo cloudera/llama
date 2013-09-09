@@ -88,7 +88,7 @@ public class LlamaAMThriftServer extends
       httpJmx = "http://" + getHostname(connector.getHost()) + ":" +
           connector.getLocalPort() + "/jmx";
       httpLlama = "http://" + getHostname(connector.getHost()) + ":" +
-          connector.getLocalPort() + "/llama";
+          connector.getLocalPort() + "/";
 
       getLog().info("HTTP JSON JMX     : {}", httpJmx);
       getLog().info("HTTP Llama Web UI : {}", httpLlama);
