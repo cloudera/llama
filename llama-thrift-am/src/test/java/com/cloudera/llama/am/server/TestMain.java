@@ -61,6 +61,7 @@ public class TestMain {
     System.setProperty(Main.CONF_DIR_SYS_PROP, confDir);
     conf.setIfUnset(LlamaAM.RM_CONNECTOR_CLASS_KEY, MockRMLlamaAMConnector.class.getName());
     conf.set(ServerConfiguration.SERVER_ADDRESS_KEY, "localhost:0");
+    conf.set(ServerConfiguration.HTTP_JMX_ADDRESS_KEY, "localhost:0");
     Writer writer = new FileWriter(new File(confDir, "llama-site.xml"));
     conf.writeXml(writer);
     writer.close();
