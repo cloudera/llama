@@ -161,7 +161,7 @@
     <description>
       Backing LlamaAM implementation to use.
       Available for functional testing:
-      com.cloudera.llama.am.mock.MockRMLlamaAMConnector
+      MockRMLlamaAMConnector
     </description>
   </property>
   <property>

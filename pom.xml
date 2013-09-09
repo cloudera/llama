@@ -46,13 +46,8 @@
   </organization>
 
   <modules>
-    <module>llama-thrift-api</module>
-    <module>llama-am-api</module>
-    <module>llama-am-mock</module>
-    <module>llama-am-yarn</module>
-    <module>llama-nm-yarn</module>
-    <module>llama-thrift-am</module>
-    <module>llama-thrift-mini-am</module>
+    <module>llama</module>
+    <module>mini-llama</module>
     <module>llama-dist</module>
     <module>llama-minikdc</module>
   </modules>
@@ -113,42 +108,17 @@
     <dependencies>
       <dependency>
         <groupId>com.cloudera.llama</groupId>
-        <artifactId>llama-thrift-api</artifactId>
+        <artifactId>llama</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>com.cloudera.llama</groupId>
-        <artifactId>llama-am-api</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.cloudera.llama</groupId>
-        <artifactId>llama-am-mock</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.cloudera.llama</groupId>
-        <artifactId>llama-am-yarn</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.cloudera.llama</groupId>
-        <artifactId>llama-nm-yarn</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.cloudera.llama</groupId>
-        <artifactId>llama-thrift-am</artifactId>
+        <artifactId>mini-llama</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>com.cloudera.llama</groupId>
         <artifactId>llama-minikdc</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.cloudera.llama</groupId>
-        <artifactId>llama-thrift-mini-am</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -321,6 +291,11 @@
           <version>1.6</version>
         </plugin>
         <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>build-helper-maven-plugin</artifactId>
+          <version>1.8</version>
+        </plugin>
+        <plugin>
           <groupId>org.apache.hadoop</groupId>
           <artifactId>hadoop-maven-plugins</artifactId>
           <version>${hadoop.version}</version>
@@ -397,7 +372,7 @@
             <phase>site</phase>
             <configuration>
               <target unless="child.module">
-                <copy file="${basedir}/llama-thrift-api/src/main/thrift/Llama.thrift"
+                <copy file="${basedir}/llama/src/main/thrift/Llama.thrift"
                       todir="${project.build.directory}/site"/>
                 <xslt in="${basedir}/llama-dist/src/main/conf/llama-site.xml"
                       out="${project.build.directory}/site/llama-site.html"

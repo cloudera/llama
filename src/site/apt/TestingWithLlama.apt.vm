@@ -27,7 +27,7 @@ Testing with Llama
 +----+
     <dependency>
       <groupId>com.cloudera.llama</groupId>
-      <artifactId>llama-thrift-mini-am</artifactId>
+      <artifactId>mini-llama</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
@@ -41,11 +41,28 @@ Testing with Llama
 
 **  Testcase boiler plate code:
   
+  Using MiniLlama will also start a Hadoop HDFS/Yarn minicluster. You need to 
+  specify how many nodes (number of DataNodes and NodeManagers) for the Hadoop 
+  HDFS/Yarn minicluster.
+  
+  You must have in your classpath (in a directory, not in a JAR) a 
+  <<<fair-scheduler-allocation.xml>>> file defining the FairScheduler queue
+  configuration.
+  
+  For example:
+  
 +----+
-public class TestMiniLlamaWithMock {
+public class TestUsingMiniLlama {
 
   private Configuration createMiniLlamaConfiguration() {
-     ...
+    URL url = Thread.currentThread().getContextClassLoader().getResource(
+        "fair-scheduler-allocation.xml");
+    String fsallocationFile = url.toExternalForm();
+    fsallocationFile = fsallocationFile.substring("file://".length());
+    Configuration conf = MiniLlama.createMiniClusterConf(1);
+    conf.set("yarn.scheduler.fair.allocation.file", fsallocationFile);
+    conf.set(LlamaAM.INITIAL_QUEUES_KEY, "default");
+    return conf;
   }
   
   @Test
@@ -69,63 +86,6 @@ public class TestMiniLlamaWithMock {
   }
 }
 +----+
-
-** Using MiniLlama with MockLlamaAM
-  
-  You need to create a Mock configuration.
-  
-  For example:
-  
-+----+
-public class TestMiniLlamaWithMock {
-
-  private Configuration createMiniLlamaConfiguration() {
-    Configuration conf = MiniLlama.createMockConf(
-        Arrays.asList("queue1", "queue2"), Arrays.asList("node1", "node2"));
-  }
-
-  @Test
-  public void testMiniLlama() throws Exception {
-    ...
-  }
-}
-+----+
-
-** Using MiniLlama with YarnLlamaAM
-  
-  Using MiniLlama with the YarnLlamAM will also start a Hadoop HDFS/Yarn 
-  minicluster. You need to specify how many nodes (number of DataNodes and 
-  NodeManagers) for the Hadoop HDFS/Yarn minicluster.
-  
-  <<NOTE:>> Until {{{https://issues.apache.org/jira/browse/YARN-1008}YARN-1008}}
-  is integrated, only one node miniclusters are supported.
-  
-  You must have in your classpath (in a directory, not in a JAR) a 
-  <<<fair-scheduler-allocation.xml>>> file defining the FairScheduler queue
-  configuration.
-  
-  For example:
-  
-+----+
-public class TestMiniLlamaWithMock {
-
-  private Configuration createMiniLlamaConfiguration() {
-    URL url = Thread.currentThread().getContextClassLoader().getResource(
-        "fair-scheduler-allocation.xml");
-    String fsallocationFile = url.toExternalForm();
-    fsallocationFile = fsallocationFile.substring("file://".length());
-    Configuration conf = MiniLlama.createMiniClusterConf(1);
-    conf.set("yarn.scheduler.fair.allocation.file", fsallocationFile);
-    conf.set(LlamaAM.INITIAL_QUEUES_KEY, "default");
-    return conf;
-  }
-  
-  @Test
-  public void testMiniLlama() throws Exception {
-    ...
-  }
-}
-+----+
   
   Example of a minimal <<<fair-scheduler-allocation.xml>>> configuration file 
   defining 3 queues:
@@ -141,14 +101,14 @@ public class TestMiniLlamaWithMock {
 </allocations>
 +----+
 
-* Using MiniLlama from the Command Line
+* Using MiniLlama from the Command-Line
 
-  <<IMPORTANT:>> MiniLlama from the Command Line is only available from the
-  standalone TARBALL, it is not available in the packaging TARBALL.
+  <<IMPORTANT:>> MiniLlama from the command-line is available from the
+  mini-llama tarball, it is not available in the llama-dist tarball.
 
 ** Install MiniLlama
 
-  Expand the <<<llama-${project.version}-standalone.tar.gz>>> TARBALL.
+  Expand the <<<mini-llama-${project.version}.tar.gz>>>.
 
 ** Configure MiniLlama
 
@@ -157,7 +117,7 @@ public class TestMiniLlamaWithMock {
 
   * <<<conf/llama-site.xml>>>
 
-  * <<<conf/minillama-log4j.properties>>>
+  * <<<conf/llama-log4j.properties>>>
 
 ** Run MiniLlama
 

@@ -24,16 +24,11 @@ Running Llama
 
 ** Install Llama AM
 
-  Expand & install one of the Llama TARBALL distribution files.
+  Build or download, and expand the Llama distribution tarball,
+  <<<llama-${project.version}.tar.gz>>>.
 
-  The standalone TARBALL, <<<llama-${project.version}-standalone.tar.gz>>>,
-  has all hadoop client JARs embedded in it. Hadoop's <<<core-site.xml>>> and 
-  <<<yarn-site.xml>>> from your Hadoop cluster should be copied to Llama 
-  <<<conf/>>> directory for Llama to work.
-
-  The packaging TARBALL, <<<llama-${project.version}-packaging.tar.gz>>>,
-  requires a local Hadoop client installed and configured to access the Hadoop 
-  cluster.    
+  Llama requires a local Hadoop client installed and configured to access the 
+  Hadoop cluster.    
     
 ** Llama AM Configuration
 

@@ -26,10 +26,10 @@
     <version>1.0.0-cdh5.0.0-SNAPSHOT</version>
   </parent>
   <groupId>com.cloudera.llama</groupId>
-  <artifactId>llama-dist</artifactId>
+  <artifactId>mini-llama</artifactId>
   <version>1.0.0-cdh5.0.0-SNAPSHOT</version>
-  <description>Llama Dist</description>
-  <name>Llama Dist</name>
+  <description>Mini Llama</description>
+  <name>Mini Llama</name>
   <packaging>jar</packaging>
 
   <properties>
@@ -63,24 +63,16 @@
       <groupId>com.cloudera.llama</groupId>
       <artifactId>llama</artifactId>
       <scope>compile</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.httpcomponents</groupId>
-          <artifactId>httpcore</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.httpcomponents</groupId>
-          <artifactId>httpclient</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-api</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>commons-lang</groupId>
-          <artifactId>commons-lang</artifactId>
-        </exclusion>
-      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-minicluster</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 
@@ -105,9 +97,9 @@
                 <configuration>
                   <appendAssemblyId>false</appendAssemblyId>
                   <attach>false</attach>
-                  <finalName>llama-${project.version}</finalName>
+                  <finalName>mini-llama-${project.version}</finalName>
                   <descriptors>
-                    <descriptor>src/main/assemblies/llama.xml</descriptor>
+                    <descriptor>src/main/assemblies/mini-llama.xml</descriptor>
                   </descriptors>
                 </configuration>
               </execution>

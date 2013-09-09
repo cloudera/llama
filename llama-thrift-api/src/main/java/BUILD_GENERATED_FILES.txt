@@ -1,7 +1,0 @@
-This directory is in the .gitignore file of the reposit
-
-The files under this directory are not under source control, they are generated
-by the thrift compiler as part of the build. 
-
-The reason we are using this directory under the src/ dir for build files is
-that the clover2 plugin fails if the java files are not under the src/ dir.

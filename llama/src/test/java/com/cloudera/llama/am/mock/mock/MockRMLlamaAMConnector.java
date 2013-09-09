@@ -1,0 +1,248 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.cloudera.llama.am.mock.mock;
+
+import com.cloudera.llama.am.api.LlamaAM;
+import com.cloudera.llama.am.api.LlamaAMException;
+import com.cloudera.llama.am.api.PlacedReservation;
+import com.cloudera.llama.am.api.PlacedResource;
+import com.cloudera.llama.am.impl.FastFormat;
+import com.cloudera.llama.am.spi.RMLlamaAMConnector;
+import com.cloudera.llama.am.spi.RMLlamaAMCallback;
+import com.cloudera.llama.am.spi.RMPlacedReservation;
+import com.cloudera.llama.am.spi.RMPlacedResource;
+import com.cloudera.llama.am.spi.RMResourceChange;
+import org.apache.hadoop.conf.Configurable;
+import org.apache.hadoop.conf.Configuration;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+
+public class MockRMLlamaAMConnector implements RMLlamaAMConnector, Configurable {
+  public static final String PREFIX_KEY = LlamaAM.PREFIX_KEY + "mock.";
+
+  public static final String EVENTS_MIN_WAIT_KEY = 
+      MockRMLlamaAMConnector.PREFIX_KEY + "events.min.wait.ms";
+  public static final int EVENTS_MIN_WAIT_DEFAULT = 1000; 
+
+  public static final String EVENTS_MAX_WAIT_KEY =
+      MockRMLlamaAMConnector.PREFIX_KEY + "events.max.wait.ms";
+  public static final int EVENTS_MAX_WAIT_DEFAULT = 10000;
+
+  public static final String QUEUES_KEY = MockRMLlamaAMConnector.PREFIX_KEY + 
+      "queues";
+  public static final Set<String> QUEUES_DEFAULT = new HashSet<String>();
+  
+  static {
+    QUEUES_DEFAULT.add("queue1");
+    QUEUES_DEFAULT.add("queue2");
+  }
+    
+  public static final String NODES_KEY = MockRMLlamaAMConnector.PREFIX_KEY + 
+      "nodes";
+  public static final String NODES_DEFAULT = "node1,node2";
+
+  private static final Map<String, PlacedResource.Status> MOCK_FLAGS = new 
+      HashMap<String, PlacedResource.Status>();
+
+  static {
+    MOCK_FLAGS.put(MockLlamaAMFlags.ALLOCATE, PlacedResource.Status.ALLOCATED);
+    MOCK_FLAGS.put(MockLlamaAMFlags.REJECT, PlacedResource.Status.REJECTED);
+    MOCK_FLAGS.put(MockLlamaAMFlags.LOSE, PlacedResource.Status.LOST);
+    MOCK_FLAGS.put(MockLlamaAMFlags.PREEMPT, PlacedResource.Status.PREEMPTED);
+  }
+
+  private static final Random RANDOM = new Random();
+
+  private PlacedResource.Status getMockResourceStatus(String location) {
+    PlacedResource.Status status = null;
+    for (Map.Entry<String, PlacedResource.Status> entry : MOCK_FLAGS.entrySet
+        ()) {
+      if (location.startsWith(entry.getKey())) {
+        status = entry.getValue();
+      }
+    }
+    if (!nodes.contains(getLocation(location))) {
+      status = PlacedResource.Status.REJECTED;      
+    } else if (status == null) {
+      int r = RANDOM.nextInt(10);
+      if (r < 1) {
+        status = PlacedResource.Status.LOST;
+      } else if (r < 2) {
+        status = PlacedResource.Status.REJECTED;
+      } else if (r < 4) {
+        status = PlacedResource.Status.PREEMPTED;
+      } else {
+        status = PlacedResource.Status.ALLOCATED;
+      }
+    }
+    return status;
+  }
+
+  private String getLocation(String location) {
+    for (Map.Entry<String, PlacedResource.Status> entry : MOCK_FLAGS.entrySet
+        ()) {
+      if (location.startsWith(entry.getKey())) {
+        return location.substring(entry.getKey().length());
+      }
+    }
+    return location;
+  }
+
+  private final AtomicLong counter = new AtomicLong();
+  private Configuration conf;
+  private ScheduledExecutorService scheduler;
+  private int minWait;
+  private int maxWait;
+  private List<String> nodes;
+  private RMLlamaAMCallback callback;
+
+  @Override
+  public void setConf(Configuration conf) {
+    this.conf = conf;
+  }
+
+  @Override
+  public Configuration getConf() {
+    return conf;
+  }
+
+  @Override
+  public void setLlamaAMCallback(RMLlamaAMCallback callback) {
+    this.callback = callback;
+  }
+
+  @Override
+  public void register(String queue) throws LlamaAMException {
+    minWait = getConf().getInt(EVENTS_MIN_WAIT_KEY, EVENTS_MIN_WAIT_DEFAULT);
+    maxWait = getConf().getInt(EVENTS_MAX_WAIT_KEY, EVENTS_MAX_WAIT_DEFAULT);
+    nodes = Collections.unmodifiableList(Arrays.asList(getConf().
+        getStrings(NODES_KEY, NODES_DEFAULT)));
+    scheduler = new ScheduledThreadPoolExecutor(1);
+    Collection<String> validQueues = getConf().
+        getTrimmedStringCollection(QUEUES_KEY);
+    if (validQueues.isEmpty()) {
+      validQueues = QUEUES_DEFAULT;
+    }
+    if (!validQueues.contains(queue)) {
+      throw new IllegalArgumentException(FastFormat.format("Invalid queue " +
+          "'{}'", queue));
+    }
+  }
+
+  @Override
+  public void unregister() {
+    scheduler.shutdownNow();
+  }
+
+  @Override
+  public List<String> getNodes() throws LlamaAMException {
+    return nodes;
+  }
+
+  @Override
+  public void reserve(RMPlacedReservation reservation)
+      throws LlamaAMException {
+    schedule(this, reservation);
+  }
+
+  @Override
+  public void release(Collection<RMPlacedResource> resources)
+      throws LlamaAMException {
+  }
+
+  private class MockRMAllocator implements Callable<Void> {
+    private MockRMLlamaAMConnector llama;
+    private PlacedResource resource;
+    private PlacedResource.Status status;
+    private boolean initial;
+    
+    public MockRMAllocator(MockRMLlamaAMConnector llama, PlacedResource resource,
+        PlacedResource.Status status, boolean initial) {
+      this.llama = llama;
+      this.resource = resource;
+      this.status = status;
+      this.initial = initial;
+    }
+
+    private void toAllocate() {
+      RMResourceChange change = RMResourceChange.createResourceAllocation
+          (resource.getClientResourceId(), "c" + counter.incrementAndGet
+              (), resource.getCpuVCores(), resource.getMemoryMb(),
+              getLocation(resource.getLocation()));
+      callback.changesFromRM(Arrays.asList(change));      
+    }
+    
+    private void toStatus(PlacedResource.Status status) {
+      RMResourceChange change = RMResourceChange.createResourceChange(
+          resource.getClientResourceId(), status);
+      callback.changesFromRM(Arrays.asList(change));
+      
+    }
+    @Override
+    public Void call() throws Exception {
+      switch (status) {
+        case ALLOCATED:
+          toAllocate();
+          break;
+        case REJECTED: 
+          toStatus(status);
+          break;
+        case LOST: 
+        case PREEMPTED: 
+          if (initial) {
+            toAllocate();
+
+            MockRMAllocator mocker = new MockRMAllocator(llama, resource, 
+                status, false);
+            int delay = minWait + RANDOM.nextInt(maxWait);
+            scheduler.schedule(mocker, delay, TimeUnit.MILLISECONDS);
+          } else {
+            toStatus(status);
+          }
+        break;
+      }
+      return null;
+    }
+  }
+
+  private void schedule(MockRMLlamaAMConnector allocator, 
+      PlacedReservation reservation) {
+    for (PlacedResource resource : reservation.getResources()) {
+      PlacedResource.Status status = getMockResourceStatus(
+          resource.getLocation());
+      MockRMAllocator mocker = new MockRMAllocator(allocator, resource, status, 
+          true);
+      int delay = minWait + RANDOM.nextInt(maxWait);
+      scheduler.schedule(mocker, delay, TimeUnit.MILLISECONDS);
+    }
+  }
+
+}

@@ -61,21 +61,15 @@ $  mvn site
 $  mvn site:run 
 +----+
 
-* Building a Distribution Tarball & a Packaging Tarball
+* Building a Distribution Tarball
 
 +----+
 $  mvn clean package -Pdist
 +----+
 
-  The standalone tarball will be available at 
-  <<<llama-dist/target/llama-${project.version}-standalone.tar.gz>>>. This 
-  tarball has all hadoop client JARs embedded in it. Hadoop's 
-  <<<core-site.xml>>> and <<<yarn-site.xml>>> from your Hadoop cluster should be
-  copied to Llama <<<conf/>>> directory for Llama to work.
-
-  The packaging tarball will be available at 
-  <<<llama-dist/target/llama-${project.version}-packaging.tar.gz>>>. This
-  tarball requires a local Hadoop client installed and configured to access the
+  The Llama tarball will be available at 
+  <<<llama-dist/target/llama-${project.version}.tar.gz>>>. The bits in the 
+  tarball require a local Hadoop client installed and configured to access the 
   Hadoop cluster.
 
 * To Update the Version of the Project
