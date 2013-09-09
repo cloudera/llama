@@ -35,6 +35,8 @@ public abstract class ThriftServer<T extends TProcessor> extends
   private TServer tServer;
   private TServerSocket tServerSocket;
   private Subject subject;
+  private String hostname;
+  private int port;
 
   protected ThriftServer(String serviceName) {
     super(serviceName);
@@ -90,16 +92,25 @@ public abstract class ThriftServer<T extends TProcessor> extends
   }
 
   @Override
-  public String getAddressHost() {
-    return (tServerSocket != null && tServerSocket.getServerSocket().isBound()) 
-           ? getHostname(tServerSocket.getServerSocket().getInetAddress().
-        getHostName()) : null;
+  public synchronized String getAddressHost() {
+    if (hostname == null) {
+     hostname = (tServerSocket != null && 
+         tServerSocket.getServerSocket().isBound()) 
+                ? getHostname(tServerSocket.getServerSocket().
+                    getInetAddress().getHostName()) 
+                : null;
+    }
+    return hostname;
   }
 
   @Override
-  public int getAddressPort() {
-    return (tServerSocket != null && tServerSocket.getServerSocket().isBound())
-           ? tServerSocket.getServerSocket().getLocalPort() : 0;
+  public synchronized int getAddressPort() {
+    if (port == 0) {
+      port = (tServerSocket != null &&
+          tServerSocket.getServerSocket().isBound())
+             ? tServerSocket.getServerSocket().getLocalPort() : 0;
+    }
+    return port;
   }
   
   protected abstract T createServiceProcessor();
