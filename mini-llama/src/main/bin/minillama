@@ -84,4 +84,4 @@ then
 fi
 
 ${JAVA_BIN} ${MINI_LLAMA_OPTS} -cp ${CLASSPATH} \
-  com.cloudera.llama.am.server.MiniLlama ${hadoopnodes}
+  com.cloudera.llama.am.MiniLlama ${hadoopnodes}

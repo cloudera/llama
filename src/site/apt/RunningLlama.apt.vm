@@ -107,7 +107,7 @@ $ bin/llama
 2013-08-02 06:57:32,784 INFO  Main -   Hadoop version       : 2.1.0-cdh5.0.0-SNAPSHOT
 2013-08-02 06:57:32,784 INFO  Main - -----------------------------------------------------------------
 2013-08-02 06:57:32,784 INFO  Main - Configuration directory: /Users/tucu/llama/conf
-2013-08-02 06:57:32,878 INFO  Main - Server: com.cloudera.llama.am.server.thrift.LlamaAMThriftServer
+2013-08-02 06:57:32,878 INFO  Main - Server: com.cloudera.llama.am.LlamaAMServer
 2013-08-02 06:57:32,879 INFO  Main - -----------------------------------------------------------------
 2013-08-02 06:57:33,790 INFO  LlamaAMThriftServer - Server listening on: 0.0.0.0:15000
 2013-08-02 06:57:33,790 INFO  LlamaAMThriftServer - Llama started!
