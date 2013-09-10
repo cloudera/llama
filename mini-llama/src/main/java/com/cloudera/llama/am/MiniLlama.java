@@ -84,7 +84,7 @@ public class MiniLlama {
   private static final String MINI_CLUSTER_NODES_KEY =
       "llama.am.server.mini.cluster.nodes";
 
-  private static ServerConfiguration S_CONF = new ServerConfiguration("am",
+  private static ServerConfiguration S_CONF = new AMServerConfiguration(
       new Configuration(false));
 
   public static Configuration createMiniClusterConf(Configuration conf,

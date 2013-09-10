@@ -30,8 +30,26 @@ import java.util.UUID;
 
 public class TestClientNotifier {
 
-  private ServerConfiguration nsConf =
-      new ServerConfiguration("ns", new Configuration(false));
+  public static class NSServerConfiguration
+      extends ServerConfiguration {
+
+    public NSServerConfiguration(Configuration conf) {
+      super("ns", conf);
+    }
+
+    @Override
+    public int getThriftDefaultPort() {
+      return 0;
+    }
+
+    @Override
+    public int getHttpDefaultPort() {
+      return 0;
+    }
+  }
+
+  private ServerConfiguration nsConf = new NSServerConfiguration(
+      new Configuration(false));
 
   private NotificationEndPoint notificationServer;
 
@@ -86,7 +104,7 @@ public class TestClientNotifier {
     Configuration conf = new Configuration(false);
     conf.setInt(nsConf.getPropertyName(
         ServerConfiguration.CLIENT_NOTIFIER_HEARTBEAT_KEY), 300);
-    ServerConfiguration sConf = new ServerConfiguration("ns", conf);
+    ServerConfiguration sConf = new NSServerConfiguration(conf);
     String clientId = "cId";
     UUID handle = UUID.randomUUID();
     MyClientRegistry cr = new MyClientRegistry(sConf, clientId, handle,
@@ -115,7 +133,7 @@ public class TestClientNotifier {
     Configuration conf = new Configuration(false);
     conf.setInt(nsConf.getPropertyName(
         ServerConfiguration.CLIENT_NOTIFIER_HEARTBEAT_KEY), 300);
-    ServerConfiguration sConf = new ServerConfiguration("ns", conf);
+    ServerConfiguration sConf = new NSServerConfiguration(conf);
     String clientId = "cId";
     UUID handle = UUID.randomUUID();
     MyClientRegistry cr = new MyClientRegistry(sConf, clientId, handle,
@@ -154,7 +172,7 @@ public class TestClientNotifier {
         ServerConfiguration.CLIENT_NOTIFIER_MAX_RETRIES_KEY), 2);
     conf.setInt(nsConf.getPropertyName(
         ServerConfiguration.TRANSPORT_TIMEOUT_KEY), 10);
-    ServerConfiguration sConf = new ServerConfiguration("ns", conf);
+    ServerConfiguration sConf = new NSServerConfiguration(conf);
     String clientId = "cId";
     UUID handle = UUID.randomUUID();
     MyClientRegistry cr = new MyClientRegistry(sConf, clientId, handle,
@@ -183,7 +201,7 @@ public class TestClientNotifier {
         ServerConfiguration.CLIENT_NOTIFIER_MAX_RETRIES_KEY), 2);
     conf.setInt(nsConf.getPropertyName(
         ServerConfiguration.TRANSPORT_TIMEOUT_KEY), 50);
-    ServerConfiguration sConf = new ServerConfiguration("ns", conf);
+    ServerConfiguration sConf = new NSServerConfiguration(conf);
     String clientId = "cId";
     UUID handle = UUID.randomUUID();
     MyClientRegistry cr = new MyClientRegistry(sConf, clientId, handle,

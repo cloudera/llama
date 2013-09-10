@@ -46,7 +46,7 @@ public class LlamaAMServer extends
   private String httpLlama;
 
   public LlamaAMServer() {
-    super("LlamaAM", "am");
+    super("LlamaAM", AMServerConfiguration.class);
   }
 
   private JmxReporter reporter;

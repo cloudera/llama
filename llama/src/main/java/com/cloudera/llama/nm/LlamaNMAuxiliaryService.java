@@ -15,18 +15,57 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.cloudera.llama.nm.yarn;
+package com.cloudera.llama.nm;
 
+import com.cloudera.llama.server.AbstractMain;
+import com.cloudera.llama.server.ServerConfiguration;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.yarn.server.api.ApplicationInitializationContext;
 import org.apache.hadoop.yarn.server.api.ApplicationTerminationContext;
 import org.apache.hadoop.yarn.server.api.AuxiliaryService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 
-public class LlamaNMPlugin extends AuxiliaryService {
+public class LlamaNMAuxiliaryService extends AuxiliaryService {
+  private static final Logger LOG = LoggerFactory.getLogger(LlamaNMServer.class);
 
-  protected LlamaNMPlugin() {
+  private LlamaNMServer nmServer;
+
+  protected LlamaNMAuxiliaryService() {
     super("Llama NM Plugin");
+  }
+
+  @Override
+  protected void setConfig(Configuration conf) {
+    super.setConfig(conf);
+  }
+
+  @Override
+  protected synchronized void serviceStart() throws Exception {
+    AbstractMain.logServerInfo();
+
+    Configuration llamaConf = new Configuration(getConfig());
+    llamaConf.addResource("llama-site.xml");
+    LOG.info("Server: {}", LlamaNMServer.class.getName());
+    LOG.info("-----------------------------------------------------------------");
+    nmServer = new LlamaNMServer();
+    nmServer.setConf(llamaConf);
+    nmServer.start();
+  }
+
+  synchronized LlamaNMServer getNMServer() {
+    return nmServer;
+  }
+
+  @Override
+  public synchronized void serviceStop() {
+    if (nmServer != null) {
+      nmServer.stop();
+      nmServer = null;
+    }
+    super.stop();
   }
 
   @Override

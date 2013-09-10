@@ -19,7 +19,6 @@ package com.cloudera.llama.server;
 
 import com.cloudera.llama.thrift.LlamaNotificationService;
 import junit.framework.Assert;
-import org.apache.hadoop.conf.Configuration;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -29,12 +28,29 @@ public class TestClientCaller {
 
   static boolean createClient;
 
+  public static class CSServerConfiguration
+      extends ServerConfiguration {
+
+    public CSServerConfiguration() {
+      super("cs");
+    }
+
+    @Override
+    public int getThriftDefaultPort() {
+      return 0;
+    }
+
+    @Override
+    public int getHttpDefaultPort() {
+      return 0;
+    }
+  }
+
   public static class MyClientCaller extends ClientCaller {
 
     public MyClientCaller(String clientId, UUID handle,
         String host, int port) {
-      super(new ServerConfiguration("cs", new Configuration(false)),
-          clientId, handle, host, port);
+      super(new CSServerConfiguration(), clientId, handle, host, port);
     }
 
     @Override

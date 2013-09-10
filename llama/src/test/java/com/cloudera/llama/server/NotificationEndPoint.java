@@ -33,8 +33,26 @@ public class NotificationEndPoint extends
   public List<TLlamaAMNotificationRequest> notifications;
   public volatile long delayResponse;
 
+  public static class ClientServerConfiguration
+      extends ServerConfiguration {
+
+    public ClientServerConfiguration() {
+      super("client");
+    }
+
+    @Override
+    public int getThriftDefaultPort() {
+      return 0;
+    }
+
+    @Override
+    public int getHttpDefaultPort() {
+      return 0;
+    }
+  }
+
   public NotificationEndPoint() {
-    super("NotificationEndPoint", "client");
+    super("NotificationEndPoint", ClientServerConfiguration.class);
   }
 
   @Override

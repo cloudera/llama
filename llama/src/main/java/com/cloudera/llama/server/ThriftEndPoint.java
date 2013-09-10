@@ -90,8 +90,8 @@ public class ThriftEndPoint {
   }
 
   public static String getServerAddress(ServerConfiguration conf) {
-    String strAddress = conf.getHttpAddress();
-    int defaultPort = conf.getHttpDefaultPort();
+    String strAddress = conf.getThriftAddress();
+    int defaultPort = conf.getThriftDefaultPort();
     InetSocketAddress address = NetUtils.createSocketAddr(strAddress,
         defaultPort);
     return address.getHostName();

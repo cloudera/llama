@@ -35,8 +35,25 @@ import java.util.UUID;
 public class TestAbstractMain {
   public static final String LLAMA_BUILD_DIR = "test.llama.build.dir";
 
-  private ServerConfiguration sConf =
-      new ServerConfiguration("x", new Configuration(false));
+  public static class XServerConfiguration
+      extends ServerConfiguration {
+
+    public XServerConfiguration() {
+      super("x", new Configuration(false));
+    }
+
+    @Override
+    public int getThriftDefaultPort() {
+      return 0;
+    }
+
+    @Override
+    public int getHttpDefaultPort() {
+      return 0;
+    }
+  }
+
+  private ServerConfiguration sConf = new XServerConfiguration();
 
   public static String createTestDir() {
     File dir = new File(System.getProperty(LLAMA_BUILD_DIR, "target"));

@@ -19,6 +19,7 @@ package com.cloudera.llama.server;
 
 import com.cloudera.llama.am.impl.FastFormat;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.thrift.TProcessor;
 import org.apache.thrift.server.TServer;
 import org.apache.thrift.server.TThreadPoolServer;
@@ -31,7 +32,7 @@ import java.security.PrivilegedExceptionAction;
 
 public abstract class ThriftServer<T extends TProcessor> extends
     AbstractServer {
-  private String configKey;
+  private Class<? extends ServerConfiguration> serverConfClass;
   private ServerConfiguration sConf;
   private TServer tServer;
   private TServerSocket tServerSocket;
@@ -39,9 +40,10 @@ public abstract class ThriftServer<T extends TProcessor> extends
   private String hostname;
   private int port;
 
-  protected ThriftServer(String serviceName, String configKey) {
+  protected ThriftServer(String serviceName,
+      Class<? extends ServerConfiguration> serverConfClass) {
     super(serviceName);
-    this.configKey = configKey;
+    this.serverConfClass = serverConfClass;
   }
 
   protected ServerConfiguration getServerConf() {
@@ -56,7 +58,7 @@ public abstract class ThriftServer<T extends TProcessor> extends
           ServerConfiguration.CONFIG_DIR_KEY));
     }
     super.setConf(conf);
-    sConf = new ServerConfiguration(configKey, conf);
+    sConf = ReflectionUtils.newInstance(serverConfClass, conf);
   }
 
   @Override

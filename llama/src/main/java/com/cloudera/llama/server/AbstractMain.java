@@ -148,7 +148,11 @@ public abstract class AbstractMain {
     }
   }
 
-  private static void logServerInfo() {
+
+  public static void logServerInfo() {
+    if (LOG == null) {
+      LOG = LoggerFactory.getLogger(AbstractMain.class);
+    }
     Properties props = new Properties();
     ClassLoader cl = Thread.currentThread().getContextClassLoader();
     InputStream is = cl.getResourceAsStream(BUILD_INFO_PROPERTIES);

@@ -58,11 +58,28 @@ import java.util.UUID;
 
 public class TestLlamaAMThriftServer {
   private ServerConfiguration sConf =
-      new ServerConfiguration("am", new Configuration(false));
+      new AMServerConfiguration(new Configuration(false));
+
+  public static class NotificationServerConfiguration
+      extends ServerConfiguration {
+
+    public NotificationServerConfiguration() {
+      super("client", new Configuration(false));
+    }
+
+    @Override
+    public int getThriftDefaultPort() {
+      return 0;
+    }
+
+    @Override
+    public int getHttpDefaultPort() {
+      return 0;
+    }
+  }
 
   protected Configuration createCallbackConfiguration() throws Exception {
-    ServerConfiguration cConf = new ServerConfiguration("client",
-        new Configuration(false));
+    ServerConfiguration cConf = new NotificationServerConfiguration();
     Configuration conf = new Configuration(false);
     conf.set(ServerConfiguration.CONFIG_DIR_KEY, TestAbstractMain.createTestDir());
     conf.set(cConf.getPropertyName(ServerConfiguration.SERVER_ADDRESS_KEY),

@@ -15,13 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.cloudera.llama.am;
+package com.cloudera.llama.nm;
 
 import com.cloudera.llama.am.impl.ParamChecker;
 import com.cloudera.llama.minikdc.MiniKdc;
 import com.cloudera.llama.server.Security;
 import com.cloudera.llama.server.ServerConfiguration;
 import com.cloudera.llama.server.TestAbstractMain;
+import com.cloudera.llama.thrift.LlamaNMService;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
@@ -43,9 +44,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class TestSecureLlamaAMThriftServer extends TestLlamaAMThriftServer {
-  private ServerConfiguration amConf = new AMServerConfiguration(
-      new Configuration(false));
+public class TestSecureLlamaNMAuxiliaryService
+    extends TestLlamaNMAuxiliaryService {
 
   private MiniKdc miniKdc;
 
@@ -62,57 +62,36 @@ public class TestSecureLlamaAMThriftServer extends TestLlamaAMThriftServer {
   }
 
   @Override
-  protected Configuration createCallbackConfiguration() throws Exception {
-    ServerConfiguration cConf = new NotificationServerConfiguration();
-    Configuration conf = super.createCallbackConfiguration();
-    String confDir = conf.get(ServerConfiguration.CONFIG_DIR_KEY);
-    ParamChecker.notEmpty(confDir, "missing confDir");
-
-    conf.setBoolean(cConf.getPropertyName(
-        ServerConfiguration.SECURITY_ENABLED_KEY), true);
-    File keytab = new File(confDir, "notification.keytab");
-    miniKdc.createPrincipal(keytab, "notification/localhost");
-    conf.set(cConf.getPropertyName(ServerConfiguration.KEYTAB_FILE_KEY),
-        keytab.getAbsolutePath());
-    conf.set(cConf.getPropertyName(ServerConfiguration.SERVER_PRINCIPAL_NAME_KEY),
-        "notification/localhost");
-    conf.set(cConf.getPropertyName(ServerConfiguration.SERVER_ADDRESS_KEY),
-        "localhost:0");
-    return conf;
-  }
-
-  @Override
-  protected Configuration createLlamaConfiguration() throws Exception {
-    Configuration conf = super.createLlamaConfiguration();
-    String confDir = conf.get(ServerConfiguration.CONFIG_DIR_KEY);
-    ParamChecker.notEmpty(confDir, "missing confDir");
-    conf.setBoolean(amConf.getPropertyName(
+  protected void injectLlamaNMConfiguration(Configuration conf)
+      throws Exception {
+    super.injectLlamaNMConfiguration(conf);
+    String confDir = TestAbstractMain.createTestDir();
+    conf.set(ServerConfiguration.CONFIG_DIR_KEY, confDir);
+    conf.setBoolean(sConf.getPropertyName(
         ServerConfiguration.SECURITY_ENABLED_KEY), true);
     File keytab = new File(confDir, "llama.keytab");
     miniKdc.createPrincipal(keytab, "llama/localhost");
-    conf.set(amConf.getPropertyName(ServerConfiguration.KEYTAB_FILE_KEY),
+    conf.set(sConf.getPropertyName(ServerConfiguration.KEYTAB_FILE_KEY),
         keytab.getAbsolutePath());
-    conf.set(amConf.getPropertyName(ServerConfiguration.SERVER_PRINCIPAL_NAME_KEY),
+    conf.set(sConf.getPropertyName(ServerConfiguration.SERVER_PRINCIPAL_NAME_KEY),
         "llama/localhost");
-    conf.set(amConf.getPropertyName(ServerConfiguration.SERVER_ADDRESS_KEY),
+    conf.set(sConf.getPropertyName(ServerConfiguration.SERVER_ADDRESS_KEY),
         "localhost:0");
-    conf.set(amConf.getPropertyName(
+    conf.set(sConf.getPropertyName(
         ServerConfiguration.NOTIFICATION_PRINCIPAL_NAME_KEY), "notification");
-    return conf;
   }
 
-  protected com.cloudera.llama.thrift.LlamaAMService.Client createClient(
-      LlamaAMServer server)
-      throws Exception {
-    TTransport transport = new TSocket(server.getAddressHost(),
-        server.getAddressPort());
+  @Override
+  protected LlamaNMService.Client createClient() throws Exception {
+    TTransport transport = new TSocket(MyLlamaNMAuxiliaryService.host,
+        MyLlamaNMAuxiliaryService.port);
     Map<String, String> saslProperties = new HashMap<String, String>();
     saslProperties.put(Sasl.QOP, "auth-conf");
     transport = new TSaslClientTransport("GSSAPI", null, "llama",
-        server.getAddressHost(), saslProperties, null, transport);
+        MyLlamaNMAuxiliaryService.host, saslProperties, null, transport);
     transport.open();
     TProtocol protocol = new TBinaryProtocol(transport);
-    return new com.cloudera.llama.thrift.LlamaAMService.Client(protocol);
+    return new LlamaNMService.Client(protocol);
   }
 
   @Override
@@ -131,7 +110,8 @@ public class TestSecureLlamaAMThriftServer extends TestLlamaAMThriftServer {
 
   @Test
   @Override
-  public void testRegister() throws Exception {
-    super.testRegister();
+  public void testStartRegisterUnregisterStop() throws Exception {
+    super.testStartRegisterUnregisterStop();
   }
+
 }

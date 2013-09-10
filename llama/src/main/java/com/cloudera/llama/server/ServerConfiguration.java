@@ -19,25 +19,41 @@ package com.cloudera.llama.server;
 
 import com.cloudera.llama.am.HostnameOnlyNodeMapper;
 import com.cloudera.llama.am.impl.FastFormat;
+import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 
-public class ServerConfiguration {
+public abstract class ServerConfiguration implements Configurable {
   public static String CONFIG_DIR_KEY = AbstractMain.CONF_DIR_SYS_PROP;
 
-  private String name;
+  private String key;
   private Configuration conf;
 
-  public ServerConfiguration(String name, Configuration conf) {
-    this.name = name;
+  protected ServerConfiguration(String key) {
+    this.key = key;
+    this.conf = new Configuration(false);
+  }
+
+  protected ServerConfiguration(String key, Configuration conf) {
+    this.key = key;
     this.conf = conf;
   }
 
+  public String getKey() {
+    return key;
+  }
+
+  @Override
+  public void setConf(Configuration conf) {
+    this.conf = conf;
+  }
+
+  @Override
   public Configuration getConf() {
     return conf;
   }
 
   public String getPropertyName(String nameTemplate) {
-    return FastFormat.format(nameTemplate, name);
+    return FastFormat.format(nameTemplate, key);
   }
 
   public String getConfDir() {
@@ -80,11 +96,7 @@ public class ServerConfiguration {
         SERVER_ADDRESS_DEFAULT);
   }
 
-  private static int SERVER_PORT_DEFAULT = 15000;
-
-  public int getThriftDefaultPort() {
-    return SERVER_PORT_DEFAULT;
-  }
+  public abstract int getThriftDefaultPort();
 
   public static String HTTP_ADDRESS_KEY = KEY_PREFIX + "http.address";
   private static String HTTP_ADDRESS_DEFAULT = "0.0.0.0";
@@ -94,11 +106,7 @@ public class ServerConfiguration {
         HTTP_ADDRESS_DEFAULT);
   }
 
-  private static int HTTP_PORT_DEFAULT = 15001;
-
-  public int getHttpDefaultPort() {
-    return SERVER_PORT_DEFAULT;
-  }
+  public abstract int getHttpDefaultPort();
 
   public static String CLIENT_NOTIFIER_QUEUE_THRESHOLD_KEY = KEY_PREFIX +
       "client.notifier.queue.threshold";
