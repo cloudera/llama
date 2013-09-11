@@ -58,6 +58,20 @@ public class ThriftEndPoint {
     return new TServerSocket(address, timeout);
   }
 
+  /**
+   * Extracts hosts from name/host@REALM or name/host.
+   */
+  static String extractPrincipalHost(String principalName) {
+    String ret = null;
+    int i = principalName.indexOf("/");
+    int j = principalName.lastIndexOf("@");
+    if (i > -1) {
+      return principalName.substring(i + 1,
+          j > -1 ? j : principalName.length());
+    }
+    return ret;
+  }
+
   public static TTransportFactory createTTransportFactory(
       ServerConfiguration conf) {
     TTransportFactory factory;
@@ -66,10 +80,9 @@ public class ThriftEndPoint {
       Map<String, String> saslProperties = new HashMap<String, String>();
       saslProperties.put(Sasl.QOP, "auth-conf");
       String principalName = Security.resolveLlamaPrincipalName(conf);
-      String declarePrincipalHost = null;
+      String declarePrincipalHost = extractPrincipalHost(principalName);
       int i = principalName.indexOf("/");
       if (i > -1) {
-        declarePrincipalHost = principalName.substring(i + 1);
         principalName = principalName.substring(0, i);
       }
       String principalHost = getServerAddress(conf);
