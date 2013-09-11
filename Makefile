@@ -93,7 +93,7 @@ install-pom:
 	[ -f "$(BASE_DIR)/pom.xml" ] && mvn -N install $(DO_MAVEN_DEPLOY)
 
 components:
-	@echo $(TARGETS)
+	@echo $(shell echo $(TARGETS) | sed -e 's/ /,/g')
 
 .DEFAULT_GOAL:= help
 .PHONY: realclean clean distclean package-help help-header packages all world help tgz srpm sdeb install-pom relnotes components
