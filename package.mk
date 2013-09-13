@@ -121,7 +121,15 @@ $(BUILD_DIR)/%/.sdeb:
           fi ;\
 	cd $(PKG_BUILD_DIR)/deb/$($(PKG)_NAME)-$(PKG_PKG_VERSION) && \
           cp -r $($(PKG)_PACKAGE_GIT_REPO)/deb/$($(PKG)_NAME) debian && \
-	  sed -i -e '/^#!/a\
+	echo '#!/bin/bash' > debian/tar_build_env.sh && \
+	echo "$(EXTRA_VAR_DEFS)" >> debian/tar_build_env.sh && \
+	echo "PKG_VERSION=$($(PKG)_PKG_VERSION)" >> debian/tar_build_env.sh && \
+	echo "FULL_VERSION=$($(PKG)_FULL_VERSION)" >> debian/tar_build_env.sh && \
+	echo "BASE_VERSION=$($(PKG)_BASE_VERSION)" >> debian/tar_build_env.sh && \
+	echo "PKG_RELEASE=$($(PKG)_RELEASE)" >> debian/tar_build_env.sh && \
+	echo "CDH_CUSTOMER_PATCH=p$(CDH_CUSTOMER_PATCH)" >> debian/tar_build_env.sh && \
+	echo "CDH_PARCEL_CUSTOM_VERSION=$($(PKG)_PKG_VERSION)-$($(PKG)_RELEASE).$(shell lsb_release -sc)" >> debian/tar_build_env.sh && \
+	sed -i -e '/^#!/a\
 $(EXTRA_VAR_DEFS) \
 $(PKG)_VERSION=$($(PKG)_PKG_VERSION) \
 $(PKG)_PATCHED_VERSION=$($(PKG)_FULL_VERSION) \
