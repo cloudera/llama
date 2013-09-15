@@ -48,6 +48,10 @@ public class ClientNotificationService implements ClientNotifier.ClientRegistry,
   private final ConcurrentHashMap<UUID, Entry> clients;
   private final ConcurrentHashMap<String, UUID> reverseMap;
 
+  public ClientNotificationService(ServerConfiguration conf) {
+    this(conf, null);
+  }
+
   public ClientNotificationService(ServerConfiguration conf,
       NodeMapper nodeMapper) {
     this.conf = conf;

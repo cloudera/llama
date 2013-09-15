@@ -18,16 +18,13 @@
 package com.cloudera.llama.nm;
 
 import com.cloudera.llama.server.ClientNotificationService;
-import com.cloudera.llama.server.NodeMapper;
 import com.cloudera.llama.server.ServerConfiguration;
 import com.cloudera.llama.server.ThriftServer;
 import com.cloudera.llama.thrift.LlamaNMService;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.util.ReflectionUtils;
 
 public class LlamaNMServer extends ThriftServer<LlamaNMService.Processor> {
   private ClientNotificationService clientNotificationService;
-  private NodeMapper nodeMapper;
 
   protected LlamaNMServer() {
     super("LlamaNM", NMServerConfiguration.class);
@@ -44,10 +41,7 @@ public class LlamaNMServer extends ThriftServer<LlamaNMService.Processor> {
   @Override
   protected void startService() {
     try {
-      Class<? extends NodeMapper> klass = getServerConf().getNodeMappingClass();
-      nodeMapper = ReflectionUtils.newInstance(klass, getConf());
-      clientNotificationService = new ClientNotificationService(getServerConf(),
-          nodeMapper);
+      clientNotificationService = new ClientNotificationService(getServerConf());
       clientNotificationService.start();
     } catch (Exception ex) {
       throw new RuntimeException(ex);

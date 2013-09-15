@@ -14,6 +14,12 @@
 -->
 <configuration>
 
+  <!-- *********************************** -->
+  <!--                                     -->
+  <!--  Llama AM Server Config             -->
+  <!--                                     -->
+  <!-- *********************************** -->
+
   <!-- LlamaAM Thrift server configuration -->
   <property>
     <name>llama.am.server.thrift.address</name>
@@ -312,6 +318,126 @@
     <value>10</value>
     <description>
       Number of threads used to do container requests to Yarn Node Managers.
+    </description>
+  </property>
+
+  <!-- *********************************** -->
+  <!--                                     -->
+  <!--  Llama NM Auxiliary Service Config  -->
+  <!--                                     -->
+  <!-- *********************************** -->
+
+  <!-- Llama Thrift server configuration -->
+  <property>
+    <name>llama.nm.server.thrift.address</name>
+    <value>0.0.0.0:15100</value>
+    <description>The address the Llama NM Auxiliary Service listen at.
+      If 0.0.0.0 is specified as IP, the server will listen in all available
+      network addresses. IMPORTANT: if security is enabled do not use 0.0.0.0,
+      instead, use the exact same hostname used in the kerberos service
+      principal of the LlamaNM auxiliary service (i.e. llama/HOSTNAME).
+      If the port is not specified, the default port is 15100.
+      If the specified port is 0, an ephemeral port will be used, the port in
+      use will be printed in the logs at startup.
+    </description>
+  </property>
+  <property>
+    <name>llama.nm.server.thrift.server.min.threads</name>
+    <value>10</value>
+    <description>
+      Minimum number of threads used by the LlamaNM auxiliary service uses for 
+      serving client requests.
+    </description>
+  </property>
+  <property>
+    <name>llama.nm.server.thrift.server.max.threads</name>
+    <value>50</value>
+    <description>
+      Maximum number of threads used by the LlamaNM auxiliary service uses for 
+      serving client requests.
+    </description>
+  </property>
+  <property>
+    <name>llama.nm.server.thrift.transport.timeout.ms</name>
+    <value>1000</value>
+    <description>
+      Socket time, in milliseconds, used LlamaNM auxiliary service for all its 
+      server and client Thrift connections.
+    </description>
+  </property>
+  <property>
+    <name>llama.nm.server.thrift.client.notifier.queue.threshold</name>
+    <value>10000</value>
+    <description>
+      Threshold of the outstanding client notification queue size to start
+      producing warnings. The queue will continue to queue notifications
+      requests when above the threshold.
+    </description>
+  </property>
+  <property>
+    <name>llama.nm.server.thrift.client.notifier.threads</name>
+    <value>10</value>
+    <description>
+      Number of threads used to do client notifications.
+    </description>
+  </property>
+  <property>
+    <name>llama.nm.server.thrift.client.notifier.max.retries</name>
+    <value>5</value>
+    <description>
+      Maximum number of retries for a client notification.
+      After the maximum number of client notification retries has been reached
+      without success the client is considered lost and all its reservations
+      are released.
+      A successful client notification resets the retries count.
+    </description>
+  </property>
+  <property>
+    <name>llama.nm.server.thrift.client.notifier.retry.interval.ms</name>
+    <value>5000</value>
+    <description>
+      Client notification retry interval, in milliseconds.
+    </description>
+  </property>
+
+  <!-- LlamaNM Auxiliary Service Thrift Security configuration -->
+  <property>
+    <name>llama.nm.server.thrift.security</name>
+    <value>false</value>
+    <description>
+      Indicates if security is enabled or not. If enabled, LlamaNM auxiliary
+      service uses Kerberos Thrift SASL for all server and client Thrift 
+      connections.
+    </description>
+  </property>
+  <property>
+    <name>llama.nm.server.thrift.kerberos.keytab.file</name>
+    <value>llama.keytab</value>
+    <description>
+      The location of the Llama NM auxiliary service keytab. If the path is 
+      relative, the keytab file is looked up in the Node Manager configuration 
+      directory.
+    </description>
+  </property>
+  <property>
+    <name>llama.nm.server.thrift.kerberos.server.principal.name</name>
+    <value>llama/_HOST</value>
+    <description>
+      LlamaAM Kerberos principal name.
+      The _HOST string is replaced with the canonical hostname.
+      It is recommended to explicitly set the hostname to avoid issues do to
+      OS network configuration changes.
+    </description>
+  </property>
+  <property>
+    <name>llama.nm.server.thrift.kerberos.notification.principal.name</name>
+    <value>impala</value>
+    <description>
+      Principal short name, without the service hostname, used for client
+      notifications. The hostname provided in the client address at registration
+      by the client will be used as service hostname. IMPORTANT: they client
+      hostname address provided at registration must match the service name
+      in the client's Kerberos principal.
     </description>
   </property>
 

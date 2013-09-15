@@ -97,6 +97,10 @@ public class ClientNotifier implements LlamaAMListener {
 
   @Override
   public void handle(LlamaAMEvent event) {
+    if (nodeMapper == null) {
+      throw new IllegalStateException("Cannot handle LlamaAMEvents without a" +
+          "NodeMapper implementation");
+    }
     if (!event.isEmpty()) {
       queueNotifier(new Notifier(event.getClientId(),
           TypeUtils.toAMNotification(event, nodeMapper)));

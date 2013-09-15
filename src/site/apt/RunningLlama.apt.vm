@@ -32,15 +32,15 @@ Running Llama
     
 ** Llama AM Configuration
 
-  Within Llama root directory:
+  Within Llama AM root directory:
   
-    * Llama startup configuration: <<<libexec/llama-env.sh>>>.
+    * Llama AM startup configuration: <<<libexec/llama-env.sh>>>.
   
-    * Llama server configuration: 
+    * Llama AM server configuration:
     <<<{{{./llama-site.html}conf/llama-site.xml}}>>> (changes take effect on 
     re-start).
   
-    * Llama server logging: 
+    * Llama AM server logging:
     <<<{{{./llama-log4j.properties}conf/llama-log4j.properties}}>>> (changes 
     take effect within 1 second).
 
@@ -128,7 +128,7 @@ $
 
 ** Security Configuration for Llama AM
 
-  If configuring Llama with security Enabled (Thrift with Kerberos SASL) you 
+  If configuring Llama AM with security Enabled (Thrift with Kerberos SASL) you
   need a running KDC, a service keytab (<<<llama/HOSTNAME>>>) and the
   corresponding keytab file.
   
@@ -204,27 +204,58 @@ $
 
   * llama.am.gang.anti.deadlock.backoff.max.delay.ms = 30000
 
-* Llama Node Manager Plugin
+* Llama Node Manager Auxiliary Service
 
-** Install Llama NM Plugin
+** Install Llama NM Auxiliary Service
 
-  Expand the Llama TARBALL distribution files.
+  Expand the Llama TARBALL distribution file.
 
-  The Llama installation has a <<<nodemanagerlib/>>> directory. The JARs within
-  this directory must be added to the classpath of all NodeManagers in the Yarn
+  The Llama installation has a <<<lib/>>> directory. The JARs within this
+  directory must be added to the classpath of all NodeManagers in the Yarn
   cluster.
 
-** Llama NM Plugin Configuration
+  When configure, the Llama NM auxiliary service is started and stopped by the
+  Hadoop Yarn NodeManager services when they start and stop.
 
-  TBD
+** Llama NM Auxiliary Service Configuration
 
-** Hadoop Yarn Configuration for Llama NM Plugin (Required)
+  Llama NM auxiliary service configuration file, <<<llama-site.xml>>>, must be
+  copied to the NodeManager configuration directory.
 
-  TBD
+  Any changes to the <<<llama-site.xml>>> file take effect on re-start.
 
-** Security Configuration for Llama NM Plugin
+** Hadoop Yarn Configuration for Llama NM Auxiliary Service (Required)
 
-  TBD
+  The following properties must be set in all NodeManager <<<yarn-site.xml>>>
+  configuration files:
+
++---+
+    <property>
+      <name>yarn.nodemanager.aux-services</name>
+      <value>mapreduce.shuffle,llama.nm.plugin</value>
+    </property>
+    <property>
+      <name>yarn.nodemanager.aux-services.llama.nm.plugin.class</name>
+      <value>com.cloudera.llama.nm.LlamaNMAuxiliaryService</value>
+    </property>
++---+
+
+  <<NOTE:>> The <<<mapreduce.shuffle>>> value is not required by Llama NM
+  auxiliary service but for Map-Reduce to work in Yarn.
+
+** Security Configuration for Llama NM Auxiliary Service
+
+  The security configuration for Llama NM auxiliary service is identical to
+  Llama AM security configuration (see above). The only difference is that the
+  property names have <<.nm.>> instead of <<<.am.>>>:
+
+    * llama.nm.server.thrift.security=false
+
+    * llama.nm.server.thrift.kerberos.keytab.file=llama.keytab
+
+    * llama.nm.server.thrift.kerberos.server.principal.name=llama/_HOST
+
+    * llama.nm.server.thrift.kerberos.notification.principal.name=impala
 
 * Notes on Thrift
 
