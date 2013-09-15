@@ -191,14 +191,13 @@ public class ClientNotifier implements LlamaAMListener {
         if (retries < maxRetries) {
           retries++;
           LOG.warn("Notification to '{}' failed on '{}' attempt, " +
-              "retrying in " + "'{}' ms, error: {}", 
-              new Object[]{clientId, retries, retryInverval, ex.toString(), ex});
+              "retrying in " + "'{}' ms, error: {}", clientId, retries,
+              retryInverval, ex.toString(), ex);
           setDelay(retryInverval);
           eventsQueue.add(this);
         } else {
           LOG.warn("Notification to '{}' failed on '{}' attempt, releasing " +
-              "client, error: {}", 
-              new Object[]{clientId, retries, ex.toString(), ex});
+              "client, error: {}", clientId, retries, ex.toString(), ex);
           clientRegistry.onMaxFailures(handle);
         }
       }

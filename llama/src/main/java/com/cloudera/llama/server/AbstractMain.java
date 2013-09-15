@@ -161,8 +161,8 @@ public abstract class AbstractMain {
         props.load(is);
         is.close();
       } catch (Exception ex) {
-        LOG.warn("Could not read '{}' from classpath: {}", new Object[]{
-            BUILD_INFO_PROPERTIES, ex.toString(), ex});
+        LOG.warn("Could not read '{}' from classpath: {}",
+            BUILD_INFO_PROPERTIES, ex.toString(), ex);
       }
     }
     LOG.info("-----------------------------------------------------------------");

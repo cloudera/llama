@@ -88,8 +88,7 @@ public class LlamaAMServiceImpl implements LlamaAMService.Iface {
           llamaAM.releaseReservationsForClientId(handle);
         } catch (LlamaAMException ex) {
           LOG.warn("Unregister() internal error releasing LlamaAM " +
-              "reservations for handle '{}' : ", new Object[]{handle,
-                                                              ex.toString(), ex});
+              "reservations for handle '{}' : ", handle, ex.toString(), ex);
         }
       } else {
         LOG.warn("Unregister() unknown handle '{}'", handle);
