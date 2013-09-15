@@ -156,21 +156,27 @@ public class ClientNotifier implements LlamaAMListener {
 
     protected void doNotification(ClientCaller clientCaller) throws Exception {
       if (notification != null) {
-        LOG.debug("Doing notification for clientId '{}', retry count '{}'",
-            clientCaller.getClientId(), retries);
+        LOG.debug("Doing notification for clientId '{}'",
+            clientCaller.getClientId());
         ClientNotifier.this.notify(clientCaller, notification);
       } else {
-        LOG.debug("Doing heartbeat for clientId '{}', retry count '{}'\",",
-            clientCaller.getClientId(), retries);
         long lastCall = System.currentTimeMillis() - clientCaller.getLastCall();
         if (lastCall > clientHeartbeat) {
+          LOG.debug("Doing heartbeat for clientId '{}'",
+              clientCaller.getClientId());
           TLlamaAMNotificationRequest request = TypeUtils.createHearbeat(handle);
           ClientNotifier.this.notify(clientCaller, request);
           setDelay(clientHeartbeat);
         } else {
+          LOG.debug("Skipping heartbeat for clientId '{}'",
+              clientCaller.getClientId());
           setDelay(clientHeartbeat - lastCall);
         }
         ClientNotifier.this.eventsQueue.add(this);
+      }
+      if (retries > 0) {
+        LOG.warn("Notification to '{}' successful after '{}' retries, " +
+            "resetting retry counter for client");
       }
       retries = 0;
     }
@@ -190,13 +196,13 @@ public class ClientNotifier implements LlamaAMListener {
       } catch (Exception ex) {
         if (retries < maxRetries) {
           retries++;
-          LOG.warn("Notification to '{}' failed on '{}' attempt, " +
+          LOG.warn("Notification to '{}' failed '{}' time(s), " +
               "retrying in " + "'{}' ms, error: {}", clientId, retries,
               retryInverval, ex.toString(), ex);
           setDelay(retryInverval);
           eventsQueue.add(this);
         } else {
-          LOG.warn("Notification to '{}' failed on '{}' attempt, releasing " +
+          LOG.warn("Notification to '{}' failed '{}' time(s), releasing " +
               "client, error: {}", clientId, retries, ex.toString(), ex);
           clientRegistry.onMaxFailures(handle);
         }
