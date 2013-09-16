@@ -22,9 +22,16 @@ import com.cloudera.llama.server.ServerConfiguration;
 import com.cloudera.llama.server.ThriftServer;
 import com.cloudera.llama.thrift.LlamaNMService;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.yarn.api.records.Resource;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
+
+import java.io.File;
+import java.net.URL;
 
 public class LlamaNMServer extends ThriftServer<LlamaNMService.Processor> {
+  private Configuration conf;
   private ClientNotificationService clientNotificationService;
+  private Resource totalCapacity;
 
   protected LlamaNMServer() {
     super("LlamaNM", NMServerConfiguration.class);
@@ -32,14 +39,29 @@ public class LlamaNMServer extends ThriftServer<LlamaNMService.Processor> {
 
   @Override
   public void setConf(Configuration conf) {
-    conf = new Configuration(conf);
-    //dummy setting because nmServer
-    conf.set(ServerConfiguration.CONFIG_DIR_KEY, "");
+    this.conf = new Configuration(conf);
+    URL url = Thread.currentThread().getContextClassLoader().
+        getResource("yarn-site.xml");
+    if (url == null) {
+      throw new RuntimeException("'yarn-site.xml' file not found in classpath");
+    }
+    if (!url.getProtocol().equals("file")) {
+      throw new RuntimeException("File 'yarn-site.xml' is in a JAR, it should" +
+          " be in a directory");
+    }
+    String confDir = new File(url.getPath()).getParent();
+    conf.set(ServerConfiguration.CONFIG_DIR_KEY, confDir);
     super.setConf(conf);
   }
 
   @Override
   protected void startService() {
+    int memoryMb = conf.getInt(YarnConfiguration.NM_PMEM_MB,
+        YarnConfiguration.DEFAULT_NM_PMEM_MB);
+    int virtualCores = conf.getInt(YarnConfiguration.NM_VCORES,
+        YarnConfiguration.DEFAULT_NM_VCORES);
+    totalCapacity = Resource.newInstance(memoryMb, virtualCores);
+
     try {
       clientNotificationService = new ClientNotificationService(getServerConf());
       clientNotificationService.start();

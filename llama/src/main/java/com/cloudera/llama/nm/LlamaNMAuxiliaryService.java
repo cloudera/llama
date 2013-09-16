@@ -18,7 +18,6 @@
 package com.cloudera.llama.nm;
 
 import com.cloudera.llama.server.AbstractMain;
-import com.cloudera.llama.server.ServerConfiguration;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.yarn.server.api.ApplicationInitializationContext;
 import org.apache.hadoop.yarn.server.api.ApplicationTerminationContext;
@@ -34,7 +33,7 @@ public class LlamaNMAuxiliaryService extends AuxiliaryService {
   private LlamaNMServer nmServer;
 
   protected LlamaNMAuxiliaryService() {
-    super("Llama NM Plugin");
+    super("llama.nm.plugin");
   }
 
   @Override

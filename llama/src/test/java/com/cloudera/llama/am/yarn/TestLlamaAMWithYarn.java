@@ -59,14 +59,14 @@ public class TestLlamaAMWithYarn {
     Configuration conf = new YarnConfiguration();
     //scheduler config
     URL url = Thread.currentThread().getContextClassLoader().
-        getResource("fair-scheduler-allocation.xml");
+        getResource("fair-scheduler.xml");
     if (url == null) {
-      throw new RuntimeException("'fair-scheduler-allocation.xml' file not " +
+      throw new RuntimeException("'fair-scheduler.xml' file not " +
           "found in classpath");
     }
     String fsallocationFile = url.toExternalForm();
     if (!fsallocationFile.startsWith("file:")) {
-      throw new RuntimeException("File 'fair-scheduler-allocation.xml' is in " +
+      throw new RuntimeException("File 'fair-scheduler.xml' is in " +
           "a JAR, it should be in a directory");
     }
     fsallocationFile = fsallocationFile.substring("file:".length());

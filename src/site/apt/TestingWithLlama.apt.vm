@@ -46,7 +46,7 @@ Testing with Llama
   HDFS/Yarn minicluster.
   
   You must have in your classpath (in a directory, not in a JAR) a 
-  <<<fair-scheduler-allocation.xml>>> file defining the FairScheduler queue
+  <<<fair-scheduler.xml>>> file defining the FairScheduler queue
   configuration.
   
   For example:
@@ -56,7 +56,7 @@ public class TestUsingMiniLlama {
 
   private Configuration createMiniLlamaConfiguration() {
     URL url = Thread.currentThread().getContextClassLoader().getResource(
-        "fair-scheduler-allocation.xml");
+        "fair-scheduler.xml");
     String fsallocationFile = url.toExternalForm();
     fsallocationFile = fsallocationFile.substring("file://".length());
     Configuration conf = MiniLlama.createMiniClusterConf(1);
@@ -87,7 +87,7 @@ public class TestUsingMiniLlama {
 }
 +----+
   
-  Example of a minimal <<<fair-scheduler-allocation.xml>>> configuration file 
+  Example of a minimal <<<fair-scheduler.xml>>> configuration file
   defining 3 queues:
   
 +----+

@@ -78,7 +78,7 @@ public class TestLlamaNMAuxiliaryService {
   }
 
   private void startYarn(Configuration conf) throws Exception {
-    miniYarn = new MiniYARNCluster("minillama", 1, 1, 1);
+    miniYarn = new MiniYARNCluster("llama.nm.plugin", 1, 1, 1);
     miniYarn.init(conf);
     miniYarn.start();
     ProxyUsers.refreshSuperUserGroupsConfiguration(conf);
