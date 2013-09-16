@@ -19,5 +19,6 @@ Llama
   Run clover (coverage)  : mvn clean clover2:setup test -Pclover clover2:aggregate clover2:clover (1)
   Create dist TARBALLs   : mvn package -Pdist
   Create documentation   : mvn site
+  Apache rat check       : mvn apache-rat:check
   
   [1: you need a clover license at ${user.home}/.clover.license]

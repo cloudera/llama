@@ -309,6 +309,11 @@
           <artifactId>maven-clover2-plugin</artifactId>
           <version>3.0.5</version>
         </plugin>
+        <plugin>
+          <groupId>org.apache.rat</groupId>
+          <artifactId>apache-rat-plugin</artifactId>
+          <version>0.8</version>
+        </plugin>
       </plugins>
     </pluginManagement>
 
@@ -393,6 +398,20 @@
           <descriptors>
             <descriptor>src/main/assemblies/empty.xml</descriptor>
           </descriptors>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
+        <configuration>
+          <excludeSubProjects>false</excludeSubProjects>
+          <excludes>
+            <exclude>.git/**</exclude>
+            <exclude>.gitignore</exclude>
+            <exclude>.idea/**</exclude>
+            <exclude>**/*iml</exclude>
+            <exclude>**/target/**</exclude>
+          </excludes>
         </configuration>
       </plugin>
     </plugins>
