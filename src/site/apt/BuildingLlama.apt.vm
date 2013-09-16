@@ -37,7 +37,7 @@ Building Llama
 * Running a Clover Report
 
 +----+
-$ mvn clean clover2:setup test -Pclover clover2:aggregate clover2:clover
+$ mvn clean clover2:instrument test clover2:aggregate clover2:clover
 +----+
 
   The resulting report will be available at <<<target/clover/index.html>>>.
@@ -46,6 +46,10 @@ $ mvn clean clover2:setup test -Pclover clover2:aggregate clover2:clover
   If the license is a different location use 
   <<<-Dclover.license.file=FULL_PATH>>>. Cloudera's Clover license is available
   at <<<dev-support/clover.license>>>.
+
+  <<NOTE:>> Using <<clover2:setup>> goal instead of <<clover2:instrument>> will
+  run faster (runs the tests once instead of twice) but the resulting classes
+  and JARs are not usable from an IDE or for deployment.
   
 * Building the Documentation
   

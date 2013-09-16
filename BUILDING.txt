@@ -16,7 +16,7 @@ Llama
   Compile                : mvn compile
   Run tests              : mvn test
   Install in ~/.m2 cache : mvn install
-  Run clover (coverage)  : mvn clean clover2:setup test -Pclover clover2:aggregate clover2:clover (1)
+  Run clover (coverage)  : mvn clean clover2:instrument test clover2:aggregate clover2:clover (1)
   Create dist TARBALLs   : mvn package -Pdist
   Create documentation   : mvn site
   Apache rat check       : mvn apache-rat:check
