@@ -93,6 +93,15 @@
     </description>
   </property>
   <property>
+    <name>llama.am.server.thrift.client.notifier.heartbeat.ms</name>
+    <value>5000</value>
+    <description>
+      Heartbeat interval (if no other notification happened), from LlamaAM
+      server to clients.
+    </description>
+  </property>
+
+  <property>
     <name>llama.am.server.thrift.node.name.mapping.class</name>
     <value>com.cloudera.llama.am.HostnameOnlyNodeMapper</value>
     <description>
@@ -397,6 +406,14 @@
     <value>5000</value>
     <description>
       Client notification retry interval, in milliseconds.
+    </description>
+  </property>
+  <property>
+    <name>llama.nm.server.thrift.client.notifier.heartbeat.ms</name>
+    <value>5000</value>
+    <description>
+      Heartbeat interval (if no other notification happened), from LlamaNM
+      auxiliary service to clients.
     </description>
   </property>
 
