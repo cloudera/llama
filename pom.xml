@@ -57,6 +57,9 @@
     
     <javaVersion>1.7</javaVersion>
 
+    <hadoop.version>${cdh.hadoop.version}</hadoop.version>
+    <slf4j.version>${cdh.slf4j.version}</slf4j.version>
+
     <clover.license.file>${user.home}/.clover.license</clover.license.file>
 
     <!-- to be able to run a single test case from the main project -->
@@ -127,7 +130,7 @@
       <dependency>
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-client</artifactId>
-        <version>${cdh.hadoop.version}</version>
+        <version>${hadoop.version}</version>
         <exclusions>
           <exclusion>
             <groupId>junit</groupId>
@@ -180,7 +183,7 @@
       <dependency>
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-minicluster</artifactId>
-        <version>${cdh.hadoop.version}</version>
+        <version>${hadoop.version}</version>
       </dependency>
       <dependency>
         <groupId>javax.servlet</groupId>
@@ -201,12 +204,12 @@
       <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-api</artifactId>
-        <version>${cdh.slf4j.version}</version>
+        <version>${slf4j.version}</version>
       </dependency>
       <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-log4j12</artifactId>
-        <version>${cdh.slf4j.version}</version>
+        <version>${slf4j.version}</version>
       </dependency>
       <dependency>
         <groupId>log4j</groupId>
@@ -301,7 +304,7 @@
         <plugin>
           <groupId>org.apache.hadoop</groupId>
           <artifactId>hadoop-maven-plugins</artifactId>
-          <version>${cdh.hadoop.version}</version>
+          <version>${hadoop.version}</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
