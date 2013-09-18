@@ -34,6 +34,7 @@ import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ApplicationReport;
 import org.apache.hadoop.yarn.api.records.ApplicationSubmissionContext;
 import org.apache.hadoop.yarn.api.records.Container;
+import org.apache.hadoop.yarn.api.records.ContainerExitStatus;
 import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.api.records.ContainerLaunchContext;
 import org.apache.hadoop.yarn.api.records.ContainerStatus;
@@ -504,12 +505,30 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
       ContainerId containerId = containerStatus.getContainerId();
       UUID clientResourceId = containerIdToClientResourceIdMap.
           remove(containerId);
+      // we have the containerId only if we did not release it.
       if (clientResourceId != null) {
-        LOG.warn("Container for resource '{}' is gone", clientResourceId);
-        //TODO this is not correct, we cannot differentiate between preempted
-        // and lost, YARN-1049
-        changes.add(RMResourceChange.createResourceChange(clientResourceId,
-            PlacedResource.Status.PREEMPTED));
+        switch (containerStatus.getExitStatus()) {
+          case ContainerExitStatus.SUCCESS:
+            LOG.warn("It should never happen, container for resource '{}' " +
+                "exited on its own", clientResourceId);
+            //reporting it as LOST for the client to take corrective measures.
+            changes.add(RMResourceChange.createResourceChange(clientResourceId,
+                PlacedResource.Status.LOST));
+            break;
+          case ContainerExitStatus.PREEMPTED:
+            LOG.warn("Container for resource '{}' has been preempted",
+                clientResourceId);
+            changes.add(RMResourceChange.createResourceChange(clientResourceId,
+                PlacedResource.Status.PREEMPTED));
+            break;
+          case ContainerExitStatus.ABORTED:
+          default:
+            LOG.warn("Container for resource '{}' has been lost, exit status" +
+                " '{}'", clientResourceId, containerStatus.getExitStatus());
+            changes.add(RMResourceChange.createResourceChange(clientResourceId,
+                PlacedResource.Status.LOST));
+            break;
+        }
       }
     }
     llamaCallback.changesFromRM(changes);
