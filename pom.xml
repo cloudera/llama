@@ -53,12 +53,11 @@
   </modules>
 
   <properties>
-    <buildDirectory>target</buildDirectory>
-    
     <javaVersion>1.7</javaVersion>
 
     <hadoop.version>${cdh.hadoop.version}</hadoop.version>
     <slf4j.version>${cdh.slf4j.version}</slf4j.version>
+    <apacheds.version>2.0.0-M15</apacheds.version>
 
     <clover.license.file>${user.home}/.clover.license</clover.license.file>
 
@@ -74,7 +73,6 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-    <apacheds.version>2.0.0-M15</apacheds.version>
 
     <!-- Clover configuration -->
     <cloverLicenseLocation>${clover.license.file}</cloverLicenseLocation>
@@ -263,7 +261,6 @@
   </reporting>
 
   <build>
-    <directory>${project.basedir}/${buildDirectory}</directory>
     <pluginManagement>
       <plugins>
         <plugin>
