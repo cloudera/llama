@@ -187,7 +187,44 @@ public class TestSecureLlamaAMThriftServer extends TestLlamaAMThriftServer {
     try {
       Configuration conf = createLlamaConfiguration();
       conf.set("hadoop.security.group.mapping", MockGroupMapping.class.getName());
-      conf.set("llama.am.server.thrift.client.acl", "group");
+      conf.set("llama.am.server.thrift.client.acl", "nobody group");
+      server.setConf(conf);
+      server.start();
+
+      Subject.doAs(getClientSubject(), new PrivilegedExceptionAction<Object>() {
+        @Override
+        public Object run() throws Exception {
+          com.cloudera.llama.thrift.LlamaAMService.Client client = createClient(server);
+
+
+          TLlamaAMRegisterRequest trReq = new TLlamaAMRegisterRequest();
+          trReq.setVersion(TLlamaServiceVersion.V1);
+          trReq.setClient_id("c1");
+          TNetworkAddress tAddress = new TNetworkAddress();
+          tAddress.setHostname("localhost");
+          tAddress.setPort(0);
+          trReq.setNotification_callback_service(tAddress);
+
+          //register
+          TLlamaAMRegisterResponse trRes = client.Register(trReq);
+          Assert.assertEquals(TStatusCode.OK,
+              trRes.getStatus().getStatus_code());
+
+          return null;
+        }
+      });
+    } finally {
+      server.stop();
+    }
+  }
+
+  @Test
+  public void testAllAuthorized() throws Exception {
+    final LlamaAMServer server = new LlamaAMServer();
+    try {
+      Configuration conf = createLlamaConfiguration();
+      conf.set("hadoop.security.group.mapping", MockGroupMapping.class.getName());
+      conf.set("llama.am.server.thrift.client.acl", "*");
       server.setConf(conf);
       server.start();
 

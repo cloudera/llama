@@ -170,7 +170,7 @@ $
   Llama supports Access Control Lists (ACL) to restrict client and admin access.
 
   And ACL is either the <<*>> wildcard or a comma-separated list of users and
-  groups (spaces and ENTERs are ignored).
+  groups. Users are separated from groups by a whitespace.
 
   There are 2 ACL configuration properties, <<client>> and <<admin>>. The
   <<client>> ACL is applied to calls in the regular thrift service endpoint.
@@ -295,7 +295,7 @@ $
   Llama supports Access Control Lists (ACL) to restrict client and admin access.
 
   And ACL is either the <<*>> wildcard or a comma-separated list of users and
-  groups (spaces and ENTERs are ignored).
+  groups. Users are separated from groups by a whitespace.
 
   There are 2 ACL configuration properties, <<client>> and <<admin>>. The
   <<client>> ACL is applied to calls in the regular thrift service endpoint.

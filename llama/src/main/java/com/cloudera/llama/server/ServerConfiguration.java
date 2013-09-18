@@ -198,31 +198,42 @@ public abstract class ServerConfiguration implements Configurable {
         NOTIFICATION_PRINCIPAL_NAME_DEFAULT);
   }
 
+  public static String ACL_DEFAULT = "*";
 
-  private String[] getACL(String key, String defaultValue) {
+  private String[] getACL(String key, boolean users) {
     String[] ret = null;
-    String acl = conf.get(getPropertyName(key), defaultValue).trim();
-    if (!acl.equals(defaultValue)) {
-      ret = acl.split(",");
-      for (int i = 0; i < ret.length; i++) {
-        ret[i] = ret[i].trim();
+    String acl = conf.get(getPropertyName(key), ACL_DEFAULT).trim();
+    if (!acl.equals(ACL_DEFAULT)) {
+      ret = acl.split(" ", 2);
+      int index = (users) ? 0 : 1;
+      if (index < ret.length) {
+        ret = ret[index].split(",");
+        for (int i = 0; i < ret.length; i++) {
+          ret[i] = ret[i].trim();
+        }
       }
     }
     return ret;
   }
 
   public static String CLIENT_ACL_KEY = KEY_PREFIX + "client.acl";
-  private static String CLIENT_ACL_DEFAULT = "*";
 
-  public String[] getClientACL() {
-    return getACL(CLIENT_ACL_KEY, CLIENT_ACL_DEFAULT);
+  public String[] getClientUserACL() {
+    return getACL(CLIENT_ACL_KEY, true);
+  }
+
+  public String[] getClientGroupACL() {
+    return getACL(CLIENT_ACL_KEY, false);
   }
 
   public static String ADMIN_ACL_KEY = KEY_PREFIX + "admin.acl";
-  private static String ADMIN_ACL_DEFAULT = "*";
 
-  public String[] getAdminACL() {
-    return getACL(ADMIN_ACL_KEY, ADMIN_ACL_DEFAULT);
+  public String[] getAdminUserACL() {
+    return getACL(ADMIN_ACL_KEY, true);
+  }
+
+  public String[] getAdminGroupACL() {
+    return getACL(ADMIN_ACL_KEY, false);
   }
 
 }

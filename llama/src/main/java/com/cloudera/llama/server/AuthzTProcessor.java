@@ -26,37 +26,47 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 public class AuthzTProcessor implements TProcessor {
   private static final Logger LOG =
       LoggerFactory.getLogger(AuthzTProcessor.class);
 
-  private Groups groupsMapping;
-  private TProcessor tProcessor;
-  private String userType;
-  private Set<String> acl;
+  private final Groups groupsMapping;
+  private final TProcessor tProcessor;
+  private final String userType;
+  private final Set<String> usersACL;
+  private final Set<String> groupsACL;
+  private final boolean allAllowed;
 
   public AuthzTProcessor(ServerConfiguration sConf, boolean isAdmin,
       TProcessor tProcessor) {
-    String[] aclArray = (isAdmin) ? sConf.getAdminACL() : sConf.getClientACL();
-    groupsMapping = new Groups(sConf.getConf());
     userType = (isAdmin) ? "admin" : "client";
-    String aclStr = "*";
-    if (aclArray != null) {
-      acl = new HashSet<String>();
-      StringBuilder sb = new StringBuilder();
-      String separator = "";
-      for (String s : aclArray) {
-        acl.add(s);
-        sb.append(separator).append(s);
-        separator = ",";
+    groupsMapping = new Groups(sConf.getConf());
+    String[] users = (isAdmin) ? sConf.getAdminUserACL() :
+                     sConf.getClientUserACL();
+    String[] groups = (isAdmin) ? sConf.getAdminGroupACL() :
+                      sConf.getClientGroupACL();
+    allAllowed = users == null && groups == null;
+    usersACL = new TreeSet<String>();
+    groupsACL = new TreeSet<String>();
+    if (!allAllowed) {
+      if (users != null) {
+        for (String u : users) {
+          usersACL.add(u);
+        }
       }
-      aclStr = sb.toString();
+      if (groups != null) {
+        for (String g : groups) {
+          groupsACL.add(g);
+        }
+      }
+    } else {
+      LOG.warn("Authorization enforcement is disabled, {} user ACL set to '{}'",
+          userType, ServerConfiguration.ACL_DEFAULT);
     }
-    LOG.info("Authorization for '{}' users, ACL: {}", userType, aclStr);
     this.tProcessor = tProcessor;
   }
 
@@ -82,7 +92,7 @@ public class AuthzTProcessor implements TProcessor {
 
   protected boolean isAuthorized(String principal) throws IOException {
     boolean authorized = true;
-    if (acl != null) {
+    if (!allAllowed) {
       int i = principal.indexOf("/");
       if (i > -1) {
         principal = principal.substring(0, i);
@@ -92,7 +102,7 @@ public class AuthzTProcessor implements TProcessor {
           principal = principal.substring(0, i);
         }
       }
-      authorized = acl.contains(principal);
+      authorized = usersACL.contains(principal);
       if (!authorized) {
         authorized = anyUserGroupInACL(principal);
       }
@@ -104,7 +114,7 @@ public class AuthzTProcessor implements TProcessor {
     List<String> groups = groupsMapping.getGroups(principal);
     boolean groupInACL = false;
     for (String g : groups) {
-      groupInACL = acl.contains(g);
+      groupInACL = groupsACL.contains(g);
       if (groupInACL) {
         break;
       }
