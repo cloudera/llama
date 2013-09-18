@@ -129,7 +129,7 @@ public abstract class AbstractMain {
     return server.getExitCode();
   }
 
-  private static void initLogging(String confDir) {
+  private void initLogging(String confDir) {
     boolean fromClasspath = true;
     File log4jConf = new File(confDir, LOG4J_PROPERTIES).getAbsoluteFile();
     if (log4jConf.exists()) {
@@ -140,7 +140,7 @@ public abstract class AbstractMain {
       URL log4jUrl = cl.getResource(LOG4J_PROPERTIES);
       PropertyConfigurator.configure(log4jUrl);
     }
-    LOG = LoggerFactory.getLogger(AbstractMain.class);
+    LOG = LoggerFactory.getLogger(this.getClass());
     LOG.debug("Llama log starting");
     if (fromClasspath) {
       LOG.warn("Log4j configuration file '{}' not found", LOG4J_PROPERTIES);
