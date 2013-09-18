@@ -22,12 +22,19 @@ import com.cloudera.llama.minikdc.MiniKdc;
 import com.cloudera.llama.server.Security;
 import com.cloudera.llama.server.ServerConfiguration;
 import com.cloudera.llama.server.TestAbstractMain;
+import com.cloudera.llama.thrift.TLlamaAMRegisterRequest;
+import com.cloudera.llama.thrift.TLlamaAMRegisterResponse;
+import com.cloudera.llama.thrift.TLlamaServiceVersion;
+import com.cloudera.llama.thrift.TNetworkAddress;
+import com.cloudera.llama.thrift.TStatusCode;
+import junit.framework.Assert;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.transport.TSaslClientTransport;
 import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
+import org.apache.thrift.transport.TTransportException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,6 +45,8 @@ import javax.security.auth.login.LoginContext;
 import javax.security.sasl.Sasl;
 import java.io.File;
 import java.security.Principal;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -134,4 +143,79 @@ public class TestSecureLlamaAMThriftServer extends TestLlamaAMThriftServer {
   public void testRegister() throws Exception {
     super.testRegister();
   }
+
+  @Test(expected = TTransportException.class)
+  public void testUnauthorized() throws Throwable {
+    final LlamaAMServer server = new LlamaAMServer();
+    try {
+      Configuration conf = createLlamaConfiguration();
+      conf.set("hadoop.security.group.mapping", MockGroupMapping.class.getName());
+      conf.set("llama.am.server.thrift.client.acl", "nobody");
+      server.setConf(conf);
+      server.start();
+
+      Subject.doAs(getClientSubject(), new PrivilegedExceptionAction<Object>() {
+        @Override
+        public Object run() throws Exception {
+          com.cloudera.llama.thrift.LlamaAMService.Client client = createClient(server);
+
+
+          TLlamaAMRegisterRequest trReq = new TLlamaAMRegisterRequest();
+          trReq.setVersion(TLlamaServiceVersion.V1);
+          trReq.setClient_id("c1");
+          TNetworkAddress tAddress = new TNetworkAddress();
+          tAddress.setHostname("localhost");
+          tAddress.setPort(0);
+          trReq.setNotification_callback_service(tAddress);
+
+          //register
+          client.Register(trReq);
+
+          return null;
+        }
+      });
+    } catch (PrivilegedActionException ex) {
+      throw ex.getCause();
+    } finally {
+      server.stop();
+    }
+  }
+
+  @Test
+  public void testAuthorized() throws Exception {
+    final LlamaAMServer server = new LlamaAMServer();
+    try {
+      Configuration conf = createLlamaConfiguration();
+      conf.set("hadoop.security.group.mapping", MockGroupMapping.class.getName());
+      conf.set("llama.am.server.thrift.client.acl", "group");
+      server.setConf(conf);
+      server.start();
+
+      Subject.doAs(getClientSubject(), new PrivilegedExceptionAction<Object>() {
+        @Override
+        public Object run() throws Exception {
+          com.cloudera.llama.thrift.LlamaAMService.Client client = createClient(server);
+
+
+          TLlamaAMRegisterRequest trReq = new TLlamaAMRegisterRequest();
+          trReq.setVersion(TLlamaServiceVersion.V1);
+          trReq.setClient_id("c1");
+          TNetworkAddress tAddress = new TNetworkAddress();
+          tAddress.setHostname("localhost");
+          tAddress.setPort(0);
+          trReq.setNotification_callback_service(tAddress);
+
+          //register
+          TLlamaAMRegisterResponse trRes = client.Register(trReq);
+          Assert.assertEquals(TStatusCode.OK,
+              trRes.getStatus().getStatus_code());
+
+          return null;
+        }
+      });
+    } finally {
+      server.stop();
+    }
+  }
+
 }

@@ -19,6 +19,7 @@ package com.cloudera.llama.server;
 
 import com.cloudera.llama.am.impl.FastFormat;
 import org.apache.hadoop.net.NetUtils;
+import org.apache.thrift.TProcessor;
 import org.apache.thrift.transport.TSaslClientTransport;
 import org.apache.thrift.transport.TSaslServerTransport;
 import org.apache.thrift.transport.TServerSocket;
@@ -46,6 +47,14 @@ public class ThriftEndPoint {
           saslProperties, null, tTransport);
     }
     return tTransport;
+  }
+
+  public static TProcessor getAuthorizationTProcessor(ServerConfiguration conf,
+      boolean isAdmin, TProcessor tProcessor) {
+    if (Security.isSecure(conf)) {
+      tProcessor = new AuthzTProcessor(conf, isAdmin, tProcessor);
+    }
+    return tProcessor;
   }
 
   public static TServerSocket createTServerSocket(ServerConfiguration conf)

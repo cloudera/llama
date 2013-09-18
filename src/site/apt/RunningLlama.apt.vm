@@ -163,6 +163,37 @@ $
   the service hostname. The Thrift SASL implementation composes the complete 
   service principal name (<<<shortName>>>/<<<hostname>>>).
 
+** Authorization Configuration for Llama AM
+
+  <<IMPORTANT:>> Authorization is only active when security is enabled.
+
+  Llama supports Access Control Lists (ACL) to restrict client and admin access.
+
+  And ACL is either the <<*>> wildcard or a comma-separated list of users and
+  groups (spaces and ENTERs are ignored).
+
+  There are 2 ACL configuration properties, <<client>> and <<admin>>. The
+  <<client>> ACL is applied to calls in the regular thrift service endpoint.
+  The <<admin>> ACL is applied to calls in the admin thrift service endpoint.
+
+  ACL are defined in the <<<llama-site.xml>>> configuration file. The ACL
+  configuration properties and their default values are:
+
+    * <<<llama.am.server.thrift.client.acl=*>>>
+
+    * <<<llama.am.server.thrift.admin.acl=*>>>
+
+  Llama uses Hadoop's <<<Groups>>> class to retrieve user group information.
+  The configuration for the <<<Groups>>> class must be set in the
+  <<<llama-site.xml>>> configuration file, the default values are:
+
+    * <<<hadoop.security.group.mapping=org.apache.hadoop.security.ShellBasedUnixGroupsMapping>>>
+
+    * <<<hadoop.security.groups.cache.secs=300>>>
+
+  For alternate group.mapping implementations and their configuration refer to
+  the Hadoop documentation.
+
 ** HTTP JSON JMX Endpoint
 
   Llama AM exposes a HTTP JSON JMX endpoint (it uses Hadoop's HTTP JSON JMX
@@ -256,6 +287,37 @@ $
     * llama.nm.server.thrift.kerberos.server.principal.name=llama/_HOST
 
     * llama.nm.server.thrift.kerberos.notification.principal.name=impala
+
+** Authorization Configuration for Llama NM Auxiliary Service
+
+  <<IMPORTANT:>> Authorization is only active when security is enabled.
+
+  Llama supports Access Control Lists (ACL) to restrict client and admin access.
+
+  And ACL is either the <<*>> wildcard or a comma-separated list of users and
+  groups (spaces and ENTERs are ignored).
+
+  There are 2 ACL configuration properties, <<client>> and <<admin>>. The
+  <<client>> ACL is applied to calls in the regular thrift service endpoint.
+  The <<admin>> ACL is applied to calls in the admin thrift service endpoint.
+
+  ACL are defined in the <<<llama-site.xml>>> configuration file. The ACL
+  configuration properties and their default values are:
+
+    * <<<llama.nm.server.thrift.client.acl=*>>>
+
+    * <<<llama.nm.server.thrift.admin.acl=*>>>
+
+  Llama uses Hadoop's <<<Groups>>> class to retrieve user group information.
+  The configuration for the <<<Groups>>> class must be set in the
+  <<<llama-site.xml>>> configuration file, the default values are:
+
+    * <<<hadoop.security.group.mapping=org.apache.hadoop.security.ShellBasedUnixGroupsMapping>>>
+
+    * <<<hadoop.security.groups.cache.secs=300>>>
+
+  For alternate group.mapping implementations and their configuration refer to
+  the Hadoop documentation.
 
 * Notes on Thrift
 

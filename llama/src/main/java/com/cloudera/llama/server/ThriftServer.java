@@ -73,7 +73,9 @@ public abstract class ThriftServer<T extends TProcessor> extends
           tServerSocket = ThriftEndPoint.createTServerSocket(sConf);
           TTransportFactory tTransportFactory = ThriftEndPoint
               .createTTransportFactory(sConf);
-          T processor = createServiceProcessor();
+          TProcessor processor = createServiceProcessor();
+          processor = ThriftEndPoint.getAuthorizationTProcessor(sConf, false,
+              processor);
           TThreadPoolServer.Args args = new TThreadPoolServer.Args
               (tServerSocket);
           args.transportFactory(tTransportFactory);

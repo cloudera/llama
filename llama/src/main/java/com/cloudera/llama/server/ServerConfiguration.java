@@ -199,4 +199,30 @@ public abstract class ServerConfiguration implements Configurable {
   }
 
 
+  private String[] getACL(String key, String defaultValue) {
+    String[] ret = null;
+    String acl = conf.get(getPropertyName(key), defaultValue).trim();
+    if (!acl.equals(defaultValue)) {
+      ret = acl.split(",");
+      for (int i = 0; i < ret.length; i++) {
+        ret[i] = ret[i].trim();
+      }
+    }
+    return ret;
+  }
+
+  public static String CLIENT_ACL_KEY = KEY_PREFIX + "client.acl";
+  private static String CLIENT_ACL_DEFAULT = "*";
+
+  public String[] getClientACL() {
+    return getACL(CLIENT_ACL_KEY, CLIENT_ACL_DEFAULT);
+  }
+
+  public static String ADMIN_ACL_KEY = KEY_PREFIX + "admin.acl";
+  private static String ADMIN_ACL_DEFAULT = "*";
+
+  public String[] getAdminACL() {
+    return getACL(ADMIN_ACL_KEY, ADMIN_ACL_DEFAULT);
+  }
+
 }
