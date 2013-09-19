@@ -70,7 +70,7 @@ TODO: need license header
     <cdh.sentry.version>1.1.0-cdh5.0.0-SNAPSHOT</cdh.sentry.version>
     
     <!-- Versions of the dependencies we manage -->
-    <!-- <cdh.avro.version>1.7.5-cdh5.0.0-SNAPSHOT</cdh.avro.version> -->
+    <!-- <cdh.avro.version>1.7.4-cdh5.0.0-SNAPSHOT</cdh.avro.version> -->
     <!-- This is wrong but we'll need to change how it is used in individual projects -->
     <cdh.avro.version>1.7.4</cdh.avro.version>
     <cdh.tika.version>1.3</cdh.tika.version>
