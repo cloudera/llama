@@ -401,7 +401,7 @@ AVRO_GIT_REPO=$(REPO_DIR)/cdh5/avro
 AVRO_PACKAGE_GIT_REPO=$(REPO_DIR)/cdh5/cdh-package/bigtop-packages/src
 AVRO_TARBALL_DST=avro-$(AVRO_BASE_VERSION).tar.gz
 AVRO_TARBALL_SRC=avro-src-$(AVRO_BASE_VERSION).tar.gz
-AVRO_DOWNLOAD_PATH=/avro/avro-$(AVRO_BASE_VERSION)
+AVRO_SITE=$(CLOUDERA_ARCHIVE)
 $(eval $(call PACKAGE,avro,AVRO))
 
 # Parquet
