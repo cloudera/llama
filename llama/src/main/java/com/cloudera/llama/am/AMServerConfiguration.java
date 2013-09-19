@@ -34,14 +34,14 @@ public class AMServerConfiguration extends ServerConfiguration {
   private static int SERVER_PORT_DEFAULT = 15000;
 
   @Override
-  public int getHttpDefaultPort() {
+  public int getThriftDefaultPort() {
     return SERVER_PORT_DEFAULT;
   }
 
   private static int HTTP_PORT_DEFAULT = 15001;
 
   @Override
-  public int getThriftDefaultPort() {
+  public int getHttpDefaultPort() {
     return HTTP_PORT_DEFAULT;
   }
 
