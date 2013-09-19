@@ -17,6 +17,7 @@
  */
 package com.cloudera.llama.server;
 
+import com.cloudera.llama.am.impl.FastFormat;
 import com.cloudera.llama.thrift.LlamaNotificationService;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
@@ -89,7 +90,8 @@ public class ClientCaller {
       lastSuccessful = true;
     } catch (Exception ex) {
       lastSuccessful = false;
-      throw new ClientException(ex);
+      throw new ClientException(FastFormat.format(
+          "Could not connect to '{}:{}', {}", host, port, ex), ex);
     }
     return ret;
   }

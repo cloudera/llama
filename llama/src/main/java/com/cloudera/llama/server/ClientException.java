@@ -19,6 +19,10 @@ package com.cloudera.llama.server;
 
 public class ClientException extends Exception {
 
+  public ClientException(String msg, Throwable cause) {
+    super(msg, cause);
+  }
+
   public ClientException(Throwable cause) {
     super(cause);
   }
