@@ -77,6 +77,16 @@ TODO: need license header
    <!-- Use this property in your subprojects's pom. -->
     <cdh.thrift.version>0.9.0</cdh.thrift.version>
     <cdh.httpcomponents.version>4.2.5</cdh.httpcomponents.version>
+    <!--
+      The httpcore rev should be drawn from the httpcomponents-client POM (the parent POM
+      of the httpclient POM - see the comment above) - the httpclient version and the httpcore
+      version are NOT always in sync with each other.
+
+      E.g. http{client,mime,etc} v4.2.5 depends on httpcore v4.2.4 - see the httpcomponents-client POM
+      - look for <httpcore.version> under <properties>:
+      https://svn.apache.org/repos/asf/httpcomponents/httpclient/tags/4.2.5/pom.xml
+    -->
+    <cdh.httpcomponents.core.version>4.2.4</cdh.httpcomponents.core.version>
 
     <cdh.slf4j.version>1.7.5</cdh.slf4j.version>
 
@@ -847,7 +857,7 @@ TODO: need license header
       <dependency>
         <groupId>org.apache.httpcomponents</groupId>
         <artifactId>httpcore</artifactId>
-        <version>${cdh.httpcomponents.version}</version>
+        <version>${cdh.httpcomponents.core.version}</version>
       </dependency>
       <dependency>
         <groupId>commons-net</groupId>
