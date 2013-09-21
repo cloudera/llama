@@ -69,7 +69,7 @@ class HarmonizationTest {
 
   @Test
   public void unique() {
-    Assert.assertEquals(this.versions.size(), 1, "Found the following ${this.versions.size()} different versions: ${this.versions.toString().tr(',', '\n')}");
+    Assert.assertEquals(this.versions.size(), 1, "Found the following ${this.versions.size()} different versions:\n${this.versions.toString().tr(',', '\n').replaceAll(']', ']\n\n')}");
   }
  
   public String toString() {
