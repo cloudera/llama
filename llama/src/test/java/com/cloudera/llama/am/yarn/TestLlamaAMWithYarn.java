@@ -84,11 +84,15 @@ public class TestLlamaAMWithYarn {
     return conf;
   }
 
-  private void startYarn(Configuration conf) throws Exception {
-    miniYarn = new MiniYARNCluster("minillama", 1, 1, 1);
+  private void startYarn(Configuration conf, int nodeManagers) throws Exception {
+    miniYarn = new MiniYARNCluster("minillama", nodeManagers, 1, 1);
     miniYarn.init(conf);
     miniYarn.start();
     ProxyUsers.refreshSuperUserGroupsConfiguration(conf);
+  }
+
+  private void startYarn(Configuration conf) throws Exception {
+    startYarn(conf, 1);
   }
 
   private void stopYarn() {
@@ -110,6 +114,7 @@ public class TestLlamaAMWithYarn {
     conf.set(LlamaAM.INITIAL_QUEUES_KEY, "queue1,queue2");
     conf.set(LlamaAM.RM_CONNECTOR_CLASS_KEY, YarnRMLlamaAMConnector.class
         .getName());
+    conf.setInt(YarnRMLlamaAMConnector.HEARTBEAT_INTERVAL_KEY, 50);
     for (Map.Entry entry : miniYarn.getConfig()) {
       conf.set((String) entry.getKey(), (String) entry.getValue());
     }
@@ -224,6 +229,35 @@ public class TestLlamaAMWithYarn {
           got.addAll(event.getAllocatedReservationIds());
         }
         Assert.assertEquals(expected, got);
+      } finally {
+        llama.stop();
+      }
+    } finally {
+      stopYarn();
+    }
+  }
+
+  @Test
+  public void testClusterNMChanges() throws Exception {
+    try {
+      Configuration conf = createMiniYarnConfig(true);
+      conf.setInt(YarnConfiguration.RM_NM_EXPIRY_INTERVAL_MS, 1000);
+      startYarn(conf, 2);
+      LlamaAM llama = LlamaAM.create(getLlamaConfiguration());
+      MyListener listener = new MyListener();
+      try {
+        llama.start();
+        llama.addListener(listener);
+        List<String> nodes = llama.getNodes();
+        Assert.assertEquals(2, nodes.size());
+        miniYarn.getNodeManager(0).stop();
+        long startTime = System.currentTimeMillis();
+        while (llama.getNodes().size() != 1
+            && System.currentTimeMillis() - startTime < 10000) {
+          Thread.sleep(100);
+        }
+        nodes = llama.getNodes();
+        Assert.assertEquals(1, nodes.size());
       } finally {
         llama.stop();
       }
