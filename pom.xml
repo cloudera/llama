@@ -798,6 +798,11 @@ TODO: need license header
         <artifactId>whirr-zookeeper</artifactId>
         <version>${cdh.whirr.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.apache.solr</groupId>
+        <artifactId>solr-solrj</artifactId>
+        <version>${cdh.solr.version}</version>
+      </dependency>
 
       <!-- Datafu -->
       <dependency>
