@@ -44,6 +44,22 @@ class HarmonizationTest {
                                          if (parser.matches()) {
                                            def component = parser[0][1];
                                            def version = parser[0][2];
+
+                                           // filter out SNAPSHOTS e.g: 20130921.084903-106
+                                           version = version.replaceFirst(/-201[0-9]{5}\.[0-9]{6}-[0-9]{1,3}/, "-SNAPSHOT"); 
+
+                                           // remove classifier from the version and add it to the component name
+                                           [ "sources", "javadoc", "tests", "smoketests", "job", 
+                                             "jar-with-dependencies", "withouthadoop" ].each {
+                                             if (version =~ "-${it}\$") {
+                                               version = version.replaceFirst("-${it}\$", '');
+                                               component = "$component-$it"
+                                             }
+                                           }
+
+                                           // special-case MR1 artifacts
+                                           version = version.replaceFirst(/-mr1-/, '-');
+
                                            if (jarMap[component] == null) {
                                              jarMap[component] = [:];
                                            }
