@@ -75,7 +75,9 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
     Class<? extends RMLlamaAMConnector> klass = getRMConnectorClass(getConf());
     rmConnector = ReflectionUtils.newInstance(klass, getConf());
     rmConnector.setLlamaAMCallback(this);
-    rmConnector.register(queue);
+    if (queue != null) {
+      rmConnector.register(queue);
+    }
     running = true;
   }
 
@@ -91,7 +93,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
   @Override
   public synchronized void stop() {
     running = false;
-    if (rmConnector != null) {
+    if (queue != null && rmConnector != null) {
       rmConnector.unregister();
     }
   }

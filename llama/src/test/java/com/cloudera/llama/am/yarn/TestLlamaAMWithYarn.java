@@ -121,6 +121,25 @@ public class TestLlamaAMWithYarn {
     return conf;
   }
 
+  @Test
+  public void testGetNodes() throws Exception {
+    try {
+      startYarn(createMiniYarnConfig(true));
+      Configuration conf = getLlamaConfiguration();
+      conf.unset(LlamaAM.INITIAL_QUEUES_KEY);
+      LlamaAM llama = LlamaAM.create(conf);
+      try {
+        llama.start();
+        List<String> nodes = llama.getNodes();
+        Assert.assertFalse(nodes.isEmpty());
+      } finally {
+        llama.stop();
+      }
+    } finally {
+      stopYarn();
+    }
+  }
+
 
   private void testReserve(boolean usePortInName) throws Exception {
     try {

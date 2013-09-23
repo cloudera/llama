@@ -201,16 +201,6 @@ public class TestMultiQueueLlamaAM {
     am.start();
   }
 
-  @Test(expected = LlamaAMException.class)
-  public void testGetAnyLlamaFail() throws Exception {
-    Configuration conf = new Configuration(false);
-    conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MyRMLlamaAMConnector.class,
-        RMLlamaAMConnector.class);
-    LlamaAM am = LlamaAM.create(conf);
-    am.start();
-    am.getNodes();
-  }
-
   @Test
   public void testGetReservationUnknown() throws Exception {
     Configuration conf = new Configuration(false);

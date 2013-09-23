@@ -356,8 +356,25 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
 
   @Override
   public List<String> getNodes() throws LlamaAMException {
-    synchronized (nodes) {
-      return new ArrayList<String>(nodes);
+    List<String> nodes = new ArrayList<String>();
+    YarnClient yarnClient = YarnClient.createYarnClient();
+    try {
+      Configuration yarnConf = new YarnConfiguration();
+      for (Map.Entry entry : getConf()) {
+        yarnConf.set((String) entry.getKey(), (String) entry.getValue());
+      }
+      yarnClient.init(yarnConf);
+      yarnClient.start();
+      List<NodeReport> nodeReports =
+          yarnClient.getNodeReports(NodeState.RUNNING);
+      for (NodeReport nodeReport : nodeReports) {
+        nodes.add(getNodeName(nodeReport.getNodeId()));
+      }
+      return nodes;
+    } catch (Throwable ex) {
+      throw new LlamaAMException(ex);
+    } finally {
+      yarnClient.stop();
     }
   }
 

@@ -38,6 +38,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
     SingleQueueLlamaAM.Callback {
   private final Map<String, LlamaAM> ams;
+  private SingleQueueLlamaAM llamaAMForGetNodes;
   private final ConcurrentHashMap<UUID, String> reservationToQueue;
   private boolean running;
 
@@ -81,18 +82,6 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
     }
   }
 
-  private LlamaAM getAnyLlama() throws LlamaAMException {
-    LlamaAM am;
-    synchronized (ams) {
-      Iterator<Map.Entry<String, LlamaAM>> iterator = ams.entrySet().iterator();
-      if (iterator.hasNext()) {
-        am = iterator.next().getValue();
-      } else {
-        throw new LlamaAMException("There is not active LlamaAM for any queue");
-      }
-    }
-    return am;
-  }
 
   @Override
   public void start() throws LlamaAMException {
@@ -105,6 +94,8 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
         throw ex;
       }
     }
+    llamaAMForGetNodes = new SingleQueueLlamaAM(getConf(), null, this);
+    llamaAMForGetNodes.start();
     running = true;
   }
 
@@ -116,6 +107,9 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
         am.stop();
       }
     }
+    if (llamaAMForGetNodes != null) {
+      llamaAMForGetNodes.stop();
+    }
   }
 
   @Override
@@ -125,8 +119,7 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
 
   @Override
   public List<String> getNodes() throws LlamaAMException {
-    LlamaAM am = getAnyLlama();
-    return am.getNodes();
+    return llamaAMForGetNodes.getNodes();
   }
 
   @SuppressWarnings("deprecation")

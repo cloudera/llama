@@ -147,14 +147,16 @@ public class MockRMLlamaAMConnector
     nodes = Collections.unmodifiableList(Arrays.asList(getConf().
         getStrings(NODES_KEY, NODES_DEFAULT)));
     scheduler = new ScheduledThreadPoolExecutor(1);
-    Collection<String> validQueues = getConf().
-        getTrimmedStringCollection(QUEUES_KEY);
-    if (validQueues.isEmpty()) {
-      validQueues = QUEUES_DEFAULT;
-    }
-    if (!validQueues.contains(queue)) {
-      throw new IllegalArgumentException(FastFormat.format("Invalid queue " +
-          "'{}'", queue));
+    if (queue != null) {
+      Collection<String> validQueues = getConf().
+          getTrimmedStringCollection(QUEUES_KEY);
+      if (validQueues.isEmpty()) {
+        validQueues = QUEUES_DEFAULT;
+      }
+      if (!validQueues.contains(queue)) {
+        throw new IllegalArgumentException(FastFormat.format("Invalid queue " +
+            "'{}'", queue));
+      }
     }
   }
 
@@ -165,7 +167,8 @@ public class MockRMLlamaAMConnector
 
   @Override
   public List<String> getNodes() throws LlamaAMException {
-    return nodes;
+    return Collections.unmodifiableList(Arrays.asList(getConf().
+        getStrings(NODES_KEY, NODES_DEFAULT)));
   }
 
   @Override
