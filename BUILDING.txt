@@ -6,7 +6,7 @@ Llama
 
 * Requirements:
 
-  JDK 1.6+
+  JDK 1.7+
   Maven 3.0.4+
   Thrift compiler 0.9.0
 
