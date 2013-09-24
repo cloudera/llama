@@ -1,0 +1,383 @@
+<html>
+<body>
+<h2>Llama Default Configuration</h2>
+        [<a href="./index.html">Go back to Llama Documentation</a>]
+        <p></p>
+<p></p>
+<table border="1">
+<tr>
+<th>name</th><th>value</th><th>description</th>
+</tr>
+<tr>
+<td><a name="llama.am.server.thrift.address">llama.am.server.thrift.address</a></td><td>0.0.0.0:15000</td><td>The address the LlamaAM server listen at.
+      If 0.0.0.0 is specified as IP, the server will listen in all available
+      network addresses. IMPORTANT: if security is enabled do not use 0.0.0.0,
+      instead, use the exact same hostname used in the kerberos service 
+      principal of the LlamaAM server (i.e. llama/HOSTNAME).
+      If the port is not specified, the default port is 15000. 
+      If the specified port is 0, an ephemeral port will be used, the port in
+      use will be printed in the logs at startup.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.server.thrift.server.min.threads">llama.am.server.thrift.server.min.threads</a></td><td>10</td><td>
+      Minimum number of threads used by the LlamaAM server uses for serving
+      client requests.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.server.thrift.server.max.threads">llama.am.server.thrift.server.max.threads</a></td><td>50</td><td>
+      Maximum number of threads used by the LlamaAM server uses for serving
+      client requests.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.server.thrift.transport.timeout.ms">llama.am.server.thrift.transport.timeout.ms</a></td><td>1000</td><td>
+      Socket time, in milliseconds, used LlamaAM server for all its server and 
+      client Thrift connections.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.server.thrift.client.notifier.queue.threshold">llama.am.server.thrift.client.notifier.queue.threshold</a></td><td>10000</td><td>
+      Threshold of the outstanding client notification queue size to start 
+      producing warnings. The queue will continue to queue notifications 
+      requests when above the threshold.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.server.thrift.client.notifier.threads">llama.am.server.thrift.client.notifier.threads</a></td><td>10</td><td>
+      Number of threads used to do client notifications.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.server.thrift.client.notifier.max.retries">llama.am.server.thrift.client.notifier.max.retries</a></td><td>5</td><td>
+      Maximum number of retries for a client notification.
+      After the maximum number of client notification retries has been reached
+      without success the client is considered lost and all its reservations
+      are released.
+      A successful client notification resets the retries count.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.server.thrift.client.notifier.retry.interval.ms">llama.am.server.thrift.client.notifier.retry.interval.ms</a></td><td>5000</td><td>
+      Client notification retry interval, in milliseconds.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.server.thrift.client.notifier.heartbeat.ms">llama.am.server.thrift.client.notifier.heartbeat.ms</a></td><td>5000</td><td>
+      Heartbeat interval (if no other notification happened), from LlamaAM
+      server to clients.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.server.thrift.node.name.mapping.class">llama.am.server.thrift.node.name.mapping.class</a></td><td>com.cloudera.llama.am.HostnameOnlyNodeMapper</td><td>
+      The NodeMapper implementation LlamaAM server uses to convert requested
+      locations into Yarn Nodes.
+      The default (and only implementation for production) drops the port
+      number if present (Impala uses DataNode addresses to request a location,
+      these addresses may contain the DataNode port number. The DataNode port
+      number is meaningless and unknown to Yarn).
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.server.thrift.http.address">llama.am.server.thrift.http.address</a></td><td>0.0.0.0:15001</td><td>The address the LlamaAM server exposes its HTTP server for
+      JMX and the Web UI.
+      If 0.0.0.0 is specified as IP, the server will listen in all available
+      network addresses.
+      If the port is not specified, the default port is 15001.
+      The HTTP JSON JMX servlet is exposed over HTTP at '/jmx', i.e.:
+        http://localhost:15001/jmx
+      If the specified port is 0, an ephemeral port will be used, the port in
+      use will be printed in the logs at startup.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.server.thrift.security">llama.am.server.thrift.security</a></td><td>false</td><td>
+      Indicates if security is enabled or not. If enabled, LlamaAM server uses
+      Kerberos Thrift SASL for all server and client Thrift connections.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.server.thrift.kerberos.keytab.file">llama.am.server.thrift.kerberos.keytab.file</a></td><td>llama.keytab</td><td>
+      The location of the LlamaAM server keytab. If the path is relative,
+      the keytab file is looked up in LlamaAM configuration directory.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.server.thrift.kerberos.server.principal.name">llama.am.server.thrift.kerberos.server.principal.name</a></td><td>llama/_HOST</td><td>
+      LlamaAM Kerberos principal name. 
+      The _HOST string is replaced with the canonical hostname.
+      It is recommended to explicitly set the hostname to avoid issues do to
+      OS network configuration changes.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.server.thrift.kerberos.notification.principal.name">llama.am.server.thrift.kerberos.notification.principal.name</a></td><td>impala</td><td>
+      Principal short name, without the service hostname, used for client
+      notifications. The hostname provided in the client address at registration
+      by the client will be used as service hostname. IMPORTANT: they client
+      hostname address provided at registration must match the service name
+      in the client's Kerberos principal.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.server.thrift.client.acl">llama.am.server.thrift.client.acl</a></td><td>*</td><td>
+      ACL for Llama AM clients.
+      The ACL is a comma-separated list of user and group names. The user and
+      group list is separated by a blank. For e.g. "alice,bob users,wheel".
+      A special value of "*" means all users are allowed.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.server.thrift.admin.acl">llama.am.server.thrift.admin.acl</a></td><td>*</td><td>
+      ACL for Llama AM admins.
+      The ACL is a comma-separated list of user and group names. The user and
+      group list is separated by a blank. For e.g. "alice,bob users,wheel".
+      A special value of "*" means all users are allowed.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.rm.connector.class">llama.am.rm.connector.class</a></td><td>com.cloudera.llama.am.yarn.YarnRMLlamaAMConnector</td><td>
+      Backing LlamaAM implementation to use.
+      Available for functional testing:
+      MockRMLlamaAMConnector
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.initial.queues">llama.am.initial.queues</a></td><td>queue1,queue2</td><td>
+      Queues LlamaAM should connect at start up.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.gang.anti.deadlock.enabled">llama.am.gang.anti.deadlock.enabled</a></td><td>true</td><td>
+      Enables Llama AM gang scheduling anti deadlock detection.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.gang.anti.deadlock.no.allocation.limit.ms">llama.am.gang.anti.deadlock.no.allocation.limit.ms</a></td><td>30000</td><td>
+      Interval of time without any new allocation that will trigger the Llama AM
+      anti-deadlock logic.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.gang.anti.deadlock.backoff.percent">llama.am.gang.anti.deadlock.backoff.percent</a></td><td>30</td><td>
+      Percentage of resources that will be backed off by the Llama AM
+      anti-deadlock logic.
+      Random reservations will be backed off until the percentage of backed off
+      resources reaches this percentage.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.gang.anti.deadlock.backoff.min.delay.ms">llama.am.gang.anti.deadlock.backoff.min.delay.ms</a></td><td>10000</td><td>
+      Minimum amount of time the backed off reservations will be in 'backed off'
+      state.
+      The actual amount time is a random value between the minimum and the
+      maximum.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.gang.anti.deadlock.backoff.max.delay.ms">llama.am.gang.anti.deadlock.backoff.max.delay.ms</a></td><td>30000</td><td>
+      Maximum amount of time the backed off reservations will be in 'backed off'
+      state.
+      The actual amount time is a random value between the minimum and the
+      maximum.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.mock.nodes">llama.am.mock.nodes</a></td><td>node1,node2</td><td>
+      List of nodes to offer.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.mock.queues">llama.am.mock.queues</a></td><td>queue1,queue2</td><td>
+      List of queues to offer.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.mock.events.min.wait.ms">llama.am.mock.events.min.wait.ms</a></td><td>1000</td><td>
+      Minimum wait time, in milliseconds, for events to be delivered after
+      reservation. Actual wait time is a random value.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.mock.events.max.wait.ms">llama.am.mock.events.max.wait.ms</a></td><td>10000</td><td>
+      Maximum wait time, in milliseconds, for events to be delivered after
+      reservation. Actual wait time is a random value.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.hadoop.user.name">llama.am.hadoop.user.name</a></td><td>llama</td><td>
+      User name use by Llama when interacting with Yarn.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.yarn.priority">llama.am.yarn.priority</a></td><td>0</td><td>
+      Application priority when creating application in Yarn Resource Manager.
+      NOTE: currently YARN does not use the application priority for 
+      scheduling decisions.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.yarn.app.monitor.timeout.ms">llama.am.yarn.app.monitor.timeout.ms</a></td><td>30000</td><td>
+      Timeout, in milliseconds, for waiting the Application Master to start
+      or to stop.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.yarn.app.monitor.polling.ms">llama.am.yarn.app.monitor.polling.ms</a></td><td>200</td><td>
+      Polling interval, in milliseconds, to determine if the Application Master
+      has started or stopped.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.yarn.app.heartbeat.interval.ms">llama.am.yarn.app.heartbeat.interval.ms</a></td><td>200</td><td>
+      LlamaAM Application Master heartbeat interval, in milliseconds. On each
+      heartbeat the Application Master submits new reservations to Yarn Resource
+      Manager and gets updates from it.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.yarn.container.handler.queue.threshold">llama.am.yarn.container.handler.queue.threshold</a></td><td>10000</td><td>
+      Threshold of the outstanding container requests queue size to Yarn Node 
+      Managers to start producing warnings. The queue will continue to queue 
+      container requests when above the threshold.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.yarn.container.handler.threads">llama.am.yarn.container.handler.threads</a></td><td>10</td><td>
+      Number of threads used to do container requests to Yarn Node Managers.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.nm.server.thrift.address">llama.nm.server.thrift.address</a></td><td>0.0.0.0:15100</td><td>The address the Llama NM Auxiliary Service listen at.
+      If 0.0.0.0 is specified as IP, the server will listen in all available
+      network addresses. IMPORTANT: if security is enabled do not use 0.0.0.0,
+      instead, use the exact same hostname used in the kerberos service
+      principal of the LlamaNM auxiliary service (i.e. llama/HOSTNAME).
+      If the port is not specified, the default port is 15100.
+      If the specified port is 0, an ephemeral port will be used, the port in
+      use will be printed in the logs at startup.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.nm.server.thrift.server.min.threads">llama.nm.server.thrift.server.min.threads</a></td><td>10</td><td>
+      Minimum number of threads used by the LlamaNM auxiliary service uses for 
+      serving client requests.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.nm.server.thrift.server.max.threads">llama.nm.server.thrift.server.max.threads</a></td><td>50</td><td>
+      Maximum number of threads used by the LlamaNM auxiliary service uses for 
+      serving client requests.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.nm.server.thrift.transport.timeout.ms">llama.nm.server.thrift.transport.timeout.ms</a></td><td>1000</td><td>
+      Socket time, in milliseconds, used LlamaNM auxiliary service for all its 
+      server and client Thrift connections.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.nm.server.thrift.client.notifier.queue.threshold">llama.nm.server.thrift.client.notifier.queue.threshold</a></td><td>10000</td><td>
+      Threshold of the outstanding client notification queue size to start
+      producing warnings. The queue will continue to queue notifications
+      requests when above the threshold.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.nm.server.thrift.client.notifier.threads">llama.nm.server.thrift.client.notifier.threads</a></td><td>10</td><td>
+      Number of threads used to do client notifications.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.nm.server.thrift.client.notifier.max.retries">llama.nm.server.thrift.client.notifier.max.retries</a></td><td>5</td><td>
+      Maximum number of retries for a client notification.
+      After the maximum number of client notification retries has been reached
+      without success the client is considered lost and all its reservations
+      are released.
+      A successful client notification resets the retries count.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.nm.server.thrift.client.notifier.retry.interval.ms">llama.nm.server.thrift.client.notifier.retry.interval.ms</a></td><td>5000</td><td>
+      Client notification retry interval, in milliseconds.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.nm.server.thrift.client.notifier.heartbeat.ms">llama.nm.server.thrift.client.notifier.heartbeat.ms</a></td><td>5000</td><td>
+      Heartbeat interval (if no other notification happened), from LlamaNM
+      auxiliary service to clients.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.nm.server.thrift.security">llama.nm.server.thrift.security</a></td><td>false</td><td>
+      Indicates if security is enabled or not. If enabled, LlamaNM auxiliary
+      service uses Kerberos Thrift SASL for all server and client Thrift 
+      connections.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.nm.server.thrift.kerberos.keytab.file">llama.nm.server.thrift.kerberos.keytab.file</a></td><td>llama.keytab</td><td>
+      The location of the Llama NM auxiliary service keytab. If the path is 
+      relative, the keytab file is looked up in the Node Manager configuration 
+      directory.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.nm.server.thrift.kerberos.server.principal.name">llama.nm.server.thrift.kerberos.server.principal.name</a></td><td>llama/_HOST</td><td>
+      LlamaAM Kerberos principal name.
+      The _HOST string is replaced with the canonical hostname.
+      It is recommended to explicitly set the hostname to avoid issues do to
+      OS network configuration changes.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.nm.server.thrift.kerberos.notification.principal.name">llama.nm.server.thrift.kerberos.notification.principal.name</a></td><td>impala</td><td>
+      Principal short name, without the service hostname, used for client
+      notifications. The hostname provided in the client address at registration
+      by the client will be used as service hostname. IMPORTANT: they client
+      hostname address provided at registration must match the service name
+      in the client's Kerberos principal.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.nm.server.thrift.client.acl">llama.nm.server.thrift.client.acl</a></td><td>*</td><td>
+      ACL for Llama NM clients.
+      The ACL is a comma-separated list of user and group names. The user and
+      group list is separated by a blank. For e.g. "alice,bob users,wheel".
+      A special value of "*" means all users are allowed.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.nm.server.thrift.admin.acl">llama.nm.server.thrift.admin.acl</a></td><td>*</td><td>
+      ACL for Llama NM admins.
+      The ACL is a comma-separated list of user and group names. The user and
+      group list is separated by a blank. For e.g. "alice,bob users,wheel".
+      A special value of "*" means all users are allowed.
+    </td>
+</tr>
+<tr>
+<td><a name="hadoop.security.group.mapping">hadoop.security.group.mapping</a></td><td>org.apache.hadoop.security.JniBasedUnixGroupsMappingWithFallback</td><td>
+      Class for user to group mapping (get groups for a given user) for ACL.
+      The default implementation,
+      org.apache.hadoop.security.JniBasedUnixGroupsMappingWithFallback,
+      will determine if the Java Native Interface (JNI) is available. If JNI is
+      available the implementation will use the API within hadoop to resolve a
+      list of groups for a user. If JNI is not available then the shell
+      implementation, ShellBasedUnixGroupsMapping, is used. This implementation
+      shells out to the Linux/Unix environment with the
+      bash -c groups
+      command to resolve a list of groups for a user.
+    </td>
+</tr>
+<tr>
+<td><a name="hadoop.security.groups.cache.secs">hadoop.security.groups.cache.secs</a></td><td>300</td><td>
+      This is the config controlling the validity of the entries in the cache
+      containing the user-&gt;group mapping. When this duration has expired,
+      then the implementation of the group mapping provider is invoked to get
+      the groups of the user and then cached back.
+    </td>
+</tr>
+</table>
+</body>
+</html>
