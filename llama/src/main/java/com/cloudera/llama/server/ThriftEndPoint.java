@@ -68,42 +68,54 @@ public class ThriftEndPoint {
   }
 
   /**
-   * Extracts hosts from name/host@REALM or name/host.
+   * Extracts name from name, name/host@REALM or name/host.
    */
-  static String extractPrincipalHost(String principalName) {
-    String ret = null;
-    int i = principalName.indexOf("/");
-    int j = principalName.lastIndexOf("@");
-    if (i > -1) {
-      return principalName.substring(i + 1,
-          j > -1 ? j : principalName.length());
+  static String extractPrincipalName(String principal) {
+    String name = principal;
+    int i = principal.indexOf("/");
+    if (i == -1) {
+      i = principal.indexOf("@");
     }
-    return ret;
+    if (i > -1) {
+      name = principal.substring(0, i);
+    }
+    return name;
+  }
+
+  /**
+   * Extracts host from name, name/host@REALM or name/host.
+   */
+  static String extractPrincipalHost(String principal) {
+    String host = null;
+    int i = principal.indexOf("/");
+    if (i > -1) {
+      int j = principal.lastIndexOf("@");
+      if (j > -1) {
+        host = principal.substring(i + 1, j);
+      } else {
+        host = principal.substring(i + 1);
+      }
+    }
+    return host;
   }
 
   public static TTransportFactory createTTransportFactory(
       ServerConfiguration conf) {
     TTransportFactory factory;
     if (Security.isSecure(conf)) {
-      TSaslServerTransport.Factory saslFactory = null;
       Map<String, String> saslProperties = new HashMap<String, String>();
       saslProperties.put(Sasl.QOP, "auth-conf");
-      String principalName = Security.resolveLlamaPrincipalName(conf);
-      String declarePrincipalHost = extractPrincipalHost(principalName);
-      int i = principalName.indexOf("/");
-      if (i > -1) {
-        principalName = principalName.substring(0, i);
+      String principal = conf.getServerPrincipalName();
+      String name = extractPrincipalName(principal);
+      String host = extractPrincipalHost(principal);
+      if (host == null) {
+        throw new IllegalArgumentException(FastFormat.format(
+            "Kerberos principal '{}' must have a hostname part", principal));
       }
-      String principalHost = getServerAddress(conf);
-      if (!principalHost.equals(declarePrincipalHost)) {
-        throw new RuntimeException(FastFormat.format(
-            "Server address configured with '{}', " +
-                "Kerberos service hostname configured with '{}'",
-            principalHost, declarePrincipalHost));
-      }
-      saslFactory = new TSaslServerTransport.Factory();
-      saslFactory.addServerDefinition("GSSAPI", principalName, principalHost,
-          saslProperties, new GssCallback());
+      TSaslServerTransport.Factory saslFactory = 
+          new TSaslServerTransport.Factory();
+      saslFactory.addServerDefinition("GSSAPI", name, host, saslProperties, 
+          new GssCallback());
       factory = saslFactory;
     } else {
       factory = new TTransportFactory();

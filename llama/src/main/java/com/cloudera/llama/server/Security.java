@@ -26,7 +26,6 @@ import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 import java.io.File;
-import java.net.InetAddress;
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -35,8 +34,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Security {
-
-  private static final String SERVICE_HOST_WILDCARD = "_HOST";
 
   public static class KerberosConfiguration extends
       javax.security.auth.login.Configuration {
@@ -94,7 +91,7 @@ public class Security {
       throws Exception {
     Subject subject;
     if (isSecure(conf)) {
-      String principalName = resolveLlamaPrincipalName(conf);
+      String principalName = conf.getServerPrincipalName();
       String keytab = conf.getKeytabFile();
       if (!(keytab.charAt(0) == '/')) {
         String confDir = conf.getConfDir();
@@ -143,7 +140,7 @@ public class Security {
 
   public static void loginToHadoop(ServerConfiguration conf) throws Exception {
     if (UserGroupInformation.isSecurityEnabled()) {
-      String principalName = resolveLlamaPrincipalName(conf);
+      String principalName = conf.getServerPrincipalName();
       String keytab = conf.getKeytabFile();
       if (!(keytab.charAt(0) == '/')) {
         String confDir = conf.getConfDir();
@@ -159,17 +156,4 @@ public class Security {
     }
   }
 
-  public static String resolveLlamaPrincipalName(ServerConfiguration conf) {
-    String principalName = conf.getServerPrincipalName();
-    int index = principalName.indexOf(SERVICE_HOST_WILDCARD);
-    if (index > -1) {
-      principalName = principalName.substring(0, index);
-      try {
-        principalName += InetAddress.getLocalHost().getCanonicalHostName();
-      } catch (Exception ex) {
-        throw new RuntimeException(ex);
-      }
-    }
-    return principalName;
-  }
 }

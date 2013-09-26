@@ -26,10 +26,7 @@
     <value>0.0.0.0:15000</value>
     <description>The address the LlamaAM server listen at.
       If 0.0.0.0 is specified as IP, the server will listen in all available
-      network addresses. IMPORTANT: if security is enabled do not use 0.0.0.0,
-      instead, use the exact same hostname used in the kerberos service 
-      principal of the LlamaAM server (i.e. llama/HOSTNAME).
-      If the port is not specified, the default port is 15000. 
+      network addresses. If the port is not specified, the default port is 15000. 
       If the specified port is 0, an ephemeral port will be used, the port in
       use will be printed in the logs at startup.
     </description>
@@ -149,12 +146,11 @@
   </property>
   <property>
     <name>llama.am.server.thrift.kerberos.server.principal.name</name>
-    <value>llama/_HOST</value>
+    <value>llama/localhost</value>
     <description>
       LlamaAM Kerberos principal name. 
-      The _HOST string is replaced with the canonical hostname.
-      It is recommended to explicitly set the hostname to avoid issues do to
-      OS network configuration changes.
+      'localhost' must be replaced with the hostname specified in the service
+      principal.
     </description>
   </property>
   <property>
@@ -459,12 +455,11 @@
   </property>
   <property>
     <name>llama.nm.server.thrift.kerberos.server.principal.name</name>
-    <value>llama/_HOST</value>
+    <value>llama/localhost</value>
     <description>
-      LlamaAM Kerberos principal name.
-      The _HOST string is replaced with the canonical hostname.
-      It is recommended to explicitly set the hostname to avoid issues do to
-      OS network configuration changes.
+       Llama NM auxiliary service keytab Kerberos principal name.
+      'localhost' must be replaced with the hostname specified in the service
+      principal.
     </description>
   </property>
   <property>

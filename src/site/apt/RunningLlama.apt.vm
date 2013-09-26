@@ -139,22 +139,13 @@ $
   
     * llama.am.server.thrift.kerberos.keytab.file=llama.keytab
   
-    * llama.am.server.thrift.kerberos.server.principal.name=llama/_HOST
+    * llama.am.server.thrift.kerberos.server.principal.name=llama/localhost
   
     * llama.am.server.thrift.kerberos.notification.principal.name=impala
   
-  The <<<_HOST>>> in the principal name gets resolved to the canonical hostname
-  of the machine where LlamaAM is running. To avoid misconfiguration problems, 
-  use the actual hostname instead <<<_HOST>>>. The hostname used should match
-  the hostname the server address resolves to. The server address is set in the
-  <<<llama.am.server.thrift.address>>> configuration property (the port number
-  will be ignored if present). 
-  
-  <<IMPORTANT:>> the default server address is <<<0.0.0.0>>>, if enabling 
-  security the address should be changed to a fixed IP or (better) a hostname. 
-  If set to a fixed IP, the hostname that IP resolves to must match the hostname 
-  in the Kerberos service principal.
-  
+  The <<<localhost>>> in the principal name must match the the hostname in the
+  Kerberos service principal. 
+    
   If the path specified in <<<llama.am.server.thrift.kerberos.keytab.file>>> is
   a relative path, the keytab file will be expected in the Llama configuration 
   directory.
@@ -284,7 +275,7 @@ $
 
     * llama.nm.server.thrift.kerberos.keytab.file=llama.keytab
 
-    * llama.nm.server.thrift.kerberos.server.principal.name=llama/_HOST
+    * llama.nm.server.thrift.kerberos.server.principal.name=llama/localhost
 
     * llama.nm.server.thrift.kerberos.notification.principal.name=impala
 

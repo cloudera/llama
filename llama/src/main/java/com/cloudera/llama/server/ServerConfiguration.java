@@ -182,7 +182,7 @@ public abstract class ServerConfiguration implements Configurable {
 
   public static String SERVER_PRINCIPAL_NAME_KEY = KEY_PREFIX +
       "kerberos.server.principal.name";
-  private static String SERVER_PRINCIPAL_NAME_DEFAULT = "llama/_HOST";
+  private static String SERVER_PRINCIPAL_NAME_DEFAULT = "llama/localhost";
 
   public String getServerPrincipalName() {
     return conf.get(getPropertyName(SERVER_PRINCIPAL_NAME_KEY),
