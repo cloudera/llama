@@ -431,8 +431,8 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
         }
       });
     } catch (Throwable ex) {
-      if (ex instanceof LlamaAMException) {
-        throw (LlamaAMException) ex;
+      if (ex.getCause() instanceof LlamaAMException) {
+        throw (LlamaAMException) ex.getCause();
       } else {
         throw new RuntimeException(ex);
       }
@@ -472,8 +472,8 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
         }
       });
     } catch (Throwable ex) {
-      if (ex instanceof LlamaAMException) {
-        throw (LlamaAMException) ex;
+      if (ex.getCause() instanceof LlamaAMException) {
+        throw (LlamaAMException) ex.getCause();
       } else {
         throw new RuntimeException(ex);
       }
