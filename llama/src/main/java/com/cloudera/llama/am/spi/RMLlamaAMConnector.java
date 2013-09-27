@@ -26,6 +26,10 @@ public interface RMLlamaAMConnector {
 
   public void setLlamaAMCallback(RMLlamaAMCallback callback);
 
+  public void start() throws LlamaAMException;
+
+  public void stop();
+
   public void register(String queue) throws LlamaAMException;
 
   public void unregister();

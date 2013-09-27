@@ -141,6 +141,14 @@ public class MockRMLlamaAMConnector
   }
 
   @Override
+  public void start() throws LlamaAMException {
+  }
+
+  @Override
+  public void stop() {
+  }
+
+  @Override
   public void register(String queue) throws LlamaAMException {
     minWait = getConf().getInt(EVENTS_MIN_WAIT_KEY, EVENTS_MIN_WAIT_DEFAULT);
     maxWait = getConf().getInt(EVENTS_MAX_WAIT_KEY, EVENTS_MAX_WAIT_DEFAULT);

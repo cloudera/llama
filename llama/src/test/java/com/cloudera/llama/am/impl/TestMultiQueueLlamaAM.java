@@ -50,6 +50,8 @@ public class TestMultiQueueLlamaAM {
   static {
     EXPECTED.add("setConf");
     EXPECTED.add("setLlamaAMCallback");
+    EXPECTED.add("start");
+    EXPECTED.add("stop");
     EXPECTED.add("register");
     EXPECTED.add("unregister");
     EXPECTED.add("getNodes");
@@ -83,6 +85,19 @@ public class TestMultiQueueLlamaAM {
     public void setLlamaAMCallback(RMLlamaAMCallback callback) {
       MyRMLlamaAMConnector.callback = callback;
       methods.add("setLlamaAMCallback");
+    }
+
+    @Override
+    public void start() throws LlamaAMException {
+      methods.add("start");
+      if (conf.getBoolean("fail.start", false)) {
+        throw new LlamaAMException("");
+      }
+    }
+
+    @Override
+    public void stop() {
+      methods.add("stop");
     }
 
     @Override
@@ -192,6 +207,17 @@ public class TestMultiQueueLlamaAM {
 
   @Test(expected = LlamaAMException.class)
   public void testStartOfDelegatedLlamaAmFail() throws Exception {
+    Configuration conf = new Configuration(false);
+    conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MyRMLlamaAMConnector.class,
+        RMLlamaAMConnector.class);
+    conf.setBoolean("fail.start", true);
+    conf.set(LlamaAM.INITIAL_QUEUES_KEY, "q");
+    LlamaAM am = LlamaAM.create(conf);
+    am.start();
+  }
+
+  @Test(expected = LlamaAMException.class)
+  public void testRegisterOfDelegatedLlamaAmFail() throws Exception {
     Configuration conf = new Configuration(false);
     conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MyRMLlamaAMConnector.class,
         RMLlamaAMConnector.class);

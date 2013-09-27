@@ -104,6 +104,7 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
       "advertised.tracking.url";
 
   private Configuration conf;
+  private Configuration yarnConf;
   private boolean includePortInNodeName;
   private RMLlamaAMCallback llamaCallback;
   private UserGroupInformation ugi;
@@ -124,6 +125,10 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
     includePortInNodeName = getConf().getBoolean
         (YarnConfiguration.RM_SCHEDULER_INCLUDE_PORT_IN_NODE_NAME,
             YarnConfiguration.DEFAULT_RM_SCHEDULER_USE_PORT_FOR_NODE_NAME);
+    yarnConf = new YarnConfiguration();
+    for (Map.Entry entry : getConf()) {
+      yarnConf.set((String) entry.getKey(), (String) entry.getValue());
+    }
   }
 
   @Override
@@ -144,10 +149,38 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
   }
 
   @Override
+  public void start() throws LlamaAMException {
+    try {
+      ugi = createUGIForApp();
+      ugi.doAs(new PrivilegedExceptionAction<Void>() {
+        @Override
+        public Void run() throws Exception {
+          _start();
+          return null;
+        }
+      });
+    } catch (Throwable ex) {
+      throw new LlamaAMException(ex);
+    }
+  }
+
+  @Override
+  public void stop() {
+    if (ugi != null) {
+      ugi.doAs(new PrivilegedAction<Void>() {
+        @Override
+        public Void run() {
+          _stop();
+          return null;
+        }
+      });
+    }
+  }
+
+  @Override
   @SuppressWarnings("unchecked")
   public void register(final String queue) throws LlamaAMException {
     try {
-      ugi = createUGIForApp();
       ugi.doAs(new PrivilegedExceptionAction<Void>() {
         @Override
         public Void run() throws Exception {
@@ -165,14 +198,20 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
                                    : nodeId.getHost();
   }
 
-  private void _initYarnApp(String queue) throws Exception {
-    Configuration yarnConf = new YarnConfiguration();
-    for (Map.Entry entry : getConf()) {
-      yarnConf.set((String) entry.getKey(), (String) entry.getValue());
-    }
+  private void _start() throws Exception {
     yarnClient = YarnClient.createYarnClient();
     yarnClient.init(yarnConf);
     yarnClient.start();
+  }
+
+  private void _stop() {
+    if (yarnClient != null) {
+      yarnClient.stop();
+      yarnClient = null;
+    }
+  }
+  
+  private void _initYarnApp(String queue) throws Exception {
     nmClient = NMClient.createNMClient();
     nmClient.init(yarnConf);
     nmClient.start();
@@ -327,15 +366,8 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
   @Override
   public List<String> getNodes() throws LlamaAMException {
     List<String> nodes = new ArrayList<String>();
-    YarnClient yarnClient = YarnClient.createYarnClient();
     try {
-      Configuration yarnConf = new YarnConfiguration();
-      for (Map.Entry entry : getConf()) {
-        yarnConf.set((String) entry.getKey(), (String) entry.getValue());
-      }
-      yarnClient.init(yarnConf);
-      yarnClient.start();
-      List<NodeReport> nodeReports =
+      List<NodeReport> nodeReports = 
           yarnClient.getNodeReports(NodeState.RUNNING);
       for (NodeReport nodeReport : nodeReports) {
         nodes.add(getNodeName(nodeReport.getNodeId()));
@@ -343,8 +375,6 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
       return nodes;
     } catch (Throwable ex) {
       throw new LlamaAMException(ex);
-    } finally {
-      yarnClient.stop();
     }
   }
 

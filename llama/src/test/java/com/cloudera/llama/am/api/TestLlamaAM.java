@@ -44,6 +44,14 @@ public class TestLlamaAM {
     }
 
     @Override
+    public void start() throws LlamaAMException {
+    }
+
+    @Override
+    public void stop() {
+    }
+
+    @Override
     public void register(String queue) throws LlamaAMException {
     }
 
