@@ -25,6 +25,7 @@ import com.cloudera.llama.am.api.Resource;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.ProxyUsers;
+import org.apache.hadoop.service.Service;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.server.MiniYARNCluster;
 import org.junit.Assert;
@@ -125,6 +126,8 @@ public class TestLlamaAMWithYarn {
   public void testGetNodes() throws Exception {
     try {
       startYarn(createMiniYarnConfig(true));
+      //we have to wait a bit to ensure the RM got the NM registered
+      Thread.sleep(3000);
       Configuration conf = getLlamaConfiguration();
       conf.unset(LlamaAM.INITIAL_QUEUES_KEY);
       LlamaAM llama = LlamaAM.create(conf);
