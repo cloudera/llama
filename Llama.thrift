@@ -40,7 +40,7 @@ enum TStatusCode {
 
 struct TStatus {
   1: required TStatusCode status_code;
-  2: optional list<string> error_msgs;
+  2: list<string> error_msgs;
 }
 
 enum TLocationEnforcement {
@@ -201,7 +201,7 @@ struct TLlamaNMNotificationRequest {
   1: required TLlamaServiceVersion version;
   2: required TUniqueId            nm_handle;
   3: required TNodeCapacity        node_capacity;
-  4: optional list<string>         ended_rm_resource_ids;
+  4: list<string>                  preempted_rm_resource_ids;
 }
 
 struct TLlamaNMNotificationResponse {

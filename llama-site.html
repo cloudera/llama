@@ -11,10 +11,7 @@
 <tr>
 <td><a name="llama.am.server.thrift.address">llama.am.server.thrift.address</a></td><td>0.0.0.0:15000</td><td>The address the LlamaAM server listen at.
       If 0.0.0.0 is specified as IP, the server will listen in all available
-      network addresses. IMPORTANT: if security is enabled do not use 0.0.0.0,
-      instead, use the exact same hostname used in the kerberos service 
-      principal of the LlamaAM server (i.e. llama/HOSTNAME).
-      If the port is not specified, the default port is 15000. 
+      network addresses. If the port is not specified, the default port is 15000. 
       If the specified port is 0, an ephemeral port will be used, the port in
       use will be printed in the logs at startup.
     </td>
@@ -104,11 +101,10 @@
     </td>
 </tr>
 <tr>
-<td><a name="llama.am.server.thrift.kerberos.server.principal.name">llama.am.server.thrift.kerberos.server.principal.name</a></td><td>llama/_HOST</td><td>
+<td><a name="llama.am.server.thrift.kerberos.server.principal.name">llama.am.server.thrift.kerberos.server.principal.name</a></td><td>llama/localhost</td><td>
       LlamaAM Kerberos principal name. 
-      The _HOST string is replaced with the canonical hostname.
-      It is recommended to explicitly set the hostname to avoid issues do to
-      OS network configuration changes.
+      'localhost' must be replaced with the hostname specified in the service
+      principal.
     </td>
 </tr>
 <tr>
@@ -324,11 +320,10 @@
     </td>
 </tr>
 <tr>
-<td><a name="llama.nm.server.thrift.kerberos.server.principal.name">llama.nm.server.thrift.kerberos.server.principal.name</a></td><td>llama/_HOST</td><td>
-      LlamaAM Kerberos principal name.
-      The _HOST string is replaced with the canonical hostname.
-      It is recommended to explicitly set the hostname to avoid issues do to
-      OS network configuration changes.
+<td><a name="llama.nm.server.thrift.kerberos.server.principal.name">llama.nm.server.thrift.kerberos.server.principal.name</a></td><td>llama/localhost</td><td>
+       Llama NM auxiliary service keytab Kerberos principal name.
+      'localhost' must be replaced with the hostname specified in the service
+      principal.
     </td>
 </tr>
 <tr>
