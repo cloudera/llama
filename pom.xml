@@ -68,6 +68,7 @@ TODO: need license header
     <cdh.llama.version>1.0.0-cdh5.0.0-SNAPSHOT</cdh.llama.version>
     <cdh.cdh-parcel.version>5.0.0-SNAPSHOT</cdh.cdh-parcel.version>
     <cdh.sentry.version>1.2.0-cdh5.0.0-SNAPSHOT</cdh.sentry.version>
+    <cdh.parquet.version>1.0.0-cdh5.0-0-SNAPSHOT</cdh.parquet.version>
     
     <!-- Versions of the dependencies we manage -->
     <!-- <cdh.avro.version>1.7.4-cdh5.0.0-SNAPSHOT</cdh.avro.version> -->
