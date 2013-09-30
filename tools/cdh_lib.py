@@ -87,7 +87,7 @@ def cdh_ancestor_branch(branch, prefix='cdh'):
   # Add origin to all ancestor branches 
   return re.sub(r'[\.\+][^\.\+]+?$', '', 'origin/' + branch)
 
-def cdh_get_version(rev, no_patch_count, prefix='cdh'):
+def cdh_get_version(rev, no_patch_count, prefix='cdh', cdh_rel_string=''):
   """ Given a revision, determine the unique version number for it. """
   separator = '-'
 
@@ -106,7 +106,10 @@ def cdh_get_version(rev, no_patch_count, prefix='cdh'):
   count = count_commits_from(merge_base, rev)
 
   if ancestor.startswith('apache') or ancestor.startswith(prefix + separator + 'base'):
-    return base_version + '+' + str(count)
+    if cdh_rel_string:
+      return base_version + '+' + cdh_rel_string + '+' + str(count)
+    else:
+      return base_version + '+' + str(count)
   else:
     return base_version + '.' + str(count)
 

@@ -6,7 +6,7 @@ import re
 import subprocess
 import sys
 import time
-from cdh_lib import cdh_get_version, git
+from cdh_lib import git
 
 def git_log(from_ref, to_ref):
   """

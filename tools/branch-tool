@@ -8,13 +8,13 @@ flags:
 options:
   -n, --no-patch-count   - Don't include patch count in version
   -p, --prefix   - Prefix for branches - defaults to 'cdh'
- 
 
-tool is:
+
+tool is ([] means optional):
   branch - make a new branch from this point
   cust-branch [cust] - make a customer branch
   migrate-cust-branch [old-cust-branch] - migrate an existing customer branch onto trunk
-  version [ref] - output version number for a ref
+  version <cdh release string> [ref] - output version number for a ref and release string (e.g. 'cdh5.0.0', even for CDH5b1)
 """
 import re
 import sys
@@ -64,13 +64,20 @@ def version(argv):
   """
 
   ref = None
-  if len(argv) == 3:
-    ref = argv[2]
+  cdh_rel_string = None
+  if len(argv) < 3:
+    raise Exception("Please specify CDH release string (e.g. 'cdh5.0.0') for querying version")
+
+  cdh_rel_string = argv[2]
+  
+  if len(argv) == 4:
+    ref = argv[3]
 
   if not ref:
     ref = git_cur_branch()
 
-  print cdh_get_version(ref, NO_PATCH_COUNT, PREFIX)
+  print cdh_get_version(ref, NO_PATCH_COUNT, PREFIX, cdh_rel_string)
+
 
 def cust_branch(argv):
   """
