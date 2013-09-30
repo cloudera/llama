@@ -44,6 +44,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -51,6 +52,10 @@ import java.util.List;
 import java.util.Map;
 
 public class MiniLlama {
+
+  private static final String NODES_OPT = "hadoopnodes";
+  private static final String NOFORMAT_OPT = "noformat";
+  private static final String WRITE_HDFS_CONFIG_OPT = "writehdfsconf";
 
   public static void main(String[] args) throws Exception {
     CommandLine cli = parseArguments(args);
@@ -60,10 +65,13 @@ public class MiniLlama {
     System.setProperty("log4j.configuration", "minillama-log4j.properties");
     Configuration conf = new Configuration(false);
     conf.addResource("llama-site.xml");
-    int nodes = intArgument(cli, "nodes", 1);
+    int nodes = intArgument(cli, NODES_OPT, 1);
     conf = createMiniClusterConf(conf, nodes);
     final MiniLlama llama = new MiniLlama(conf);
-    llama.skipDfsFormat(cli.hasOption("noformat"));
+    llama.skipDfsFormat(cli.hasOption(NOFORMAT_OPT));
+    if (cli.hasOption(WRITE_HDFS_CONFIG_OPT)) {
+      llama.setWriteHadoopConfig(cli.getOptionValue(WRITE_HDFS_CONFIG_OPT));
+    }
     llama.start();
     LOG.info("**************************************************************"
         + "*******************************************************");
@@ -91,8 +99,10 @@ public class MiniLlama {
   static Options makeOptions() {
     Options options = new Options();
     options
-        .addOption("nodes", true, "How many nodes to use (default 1)")
-        .addOption("noformat", false, "Do not format the DFS (default false)")
+        .addOption(NODES_OPT, true, "How many nodes to use (default 1)")
+        .addOption(NOFORMAT_OPT, false, "Do not format the DFS (default false)")
+        .addOption(WRITE_HDFS_CONFIG_OPT, true, 
+            "Save Hadoop configuration to this XML file.")
         .addOption(
             OptionBuilder.withDescription("Prints option help.").create("help"));
     return options;
@@ -175,9 +185,11 @@ public class MiniLlama {
 
   private final Configuration conf;
   private boolean skipDfsFormat = false;
+  private String writeHdfsConfig = null;
   private final AbstractServer server;
   private List<String> dataNodes;
   private MiniDFSCluster miniHdfs;
+  private Configuration miniHdfsConf;
   private MiniYARNCluster miniYarn;
 
   public MiniLlama(Configuration conf) {
@@ -196,6 +208,10 @@ public class MiniLlama {
     this.skipDfsFormat = skipDfsFormat;
   }
 
+  public void setWriteHadoopConfig(String writeHdfsConfig) {
+    this.writeHdfsConfig = writeHdfsConfig;
+  }
+  
   public void start() throws Exception {
     Map<String, String> mapping = startMiniHadoop();
     server.getConf().setClass(S_CONF.getPropertyName(
@@ -204,6 +220,11 @@ public class MiniLlama {
     MiniClusterNodeMapper.addMapping(getConf(), mapping);
     for (Map.Entry entry : miniYarn.getConfig()) {
       conf.set((String) entry.getKey(), (String) entry.getValue());
+    }
+    if (writeHdfsConfig != null) {
+      FileOutputStream fos = new FileOutputStream(new File(writeHdfsConfig));
+      miniHdfsConf.writeXml(fos);
+      fos.close();
     }
     dataNodes = new ArrayList<String>(mapping.keySet());
     dataNodes = Collections.unmodifiableList(dataNodes);
@@ -257,7 +278,9 @@ public class MiniLlama {
     }
     miniHdfs = new MiniDFSCluster(hdfsPort, conf, clusterNodes, !skipDfsFormat,
         true, null, null);
+    miniHdfs.waitActive();
     conf = miniHdfs.getConfiguration(0);
+    miniHdfsConf = conf;
     miniYarn = new MiniYARNCluster("minillama", clusterNodes, 1, 1);
     conf.setBoolean(YarnConfiguration.RM_SCHEDULER_INCLUDE_PORT_IN_NODE_NAME,
         true);

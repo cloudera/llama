@@ -150,3 +150,9 @@ $ bin/minillama --hadoop-conf=/Users/tucu/myhadoopconf --hadoop-nodes=3
 2013-09-02 09:14:47,244 INFO  [main] server.MiniLlama (MiniLlama.java:main(64)) - Mini Llama running with HDFS/Yarn minicluster with 2 nodes, HDFS URI: hdfs://localhost:8020 Llama URI: 0.0.0.0:15000
 2013-09-02 09:14:47,244 INFO  [main] server.MiniLlama (MiniLlama.java:main(68)) - *********************************************************************************************************************
 +---+
+
+  Additional options:
+  
+    * <<<-no-format>>>: It does not reformats MiniHDFS on startup.
+    * <<<-write-hdfs-config=>>><<FILE>>: Writes out MiniHDFS configuration to 
+    the specified <<FILE>>.

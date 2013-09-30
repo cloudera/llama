@@ -30,20 +30,39 @@ while [ -h "${PRG}" ]; do
   fi
 done
 
+printUsage() {
+  echo "Both --hadoop-conf and --hadoop-nodes options must be specified"
+  echo
+  echo "Usage: minillama <OPTIONS>"
+  echo "                 --hadoop-conf=<HADOOP_CONF_DIR>"
+  echo "                 --hadoop-nodes=<CLUSTER_SIZE>"
+  echo "                 [--no-format]"
+  echo "                 [--write-hdfs-conf=<FILE>]"
+  echo "                 [--verbose]"
+  echo
+  exit 1
+}
+
 BASEDIR=`dirname ${PRG}`
 BASEDIR=`cd ${BASEDIR}/..;pwd`
+
+writehdfsconf=""
+noformat=""
 
 for i in $*
 do
   case $i in
   --hadoop-conf=*)
-    hadoopconf=${i#*=}
+    hadoopconf="-hadoopconf=${i#*=}"
     ;;
   --hadoop-nodes=*)
-    hadoopnodes="-nodes ${i#*=}"
+    hadoopnodes="-hadoopnodes=${i#*=}"
     ;;
   --no-format)
     noformat="-noformat"
+    ;;
+  --write-hdfs-conf=*)
+    writehdfsconf="-writehdfsconf=${i#*=}"
     ;;
   --verbose)
     verbose=true
@@ -57,15 +76,7 @@ do
   esac
 done
 if [[ "${hadoopconf}" == "" || "${hadoopnodes}" == "" ]] ; then
-  echo "Both --hadoop-conf and --hadoop-nodes options must be specified"
-  echo
-  echo "Usage: minillama <OPTIONS>"
-  echo "                 --hadoop-conf=<HADOOP_CONF_DIR>"
-  echo "                 --hadoop-nodes=<CLUSTER_SIZE>"
-  echo "                 --no-format"
-  echo "                 [--verbose]"
-  echo
-  exit 1
+ printUsage
 fi
 
 CLASSPATH="${hadoopconf}:${BASEDIR}/conf"
@@ -88,4 +99,4 @@ then
 fi
 
 ${JAVA_BIN} ${MINI_LLAMA_OPTS} -cp ${CLASSPATH} \
-  com.cloudera.llama.am.MiniLlama ${hadoopnodes} ${noformat}
+  com.cloudera.llama.am.MiniLlama ${hadoopnodes} ${noformat} ${writehdfsconf}

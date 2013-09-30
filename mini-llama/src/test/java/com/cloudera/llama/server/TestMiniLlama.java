@@ -37,13 +37,27 @@ import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
 import org.junit.Test;
 
+import java.io.File;
 import java.net.URL;
 import java.util.HashSet;
+import java.util.UUID;
 
 public class TestMiniLlama {
 
   @Test
-  public void testMiniLlamaWithHadoopMiniCluster() throws Exception {
+  public void testMiniLlamaWithHadoopMiniCluster()
+      throws Exception {
+    testMiniLlamaWithHadoopMiniCluster(false);
+  }
+
+  @Test
+  public void testMiniLlamaWithHadoopMiniClusterWriteHdfsConf()
+      throws Exception {
+    testMiniLlamaWithHadoopMiniCluster(true);
+  }
+
+  private void testMiniLlamaWithHadoopMiniCluster(boolean writeHdfsConf) 
+      throws Exception {
     URL url = Thread.currentThread().getContextClassLoader().getResource(
         "fair-scheduler.xml");
     if (url == null) {
@@ -59,14 +73,26 @@ public class TestMiniLlama {
     Configuration conf = MiniLlama.createMiniClusterConf(2);
     conf.set("yarn.scheduler.fair.allocation.file", fsallocationFile);
     conf.set(LlamaAM.INITIAL_QUEUES_KEY, "default");
-    testMiniLlama(conf);
+    testMiniLlama(conf, writeHdfsConf);
   }
 
-  private void testMiniLlama(Configuration conf) throws Exception {
+  private void testMiniLlama(Configuration conf, boolean writeHdfsConf) 
+      throws Exception {
+    File confFile = null;
     MiniLlama server = new MiniLlama(conf);
     try {
       Assert.assertNotNull(server.getConf().get(LlamaAM.INITIAL_QUEUES_KEY));
+      if (writeHdfsConf) {
+        File confDir = new File("target", UUID.randomUUID().toString());
+        confDir.mkdirs();
+        confFile = new File(confDir, "minidfs-site.xml").getAbsoluteFile();
+        server.setWriteHadoopConfig(confFile.getAbsolutePath());
+      }
       server.start();
+      
+      if (writeHdfsConf) {
+        Assert.assertTrue(confFile.exists());
+      }
       Assert.assertNotSame(0, server.getAddressPort());
       TTransport transport = new TSocket(server.getAddressHost(),
           server.getAddressPort());
