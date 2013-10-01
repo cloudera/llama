@@ -30,6 +30,7 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.server.MiniYARNCluster;
 import org.junit.Assert;
 import org.junit.Test;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -42,6 +43,11 @@ import java.util.Set;
 import java.util.UUID;
 
 public class TestLlamaAMWithYarn {
+
+  static {
+    SLF4JBridgeHandler.removeHandlersForRootLogger();
+    SLF4JBridgeHandler.install();
+  }
 
   public static class MyListener implements LlamaAMListener {
     public List<LlamaAMEvent> events = Collections.synchronizedList(new

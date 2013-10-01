@@ -42,6 +42,7 @@ import org.apache.hadoop.yarn.server.MiniYARNCluster;
 import org.apache.hadoop.yarn.server.nodemanager.NodeManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -52,6 +53,11 @@ import java.util.List;
 import java.util.Map;
 
 public class MiniLlama {
+
+  static {
+    SLF4JBridgeHandler.removeHandlersForRootLogger();
+    SLF4JBridgeHandler.install();
+  }
 
   private static final String NODES_OPT = "hadoopnodes";
   private static final String NOFORMAT_OPT = "noformat";

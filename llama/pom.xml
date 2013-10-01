@@ -96,7 +96,12 @@
       <artifactId>llama-minikdc</artifactId>
       <scope>test</scope>
     </dependency>
-   </dependencies>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>jul-to-slf4j</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
 
   <build>
     <!--
