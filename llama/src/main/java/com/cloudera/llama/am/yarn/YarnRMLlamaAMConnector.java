@@ -276,6 +276,10 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
       // unmanaged AM
       appContext.setUnmanagedAM(true);
 
+      // setting max attempts to 1 to avoid warning from Yarn RM
+      // as the AM is unmanaged, it doesn't really matter.
+      appContext.setMaxAppAttempts(1);
+
       // Submit the application to the applications manager
       return rmClient.submitApplication(appContext);
     } catch (Exception ex) {
