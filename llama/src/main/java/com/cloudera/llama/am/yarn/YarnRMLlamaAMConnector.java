@@ -314,7 +314,8 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
       return report;
     } catch (Exception ex) {
       if (!calledFromStopped) {
-        _stop(FinalApplicationStatus.FAILED, "Could not start, error: " + ex);
+        _stop(FinalApplicationStatus.FAILED, "Could not start, error: " + ex, 
+            true);
       }
       throw new LlamaAMException(ex);
     }
@@ -325,13 +326,14 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
     ugi.doAs(new PrivilegedAction<Void>() {
       @Override
       public Void run() {
-        _stop(FinalApplicationStatus.SUCCEEDED, "Stopped by AM");
+        _stop(FinalApplicationStatus.SUCCEEDED, "Stopped by AM", false);
         return null;
       }
     });
   }
 
-  private synchronized void _stop(FinalApplicationStatus status, String msg) {
+  private synchronized void _stop(FinalApplicationStatus status, String msg,
+      boolean stopYarnClient) {
     if (amRmClientAsync != null) {
       LOG.debug("Stopping AM '{}'", appId);
       try {
@@ -342,20 +344,22 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
       amRmClientAsync.stop();
       amRmClientAsync = null;
     }
-    if (yarnClient != null) {
-      try {
-        ApplicationReport report = _monitorAppState(yarnClient, appId, STOPPED,
-            true);
-        if (report.getFinalApplicationStatus()
-            != FinalApplicationStatus.SUCCEEDED) {
-          LOG.warn("Problem stopping application, final status '{}'",
-              report.getFinalApplicationStatus());
+    if (stopYarnClient) {
+      if (yarnClient != null) {
+        try {
+          ApplicationReport report = _monitorAppState(yarnClient, appId, STOPPED,
+              true);
+          if (report.getFinalApplicationStatus()
+              != FinalApplicationStatus.SUCCEEDED) {
+            LOG.warn("Problem stopping application, final status '{}'",
+                report.getFinalApplicationStatus());
+          }
+        } catch (Exception ex) {
+          LOG.warn("Error stopping application, " + ex, ex);
         }
-      } catch (Exception ex) {
-        LOG.warn("Error stopping application, " + ex, ex);
+        yarnClient.stop();
+        yarnClient = null;
       }
-      yarnClient.stop();
-      yarnClient = null;
     }
     if (nmClient != null) {
       //TODO this is introducing a deadlock
@@ -651,7 +655,7 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
     LOG.warn("Yarn requested AM to shutdown");
 
     // no need to use a ugi.doAs() as this is called from within Yarn client
-    _stop(FinalApplicationStatus.FAILED, "Shutdown by Yarn");
+    _stop(FinalApplicationStatus.FAILED, "Shutdown by Yarn", true);
   }
 
   @Override
@@ -679,7 +683,7 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
     llamaCallback.stoppedByRM();
     // no need to use a ugi.doAs() as this is called from within Yarn client
     _stop(FinalApplicationStatus.FAILED, "Error in Yarn client: " + ex
-        .toString());
+        .toString(), true);
   }
 
 }
