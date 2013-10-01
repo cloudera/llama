@@ -31,6 +31,7 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.server.datanode.DataNode;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -55,6 +56,7 @@ import java.util.Map;
 public class MiniLlama {
 
   static {
+    System.setProperty("log4j.configuration", "llama-log4j.properties");
     SLF4JBridgeHandler.removeHandlersForRootLogger();
     SLF4JBridgeHandler.install();
   }
@@ -68,7 +70,6 @@ public class MiniLlama {
     if (cli == null) {
       return;
     }
-    System.setProperty("log4j.configuration", "minillama-log4j.properties");
     Configuration conf = new Configuration(false);
     conf.addResource("llama-site.xml");
     int nodes = intArgument(cli, NODES_OPT, 1);
@@ -83,7 +84,7 @@ public class MiniLlama {
         + "*******************************************************");
     LOG.info("Mini Llama running with HDFS/Yarn minicluster with {} nodes, " +
         "HDFS URI: {} Llama URI: {}", nodes,
-        new YarnConfiguration().get("fs.defaultFS"),
+        llama.getHadoopConf().get("fs.defaultFS"),
         llama.getAddressHost() + ":" + llama.getAddressPort());
     LOG.info("*************************************************************" +
         "********************************************************");
@@ -195,7 +196,7 @@ public class MiniLlama {
   private final AbstractServer server;
   private List<String> dataNodes;
   private MiniDFSCluster miniHdfs;
-  private Configuration miniHdfsConf;
+  private Configuration hadoopConf;
   private MiniYARNCluster miniYarn;
 
   public MiniLlama(Configuration conf) {
@@ -208,6 +209,10 @@ public class MiniLlama {
 
   public Configuration getConf() {
     return conf;
+  }
+
+  public Configuration getHadoopConf() {
+    return hadoopConf;
   }
 
   public void skipDfsFormat(boolean skipDfsFormat) {
@@ -229,7 +234,7 @@ public class MiniLlama {
     }
     if (writeHdfsConfig != null) {
       FileOutputStream fos = new FileOutputStream(new File(writeHdfsConfig));
-      miniHdfsConf.writeXml(fos);
+      hadoopConf.writeXml(fos);
       fos.close();
     }
     dataNodes = new ArrayList<String>(mapping.keySet());
@@ -260,7 +265,8 @@ public class MiniLlama {
       String testBuildData = new File("target").getAbsolutePath();
       System.setProperty(MiniDFSCluster.PROP_TEST_BUILD_DATA, testBuildData);
     }
-
+    //to trigger hdfs-site.xml registration as default resource
+    new HdfsConfiguration();
     Configuration conf = new YarnConfiguration();
     String llamaProxyUser = System.getProperty("user.name");
     conf.set("hadoop.security.authentication", "simple");
@@ -286,12 +292,12 @@ public class MiniLlama {
         true, null, null);
     miniHdfs.waitActive();
     conf = miniHdfs.getConfiguration(0);
-    miniHdfsConf = conf;
     miniYarn = new MiniYARNCluster("minillama", clusterNodes, 1, 1);
     conf.setBoolean(YarnConfiguration.RM_SCHEDULER_INCLUDE_PORT_IN_NODE_NAME,
         true);
     miniYarn.init(conf);
     miniYarn.start();
+    hadoopConf = conf;
 
     ProxyUsers.refreshSuperUserGroupsConfiguration(conf);
 

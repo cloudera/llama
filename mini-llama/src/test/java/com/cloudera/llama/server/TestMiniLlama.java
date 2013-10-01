@@ -31,6 +31,8 @@ import com.cloudera.llama.thrift.TNetworkAddress;
 import com.cloudera.llama.thrift.TStatusCode;
 import junit.framework.Assert;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.transport.TSocket;
@@ -38,6 +40,7 @@ import org.apache.thrift.transport.TTransport;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.OutputStream;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.UUID;
@@ -121,6 +124,14 @@ public class TestMiniLlama {
       Assert.assertEquals(TStatusCode.OK, tgnRes.getStatus().getStatus_code());
       Assert.assertEquals(new HashSet<String>(server.getDataNodes()),
           new HashSet<String>(tgnRes.getNodes()));
+
+      //test MiniHDFS
+      FileSystem fs = FileSystem.get(server.getConf());
+      Assert.assertTrue(fs.getUri().getScheme().equals("hdfs"));
+      fs.listStatus(new Path("/"));
+      OutputStream os = fs.create(new Path("/test.txt"));
+      os.write(0);
+      os.close();
 
       //unregister
       TLlamaAMUnregisterRequest turReq = new TLlamaAMUnregisterRequest();
