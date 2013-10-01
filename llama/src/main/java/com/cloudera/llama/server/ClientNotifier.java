@@ -86,7 +86,7 @@ public class ClientNotifier implements LlamaAMListener {
     eventsQueue.add(notifier);
     int size = eventsQueue.size();
     if (size > queueThreshold) {
-      LOG.warn("Outbound events queue over '{}' threshold at '{}",
+      LOG.warn("Outbound events queue over '{}' threshold at '{}'",
           queueThreshold, size);
     }
   }
@@ -176,7 +176,8 @@ public class ClientNotifier implements LlamaAMListener {
       }
       if (retries > 0) {
         LOG.warn("Notification to '{}' successful after '{}' retries, " +
-            "resetting retry counter for client");
+            "resetting retry counter for client", clientCaller.getClientId(),
+            retries);
       }
       retries = 0;
     }
