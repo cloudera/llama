@@ -96,7 +96,8 @@ install-pom:
 	[ -f "$(BASE_DIR)/pom.xml" ] && mvn -N install $(DO_MAVEN_DEPLOY)
 
 components:
-	@echo $(shell echo $(TARGETS) | sed -e 's/ /,/g')
+# We have to prune out avro because it's in cdh5.mk but not yet part of the CDH5 build.
+	@echo $(shell echo $(TARGETS) | sed -e 's/ avro / /g' | sed -e 's/ /,/g')
 
 .DEFAULT_GOAL:= help
 .PHONY: realclean clean distclean package-help help-header packages all world help tgz srpm sdeb install-pom relnotes components
