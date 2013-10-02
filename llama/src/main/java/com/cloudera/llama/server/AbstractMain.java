@@ -138,7 +138,9 @@ public abstract class AbstractMain {
     } else {
       ClassLoader cl = Thread.currentThread().getContextClassLoader();
       URL log4jUrl = cl.getResource(LOG4J_PROPERTIES);
-      PropertyConfigurator.configure(log4jUrl);
+      if (log4jUrl != null) {
+        PropertyConfigurator.configure(log4jUrl);
+      }
     }
     LOG = LoggerFactory.getLogger(this.getClass());
     LOG.debug("Llama log starting");
