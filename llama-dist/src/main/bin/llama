@@ -17,6 +17,11 @@
 # limitations under the License.
 #
 
+if [ "${HADOOP_HOME}x" = "x" ]; then
+  echo "Error: HADOOP_HOME must be set in the environment"
+  exit 1
+fi
+
 # resolve links - $0 may be a softlink
 PRG="${0}"
 
