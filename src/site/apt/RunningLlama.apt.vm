@@ -28,7 +28,7 @@ Running Llama
   <<<llama-${project.version}.tar.gz>>>.
 
   Llama requires a local Hadoop client installed and configured to access the 
-  Hadoop cluster.    
+  Hadoop cluster. The <<<HADOOP_HOME>>> environment variable must be defined.
     
 ** Llama AM Configuration
 
