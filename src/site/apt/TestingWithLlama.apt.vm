@@ -159,3 +159,83 @@ $ bin/minillama --hadoop-conf=/Users/tucu/myhadoopconf --hadoop-nodes=3
     * <<<-no-format>>>: It does not reformats MiniHDFS on startup.
     * <<<-write-hdfs-config=>>><<FILE>>: Writes out MiniHDFS configuration to 
     the specified <<FILE>>.
+
+* Using the LlamaClient Command-Line Tool
+
+  The LlamaClient command-line tool allows to interact with a Llama AM running
+  from a proper installation or from MiniLlama.
+
+  LlamaClient can run a client callback server listening for notifications and
+  support all Llama AM Thrift API operations: <<<Register>>>, <<<Unregister>>>,
+  <<<GetNodes>>>, <<<Reserve>>> and <<<Release>>>.
+
+  <<IMPORTANT:>> LlamaClient command-line line is available from the
+  mini-llama tarball, it is not available in the llama-dist tarball.
+
+  Follow the steps to install and configure MiniLlama.
+
+** Run LlamaClient
+
+  The LlamaClient supports the following sub-command options:
+
++---+
+      llamaclient help : display usage for all commands or specified command
+
+      llamaclient register <OPTIONS> : register client
+
+                           -callback <arg>   <HOST>:<PORT> of client's callback server
+                           -clientId <arg>   client ID
+                           -llama <arg>      <HOST>:<PORT> of llama
+                           -secure           uses kerberos
+
+        OUTPUT: the registration HANDLE is written to <stdout>.
+
+      llamaclient unregister <OPTIONS> : unregister client
+
+                             -handle <arg>   <UUID> from registration
+                             -llama <arg>    <HOST>:<PORT> of llama
+                             -secure         uses kerberos
+
+      llamaclient getnodes <OPTIONS> : get cluster nodes
+
+                           -handle <arg>   <UUID> from registration
+                           -llama <arg>    <HOST>:<PORT> of llama
+                           -secure         uses kerberos
+
+        OUTPUT: the nodes are written to <stdout>, one per line.
+
+      llamaclient reserve <OPTIONS> : make a reservation
+
+                          -cpus <arg>        cpus required per location of reservation
+                          -handle <arg>      <UUID> from registration
+                          -llama <arg>       <HOST>:<PORT> of llama
+                          -locations <arg>   locations of reservation, comma separated
+                          -memory <arg>      memory (MB) required per location of reservation
+                          -nogang            no gang reservation
+                          -queue <arg>       queue of reservation
+                          -relaxlocality     relax locality
+                          -secure            uses kerberos
+
+        OUTPUT: the reservation ID is written to <stdout>.
+
+      llamaclient release <OPTIONS> : release a reservation
+
+                          -handle <arg>        <UUID> from registration
+                          -llama <arg>         <HOST>:<PORT> of llama
+                          -reservation <arg>   <UUID> from reservation
+                          -secure              uses kerberos
+
+      llamaclient callbackserver <OPTIONS> : run callback server
+
+                                 -port <arg>   <PORT> of callback server
+                                 -secure       uses kerberos
++---+
+
+  <<IMPORTANT:>>
+
+    * All options are mandatory except for: <<<-nogang>>>, <<<-relaxlocality>>>
+    and <<<--secure>>>. If omitted it means they are not in effect for the
+    current invocation.
+
+    * The <<<-secure>>> option is not supported yet. Currently, the
+    LlamaClient works on non-secure mode only.

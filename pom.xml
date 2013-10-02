@@ -117,6 +117,12 @@
       </dependency>
       <dependency>
         <groupId>com.cloudera.llama</groupId>
+        <artifactId>llama</artifactId>
+        <classifier>tests</classifier>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.cloudera.llama</groupId>
         <artifactId>mini-llama</artifactId>
         <version>${project.version}</version>
       </dependency>

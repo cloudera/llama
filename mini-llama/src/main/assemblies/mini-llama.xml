@@ -25,11 +25,6 @@
 
   <files>
     <file>
-      <source>${basedir}/src/main/bin/minillama</source>
-      <outputDirectory>/bin</outputDirectory>
-      <fileMode>0755</fileMode>
-    </file>
-    <file>
       <source>${basedir}/README.txt</source>
       <outputDirectory>/</outputDirectory>
       <filtered>true</filtered>
@@ -42,6 +37,12 @@
   </files>
 
   <fileSets>
+
+    <fileSet>
+      <directory>${basedir}/src/main/bin</directory>
+      <outputDirectory>/bin</outputDirectory>
+      <fileMode>0755</fileMode>
+    </fileSet>
 
     <!-- License, Notice, etc -->
     <fileSet>
