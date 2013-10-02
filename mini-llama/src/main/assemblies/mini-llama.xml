@@ -75,6 +75,9 @@
       <outputDirectory>/lib</outputDirectory>
       <unpack>false</unpack>
       <scope>compile</scope>
+      <excludes>
+        <exclude>org.apache.hadoop:hadoop-minicluster</exclude>
+      </excludes>
     </dependencySet>
 
   </dependencySets>
