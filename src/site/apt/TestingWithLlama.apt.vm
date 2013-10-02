@@ -106,6 +106,9 @@ public class TestUsingMiniLlama {
   <<IMPORTANT:>> MiniLlama from the command-line is available from the
   mini-llama tarball, it is not available in the llama-dist tarball.
 
+  MiniLlama requires a local Hadoop cluster installation to pick up the Hadoop
+  JAR files. The <<<HADOOP_HOME>>> environment variable must be defined.
+
 ** Install MiniLlama
 
   Expand the <<<mini-llama-${project.version}.tar.gz>>>.

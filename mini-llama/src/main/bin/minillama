@@ -17,6 +17,11 @@
 # limitations under the License.
 #
 
+if [ "${HADOOP_HOME}x" = "x" ]; then
+  echo "Error: HADOOP_HOME must be set in the environment"
+  exit 1
+fi
+
 # resolve links - $0 may be a softlink
 PRG="${0}"
 
@@ -38,7 +43,6 @@ printUsage() {
   echo "                 --hadoop-nodes=<CLUSTER_SIZE>"
   echo "                 [--no-format]"
   echo "                 [--write-hdfs-conf=<FILE>]"
-  echo "                 [--verbose]"
   echo
   exit 1
 }
@@ -64,9 +68,6 @@ do
   --write-hdfs-conf=*)
     writehdfsconf="-writehdfsconf=${i#*=}"
     ;;
-  --verbose)
-    verbose=true
-    ;;
   *)
     echo "Invalid option"
     echo
@@ -84,19 +85,14 @@ for i in "${BASEDIR}/lib/"*.jar; do
   CLASSPATH="${CLASSPATH}:$i"
 done
 
-if test -z ${JAVA_HOME}
-then
-    JAVA_BIN=java
-else
-    JAVA_BIN=${JAVA_HOME}/bin/java
-fi
+#
+# We need this because YARN has the test JAR in a subdir and it is not picked up
+# by the hadoop command line tool
+#
+CLASSPATH="${CLASSPATH}:`ls ${HADOOP_HOME}/share/hadoop/yarn/test/hadoop-yarn-server-tests*.jar`"
 
-if [ "${verbose}" = "true" ];
-then
-  echo "JAVA                      : `which java`"
-  echo "MINI_LLAMA_OPTS           : ${MINI_LLAMA_OPTS}"
-  echo "CLASSPATH                 : ${CLASSPATH}"
-fi
-
-${JAVA_BIN} ${MINI_LLAMA_OPTS} -cp ${CLASSPATH} \
-  com.cloudera.llama.am.MiniLlama ${hadoopnodes} ${noformat} ${writehdfsconf}
+export HADOOP_USER_CLASSPATH_FIRST=true
+export HADOOP_CLASSPATH="${HADOOP_CLASSPATH}:${CLASSPATH}"
+export HADOOP_CLIENT_OPTS="${HADOOP_CLIENT_OPTS} ${MINI_LLAMA_OPTS}"
+exec $HADOOP_HOME/bin/hadoop com.cloudera.llama.am.MiniLlama \
+  ${hadoopnodes} ${noformat} ${writehdfsconf}
