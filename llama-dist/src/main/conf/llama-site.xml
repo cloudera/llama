@@ -330,6 +330,22 @@
       Manager and gets updates from it.
     </description>
   </property>
+  <property>
+    <name>llama.am.yarn.container.handler.queue.threshold</name>
+    <value>10000</value>
+    <description>
+      Threshold of the outstanding container requests queue size to Yarn Node 
+      Managers to start producing warnings. The queue will continue to queue 
+      container requests when above the threshold.
+    </description>
+  </property>
+  <property>
+    <name>llama.am.yarn.container.handler.threads</name>
+    <value>10</value>
+    <description>
+      Number of threads used to do container requests to Yarn Node Managers.
+    </description>
+  </property>
 
   <!-- *********************************** -->
   <!--                                     -->
