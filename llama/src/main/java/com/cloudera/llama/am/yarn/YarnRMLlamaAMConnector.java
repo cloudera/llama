@@ -115,6 +115,9 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
   public static final String ADVERTISED_TRACKING_URL_KEY = PREFIX_KEY +
       "advertised.tracking.url";
 
+
+  private static final int SLEEP_TIME_SEC = 315360000; //10 years
+
   private Configuration conf;
   private Configuration yarnConf;
   private boolean includePortInNodeName;
@@ -620,7 +623,8 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
                   Records.newRecord(ContainerLaunchContext.class);
               ctx.setEnvironment(Collections.EMPTY_MAP);
               ctx.setLocalResources(Collections.EMPTY_MAP);
-              ctx.setCommands(Arrays.asList("sleep", "315360000")); //10 years
+              ctx.setCommands(Arrays.asList("sleep", Integer.toString(
+                  SLEEP_TIME_SEC)));
               nmClient.startContainer(container, ctx);
             } else {
               nmClient.stopContainer(container.getId(), container.getNodeId());
