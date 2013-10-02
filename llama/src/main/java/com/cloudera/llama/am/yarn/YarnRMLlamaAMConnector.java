@@ -68,7 +68,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
     AMRMClientAsync.CallbackHandler {
@@ -92,6 +96,14 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
       "app.heartbeat.interval.ms";
   public static final int HEARTBEAT_INTERNAL_DEFAULT = 200;
 
+  public static final String CONTAINER_HANDLER_QUEUE_THRESHOLD_KEY = PREFIX_KEY
+      + "container.handler.queue.threshold";
+  public static final int CONTAINER_HANDLER_QUEUE_THRESHOLD_DEFAULT = 10000;
+
+  public static final String CONTAINER_HANDLER_THREADS_KEY = PREFIX_KEY +
+      "container.handler.threads";
+  public static final int CONTAINER_HANDLER_THREADS_DEFAULT = 10;
+
   public static final String HADOOP_USER_NAME_KEY = PREFIX_KEY +
       "hadoop.user.name";
   public static final String HADOOP_USER_NAME_DEFAULT = "llama";
@@ -114,6 +126,9 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
   private ApplicationId appId;
   private final Set<String> nodes;
   private Resource maxResource;
+  private int containerHandlerQueueThreshold;
+  private BlockingQueue<ContainerHandler> containerHandlerQueue;
+  private ThreadPoolExecutor containerHandlerExecutor;
 
   public YarnRMLlamaAMConnector() {
     nodes = Collections.synchronizedSet(new HashSet<String>());
@@ -188,6 +203,17 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
           return null;
         }
       });
+      containerHandlerQueueThreshold = getConf().getInt(
+          CONTAINER_HANDLER_QUEUE_THRESHOLD_KEY,
+          CONTAINER_HANDLER_QUEUE_THRESHOLD_DEFAULT);
+      containerHandlerQueue = new LinkedBlockingQueue<ContainerHandler>();
+      int threads = getConf().getInt(CONTAINER_HANDLER_THREADS_KEY,
+          CONTAINER_HANDLER_THREADS_DEFAULT);
+      // funny down-casting and up-casting because javac gets goofy here
+      containerHandlerExecutor = new ThreadPoolExecutor(threads, threads, 0,
+          TimeUnit.SECONDS, (BlockingQueue<Runnable>) (BlockingQueue)
+          containerHandlerQueue);
+      containerHandlerExecutor.prestartAllCoreThreads();
     } catch (Exception ex) {
       throw new LlamaAMException(ex);
     }
@@ -338,6 +364,10 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
 
   private synchronized void _stop(FinalApplicationStatus status, String msg,
       boolean stopYarnClient) {
+    if (containerHandlerExecutor != null) {
+      containerHandlerExecutor.shutdownNow();
+      containerHandlerExecutor = null;
+    }
     if (amRmClientAsync != null) {
       LOG.debug("Stopping AM '{}'", appId);
       try {
@@ -489,7 +519,7 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
         } else if (payload instanceof Container) {
           Container container = ((Container) payload);
           containerIdToClientResourceIdMap.remove(container.getId());
-          stopContainer(ugi, resource, container);
+          queue(new ContainerHandler(ugi, resource, container, Action.STOP));
         }
       } else {
         LOG.debug("Missing RM payload, ignoring release of container " +
@@ -559,57 +589,66 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
     llamaCallback.changesFromRM(changes);
   }
 
-  private boolean startContainer(UserGroupInformation ugi,
-      final RMPlacedResource placedResource, final Container container) {
-    boolean ret = false;
-    try {
-      ugi.doAs(new PrivilegedExceptionAction<Void>() {
-        @Override
-        @SuppressWarnings("unchecked")
-        public Void run() throws Exception {
-            LOG.debug("Starting container '{}' process for resource '{}' " +
-                "at node '{}'", container.getId(), 
-                placedResource.getClientResourceId(),
-                container.getNodeId());
-            ContainerLaunchContext ctx =
-                Records.newRecord(ContainerLaunchContext.class);
-            ctx.setEnvironment(Collections.EMPTY_MAP);
-            ctx.setLocalResources(Collections.EMPTY_MAP);
-            ctx.setCommands(Arrays.asList("sleep", "315360000")); //10 years
-            nmClient.startContainer(container, ctx);
-          return null;
-        }
-      });
-      ret = true;
-    } catch (Exception ex) {
-      LOG.warn(
-          "Could not start container '{}' for resource '{}' at node '{}': {}'",
-          container.getId(), placedResource.getClientResourceId(),
-          getNodeName(container.getNodeId()), ex.toString(), ex);
+  private enum Action {START, STOP}
+
+  class ContainerHandler implements Runnable {
+    final private UserGroupInformation ugi;
+    final private UUID clientResourceId;
+    final private Container container;
+    final private Action action;
+
+    public ContainerHandler(UserGroupInformation ugi,
+        RMPlacedResource placedResource, Container container, Action action) {
+      this.ugi = ugi;
+      this.clientResourceId = placedResource.getClientResourceId();
+      this.container = container;
+      this.action = action;
     }
-    return ret;
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public void run() {
+      try {
+        ugi.doAs(new PrivilegedExceptionAction<Void>() {
+          @Override
+          public Void run() throws Exception {
+            if (action == Action.START) {
+              LOG.debug("Starting container '{}' process for resource '{}' " +
+                  "at node '{}'", container.getId(), clientResourceId,
+                  container.getNodeId());
+              ContainerLaunchContext ctx =
+                  Records.newRecord(ContainerLaunchContext.class);
+              ctx.setEnvironment(Collections.EMPTY_MAP);
+              ctx.setLocalResources(Collections.EMPTY_MAP);
+              ctx.setCommands(Arrays.asList("sleep", "315360000")); //10 years
+              nmClient.startContainer(container, ctx);
+            } else {
+              nmClient.stopContainer(container.getId(), container.getNodeId());
+            }
+            return null;
+          }
+        });
+      } catch (Exception ex) {
+        LOG.warn(
+            "Could not {} container '{}' for resource '{}' at node '{}': {}'",
+            action, container.getId(), clientResourceId,
+            getNodeName(container.getNodeId()), ex.toString(), ex);
+        if (action == Action.START) {
+          List<RMResourceChange> changes = new ArrayList<RMResourceChange>();
+          changes.add(RMResourceChange.createResourceChange(clientResourceId,
+              PlacedResource.Status.LOST));
+          llamaCallback.changesFromRM(changes);
+        }
+      }
+    }
   }
 
-  private void stopContainer(UserGroupInformation ugi,
-      final RMPlacedResource placedResource, final Container container) {
-    try {
-      ugi.doAs(new PrivilegedExceptionAction<Void>() {
-        @Override
-        @SuppressWarnings("unchecked")
-        public Void run() throws Exception {
-          LOG.debug("Stopping container '{}' process for resource '{}' " +
-              "at node '{}'", container.getId(),
-              placedResource.getClientResourceId(),
-              container.getNodeId());
-          nmClient.stopContainer(container.getId(), container.getNodeId());
-          return null;
-        }
-      });
-    } catch (Exception ex) {
-      LOG.warn(
-          "Error stopping container '{}' for resource '{}' at node '{}': {}'",
-          container.getId(), placedResource.getClientResourceId(),
-          getNodeName(container.getNodeId()), ex.toString(), ex);
+  private void queue(ContainerHandler handler) {
+    containerHandlerQueue.add(handler);
+    int size = containerHandlerQueue.size();
+    if (size > containerHandlerQueueThreshold) {
+      LOG.warn("Container handler queue over '{}' threshold at '{}'",
+          containerHandlerQueueThreshold, size);
     }
   }
 
@@ -640,13 +679,10 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
         pr.setRmPayload(container);
         containerIdToClientResourceIdMap.put(container.getId(),
             pr.getClientResourceId());
+        changes.add(createResourceAllocation(pr, container));
         amRmClientAsync.removeContainerRequest(req);
 
-        changes.add(createResourceAllocation(pr, container));
-        if (!startContainer(ugi, pr, container)) {
-          changes.add(RMResourceChange.createResourceChange(
-              pr.getClientResourceId(), PlacedResource.Status.LOST));
-        }
+        queue(new ContainerHandler(ugi, pr, container, Action.START));
       }
     }
     llamaCallback.changesFromRM(changes);
