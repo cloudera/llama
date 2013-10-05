@@ -39,6 +39,9 @@ import org.apache.hadoop.yarn.api.records.ContainerId;
 import org.apache.hadoop.yarn.api.records.ContainerLaunchContext;
 import org.apache.hadoop.yarn.api.records.ContainerStatus;
 import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
+import org.apache.hadoop.yarn.api.records.LocalResource;
+import org.apache.hadoop.yarn.api.records.LocalResourceType;
+import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
 import org.apache.hadoop.yarn.api.records.NodeId;
 import org.apache.hadoop.yarn.api.records.NodeReport;
 import org.apache.hadoop.yarn.api.records.NodeState;
@@ -51,10 +54,13 @@ import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.client.api.YarnClientApplication;
 import org.apache.hadoop.yarn.client.api.async.AMRMClientAsync;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
+import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.apache.hadoop.yarn.util.Records;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.net.URL;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
@@ -622,7 +628,22 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
               ContainerLaunchContext ctx =
                   Records.newRecord(ContainerLaunchContext.class);
               ctx.setEnvironment(Collections.EMPTY_MAP);
-              ctx.setLocalResources(Collections.EMPTY_MAP);
+
+              //Doing this because there is a bug in Yarn LCE.java where 
+              //if not localization is done the creation of the usercache/$USER
+              //dir does not happen during localization and launching fails
+              File file = new File("/etc/hosts");
+              LocalResource lr = LocalResource.newInstance(
+                  ConverterUtils.getYarnUrlFromURI(file.toURI()),
+                  LocalResourceType.FILE, LocalResourceVisibility.APPLICATION,
+                  file.length(), file.lastModified());
+              Map<String, LocalResource> lrMap = 
+                  new HashMap<String, LocalResource>();
+              lrMap.put("dummy.txt", lr);
+              ctx.setLocalResources(lrMap);
+
+              //ctx.setLocalResources(Collections.EMPTY_MAP);
+              
               ctx.setCommands(Arrays.asList("sleep", Integer.toString(
                   SLEEP_TIME_SEC)));
               nmClient.startContainer(container, ctx);
