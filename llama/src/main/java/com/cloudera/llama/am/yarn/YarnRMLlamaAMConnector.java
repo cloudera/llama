@@ -345,7 +345,7 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
       while (!states.contains(report.getYarnApplicationState())) {
         if (System.currentTimeMillis() - start > timeout) {
           throw new LlamaAMException(FastFormat.format(
-              "App '{}' time out, failed to reach states '{}'", appId, states));
+              "App '{}' time out ({}ms), failed to reach states '{}'", appId, timeout, states));
         }
         Thread.sleep(polling);
         report = rmClient.getApplicationReport(appId);
