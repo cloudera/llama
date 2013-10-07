@@ -254,15 +254,15 @@ $
 +---+
     <property>
       <name>yarn.nodemanager.aux-services</name>
-      <value>mapreduce.shuffle,llama.nm.plugin</value>
+      <value>mapreduce.shuffle,llama_nm_plugin</value>
     </property>
     <property>
-      <name>yarn.nodemanager.aux-services.llama.nm.plugin.class</name>
+      <name>yarn.nodemanager.aux-services.llama_nm_plugin.class</name>
       <value>com.cloudera.llama.nm.LlamaNMAuxiliaryService</value>
     </property>
 +---+
 
-  <<NOTE:>> The <<<mapreduce.shuffle>>> value is not required by Llama NM
+  <<NOTE:>> The <<<mapreduce_shuffle>>> value is not required by Llama NM
   auxiliary service but for Map-Reduce to work in Yarn.
 
 ** Security Configuration for Llama NM Auxiliary Service

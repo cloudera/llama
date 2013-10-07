@@ -69,8 +69,8 @@ public class TestLlamaNMAuxiliaryService {
 
   private Configuration createMiniYarnConfig() throws Exception {
     Configuration conf = new YarnConfiguration();
-    conf.set("yarn.nodemanager.aux-services", "llama.nm.plugin");
-    conf.setClass("yarn.nodemanager.aux-services.llama.nm.plugin.class",
+    conf.set("yarn.nodemanager.aux-services", "llama_nm_plugin");
+    conf.setClass("yarn.nodemanager.aux-services.llama_nm_plugin.class",
         MyLlamaNMAuxiliaryService.class, AuxiliaryService.class);
 
     injectLlamaNMConfiguration(conf);
