@@ -33,7 +33,7 @@ public class LlamaNMAuxiliaryService extends AuxiliaryService {
   private LlamaNMServer nmServer;
 
   protected LlamaNMAuxiliaryService() {
-    super("llama.nm.plugin");
+    super("llama_nm_plugin");
   }
 
   @Override
