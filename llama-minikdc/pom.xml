@@ -84,32 +84,10 @@
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
-    <!--<dependency>-->
-      <!--<groupId>org.apache.thrift</groupId>-->
-      <!--<artifactId>libthrift</artifactId>-->
-      <!--<scope>test</scope>-->
-    <!--</dependency>-->
-    <!--<dependency>-->
-      <!--<groupId>org.apache.hadoop</groupId>-->
-      <!--<artifactId>hadoop-common</artifactId>-->
-      <!--<scope>test</scope>-->
-    <!--</dependency>-->
   </dependencies>
 
   <build>
     <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-assembly-plugin</artifactId>
-        <configuration>
-          <appendAssemblyId>false</appendAssemblyId>
-          <attach>false</attach>
-          <finalName>${project.artifactId}-${project.version}</finalName>
-          <descriptors>
-            <descriptor>src/main/assemblies/minikdc.xml</descriptor>
-          </descriptors>
-        </configuration>
-      </plugin>
       <plugin>
         <groupId>org.apache.rat</groupId>
         <artifactId>apache-rat-plugin</artifactId>
@@ -123,5 +101,40 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <id>dist</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>dist</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>single</goal>
+                </goals>
+                <configuration>
+                  <appendAssemblyId>false</appendAssemblyId>
+                  <attach>false</attach>
+                  <finalName>${project.artifactId}-${project.version}
+                  </finalName>
+                  <descriptors>
+                    <descriptor>src/main/assemblies/minikdc.xml</descriptor>
+                  </descriptors>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
 </project>
