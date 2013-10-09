@@ -61,20 +61,8 @@ public class TestMiniLlama {
 
   private void testMiniLlamaWithHadoopMiniCluster(boolean writeHdfsConf) 
       throws Exception {
-    URL url = Thread.currentThread().getContextClassLoader().getResource(
-        "fair-scheduler.xml");
-    if (url == null) {
-      throw new RuntimeException(
-          "Missing 'fair-scheduler.xml' file in classpath");
-    }
-    String fsallocationFile = url.toExternalForm();
-    if (!fsallocationFile.startsWith("file:")) {
-      throw new RuntimeException("File 'fair-scheduler.xml' is in " +
-          "a JAR, it should be in a directory");
-    }
-    fsallocationFile = fsallocationFile.substring("file:".length());
     Configuration conf = MiniLlama.createMiniClusterConf(2);
-    conf.set("yarn.scheduler.fair.allocation.file", fsallocationFile);
+    conf.set("yarn.scheduler.fair.allocation.file", "test-fair-scheduler.xml");
     conf.set(LlamaAM.INITIAL_QUEUES_KEY, "default");
     testMiniLlama(conf, writeHdfsConf);
   }

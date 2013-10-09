@@ -25,7 +25,6 @@ import com.cloudera.llama.am.api.Resource;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.ProxyUsers;
-import org.apache.hadoop.service.Service;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.server.MiniYARNCluster;
 import org.junit.Assert;
@@ -64,20 +63,7 @@ public class TestLlamaAMWithYarn {
   private Configuration createMiniYarnConfig(boolean usePortInName)
       throws Exception {
     Configuration conf = new YarnConfiguration();
-    //scheduler config
-    URL url = Thread.currentThread().getContextClassLoader().
-        getResource("fair-scheduler.xml");
-    if (url == null) {
-      throw new RuntimeException("'fair-scheduler.xml' file not " +
-          "found in classpath");
-    }
-    String fsallocationFile = url.toExternalForm();
-    if (!fsallocationFile.startsWith("file:")) {
-      throw new RuntimeException("File 'fair-scheduler.xml' is in " +
-          "a JAR, it should be in a directory");
-    }
-    fsallocationFile = fsallocationFile.substring("file:".length());
-    conf.set("yarn.scheduler.fair.allocation.file", fsallocationFile);
+    conf.set("yarn.scheduler.fair.allocation.file", "test-fair-scheduler.xml");
 
     //proxy user config
     String llamaProxyUser = System.getProperty("user.name");
