@@ -165,7 +165,7 @@ public abstract class ServerConfiguration implements Configurable {
 
   public static String TRANSPORT_TIMEOUT_KEY = KEY_PREFIX +
       "transport.timeout.ms";
-  private static int TRANSPORT_TIMEOUT_DEFAULT = 1000;
+  private static int TRANSPORT_TIMEOUT_DEFAULT = 3600000; // 1hr
 
   public int getTransportTimeOut() {
     return conf.getInt(getPropertyName(TRANSPORT_TIMEOUT_KEY),
