@@ -24,10 +24,14 @@ import com.cloudera.llama.thrift.TLlamaAMGetNodesRequest;
 import com.cloudera.llama.thrift.TLlamaAMGetNodesResponse;
 import com.cloudera.llama.thrift.TLlamaAMRegisterRequest;
 import com.cloudera.llama.thrift.TLlamaAMRegisterResponse;
+import com.cloudera.llama.thrift.TLlamaAMReservationRequest;
+import com.cloudera.llama.thrift.TLlamaAMReservationResponse;
 import com.cloudera.llama.thrift.TLlamaAMUnregisterRequest;
 import com.cloudera.llama.thrift.TLlamaAMUnregisterResponse;
 import com.cloudera.llama.thrift.TLlamaServiceVersion;
+import com.cloudera.llama.thrift.TLocationEnforcement;
 import com.cloudera.llama.thrift.TNetworkAddress;
+import com.cloudera.llama.thrift.TResource;
 import com.cloudera.llama.thrift.TStatusCode;
 import junit.framework.Assert;
 import org.apache.hadoop.conf.Configuration;
@@ -42,6 +46,7 @@ import org.junit.Test;
 import java.io.File;
 import java.io.OutputStream;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.UUID;
 
@@ -112,6 +117,22 @@ public class TestMiniLlama {
       Assert.assertEquals(TStatusCode.OK, tgnRes.getStatus().getStatus_code());
       Assert.assertEquals(new HashSet<String>(server.getDataNodes()),
           new HashSet<String>(tgnRes.getNodes()));
+
+      //reserve
+      TLlamaAMReservationRequest tresReq = new TLlamaAMReservationRequest();
+      tresReq.setVersion(TLlamaServiceVersion.V1);
+      tresReq.setAm_handle(trRes.getAm_handle());
+      tresReq.setQueue("default");
+      TResource tResource = new TResource();
+      tResource.setClient_resource_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
+      tResource.setAskedLocation(server.getDataNodes().get(0));
+      tResource.setV_cpu_cores((short) 1);
+      tResource.setMemory_mb(1024);
+      tResource.setEnforcement(TLocationEnforcement.MUST);
+      tresReq.setResources(Arrays.asList(tResource));
+      tresReq.setGang(true);
+      TLlamaAMReservationResponse tresRes = client.Reserve(tresReq);
+      Assert.assertEquals(TStatusCode.OK, tresRes.getStatus().getStatus_code());
 
       //test MiniHDFS
       FileSystem fs = FileSystem.get(server.getConf());

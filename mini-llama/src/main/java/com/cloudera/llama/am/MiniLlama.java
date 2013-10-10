@@ -175,6 +175,8 @@ public class MiniLlama {
     conf.setInt(MINI_CLUSTER_NODES_KEY, nodes);
     conf.setIfUnset(S_CONF.getPropertyName(
         ServerConfiguration.SERVER_ADDRESS_KEY), "localhost:0");
+    conf.setIfUnset(S_CONF.getPropertyName(
+        ServerConfiguration.HTTP_ADDRESS_KEY), "localhost:0");
     return conf;
   }
 
