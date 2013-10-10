@@ -301,12 +301,19 @@ public class TestGangAntiDeadlockLlamaAM {
       UUID clientId = UUID.randomUUID();
       Reservation<Resource> reservation1 = createReservation(clientId, 1, true);
       UUID id1 = gAm.reserve(reservation1);
+      long placedOn1 = gAm.getReservation(id1).getPlacedOn();
+      Thread.sleep(1);
       Reservation<Resource> reservation2 = createReservation(clientId, 1, true);
       UUID id2 = gAm.reserve(reservation2);
+      long placedOn2 = gAm.getReservation(id2).getPlacedOn();
+      Thread.sleep(1);
       Reservation<Resource> reservation3 = createReservation(clientId, 1, true);
       UUID id3 = gAm.reserve(reservation3);
+      long placedOn3 = gAm.getReservation(id3).getPlacedOn();
+      Thread.sleep(1);
       Reservation<Resource> reservation4 = createReservation(clientId, 1, true);
       UUID id4 = gAm.reserve(reservation4);
+      long placedOn4 = gAm.getReservation(id4).getPlacedOn();
 
       Assert.assertNotNull(gAm.getReservation(id1));
       Assert.assertNotNull(gAm.getReservation(id2));
@@ -367,6 +374,12 @@ public class TestGangAntiDeadlockLlamaAM {
       Assert.assertEquals(3, gAm.localReservations.size());
       Assert.assertEquals(0, gAm.backedOffReservations.size());
       Assert.assertEquals(3, gAm.submittedReservations.size());
+
+      //verify placedOn value is same as original
+      Assert.assertEquals(placedOn1, gAm.getReservation(id1).getPlacedOn());
+      Assert.assertEquals(placedOn2, gAm.getReservation(id2).getPlacedOn());
+      Assert.assertEquals(placedOn3, gAm.getReservation(id3).getPlacedOn());
+      Assert.assertEquals(placedOn4, gAm.getReservation(id4).getPlacedOn());
     } finally {
       gAm.stop();
     }

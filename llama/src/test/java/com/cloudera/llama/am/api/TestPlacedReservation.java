@@ -29,7 +29,7 @@ public class TestPlacedReservation {
   public static class MyPlacedReservation extends PlacedReservation {
     private UUID id;
 
-    protected MyPlacedReservation(UUID id, Reservation<Resource> reservation) {
+    protected MyPlacedReservation(UUID id, Reservation<? extends Resource> reservation) {
       super(reservation);
       this.id = id;
     }
@@ -77,6 +77,25 @@ public class TestPlacedReservation {
     Assert.assertEquals(r1.hashCode(), r2.hashCode());
     Assert.assertNotSame(r1.hashCode(), r3.hashCode());
     Assert.assertNotSame(r2.hashCode(), r3.hashCode());
+  }
+
+  @Test
+  public void testPlacedOn() throws Exception{
+    List<Resource> resources = new ArrayList<Resource>();
+    resources.add(TestReservation.createResource());
+    UUID cId = UUID.randomUUID();
+    Reservation r = new Reservation(cId, "q", resources, true);
+
+    UUID id1 = UUID.randomUUID();
+    PlacedReservation r1 = new MyPlacedReservation(id1, r);
+
+    Assert.assertTrue(r1.getPlacedOn() > 0);
+    Assert.assertTrue(System.currentTimeMillis() >= r1.getPlacedOn());
+
+    Thread.sleep(5);
+
+    PlacedReservation r2 = new MyPlacedReservation(id1, r1);
+    Assert.assertEquals(r1.getPlacedOn(), r2.getPlacedOn());
   }
 
 }

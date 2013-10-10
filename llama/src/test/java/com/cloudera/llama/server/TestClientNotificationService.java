@@ -40,7 +40,7 @@ public class TestClientNotificationService {
   public void testRegisterNewClientIdNewCallback() throws Exception {
     MyUnregisterListener ul = new MyUnregisterListener();
     ClientNotificationService cns = new ClientNotificationService(
-        new AMServerConfiguration(), null, ul);
+        new AMServerConfiguration(), null, null, ul);
     cns.start();
     try {
       UUID handle = cns.register("c1", "h", 0);
@@ -56,7 +56,7 @@ public class TestClientNotificationService {
   public void testRegisterNewClientIdExistingCallback() throws Exception {
     MyUnregisterListener ul = new MyUnregisterListener();
     ClientNotificationService cns = new ClientNotificationService(
-        new AMServerConfiguration(), null, ul);
+        new AMServerConfiguration(), null, null, ul);
     cns.start();
     try {
       UUID handle1 = cns.register("c1", "h", 0);
@@ -77,7 +77,7 @@ public class TestClientNotificationService {
       throws Exception {
     MyUnregisterListener ul = new MyUnregisterListener();
     ClientNotificationService cns = new ClientNotificationService(
-        new AMServerConfiguration(), null, ul);
+        new AMServerConfiguration(), null, null, ul);
     cns.start();
     try {
       UUID handle1 = cns.register("c1", "h", 0);
@@ -97,7 +97,7 @@ public class TestClientNotificationService {
       throws Exception {
     MyUnregisterListener ul = new MyUnregisterListener();
     ClientNotificationService cns = new ClientNotificationService(
-        new AMServerConfiguration(), null, ul);
+        new AMServerConfiguration(), null, null, ul);
     cns.start();
     try {
       UUID handle1 = cns.register("c1", "h1", 0);
@@ -117,7 +117,7 @@ public class TestClientNotificationService {
       throws Exception {
     MyUnregisterListener ul = new MyUnregisterListener();
     ClientNotificationService cns = new ClientNotificationService(
-        new AMServerConfiguration(), null, ul);
+        new AMServerConfiguration(), null, null, ul);
     cns.start();
     try {
       UUID handle1 = cns.register("c1", "h1", 0);

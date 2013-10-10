@@ -83,7 +83,7 @@ public class TestClientNotifier {
 
     public MyClientRegistry(ServerConfiguration conf, String clientId,
         UUID handle, String host, int port) {
-      clientCaller = new ClientCaller(conf, clientId, handle, host, port);
+      clientCaller = new ClientCaller(conf, clientId, handle, host, port, null);
     }
 
     @Override
@@ -111,7 +111,7 @@ public class TestClientNotifier {
         notificationServer.getAddressHost(),
         notificationServer.getAddressPort());
     ClientNotifier cn = new ClientNotifier(sConf, new HostnameOnlyNodeMapper(),
-        cr);
+        cr, null);
     try {
       cn.start();
       cn.registerClientForHeartbeats(handle);
@@ -140,7 +140,7 @@ public class TestClientNotifier {
         notificationServer.getAddressHost(),
         notificationServer.getAddressPort());
     ClientNotifier cn = new ClientNotifier(sConf, new HostnameOnlyNodeMapper(),
-        cr);
+        cr, null);
     try {
       cn.start();
       cn.registerClientForHeartbeats(handle);
@@ -178,7 +178,7 @@ public class TestClientNotifier {
     MyClientRegistry cr = new MyClientRegistry(sConf, clientId, handle,
         notificationServer.getAddressHost(), 0);
     ClientNotifier cn = new ClientNotifier(sConf, new HostnameOnlyNodeMapper(),
-        cr);
+        cr, null);
     try {
       cn.start();
       cn.registerClientForHeartbeats(handle);
@@ -208,7 +208,7 @@ public class TestClientNotifier {
         notificationServer.getAddressHost(),
         notificationServer.getAddressPort());
     ClientNotifier cn = new ClientNotifier(sConf, new HostnameOnlyNodeMapper(),
-        cr);
+        cr, null);
     notificationServer.delayResponse = 100;
     try {
       cn.start();

@@ -19,6 +19,7 @@ package com.cloudera.llama.server;
 
 import com.cloudera.llama.am.impl.FastFormat;
 import com.cloudera.llama.thrift.LlamaNotificationService;
+import com.codahale.metrics.MetricRegistry;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.transport.TTransport;
@@ -31,19 +32,21 @@ public class ClientCaller {
   private final UUID handle;
   private final String host;
   private final int port;
+  private final MetricRegistry metricRegistry;
   private TTransport tTransport;
   private LlamaNotificationService.Iface client;
   private boolean lastSuccessful;
   private long lastCall;
 
   public ClientCaller(ServerConfiguration conf, String clientId, UUID handle,
-      String host, int port) {
+      String host, int port, MetricRegistry metricRegistry) {
     this.conf = conf;
     this.clientId = clientId;
     this.handle = handle;
     this.host = host;
     this.port = port;
     lastCall = System.currentTimeMillis();
+    this.metricRegistry = metricRegistry;
   }
 
   public String getClientId() {
@@ -100,7 +103,10 @@ public class ClientCaller {
     tTransport = ThriftEndPoint.createClientTransport(conf, host, port);
     tTransport.open();
     TProtocol protocol = new TBinaryProtocol(tTransport);
-    return new LlamaNotificationService.Client(protocol);
+    LlamaNotificationService.Iface client =
+        new LlamaNotificationService.Client(protocol);
+    client = new MetricClientLlamaNotificationService(client, metricRegistry);
+    return client;
   }
 
   public synchronized void cleanUpClient() {

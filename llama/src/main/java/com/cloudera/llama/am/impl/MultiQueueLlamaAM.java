@@ -23,6 +23,10 @@ import com.cloudera.llama.am.api.LlamaAMException;
 import com.cloudera.llama.am.api.LlamaAMListener;
 import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.Reservation;
+import com.cloudera.llama.server.MetricUtil;
+import com.codahale.metrics.CachedGauge;
+import com.codahale.metrics.Gauge;
+import com.codahale.metrics.MetricRegistry;
 import org.apache.hadoop.conf.Configuration;
 
 import java.util.ArrayList;
@@ -34,9 +38,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
-    SingleQueueLlamaAM.Callback {
+    SingleQueueLlamaAM.Callback  {
+
+  private static final String QUEUES_GAUGE = METRIC_PREFIX + "queues.gauge";
+  private static final String RESERVATIONS_GAUGE = METRIC_PREFIX +
+      "reservations.gauge";
+
   private final Map<String, LlamaAM> ams;
   private SingleQueueLlamaAM llamaAMForGetNodes;
   private final ConcurrentHashMap<UUID, String> reservationToQueue;
@@ -50,6 +60,32 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
       throw new IllegalArgumentException(FastFormat.format(
           "RMLlamaAMConnector class not defined in the configuration under '{}'",
           SingleQueueLlamaAM.RM_CONNECTOR_CLASS_KEY));
+    }
+  }
+
+  @Override
+  public synchronized void setMetricRegistry(MetricRegistry metricRegistry) {
+    super.setMetricRegistry(metricRegistry);
+    for (LlamaAM am : ams.values()) {
+      am.setMetricRegistry(metricRegistry);
+    }
+    if (metricRegistry != null) {
+      MetricUtil.registerGauge(metricRegistry, QUEUES_GAUGE,
+          new CachedGauge<List<String>>(1, TimeUnit.SECONDS) {
+            @Override
+            protected List<String> loadValue() {
+              synchronized (ams) {
+                return new ArrayList<String>(ams.keySet());
+              }
+            }
+          });
+      MetricUtil.registerGauge(metricRegistry, RESERVATIONS_GAUGE,
+          new Gauge<Integer>() {
+            @Override
+            public Integer getValue() {
+              return reservationToQueue.size();
+            }
+          });
     }
   }
 
@@ -68,6 +104,7 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
       am = ams.get(queue);
       if (am == null) {
         am = new SingleQueueLlamaAM(getConf(), queue, this);
+        am.setMetricRegistry(getMetricRegistry());
         am.start();
         am.addListener(this);
         ams.put(queue, am);

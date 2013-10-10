@@ -154,7 +154,7 @@ public abstract class AbstractServer implements Configurable {
     metrics = new MetricRegistry();
   }
 
-  protected MetricRegistry getMetrics() {
+  protected MetricRegistry getMetricRegistry() {
     return metrics;
   }
 

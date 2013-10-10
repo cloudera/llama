@@ -21,12 +21,15 @@ import com.cloudera.llama.am.api.LlamaAMEvent;
 import com.cloudera.llama.am.api.LlamaAMListener;
 import com.cloudera.llama.thrift.TLlamaAMNotificationRequest;
 import com.cloudera.llama.thrift.TLlamaAMNotificationResponse;
+import com.codahale.metrics.MetricRegistry;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.security.auth.Subject;
 import java.security.PrivilegedExceptionAction;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.DelayQueue;
@@ -36,6 +39,21 @@ import java.util.concurrent.TimeUnit;
 public class ClientNotifier implements LlamaAMListener {
   private static final Logger LOG = LoggerFactory.getLogger(
       ClientNotifier.class);
+
+  private static final String METRIC_PREFIX =
+      "llama.server.thrift-outgoing.";
+
+  private static final String NOTIFICATION_FAILURES_METER = METRIC_PREFIX +
+      "Notification.failures.meter";
+
+  public static final List<String> METRIC_KEYS = Arrays.asList(
+      NOTIFICATION_FAILURES_METER);
+
+  public static void registerMetric(MetricRegistry metricRegistry) {
+    if (metricRegistry != null) {
+      MetricUtil.registerMeter(metricRegistry, NOTIFICATION_FAILURES_METER);
+    }
+  }
 
   public interface ClientRegistry {
     
@@ -47,6 +65,7 @@ public class ClientNotifier implements LlamaAMListener {
   private final ServerConfiguration conf;
   private final NodeMapper nodeMapper;
   private final ClientRegistry clientRegistry;
+  private final MetricRegistry metricRegistry;
   private int queueThreshold;
   private int maxRetries;
   private int retryInverval;
@@ -56,10 +75,11 @@ public class ClientNotifier implements LlamaAMListener {
   private Subject subject;
 
   public ClientNotifier(ServerConfiguration conf, NodeMapper nodeMapper,
-      ClientRegistry clientRegistry) {
+      ClientRegistry clientRegistry, MetricRegistry metricRegistry) {
     this.conf = conf;
     this.nodeMapper = nodeMapper;
     this.clientRegistry = clientRegistry;
+    this.metricRegistry = metricRegistry;
     queueThreshold = conf.getClientNotifierQueueThreshold();
     maxRetries = conf.getClientNotifierMaxRetries();
     retryInverval = conf.getClientNotifierRetryInterval();
@@ -195,6 +215,7 @@ public class ClientNotifier implements LlamaAMListener {
               handle);
         }
       } catch (Exception ex) {
+        MetricUtil.meter(metricRegistry, NOTIFICATION_FAILURES_METER, 1);
         if (retries < maxRetries) {
           retries++;
           LOG.warn("Notification to '{}' failed '{}' time(s), " +

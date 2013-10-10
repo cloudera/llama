@@ -24,9 +24,12 @@ import com.cloudera.llama.am.api.LlamaAMListener;
 import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.PlacedResource;
 import com.cloudera.llama.am.api.Reservation;
+import com.cloudera.llama.server.MetricUtil;
+import com.codahale.metrics.MetricRegistry;
 import org.apache.hadoop.conf.Configuration;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -41,6 +44,17 @@ import java.util.concurrent.TimeUnit;
 
 public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
     LlamaAMListener, Runnable {
+
+  private static final String METRIC_PREFIX = LlamaAM.METRIC_PREFIX +
+      "gang-anti-deadlock.";
+
+  private static final String BACKED_OFF_RESERVATIONS_METER = METRIC_PREFIX +
+      "backed-off-reservations.meter";
+  private static final String BACKED_OFF_RESOURCES_METER = METRIC_PREFIX +
+      "backed-off-resources.meter";
+
+  public static final List<String> METRIC_KEYS = Arrays.asList(
+      BACKED_OFF_RESERVATIONS_METER, BACKED_OFF_RESOURCES_METER);
 
   static class BackedOffReservation implements Delayed {
     private PlacedReservation reservation;
@@ -85,6 +99,16 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
     super(conf);
     this.am = llamaAM;
     am.addListener(this);
+  }
+
+  @Override
+  public void setMetricRegistry(MetricRegistry metricRegistry) {
+    super.setMetricRegistry(metricRegistry);
+    am.setMetricRegistry(metricRegistry);
+    if (metricRegistry != null) {
+      MetricUtil.registerMeter(metricRegistry, BACKED_OFF_RESERVATIONS_METER);
+      MetricUtil.registerMeter(metricRegistry, BACKED_OFF_RESOURCES_METER);
+    }
   }
 
   @Override
@@ -144,6 +168,7 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
       PlacedReservationImpl placedReservation =
           new PlacedReservationImpl(reservationId, reservation);
       gReserve(reservationId, placedReservation);
+      reservation = placedReservation;
     }
     am.reserve(reservationId, reservation);
   }
@@ -309,6 +334,12 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
                 new BackedOffReservation(reservation, getBackOffDelay()));
             submittedReservations.remove(reservationId);
             submitted.remove(reservationId);
+
+            MetricUtil.meter(getMetricRegistry(), BACKED_OFF_RESERVATIONS_METER,
+                1);
+            MetricUtil.meter(getMetricRegistry(), BACKED_OFF_RESOURCES_METER,
+                reservation.getResources().size());
+
           } catch (LlamaAMException ex) {
             getLog().warn("Error while backing off gang reservation {}: {}",
                 reservation.getReservationId(), ex.toString(), ex);

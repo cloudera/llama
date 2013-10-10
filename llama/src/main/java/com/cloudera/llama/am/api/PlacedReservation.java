@@ -27,8 +27,17 @@ public abstract class PlacedReservation extends Reservation<PlacedResource> {
     PENDING, PARTIAL, ALLOCATED
   }
 
-  protected PlacedReservation(Reservation<Resource> reservation) {
+  private long placedOn;
+
+  protected PlacedReservation(Reservation<? extends Resource> reservation) {
     super(reservation);
+    placedOn = (reservation instanceof PlacedReservation)
+               ? ((PlacedReservation) reservation).getPlacedOn()
+               : System.currentTimeMillis();
+  }
+
+  public long getPlacedOn() {
+    return placedOn;
   }
 
   public abstract UUID getReservationId();
@@ -36,7 +45,7 @@ public abstract class PlacedReservation extends Reservation<PlacedResource> {
   public abstract Status getStatus();
 
   private static final String TO_STRING_MSG = "placedReservation[clientId: {}" +
-      " queue: {} resources: {} gang: {} reservationId: {} status: {}]";
+      " queue: {} resources: {} gang: {} reservationId: {} placedOn: {} status: {}]";
 
   @Override
   public String toString() {

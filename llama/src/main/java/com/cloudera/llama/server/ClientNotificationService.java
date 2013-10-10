@@ -20,13 +20,26 @@ package com.cloudera.llama.server;
 import com.cloudera.llama.am.api.LlamaAMEvent;
 import com.cloudera.llama.am.api.LlamaAMListener;
 import com.cloudera.llama.am.impl.FastFormat;
+import com.codahale.metrics.Gauge;
+import com.codahale.metrics.MetricRegistry;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class ClientNotificationService implements ClientNotifier.ClientRegistry,
-    LlamaAMListener {
+    LlamaAMListener, Gauge<Integer> {
+
+  private static final String METRIC_PREFIX = "llama.server.";
+
+  private static final String CLIENTS_GAUGE = METRIC_PREFIX + "clients.gauge";
+  private static final String CLIENTS_EVICTION_METER = METRIC_PREFIX +
+      "clients-eviction.meter";
+
+  public static final List<String> METRIC_KEYS = Arrays.asList(
+      CLIENTS_GAUGE, CLIENTS_EVICTION_METER);
 
   public interface UnregisterListener {
 
@@ -44,7 +57,8 @@ public class ClientNotificationService implements ClientNotifier.ClientRegistry,
       this.clientId = clientId;
       this.host = host;
       this.port = port;
-      caller = new ClientCaller(conf, clientId, handle, host, port);
+      caller = new ClientCaller(conf, clientId, handle, host, port,
+          metricRegistry);
     }
   }
 
@@ -58,20 +72,29 @@ public class ClientNotificationService implements ClientNotifier.ClientRegistry,
   //Map of callback-address to handle (for reverse lookup)
   private final ConcurrentHashMap<String, UUID> callbackToHandle;
   private final UnregisterListener unregisterListener;
+  private final MetricRegistry metricRegistry;
 
-  public ClientNotificationService(ServerConfiguration conf) {
-    this(conf, null, null);
+  public ClientNotificationService(ServerConfiguration conf, MetricRegistry metricRegistry) {
+    this(conf, null, metricRegistry, null);
   }
 
   public ClientNotificationService(ServerConfiguration conf,
-      NodeMapper nodeMapper, UnregisterListener unregisterListener) {
+      NodeMapper nodeMapper, MetricRegistry metricRegistry,
+      UnregisterListener unregisterListener) {
     this.conf = conf;
     lock = new ReentrantReadWriteLock();
     clients = new ConcurrentHashMap<UUID, Entry>();
     clientIdToHandle = new ConcurrentHashMap<String, UUID>();
     callbackToHandle = new ConcurrentHashMap<String, UUID>();
-    clientNotifier = new ClientNotifier(conf, nodeMapper, this);
     this.unregisterListener = unregisterListener;
+    this.metricRegistry = metricRegistry;
+    if (metricRegistry != null) {
+      MetricClientLlamaNotificationService.registerMetric(metricRegistry);
+      metricRegistry.register(CLIENTS_GAUGE, this);
+      MetricUtil.registerMeter(metricRegistry, CLIENTS_EVICTION_METER);
+      ClientNotifier.registerMetric(metricRegistry);
+    }
+    clientNotifier = new ClientNotifier(conf, nodeMapper, this, metricRegistry);
   }
 
   public void start() throws Exception {
@@ -174,12 +197,20 @@ public class ClientNotificationService implements ClientNotifier.ClientRegistry,
 
   @Override
   public void onMaxFailures(UUID handle) {
+    MetricUtil.meter(metricRegistry, CLIENTS_EVICTION_METER, 1);
     unregister(handle);
   }
 
   @Override
   public void handle(LlamaAMEvent event) {
     clientNotifier.handle(event);
+  }
+
+  //metric
+
+  @Override
+  public Integer getValue() {
+    return clients.size();
   }
 
 }

@@ -19,9 +19,15 @@ package com.cloudera.llama.am;
 
 
 import com.cloudera.llama.am.api.LlamaAM;
+import com.cloudera.llama.am.impl.FastFormat;
+import com.cloudera.llama.am.impl.GangAntiDeadlockLlamaAM;
+import com.cloudera.llama.am.impl.SingleQueueLlamaAM;
 import com.cloudera.llama.am.mock.mock.MockLlamaAMFlags;
 import com.cloudera.llama.am.mock.mock.MockRMLlamaAMConnector;
 import com.cloudera.llama.am.spi.RMLlamaAMConnector;
+import com.cloudera.llama.server.ClientNotificationService;
+import com.cloudera.llama.server.ClientNotifier;
+import com.cloudera.llama.server.MetricClientLlamaNotificationService;
 import com.cloudera.llama.server.NotificationEndPoint;
 import com.cloudera.llama.server.ServerConfiguration;
 import com.cloudera.llama.server.TestAbstractMain;
@@ -41,6 +47,8 @@ import com.cloudera.llama.thrift.TLocationEnforcement;
 import com.cloudera.llama.thrift.TNetworkAddress;
 import com.cloudera.llama.thrift.TResource;
 import com.cloudera.llama.thrift.TStatusCode;
+import com.codahale.metrics.Metric;
+import com.codahale.metrics.MetricRegistry;
 import junit.framework.Assert;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.thrift.protocol.TBinaryProtocol;
@@ -54,6 +62,9 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.PrivilegedExceptionAction;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 public class TestLlamaAMThriftServer {
@@ -301,9 +312,34 @@ public class TestLlamaAMThriftServer {
     }
   }
 
+  private static class MyLlamaAMServer extends LlamaAMServer {
+
+    @Override
+    public MetricRegistry getMetricRegistry() {
+      return super.getMetricRegistry();
+    }
+  }
+
+  private void verifyMetricRegistration(MyLlamaAMServer server)
+      throws Exception {
+    Set<String> keys = new HashSet<String>();
+    keys.addAll(ClientNotificationService.METRIC_KEYS);
+    keys.addAll(ClientNotifier.METRIC_KEYS);
+    keys.addAll(GangAntiDeadlockLlamaAM.METRIC_KEYS);
+    keys.addAll(MetricClientLlamaNotificationService.METRIC_KEYS);
+    keys.addAll(MetricLlamaAMService.METRIC_KEYS);
+    for (String key : SingleQueueLlamaAM.METRIC_TEMPLATE_KEYS) {
+      keys.add(FastFormat.format(key, "q1"));
+    }
+    MetricRegistry mr = server.getMetricRegistry();
+    Map<String, Metric> metrics = mr.getMetrics();
+    Assert.assertTrue(metrics.keySet().containsAll(keys));
+
+  }
+
   @Test
   public void testReservation() throws Exception {
-    final LlamaAMServer server = new LlamaAMServer();
+    final MyLlamaAMServer server = new MyLlamaAMServer();
     final NotificationEndPoint callbackServer = new NotificationEndPoint();
     try {
       callbackServer.setConf(createCallbackConfiguration());
@@ -377,6 +413,9 @@ public class TestLlamaAMThriftServer {
           turReq.setAm_handle(trRes.getAm_handle());
           TLlamaAMUnregisterResponse turRes = client.Unregister(turReq);
           Assert.assertEquals(TStatusCode.OK, turRes.getStatus().getStatus_code());
+
+          //test metric registration
+          verifyMetricRegistration(server);
           return null;
         }
       });

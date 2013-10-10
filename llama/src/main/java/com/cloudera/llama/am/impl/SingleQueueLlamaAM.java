@@ -17,6 +17,7 @@
  */
 package com.cloudera.llama.am.impl;
 
+import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.LlamaAMException;
 import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.PlacedResource;
@@ -27,10 +28,14 @@ import com.cloudera.llama.am.spi.RMLlamaAMConnector;
 import com.cloudera.llama.am.spi.RMPlacedResource;
 import com.cloudera.llama.am.spi.RMResourceChange;
 import com.cloudera.llama.am.yarn.YarnRMLlamaAMConnector;
+import com.cloudera.llama.server.MetricUtil;
+import com.codahale.metrics.Gauge;
+import com.codahale.metrics.MetricRegistry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ReflectionUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +43,23 @@ import java.util.UUID;
 
 public class SingleQueueLlamaAM extends LlamaAMImpl implements
     RMLlamaAMCallback {
+
+  private static final String METRIC_PREFIX_TEMPLATE = LlamaAM.METRIC_PREFIX +
+      "queue({}).";
+
+  private static final String RESERVATIONS_GAUGE_TEMPLATE =
+      METRIC_PREFIX_TEMPLATE + "reservations.gauge";
+  private static final String RESOURCES_GAUGE_TEMPLATE =
+      METRIC_PREFIX_TEMPLATE + "resources.gauge";
+  private static final String RESERVATIONS_ALLOCATION_TIMER_TEMPLATE =
+      METRIC_PREFIX_TEMPLATE + "reservations-allocation-delay.timer";
+  private static final String RESOURCES_ALLOCATION_TIMER_TEMPLATE =
+      METRIC_PREFIX_TEMPLATE + "resources-allocation-delay.timer";
+
+  public static final List<String> METRIC_TEMPLATE_KEYS = Arrays.asList(
+      RESERVATIONS_GAUGE_TEMPLATE, RESOURCES_GAUGE_TEMPLATE,
+      RESERVATIONS_ALLOCATION_TIMER_TEMPLATE,
+      RESOURCES_ALLOCATION_TIMER_TEMPLATE);
 
   public interface Callback {
 
@@ -50,6 +72,10 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
   private final Map<UUID, PlacedReservationImpl> reservationsMap;
   private final Map<UUID, PlacedResourceImpl> resourcesMap;
   private final Callback callback;
+  private String reservationsGaugeKey;
+  private String resourcesGaugeKey;
+  private String reservationsAllocationTimerKey;
+  private String resourcesAllocationTimerKey;
   private RMLlamaAMConnector rmConnector;
   private boolean running;
 
@@ -66,6 +92,39 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
     reservationsMap = new HashMap<UUID, PlacedReservationImpl>();
     resourcesMap = new HashMap<UUID, PlacedResourceImpl>();
     this.callback = callback;
+  }
+
+  @Override
+  public void setMetricRegistry(MetricRegistry metricRegistry) {
+    super.setMetricRegistry(metricRegistry);
+    reservationsGaugeKey = FastFormat.format(RESERVATIONS_GAUGE_TEMPLATE, queue);
+    resourcesGaugeKey = FastFormat.format(RESOURCES_GAUGE_TEMPLATE,  queue);
+    reservationsAllocationTimerKey = FastFormat.format(
+        RESERVATIONS_ALLOCATION_TIMER_TEMPLATE, queue);
+    resourcesAllocationTimerKey = FastFormat.format(
+        RESOURCES_ALLOCATION_TIMER_TEMPLATE, queue);
+    if (metricRegistry != null) {
+      MetricUtil.registerGauge(metricRegistry, reservationsGaugeKey,
+          new Gauge<Integer>() {
+            @Override
+            public Integer getValue() {
+              synchronized (this) {
+                return reservationsMap.size();
+              }
+            }
+          });
+      MetricUtil.registerGauge(metricRegistry, resourcesGaugeKey,
+          new Gauge<Integer>() {
+            @Override
+            public Integer getValue() {
+              synchronized (this) {
+                return resourcesMap.size();
+              }
+            }
+          });
+      MetricUtil.registerTimer(metricRegistry, reservationsAllocationTimerKey);
+      MetricUtil.registerTimer(metricRegistry, resourcesAllocationTimerKey);
+    }
   }
 
   // LlamaAM API
@@ -94,6 +153,12 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
   @Override
   public synchronized void stop() {
     running = false;
+    if (getMetricRegistry() != null) {
+      getMetricRegistry().remove(reservationsGaugeKey);
+      getMetricRegistry().remove(reservationsGaugeKey);
+      getMetricRegistry().remove(reservationsAllocationTimerKey);
+      getMetricRegistry().remove(resourcesAllocationTimerKey);
+    }
     if (rmConnector != null) {
       if (queue != null) {
         rmConnector.unregister();
@@ -248,6 +313,11 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
       getLog().warn("Reservation '{}' during resource allocation handling " +
           "for" + " '{}'", reservationId, resource.getClientResourceId());
     } else {
+
+      MetricUtil.time(getMetricRegistry(), resourcesAllocationTimerKey,
+          System.currentTimeMillis() - reservation.getPlacedOn(),
+          new ReservationResourceLogContext(resource));
+
       LlamaAMEventImpl event = getEventForClientId(eventsMap,
           reservation.getClientId());
       List<PlacedResourceImpl> resources = reservation.getResourceImpls();
@@ -265,6 +335,10 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
           event.getAllocatedResources().add(resource);
         }
         event.getAllocatedGangResources().add(resource);
+
+        MetricUtil.time(getMetricRegistry(), reservationsAllocationTimerKey,
+            System.currentTimeMillis() - reservation.getPlacedOn(),
+            new ReservationResourceLogContext(reservation));
       } else {
         reservation.setStatus(PlacedReservation.Status.PARTIAL);
         if (!reservation.isGang()) {

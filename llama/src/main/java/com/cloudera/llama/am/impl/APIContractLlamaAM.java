@@ -22,6 +22,7 @@ import com.cloudera.llama.am.api.LlamaAMException;
 import com.cloudera.llama.am.api.LlamaAMListener;
 import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.Reservation;
+import com.codahale.metrics.MetricRegistry;
 import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +39,12 @@ public class APIContractLlamaAM extends LlamaAM {
     super(llamaAM.getConf());
     this.llamaAM = ParamChecker.notNull(llamaAM, "llamaAM");
     logger = LoggerFactory.getLogger(this.llamaAM.getClass());
+  }
+
+  @Override
+  public void setMetricRegistry(MetricRegistry metricRegistry) {
+    super.setMetricRegistry(metricRegistry);
+    llamaAM.setMetricRegistry(metricRegistry);
   }
 
   private Logger getLog() {

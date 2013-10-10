@@ -21,6 +21,7 @@ import com.cloudera.llama.am.impl.APIContractLlamaAM;
 import com.cloudera.llama.am.impl.GangAntiDeadlockLlamaAM;
 import com.cloudera.llama.am.impl.MultiQueueLlamaAM;
 import com.cloudera.llama.am.impl.ParamChecker;
+import com.codahale.metrics.MetricRegistry;
 import org.apache.hadoop.conf.Configuration;
 
 import java.util.List;
@@ -29,6 +30,8 @@ import java.util.UUID;
 
 public abstract class LlamaAM {
   public static final String PREFIX_KEY = "llama.am.";
+
+  public static final String METRIC_PREFIX = "llama.am.";
 
   public static final String RM_CONNECTOR_CLASS_KEY = PREFIX_KEY +
       "rm.connector.class";
@@ -76,10 +79,19 @@ public abstract class LlamaAM {
     return new APIContractLlamaAM(am);
   }
 
+  private MetricRegistry metricRegistry;
   private Configuration conf;
 
   protected LlamaAM(Configuration conf) {
     this.conf = ParamChecker.notNull(conf, "conf");
+  }
+
+  public void setMetricRegistry(MetricRegistry metricRegistry) {
+    this.metricRegistry = metricRegistry;
+  }
+
+  protected MetricRegistry getMetricRegistry() {
+    return metricRegistry;
   }
 
   public Configuration getConf() {

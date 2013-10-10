@@ -63,7 +63,8 @@ public class LlamaNMServer extends ThriftServer<LlamaNMService.Processor> {
     totalCapacity = Resource.newInstance(memoryMb, virtualCores);
 
     try {
-      clientNotificationService = new ClientNotificationService(getServerConf());
+      clientNotificationService = new ClientNotificationService(getServerConf(),
+          getMetricRegistry());
       clientNotificationService.start();
     } catch (Exception ex) {
       throw new RuntimeException(ex);

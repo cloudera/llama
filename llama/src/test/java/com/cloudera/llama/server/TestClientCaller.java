@@ -50,7 +50,7 @@ public class TestClientCaller {
 
     public MyClientCaller(String clientId, UUID handle,
         String host, int port) {
-      super(new CSServerConfiguration(), clientId, handle, host, port);
+      super(new CSServerConfiguration(), clientId, handle, host, port, null);
     }
 
     @Override

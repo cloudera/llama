@@ -55,7 +55,7 @@ public class LlamaAMServer extends
   private Server httpServer;
 
   protected void startJMX() {
-    reporter = JmxReporter.forRegistry(getMetrics()).build();
+    reporter = JmxReporter.forRegistry(getMetricRegistry()).build();
     reporter.start();
   }
 
@@ -119,7 +119,7 @@ public class LlamaAMServer extends
       Class<? extends NodeMapper> klass = getServerConf().getNodeMappingClass();
       nodeMapper = ReflectionUtils.newInstance(klass, getConf());
       clientNotificationService = new ClientNotificationService(getServerConf(),
-          nodeMapper, this);
+          nodeMapper, getMetricRegistry(), this);
       clientNotificationService.start();
 
       getConf().set(YarnRMLlamaAMConnector.ADVERTISED_HOSTNAME_KEY,
@@ -129,6 +129,7 @@ public class LlamaAMServer extends
       getConf().set(YarnRMLlamaAMConnector.ADVERTISED_TRACKING_URL_KEY,
           getHttpLlamaUI());
       llamaAm = LlamaAM.create(getConf());
+      llamaAm.setMetricRegistry(getMetricRegistry());
       llamaAm.start();
     } catch (Exception ex) {
       throw new RuntimeException(ex);
@@ -146,6 +147,8 @@ public class LlamaAMServer extends
   protected LlamaAMService.Processor createServiceProcessor() {
     LlamaAMService.Iface handler = new LlamaAMServiceImpl(llamaAm, nodeMapper,
         clientNotificationService);
+    MetricLlamaAMService.registerMetric(getMetricRegistry());
+    handler = new MetricLlamaAMService(handler, getMetricRegistry());
     return new LlamaAMService.Processor<LlamaAMService.Iface>(handler);
   }
 
