@@ -36,9 +36,11 @@ import org.mortbay.jetty.bio.SocketConnector;
 import org.mortbay.jetty.servlet.Context;
 
 import java.net.InetSocketAddress;
+import java.util.UUID;
 
 public class LlamaAMServer extends
-    ThriftServer<com.cloudera.llama.thrift.LlamaAMService.Processor> {
+    ThriftServer<com.cloudera.llama.thrift.LlamaAMService.Processor>
+    implements ClientNotificationService.UnregisterListener {
   private LlamaAM llamaAm;
   private ClientNotificationService clientNotificationService;
   private NodeMapper nodeMapper;
@@ -117,7 +119,7 @@ public class LlamaAMServer extends
       Class<? extends NodeMapper> klass = getServerConf().getNodeMappingClass();
       nodeMapper = ReflectionUtils.newInstance(klass, getConf());
       clientNotificationService = new ClientNotificationService(getServerConf(),
-          nodeMapper);
+          nodeMapper, this);
       clientNotificationService.start();
 
       getConf().set(YarnRMLlamaAMConnector.ADVERTISED_HOSTNAME_KEY,
@@ -147,4 +149,13 @@ public class LlamaAMServer extends
     return new LlamaAMService.Processor<LlamaAMService.Iface>(handler);
   }
 
+  @Override
+  public void onUnregister(UUID handle) {
+    try {
+      llamaAm.releaseReservationsForClientId(handle);
+    } catch (Throwable ex) {
+      getLog().warn("Error releasing reservations for clientId '{}', {}",
+          handle, ex.toString(), ex);
+    }
+  }
 }

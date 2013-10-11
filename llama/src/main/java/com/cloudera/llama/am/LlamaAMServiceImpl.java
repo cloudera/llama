@@ -83,14 +83,7 @@ public class LlamaAMServiceImpl implements LlamaAMService.Iface {
     TLlamaAMUnregisterResponse response = new TLlamaAMUnregisterResponse();
     try {
       UUID handle = TypeUtils.toUUID(request.getAm_handle());
-      if (clientNotificationService.unregister(handle)) {
-        try {
-          llamaAM.releaseReservationsForClientId(handle);
-        } catch (LlamaAMException ex) {
-          LOG.warn("Unregister() internal error releasing LlamaAM " +
-              "reservations for handle '{}' : ", handle, ex.toString(), ex);
-        }
-      } else {
+      if (!clientNotificationService.unregister(handle)) {
         LOG.warn("Unregister() unknown handle '{}'", handle);
       }
       response.setStatus(TypeUtils.OK);

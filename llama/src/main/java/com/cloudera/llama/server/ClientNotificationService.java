@@ -28,6 +28,12 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class ClientNotificationService implements ClientNotifier.ClientRegistry,
     LlamaAMListener {
 
+  public interface UnregisterListener {
+
+    public void onUnregister(UUID handle);
+
+  }
+
   private class Entry {
     private final String clientId;
     private final String host;
@@ -45,20 +51,27 @@ public class ClientNotificationService implements ClientNotifier.ClientRegistry,
   private final ServerConfiguration conf;
   private final ClientNotifier clientNotifier;
   private final ReentrantReadWriteLock lock;
+  //MAP of handle to client Entry
   private final ConcurrentHashMap<UUID, Entry> clients;
-  private final ConcurrentHashMap<String, UUID> reverseMap;
+  //Map of clientId to handle (for reverse lookup)
+  private final ConcurrentHashMap<String, UUID> clientIdToHandle;
+  //Map of callback-address to handle (for reverse lookup)
+  private final ConcurrentHashMap<String, UUID> callbackToHandle;
+  private final UnregisterListener unregisterListener;
 
   public ClientNotificationService(ServerConfiguration conf) {
-    this(conf, null);
+    this(conf, null, null);
   }
 
   public ClientNotificationService(ServerConfiguration conf,
-      NodeMapper nodeMapper) {
+      NodeMapper nodeMapper, UnregisterListener unregisterListener) {
     this.conf = conf;
     lock = new ReentrantReadWriteLock();
     clients = new ConcurrentHashMap<UUID, Entry>();
-    reverseMap = new ConcurrentHashMap<String, UUID>();
+    clientIdToHandle = new ConcurrentHashMap<String, UUID>();
+    callbackToHandle = new ConcurrentHashMap<String, UUID>();
     clientNotifier = new ClientNotifier(conf, nodeMapper, this);
+    this.unregisterListener = unregisterListener;
   }
 
   public void start() throws Exception {
@@ -69,23 +82,47 @@ public class ClientNotificationService implements ClientNotifier.ClientRegistry,
     clientNotifier.stop();
   }
 
+  private String getAddress(String host, int port) {
+    return host.toLowerCase() + ":" + port;
+  }
+  private UUID registerNewClient(String clientId, String host, int port) {
+    UUID handle = UUID.randomUUID();
+    clients.put(handle, new Entry(clientId, handle, host, port));
+    clientIdToHandle.put(clientId, handle);
+    callbackToHandle.put(getAddress(host, port), handle);
+    clientNotifier.registerClientForHeartbeats(handle);
+    return handle;
+  }
+
+
   public synchronized UUID register(String clientId, String host, int port)
       throws ClientRegistryException {
     lock.writeLock().lock();
     try {
-      UUID handle = reverseMap.get(clientId);
-      if (handle == null) {
-        handle = UUID.randomUUID();
-        clients.put(handle, new Entry(clientId, handle, host, port));
-        reverseMap.put(clientId, handle);
-        clientNotifier.registerClientForHeartbeats(handle);
+      UUID handle;
+      UUID clientIdHandle = clientIdToHandle.get(clientId);
+      UUID callbackHandle = callbackToHandle.get(getAddress(host, port));
+      if (clientIdHandle == null && callbackHandle == null) {
+        //NEW HANDLE
+        handle = registerNewClient(clientId, host, port);
+      } else if (clientIdHandle == null && callbackHandle != null) {
+        //NEW HANDLE, delete reservations from old handle
+        unregister(callbackHandle);
+        handle = registerNewClient(clientId, host, port);
+      } else if (clientIdHandle != null && callbackHandle == null) {
+        //ERROR
+        Entry entry = clients.get(clientIdHandle);
+        throw new ClientRegistryException(FastFormat.format("ClientId '{}' " +
+            "already registered with a different notification address {}",
+            clientId, getAddress(entry.host, entry.port)));
+      } else if (clientIdHandle == callbackHandle) {
+        handle = clientIdHandle;
       } else {
-        Entry entry = clients.get(handle);
-        if (!entry.host.equals(host) || entry.port != port) {
-          throw new ClientRegistryException(FastFormat.format("ClientId '{}' " +
-              "already registered with a different notification address",
-              clientId));
-        }
+        //ERROR
+        throw new ClientRegistryException(FastFormat.format("ClientId '{}' " +
+            "and notification address '{}' already used in two different " +
+            "active registrations '{}' and '{}'", clientId,
+            getAddress(host, port), clientIdHandle, callbackHandle));
       }
       return handle;
     } finally {
@@ -100,11 +137,15 @@ public class ClientNotificationService implements ClientNotifier.ClientRegistry,
       Entry entry = clients.remove(handle);
       if (entry != null) {
         entry.caller.cleanUpClient();
-        reverseMap.remove(entry.clientId);
+        clientIdToHandle.remove(entry.clientId);
+        callbackToHandle.remove(getAddress(entry.host, entry.port));
         ret = true;
       }
     } finally {
       lock.writeLock().unlock();
+    }
+    if (ret & unregisterListener != null) {
+      unregisterListener.onUnregister(handle);
     }
     return ret;
   }
