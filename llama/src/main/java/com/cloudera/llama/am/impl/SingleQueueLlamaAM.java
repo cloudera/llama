@@ -244,6 +244,9 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
           _deleteReservation(reservation.getReservationId());
           reservations.add(reservation);
         }
+        getLog().debug(
+            "Releasing all reservations for clientId({}), reservationId '{}'",
+            clientId, reservation.getReservationId());
       }
     }
     List<UUID> ids = new ArrayList<UUID>(reservations.size());
