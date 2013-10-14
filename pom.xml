@@ -74,7 +74,7 @@ TODO: need license header
     <!-- <cdh.avro.version>1.7.4-cdh5.0.0-SNAPSHOT</cdh.avro.version> -->
     <!-- This is wrong but we'll need to change how it is used in individual projects -->
     <cdh.avro.version>1.7.4</cdh.avro.version>
-    <cdh.tika.version>1.3</cdh.tika.version>
+    <cdh.tika.version>1.4</cdh.tika.version>
    <!-- Use this property in your subprojects's pom. -->
     <cdh.thrift.version>0.9.0</cdh.thrift.version>
     <cdh.httpcomponents.version>4.2.5</cdh.httpcomponents.version>
