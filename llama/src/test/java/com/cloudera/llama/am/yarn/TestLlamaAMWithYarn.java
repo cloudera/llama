@@ -19,6 +19,7 @@ package com.cloudera.llama.am.yarn;
 
 import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.LlamaAMEvent;
+import com.cloudera.llama.am.api.LlamaAMException;
 import com.cloudera.llama.am.api.LlamaAMListener;
 import com.cloudera.llama.am.api.Reservation;
 import com.cloudera.llama.am.api.Resource;
@@ -279,5 +280,81 @@ public class TestLlamaAMWithYarn {
     }
   }
 
+  @Test
+  public void testResourceRejections() throws Exception {
+    try {
+      Configuration conf = createMiniYarnConfig(true);
+      conf.setInt(YarnConfiguration.NM_VCORES, 1);
+      conf.setInt(YarnConfiguration.NM_PMEM_MB, 4096);
+      conf.setInt(YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES, 2);
+      conf.setInt(YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_MB, 5020);
+      startYarn(conf, 1);
+      LlamaAM llama = LlamaAM.create(getLlamaConfiguration());
+      try {
+        llama.start();
+        List<String> nodes = llama.getNodes();
+
+        //invalid node
+        try {
+          Resource r = new Resource(UUID.randomUUID(), "xyz:-1",
+              Resource.LocationEnforcement.MUST, 1, 4096);
+          llama.reserve(new Reservation(UUID.randomUUID(), "queue1",
+              Arrays.asList(r), true));
+          Assert.fail();
+        } catch (LlamaAMException ex) {
+          //NOP
+        }
+
+        //over max cpus
+        try {
+          Resource r = new Resource(UUID.randomUUID(), nodes.get(0),
+              Resource.LocationEnforcement.MUST, 3, 4096);
+          llama.reserve(new Reservation(UUID.randomUUID(), "queue1",
+              Arrays.asList(r), true));
+          Assert.fail();
+        } catch (LlamaAMException ex) {
+          //NOP
+        }
+
+        //over max memory
+        try {
+          Resource r = new Resource(UUID.randomUUID(), nodes.get(0),
+              Resource.LocationEnforcement.MUST, 1, 4097);
+          llama.reserve(new Reservation(UUID.randomUUID(), "queue1",
+              Arrays.asList(r), true));
+          Assert.fail();
+        } catch (LlamaAMException ex) {
+          //NOP
+        }
+
+        //over node cpus
+        try {
+          Resource r = new Resource(UUID.randomUUID(), nodes.get(0),
+              Resource.LocationEnforcement.MUST, 2, 4096);
+          llama.reserve(new Reservation(UUID.randomUUID(), "queue1",
+              Arrays.asList(r), true));
+          Assert.fail();
+        } catch (LlamaAMException ex) {
+          //NOP
+        }
+
+        //over node memory
+        try {
+          Resource r = new Resource(UUID.randomUUID(), nodes.get(0),
+              Resource.LocationEnforcement.MUST, 1, 5021);
+          llama.reserve(new Reservation(UUID.randomUUID(), "queue1",
+              Arrays.asList(r), true));
+          Assert.fail();
+        } catch (LlamaAMException ex) {
+          //NOP
+        }
+
+      } finally {
+        llama.stop();
+      }
+    } finally {
+      stopYarn();
+    }
+  }
 
 }

@@ -69,7 +69,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -132,14 +131,14 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
   private AMRMClientAsync<LlamaContainerRequest> amRmClientAsync;
   private NMClient nmClient;
   private ApplicationId appId;
-  private final Set<String> nodes;
+  private final Map<String, Resource> nodes;
   private Resource maxResource;
   private int containerHandlerQueueThreshold;
   private BlockingQueue<ContainerHandler> containerHandlerQueue;
   private ThreadPoolExecutor containerHandlerExecutor;
 
   public YarnRMLlamaAMConnector() {
-    nodes = Collections.synchronizedSet(new HashSet<String>());
+    nodes = Collections.synchronizedMap(new HashMap<String, Resource>());
   }
 
   @Override
@@ -267,7 +266,11 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
     maxResource = response.getMaximumResourceCapability();
     for (NodeReport nodeReport : yarnClient.getNodeReports()) {
       if (nodeReport.getNodeState() == NodeState.RUNNING) {
-        nodes.add(getNodeName(nodeReport.getNodeId()));
+        String nodeKey = getNodeName(nodeReport.getNodeId());
+        nodes.put(nodeKey, nodeReport.getCapability());
+        LOG.debug("Added node '{}' with '{}' cpus and '{}' memory",
+            nodeKey, nodeReport.getCapability().getVirtualCores(),
+            nodeReport.getCapability().getMemory());
       }
     }
     LOG.debug("Started AM '{}' for '{}' queue", appId, queue);
@@ -446,22 +449,6 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
 
   private Resource createResource(PlacedResource resource)
       throws LlamaAMException {
-    if (!nodes.contains(resource.getLocation())) {
-      throw new LlamaAMException(FastFormat.format(
-          "Node '{}' is not available", resource.getLocation()));
-    }
-    if (resource.getMemoryMb() > maxResource.getMemory()) {
-      throw new LlamaAMException(FastFormat.format(
-          "Resource '{}' asking for '{}' memory exceeds maximum '{}'",
-          resource.getClientResourceId(), resource.getMemoryMb(),
-          maxResource.getMemory()));
-    }
-    if (resource.getCpuVCores() > maxResource.getVirtualCores()) {
-      throw new LlamaAMException(FastFormat.format(
-          "Resource '{}' asking for '{}' CPUs exceeds maximum '{}'",
-          resource.getClientResourceId(), resource.getCpuVCores(),
-          maxResource.getVirtualCores()));
-    }
     return Resource.newInstance(resource.getMemoryMb(),
         resource.getCpuVCores());
   }
@@ -485,8 +472,44 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
     }
   }
 
+  private void verifyResources(List<RMPlacedResource> resources)
+      throws LlamaAMException {
+    for (RMPlacedResource r : resources) {
+      Resource nodeCapabilites = nodes.get(r.getLocation());
+      if (nodeCapabilites == null) {
+        throw new LlamaAMException(FastFormat.format(
+            "Resource request for node '{}', node is not available",
+            r.getLocation()));
+      }
+      if (r.getCpuVCores() > maxResource.getVirtualCores()) {
+        throw new LlamaAMException(FastFormat.format("Resource request for " +
+            "node '{}', requested CPUs '{}' exceeds maximum allowed CPUs '{}'",
+            r.getLocation(), r.getCpuVCores(),
+            nodeCapabilites.getVirtualCores()));
+      }
+      if (r.getMemoryMb() > maxResource.getMemory()) {
+        throw new LlamaAMException(FastFormat.format("Resource request for " +
+            "node '{}', requested memory '{}' exceeds maximum allowed memory " +
+            "'{}'",
+            r.getLocation(), r.getMemoryMb(), nodeCapabilites.getMemory()));
+      }
+      if (r.getCpuVCores() > nodeCapabilites.getVirtualCores()) {
+        throw new LlamaAMException(FastFormat.format("Resource request for " +
+            "node '{}', requested CPUs '{}' exceeds node's CPUs '{}'",
+            r.getLocation(), r.getCpuVCores(),
+            nodeCapabilites.getVirtualCores()));
+      }
+      if (r.getMemoryMb() > nodeCapabilites.getMemory()) {
+        throw new LlamaAMException(FastFormat.format("Resource request for " +
+            "node '{}', requested memory '{}' exceeds node's memory '{}'",
+            r.getLocation(), r.getMemoryMb(), nodeCapabilites.getMemory()));
+      }
+    }
+  }
+
   private void _reserve(RMPlacedReservation reservation)
       throws LlamaAMException {
+    verifyResources(reservation.getRMResources());
     for (RMPlacedResource resource : reservation.getRMResources()) {
       LOG.debug("Adding container request for '{}'", resource);
       LlamaContainerRequest request = new LlamaContainerRequest(resource);
@@ -724,14 +747,17 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
 
   @Override
   public void onNodesUpdated(List<NodeReport> nodeReports) {
-    LOG.debug("Received nodes update for {} nodes", nodeReports.size());
-    for (NodeReport node : nodeReports) {
-      if (node.getNodeState() == NodeState.RUNNING) {
-        LOG.debug("Added node {}", node.getNodeId());
-        nodes.add(getNodeName(node.getNodeId()));
+    LOG.debug("Received nodes update for '{}' nodes", nodeReports.size());
+    for (NodeReport nodeReport : nodeReports) {
+      if (nodeReport.getNodeState() == NodeState.RUNNING) {
+        String nodeKey = getNodeName(nodeReport.getNodeId());
+        nodes.put(nodeKey, nodeReport.getCapability());
+        LOG.debug("Added node '{}' with '{}' cpus and '{}' memory",
+            nodeKey, nodeReport.getCapability().getVirtualCores(),
+            nodeReport.getCapability().getMemory());
       } else {
-        LOG.debug("Removed node {}", node.getNodeId());
-        nodes.remove(getNodeName(node.getNodeId()));
+        LOG.debug("Removed node '{}'", nodeReport.getNodeId());
+        nodes.remove(getNodeName(nodeReport.getNodeId()));
       }
     }
   }
