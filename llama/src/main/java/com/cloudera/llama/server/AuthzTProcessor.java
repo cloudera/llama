@@ -64,7 +64,8 @@ public class AuthzTProcessor implements TProcessor {
         }
       }
     } else {
-      LOG.warn("Authorization enforcement is disabled, {} user ACL set to '{}'",
+      LOG.warn(
+          "Authorization enforcement is disabled, '{}' user ACL set to '{}'",
           userType, ServerConfiguration.ACL_DEFAULT);
     }
     this.tProcessor = tProcessor;
@@ -78,9 +79,11 @@ public class AuthzTProcessor implements TProcessor {
     String principal = saslServerTransport.getSaslServer().getAuthorizationID();
     try {
       if (isAuthorized(principal)) {
-        LOG.debug("Authorization for '{}' as {} user, OK", principal, userType);
+        LOG.debug("Authorization for '{}' as '{}' user, OK", principal,
+            userType);
       } else {
-        LOG.warn("Authorization for '{}' as {} user, FAILED", principal, userType);
+        LOG.warn("Authorization for '{}' as '{}' user, FAILED", principal,
+            userType);
         throw new TException("Unauthorized");
       }
       return tProcessor.process(inProt, outProt);

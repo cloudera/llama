@@ -71,7 +71,7 @@ public class TestLlamaAMImpl {
     }
 
     @Override
-    public List<UUID> releaseReservationsForClientId(UUID clientId)
+    public List<UUID> releaseReservationsForHandle(UUID handle)
         throws LlamaAMException {
       return null;
     }

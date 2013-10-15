@@ -157,7 +157,7 @@ public class TestMultiQueueLlamaAM {
       am.removeListener(listener);
       am.getReservation(id);
       am.releaseReservation(id);
-      am.releaseReservationsForClientId(UUID.randomUUID());
+      am.releaseReservationsForHandle(UUID.randomUUID());
       am.stop();
 
       Assert.assertEquals(EXPECTED, MyRMLlamaAMConnector.methods);
@@ -178,7 +178,7 @@ public class TestMultiQueueLlamaAM {
       UUID cId = UUID.randomUUID();
       am.reserve(new Reservation(cId, "q",
           Arrays.asList(TestReservation.createResource()), true));
-      am.releaseReservationsForClientId(cId);
+      am.releaseReservationsForHandle(cId);
     } finally {
       am.stop();
     }
@@ -199,7 +199,7 @@ public class TestMultiQueueLlamaAM {
           Arrays.asList(TestReservation.createResource()), true));
       am.reserve(new Reservation(cId, "q2",
           Arrays.asList(TestReservation.createResource()), true));
-      am.releaseReservationsForClientId(cId);
+      am.releaseReservationsForHandle(cId);
     } finally {
       am.stop();
     }
@@ -276,7 +276,7 @@ public class TestMultiQueueLlamaAM {
               PlacedResource.Status.REJECTED)));
       Assert.assertTrue(listenerCalled);
       am.releaseReservation(id);
-      am.releaseReservationsForClientId(UUID.randomUUID());
+      am.releaseReservationsForHandle(UUID.randomUUID());
       am.removeListener(listener);
       listenerCalled = false;
       Assert.assertFalse(listenerCalled);

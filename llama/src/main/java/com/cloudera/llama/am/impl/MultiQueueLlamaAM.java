@@ -198,17 +198,17 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
   }
 
   @Override
-  public List<UUID> releaseReservationsForClientId(UUID clientId)
+  public List<UUID> releaseReservationsForHandle(UUID handle)
       throws LlamaAMException {
     List<UUID> ids = new ArrayList<UUID>();
     LlamaAMException thrown = null;
     for (LlamaAM am : getLlamaAMs()) {
       try {
-        ids.addAll(am.releaseReservationsForClientId(clientId));
+        ids.addAll(am.releaseReservationsForHandle(handle));
       } catch (LlamaAMException ex) {
         if (thrown != null) {
-          getLog().error("releaseReservationsFoClientId({}), error: {}",
-              clientId, ex.toString(), ex);
+          getLog().error("releaseReservationsForHandle({}), error: {}",
+              handle, ex.toString(), ex);
         }
         thrown = ex;
       }

@@ -822,7 +822,7 @@ public class TestSingleQueueLlamaAM {
       Assert.assertNotNull(llama._getReservation(reservationId1));
       Assert.assertNotNull(llama._getReservation(reservationId2));
       Assert.assertNotNull(llama._getReservation(reservationId3));
-      llama.releaseReservationsForClientId(cId1);
+      llama.releaseReservationsForHandle(cId1);
       Assert.assertNull(llama._getReservation(reservationId1));
       Assert.assertNull(llama._getReservation(reservationId2));
       Assert.assertNotNull(llama._getReservation(reservationId3));

@@ -92,7 +92,7 @@ public class TestAPIContractLlamaAM {
     }
 
     @Override
-    public List<UUID> releaseReservationsForClientId(UUID clientId)
+    public List<UUID> releaseReservationsForHandle(UUID handle)
         throws LlamaAMException {
       return null;
     }
@@ -260,7 +260,7 @@ public class TestAPIContractLlamaAM {
     AssertUtils.assertException(new Callable<Object>() {
       @Override
       public Object call() throws Exception {
-        am.releaseReservationsForClientId(null);
+        am.releaseReservationsForHandle(null);
         return null;
       }
     }, IllegalStateException.class);

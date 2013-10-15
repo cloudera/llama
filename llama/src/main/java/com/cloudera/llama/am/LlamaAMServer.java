@@ -155,9 +155,9 @@ public class LlamaAMServer extends
   @Override
   public void onUnregister(UUID handle) {
     try {
-      llamaAm.releaseReservationsForClientId(handle);
+      llamaAm.releaseReservationsForHandle(handle);
     } catch (Throwable ex) {
-      getLog().warn("Error releasing reservations for clientId '{}', {}",
+      getLog().warn("Error releasing reservations for handle '{}', {}",
           handle, ex.toString(), ex);
     }
   }

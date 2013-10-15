@@ -95,7 +95,7 @@ public abstract class AbstractServer implements Configurable {
       }
     }
     runLevel = 4;
-    getLog().info("Server listening at: {}:{}", getAddressHost(),
+    getLog().info("Server listening at '{}:{}'", getAddressHost(),
         getAddressPort());
     getLog().info("Llama started!");
   }

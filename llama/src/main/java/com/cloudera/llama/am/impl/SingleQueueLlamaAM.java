@@ -234,19 +234,19 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
 
   @Override
   @SuppressWarnings("unchecked")
-  public List<UUID> releaseReservationsForClientId(UUID clientId)
+  public List<UUID> releaseReservationsForHandle(UUID handle)
       throws LlamaAMException {
     List<PlacedReservation> reservations = new ArrayList<PlacedReservation>();
     synchronized (this) {
       for (PlacedReservation reservation :
           new ArrayList<PlacedReservation>(reservationsMap.values())) {
-        if (reservation.getClientId().equals(clientId)) {
+        if (reservation.getClientId().equals(handle)) {
           _deleteReservation(reservation.getReservationId());
           reservations.add(reservation);
         }
         getLog().debug(
-            "Releasing all reservations for clientId({}), reservationId '{}'",
-            clientId, reservation.getReservationId());
+            "Releasing all reservations for handle '{}', reservationId '{}'",
+            handle, reservation.getReservationId());
       }
     }
     List<UUID> ids = new ArrayList<UUID>(reservations.size());

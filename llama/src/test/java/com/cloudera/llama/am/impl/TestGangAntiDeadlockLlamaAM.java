@@ -140,7 +140,7 @@ public class TestGangAntiDeadlockLlamaAM {
 
     @Override
     @SuppressWarnings("unchecked")
-    public List<UUID> releaseReservationsForClientId(UUID clientId)
+    public List<UUID> releaseReservationsForHandle(UUID handle)
         throws LlamaAMException {
       invoked.add("releaseReservationsForClientId");
       return new ArrayList(reservations.keySet());
@@ -218,7 +218,7 @@ public class TestGangAntiDeadlockLlamaAM {
     Assert.assertTrue(gAm.localReservations.isEmpty());
     Assert.assertTrue(gAm.backedOffReservations.isEmpty());
     Assert.assertFalse(am.reservations.containsKey(id));
-    gAm.releaseReservationsForClientId(UUID.randomUUID());
+    gAm.releaseReservationsForHandle(UUID.randomUUID());
     gAm.stop();
     Assert.assertFalse(gAm.isRunning());
 
@@ -415,7 +415,7 @@ public class TestGangAntiDeadlockLlamaAM {
       Assert.assertEquals(2, gAm.backedOffReservations.size());
       Assert.assertEquals(2, gAm.submittedReservations.size());
 
-      List<UUID> uuids = gAm.releaseReservationsForClientId(clientId);
+      List<UUID> uuids = gAm.releaseReservationsForHandle(clientId);
       Assert.assertEquals(4, uuids.size());
     } finally {
       gAm.stop();
