@@ -47,6 +47,7 @@ import com.cloudera.llama.thrift.TLocationEnforcement;
 import com.cloudera.llama.thrift.TNetworkAddress;
 import com.cloudera.llama.thrift.TResource;
 import com.cloudera.llama.thrift.TStatusCode;
+import com.cloudera.llama.util.UUID;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
 import junit.framework.Assert;
@@ -65,7 +66,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 public class TestLlamaAMThriftServer {
   private ServerConfiguration sConf =

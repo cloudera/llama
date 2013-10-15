@@ -25,6 +25,7 @@ import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.PlacedResource;
 import com.cloudera.llama.am.api.Reservation;
 import com.cloudera.llama.server.MetricUtil;
+import com.cloudera.llama.util.UUID;
 import com.codahale.metrics.MetricRegistry;
 import org.apache.hadoop.conf.Configuration;
 
@@ -37,7 +38,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.DelayQueue;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;

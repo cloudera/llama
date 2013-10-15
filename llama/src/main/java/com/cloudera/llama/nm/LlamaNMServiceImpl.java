@@ -29,7 +29,7 @@ import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.UUID;
+import com.cloudera.llama.util.UUID;
 
 public class LlamaNMServiceImpl implements LlamaNMService.Iface {
   private static final Logger LOG = LoggerFactory.getLogger(

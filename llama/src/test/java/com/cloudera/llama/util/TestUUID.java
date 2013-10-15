@@ -15,26 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.cloudera.llama.am.impl;
+package com.cloudera.llama.util;
 
-import com.cloudera.llama.util.UUID;
 import junit.framework.Assert;
 import org.junit.Test;
 
-public class TestLlamaAMEventImpl {
+public class TestUUID {
 
   @Test
-  public void testMethods() {
-    UUID cId = UUID.randomUUID();
-    LlamaAMEventImpl event = new LlamaAMEventImpl(cId);
-    Assert.assertEquals(cId, event.getClientId());
-    Assert.assertTrue(event.isEmpty());
-    Assert.assertNotNull(event.getAllocatedReservationIds());
-    Assert.assertNotNull(event.getAllocatedResources());
-    Assert.assertNotNull(event.getLostClientResourcesIds());
-    Assert.assertNotNull(event.getPreemptedClientResourceIds());
-    Assert.assertNotNull(event.getPreemptedReservationIds());
-    Assert.assertNotNull(event.getRejectedClientResourcesIds());
-    Assert.assertNotNull(event.getRejectedReservationIds());
+  public void testLUUID() throws Exception{
+    java.util.UUID uuid = java.util.UUID.randomUUID();
+    UUID UUID1 = new UUID(uuid);
+    UUID UUID2 = new UUID(uuid);
+    Assert.assertEquals(UUID1, UUID2);
+    String s1 = UUID1.toString();
+    UUID UUID3 = UUID.fromString(s1);
+    Assert.assertEquals(UUID1, UUID3);
   }
 }

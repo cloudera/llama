@@ -22,7 +22,7 @@ import com.cloudera.llama.am.api.PlacedResource;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
+import com.cloudera.llama.util.UUID;
 
 public class LlamaAMEventImpl implements LlamaAMEvent {
   private final UUID clientId;

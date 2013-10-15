@@ -19,7 +19,7 @@ package com.cloudera.llama.am.api;
 
 import com.cloudera.llama.am.impl.FastFormat;
 
-import java.util.UUID;
+import com.cloudera.llama.util.UUID;
 
 public abstract class PlacedResource extends Resource {
 

@@ -22,13 +22,13 @@ import com.cloudera.llama.am.api.LlamaAMException;
 import com.cloudera.llama.am.api.LlamaAMListener;
 import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.Reservation;
+import com.cloudera.llama.util.UUID;
 import com.codahale.metrics.MetricRegistry;
 import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.UUID;
 
 public class APIContractLlamaAM extends LlamaAM {
   private final Logger logger;

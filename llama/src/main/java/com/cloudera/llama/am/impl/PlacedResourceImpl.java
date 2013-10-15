@@ -20,7 +20,7 @@ package com.cloudera.llama.am.impl;
 import com.cloudera.llama.am.api.Resource;
 import com.cloudera.llama.am.spi.RMPlacedResource;
 
-import java.util.UUID;
+import com.cloudera.llama.util.UUID;
 
 public class PlacedResourceImpl extends RMPlacedResource {
   private UUID clientId;

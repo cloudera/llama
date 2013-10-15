@@ -20,7 +20,7 @@ package com.cloudera.llama.am.spi;
 import com.cloudera.llama.am.api.PlacedResource;
 import com.cloudera.llama.am.impl.FastFormat;
 
-import java.util.UUID;
+import com.cloudera.llama.util.UUID;
 
 public class RMResourceChange {
   private final UUID clientResourceId;

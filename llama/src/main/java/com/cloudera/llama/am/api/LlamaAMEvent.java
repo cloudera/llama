@@ -18,7 +18,7 @@
 package com.cloudera.llama.am.api;
 
 import java.util.List;
-import java.util.UUID;
+import com.cloudera.llama.util.UUID;
 
 public interface LlamaAMEvent {
 

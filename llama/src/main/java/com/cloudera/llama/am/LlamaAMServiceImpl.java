@@ -18,7 +18,6 @@
 package com.cloudera.llama.am;
 
 import com.cloudera.llama.am.api.LlamaAM;
-import com.cloudera.llama.am.api.LlamaAMException;
 import com.cloudera.llama.am.api.Reservation;
 import com.cloudera.llama.server.ClientNotificationService;
 import com.cloudera.llama.server.NodeMapper;
@@ -35,12 +34,12 @@ import com.cloudera.llama.thrift.TLlamaAMReservationResponse;
 import com.cloudera.llama.thrift.TLlamaAMUnregisterRequest;
 import com.cloudera.llama.thrift.TLlamaAMUnregisterResponse;
 import com.cloudera.llama.thrift.TNetworkAddress;
+import com.cloudera.llama.util.UUID;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.UUID;
 
 public class LlamaAMServiceImpl implements LlamaAMService.Iface {
   private static final Logger LOG = LoggerFactory.getLogger(

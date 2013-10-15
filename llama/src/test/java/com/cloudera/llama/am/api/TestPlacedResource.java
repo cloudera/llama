@@ -19,7 +19,7 @@ package com.cloudera.llama.am.api;
 
 import org.junit.Test;
 
-import java.util.UUID;
+import com.cloudera.llama.util.UUID;
 
 public class TestPlacedResource {
 

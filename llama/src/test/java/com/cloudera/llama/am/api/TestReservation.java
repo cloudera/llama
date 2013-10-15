@@ -17,12 +17,12 @@
  */
 package com.cloudera.llama.am.api;
 
+import com.cloudera.llama.util.UUID;
 import junit.framework.Assert;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 public class TestReservation {
 

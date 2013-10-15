@@ -26,7 +26,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.UUID;
+import com.cloudera.llama.util.UUID;
 
 public class TestClientNotifier {
 

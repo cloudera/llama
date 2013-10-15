@@ -29,6 +29,7 @@ import com.cloudera.llama.am.spi.RMPlacedResource;
 import com.cloudera.llama.am.spi.RMResourceChange;
 import com.cloudera.llama.am.yarn.YarnRMLlamaAMConnector;
 import com.cloudera.llama.server.MetricUtil;
+import com.cloudera.llama.util.UUID;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
 import org.apache.hadoop.conf.Configuration;
@@ -39,7 +40,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 public class SingleQueueLlamaAM extends LlamaAMImpl implements
     RMLlamaAMCallback {

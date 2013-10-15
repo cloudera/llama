@@ -21,7 +21,7 @@ import com.cloudera.llama.am.api.Resource;
 import junit.framework.Assert;
 import org.junit.Test;
 
-import java.util.UUID;
+import com.cloudera.llama.util.UUID;
 
 public class TestRMPlacedResource {
 

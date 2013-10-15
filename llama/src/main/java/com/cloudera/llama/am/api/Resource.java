@@ -20,7 +20,7 @@ package com.cloudera.llama.am.api;
 import com.cloudera.llama.am.impl.FastFormat;
 import com.cloudera.llama.am.impl.ParamChecker;
 
-import java.util.UUID;
+import com.cloudera.llama.util.UUID;
 
 public class Resource {
 

@@ -19,11 +19,11 @@ package com.cloudera.llama.am.spi;
 
 import com.cloudera.llama.am.api.Reservation;
 import com.cloudera.llama.am.api.Resource;
+import com.cloudera.llama.util.UUID;
 import junit.framework.Assert;
 import org.junit.Test;
 
 import java.util.Arrays;
-import java.util.UUID;
 
 public class TestRMPlacedReservation {
 

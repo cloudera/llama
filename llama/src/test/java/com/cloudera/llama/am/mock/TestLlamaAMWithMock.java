@@ -24,6 +24,7 @@ import com.cloudera.llama.am.api.Reservation;
 import com.cloudera.llama.am.api.Resource;
 import com.cloudera.llama.am.mock.mock.MockLlamaAMFlags;
 import com.cloudera.llama.am.mock.mock.MockRMLlamaAMConnector;
+import com.cloudera.llama.util.UUID;
 import junit.framework.Assert;
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Test;
@@ -34,7 +35,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 public class TestLlamaAMWithMock {
 

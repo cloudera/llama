@@ -35,7 +35,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
+import com.cloudera.llama.util.UUID;
 
 public class TypeUtils {
   public static final TStatus OK = new TStatus().setStatus_code(TStatusCode.OK);

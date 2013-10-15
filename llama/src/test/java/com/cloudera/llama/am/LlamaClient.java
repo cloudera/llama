@@ -38,6 +38,7 @@ import com.cloudera.llama.thrift.TNetworkAddress;
 import com.cloudera.llama.thrift.TResource;
 import com.cloudera.llama.thrift.TStatusCode;
 import com.cloudera.llama.util.CLIParser;
+import com.cloudera.llama.util.UUID;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -56,7 +57,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 public class LlamaClient {
 

@@ -33,6 +33,7 @@ import com.cloudera.llama.thrift.TLocationEnforcement;
 import com.cloudera.llama.thrift.TNetworkAddress;
 import com.cloudera.llama.thrift.TResource;
 import com.cloudera.llama.thrift.TStatusCode;
+import com.cloudera.llama.util.UUID;
 import junit.framework.Assert;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -45,10 +46,8 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.OutputStream;
-import java.net.URL;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.UUID;
 
 public class TestMiniLlama {
 

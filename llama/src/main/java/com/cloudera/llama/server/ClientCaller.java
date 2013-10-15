@@ -19,12 +19,11 @@ package com.cloudera.llama.server;
 
 import com.cloudera.llama.am.impl.FastFormat;
 import com.cloudera.llama.thrift.LlamaNotificationService;
+import com.cloudera.llama.util.UUID;
 import com.codahale.metrics.MetricRegistry;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.transport.TTransport;
-
-import java.util.UUID;
 
 public class ClientCaller {
   private final ServerConfiguration conf;

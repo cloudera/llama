@@ -25,6 +25,7 @@ import com.cloudera.llama.server.Security;
 import com.cloudera.llama.server.ThriftEndPoint;
 import com.cloudera.llama.server.ThriftServer;
 import com.cloudera.llama.thrift.LlamaAMService;
+import com.cloudera.llama.util.UUID;
 import com.codahale.metrics.JmxReporter;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.jmx.JMXJsonServlet;
@@ -36,7 +37,6 @@ import org.mortbay.jetty.bio.SocketConnector;
 import org.mortbay.jetty.servlet.Context;
 
 import java.net.InetSocketAddress;
-import java.util.UUID;
 
 public class LlamaAMServer extends
     ThriftServer<com.cloudera.llama.thrift.LlamaAMService.Processor>

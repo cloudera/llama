@@ -18,10 +18,9 @@
 package com.cloudera.llama.server;
 
 import com.cloudera.llama.am.AMServerConfiguration;
+import com.cloudera.llama.util.UUID;
 import junit.framework.Assert;
 import org.junit.Test;
-
-import java.util.UUID;
 
 public class TestClientNotificationService {
 

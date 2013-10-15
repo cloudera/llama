@@ -30,7 +30,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.Writer;
-import java.util.UUID;
+import com.cloudera.llama.util.UUID;
 
 public class TestAbstractMain {
   public static final String LLAMA_BUILD_DIR = "test.llama.build.dir";

@@ -22,7 +22,7 @@ import com.cloudera.llama.am.impl.ParamChecker;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
+import com.cloudera.llama.util.UUID;
 
 public class Reservation<T extends Resource> {
   private final UUID clientId;

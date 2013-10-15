@@ -24,7 +24,7 @@ import com.cloudera.llama.am.spi.RMPlacedReservation;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
+import com.cloudera.llama.util.UUID;
 
 public class PlacedReservationImpl extends RMPlacedReservation {
   private final UUID reservationId;
