@@ -76,6 +76,7 @@ TODO: need license header
     <cdh.avro.version>1.7.4</cdh.avro.version>
     <cdh.tika.version>1.4</cdh.tika.version>
    <!-- Use this property in your subprojects's pom. -->
+    <cdh.tomcat.version>6.0.37</cdh.tomcat.version>
     <cdh.thrift.version>0.9.0</cdh.thrift.version>
     <cdh.httpcomponents.version>4.2.5</cdh.httpcomponents.version>
     <!--
