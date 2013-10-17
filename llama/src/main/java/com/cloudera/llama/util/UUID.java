@@ -18,15 +18,21 @@
 package com.cloudera.llama.util;
 
 
-public class UUID {
-  private java.util.UUID uuid;
+import com.cloudera.llama.am.impl.ParamChecker;
 
-  public UUID(java.util.UUID uuid) {
-    this.uuid = uuid;
+import java.math.BigInteger;
+
+public class UUID {
+  private long low;
+  private long high;
+
+  UUID(java.util.UUID uuid) {
+    this(uuid.getMostSignificantBits(), uuid.getLeastSignificantBits());
   }
 
   public UUID(long mostSigBits, long leastSigBits) {
-    this(new java.util.UUID(mostSigBits, leastSigBits));
+    this.low = leastSigBits;
+    this.high = mostSigBits;
   }
 
   public static UUID randomUUID() {
@@ -34,58 +40,66 @@ public class UUID {
   }
 
   public long getLeastSignificantBits() {
-    return uuid.getLeastSignificantBits();
+    return low;
   }
 
   public long getMostSignificantBits() {
-    return uuid.getMostSignificantBits();
+    return high;
   }
 
   @Override
   public int hashCode() {
-    return uuid.hashCode();
+    long highLow = high ^ low;
+    return ((int) (highLow >> 32)) ^ (int) highLow;
   }
 
   @Override
   public boolean equals(Object obj) {
-    return (obj instanceof UUID) && uuid.equals(((UUID) obj).uuid);
+    boolean ret = false;
+    if (obj instanceof UUID) {
+      UUID other = (UUID) obj;
+      ret = low == other.low && high == other.high;
+    }
+    return ret;
   }
 
-  public static UUID fromString(String name) {
-    String[] components = new String[5];
-    components[0] = "0x" + name.substring(0, 8);
-    components[1] = "0x" + name.substring(8, 8 + 4);
-    components[2] = "0x" + name.substring(12, 12 + 4);
-    components[3] = "0x" + name.substring(16, 16 + 4);
-    components[4] = "0x" + name.substring(20, 20 + 12);
-
-    long mostSigBits = Long.decode(components[0]);
-    mostSigBits <<= 16;
-    mostSigBits |= Long.decode(components[1]);
-    mostSigBits <<= 16;
-    mostSigBits |= Long.decode(components[2]);
-
-    long leastSigBits = Long.decode(components[3]);
-    leastSigBits <<= 48;
-    leastSigBits |= Long.decode(components[4]);
-
-    return new UUID(mostSigBits, leastSigBits);
+  public static UUID fromString(String value) {
+    ParamChecker.notEmpty(value, "value");
+    int sep = value.indexOf(":");
+    if (sep == -1) {
+      throw new IllegalArgumentException(
+          "Invalid UUID string value, missing ':' : " + value);
+    }
+    String sLow = value.substring(0, sep);
+    String sHigh = value.substring(sep + 1);
+    if (sLow.length() > 16) {
+      throw new IllegalArgumentException(
+          "Invalid UUID string value, low is not a 32 bit hexa: " + value);
+    }
+    if (sHigh.length() > 16) {
+      throw new IllegalArgumentException(
+          "Invalid UUID string value, high is not a 32 bit hexa: " + value);
+    }
+    long low = new BigInteger(sLow, 16).longValue();
+    long high = new BigInteger(sHigh, 16).longValue();
+    return new UUID(high, low);
   }
 
 
   @Override
   public String toString() {
-    long mostSigBits = uuid.getMostSignificantBits();
-    long leastSigBits = uuid.getLeastSignificantBits();
-    return (digits(mostSigBits >> 32, 8) +
-        digits(mostSigBits >> 16, 4) +
-        digits(mostSigBits, 4) +
-        digits(leastSigBits >> 48, 4) +
-        digits(leastSigBits, 12));
+    String sLow = Long.toHexString(low);
+    String sHigh = Long.toHexString(high);
+    return trimZeros(sLow) + ":" + trimZeros(sHigh);
   }
 
-  private static String digits(long val, int digits) {
-    long hi = 1L << (digits * 4);
-    return Long.toHexString(hi | (val & (hi - 1))).substring(1);
+  private String trimZeros(String value) {
+    int i = 0;
+    int len = value.length() - 1; // we need keep at least one zero if all zeros
+    while (i < len && value.charAt(i) == '0') {
+      i++;
+    }
+    return value.substring(i);
   }
+
 }
