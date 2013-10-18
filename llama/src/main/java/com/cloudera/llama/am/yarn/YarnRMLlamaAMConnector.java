@@ -696,20 +696,46 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
               getNodeName(container.getNodeId()), container.getResource());
 
       if (!matchingContainerReqs.isEmpty()) {
-        Collection<LlamaContainerRequest> coll = matchingContainerReqs.get(0);
-        LlamaContainerRequest req = coll.iterator().next();
-        RMPlacedResource pr = req.getPlacedResource();
+        LlamaContainerRequest req = null;
+        for (Collection<LlamaContainerRequest> lcrColl : matchingContainerReqs) {
+          for (LlamaContainerRequest lcr : lcrColl) {
+            LOG.trace("Matching container '{}' resource '{}'", container,
+                lcr.getPlacedResource());
+            if (lcr.getPlacedResource().getStatus() !=
+                PlacedResource.Status.PENDING) {
+              LOG.error(
+                  "Reservation '{}' resource '{}' should not be in YARN " +
+                  "anymore, removing it again",
+                  lcr.getPlacedResource().getReservationId(),
+                  lcr.getPlacedResource().getClientResourceId());
+              amRmClientAsync.removeContainerRequest(lcr);
+            } else {
+              req = lcr;
+              break;
+            }
+          }
+          if (req != null) {
+            break;
+          }
+        }
+        if (req == null) {
+          LOG.error("There was a match for container '{}', " +
+              "LlamaContainerRequest cannot be NULL", container);
+        } else {
+          RMPlacedResource pr = req.getPlacedResource();
 
-        LOG.debug("New allocation for '{}' container '{}', node '{}'",
-            pr, container.getId(), container.getNodeId());
+          LOG.debug("New allocation for '{}' container '{}', node '{}'",
+              pr, container.getId(), container.getNodeId());
 
-        pr.setRmPayload(container);
-        containerIdToClientResourceIdMap.put(container.getId(),
-            pr.getClientResourceId());
-        changes.add(createResourceAllocation(pr, container));
-        amRmClientAsync.removeContainerRequest(req);
+          pr.setRmPayload(container);
+          containerIdToClientResourceIdMap.put(container.getId(),
+              pr.getClientResourceId());
+          changes.add(createResourceAllocation(pr, container));
+          amRmClientAsync.removeContainerRequest(req);
+          LOG.trace("Reservation resource '{}' removed from YARN", pr);
 
-        queue(new ContainerHandler(ugi, pr, container, Action.START));
+          queue(new ContainerHandler(ugi, pr, container, Action.START));
+        }
       }
     }
     llamaCallback.changesFromRM(changes);

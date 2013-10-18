@@ -164,24 +164,35 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
   @Override
   public void reserve(UUID reservationId, Reservation reservation)
       throws LlamaAMException {
+    boolean doActualReservation = true;
     if (reservation.isGang()) {
       PlacedReservationImpl placedReservation =
           new PlacedReservationImpl(reservationId, reservation);
-      gReserve(reservationId, placedReservation);
+      doActualReservation = gReserve(reservationId, placedReservation);
       reservation = placedReservation;
     }
-    am.reserve(reservationId, reservation);
+    if (doActualReservation) {
+      am.reserve(reservationId, reservation);
+    }
   }
 
-  private synchronized void gReserve(UUID reservationId,
+  private synchronized boolean gReserve(UUID reservationId,
       PlacedReservationImpl placedReservation) {
+    boolean doActualReservation;
     localReservations.put(reservationId, placedReservation);
     if (backedOffReservations.isEmpty()) {
       submittedReservations.add(reservationId);
+      doActualReservation = true;
     } else {
+      long delay = getBackOffDelay();
       backedOffReservations.add(new BackedOffReservation(placedReservation,
-          getBackOffDelay()));
+          delay));
+      getLog().warn(
+          "Back off in effect, delaying placing reservation '{}' for '{}' ms",
+          reservationId, delay);
+      doActualReservation = false;
     }
+    return doActualReservation;
   }
 
   @Override
