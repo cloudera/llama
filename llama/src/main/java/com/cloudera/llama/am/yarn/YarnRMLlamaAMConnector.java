@@ -50,6 +50,7 @@ import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.client.api.AMRMClient;
 import org.apache.hadoop.yarn.client.api.NMClient;
+import org.apache.hadoop.yarn.client.api.NMTokenCache;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.client.api.YarnClientApplication;
 import org.apache.hadoop.yarn.client.api.async.AMRMClientAsync;
@@ -247,7 +248,9 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
   }
   
   private void _initYarnApp(String queue) throws Exception {
+    NMTokenCache nmTokenCache = new NMTokenCache();
     nmClient = NMClient.createNMClient();
+    nmClient.setNMTokenCache(nmTokenCache);
     nmClient.init(yarnConf);
     nmClient.start();
     appId = _createApp(yarnClient, queue);
@@ -255,8 +258,10 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
     ugi.addToken(yarnClient.getAMRMToken(appId));
     int heartbeatInterval = getConf().getInt(HEARTBEAT_INTERVAL_KEY,
         HEARTBEAT_INTERNAL_DEFAULT);
-    amRmClientAsync = AMRMClientAsync.createAMRMClientAsync(heartbeatInterval,
-        YarnRMLlamaAMConnector.this);
+    AMRMClient<LlamaContainerRequest> amRmClient = AMRMClient.createAMRMClient();
+    amRmClient.setNMTokenCache(nmTokenCache);
+    amRmClientAsync = AMRMClientAsync.createAMRMClientAsync(amRmClient, 
+        heartbeatInterval, YarnRMLlamaAMConnector.this);
     amRmClientAsync.init(yarnConf);
     amRmClientAsync.start();
     String urlWithoutScheme = getConf().get(ADVERTISED_TRACKING_URL_KEY,
