@@ -80,6 +80,15 @@ public abstract class ServerConfiguration implements Configurable {
         SERVER_MAX_THREADS_DEFAULT);
   }
 
+  public static String SERVER_CALLS_QUEUE_SIZE_KEY = KEY_PREFIX +
+      "server.calls.queue.size";
+  private static int SERVER_CALLS_QUEUE_SIZE_DEFAULT = 100;
+
+  public int getServerCallsQueueSize() {
+    return conf.getInt(getPropertyName(SERVER_CALLS_QUEUE_SIZE_KEY),
+        SERVER_CALLS_QUEUE_SIZE_DEFAULT);
+  }
+
   public static String SECURITY_ENABLED_KEY = KEY_PREFIX + "security";
   private static boolean SECURITY_ENABLED_DEFAULT = false;
 

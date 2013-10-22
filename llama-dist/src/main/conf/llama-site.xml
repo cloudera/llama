@@ -48,6 +48,14 @@
     </description>
   </property>
   <property>
+    <name>llama.am.server.thrift.server.calls.queue.size</name>
+    <value>100</value>
+    <description>
+      Maximum number of client calls that can be queued up when all threads
+      are in used.
+    </description>
+  </property>
+  <property>
     <name>llama.am.server.thrift.transport.timeout.ms</name>
     <value>3600000</value>
     <description>
@@ -381,6 +389,14 @@
     <description>
       Maximum number of threads used by the LlamaNM auxiliary service uses for 
       serving client requests.
+    </description>
+  </property>
+  <property>
+    <name>llama.nm.server.thrift.server.calls.queue.size</name>
+    <value>100</value>
+    <description>
+      Maximum number of client calls that can be queued up when all threads
+      are in used.
     </description>
   </property>
   <property>
