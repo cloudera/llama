@@ -9,7 +9,7 @@ CDH_VERSION_STRING ?= cdh5.0.0-SNAPSHOT
 CDH_REL_STRING ?= cdh5.0.0
 # Only defined if we are doing a beta release. This will
 # show up in the release identifier
-CDH_BETA_REL_STRING ?= cdh5b1
+CDH_BETA_REL_STRING ?= cdh5b2
 CDH_MAKEFILE:=$(CDH).mk
 
 REQUIRED_DIRS = $(BUILD_DIR) $(DL_DIR) $(OUTPUT_DIR)
