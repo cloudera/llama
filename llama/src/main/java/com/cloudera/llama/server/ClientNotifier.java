@@ -155,10 +155,12 @@ public class ClientNotifier implements LlamaAMListener {
     }
 
     protected void doNotification(ClientCaller clientCaller) throws Exception {
+      boolean success = false;
       if (notification != null) {
         LOG.debug("Doing notification for clientId '{}'",
             clientCaller.getClientId());
         ClientNotifier.this.notify(clientCaller, notification);
+        success = true;
       } else {
         long lastCall = System.currentTimeMillis() - clientCaller.getLastCall();
         if (lastCall > clientHeartbeat) {
@@ -166,6 +168,7 @@ public class ClientNotifier implements LlamaAMListener {
               clientCaller.getClientId());
           TLlamaAMNotificationRequest request = TypeUtils.createHearbeat(handle);
           ClientNotifier.this.notify(clientCaller, request);
+          success = true;
           setDelay(clientHeartbeat);
         } else {
           LOG.debug("Skipping heartbeat for clientId '{}'",
@@ -174,12 +177,12 @@ public class ClientNotifier implements LlamaAMListener {
         }
         ClientNotifier.this.eventsQueue.add(this);
       }
-      if (retries > 0) {
+      if (success && retries > 0) {
         LOG.warn("Notification to '{}' successful after '{}' retries, " +
             "resetting retry counter for client", clientCaller.getClientId(),
             retries);
+        retries = 0;
       }
-      retries = 0;
     }
 
     @Override
@@ -203,7 +206,7 @@ public class ClientNotifier implements LlamaAMListener {
           setDelay(retryInverval);
           eventsQueue.add(this);
         } else {
-          LOG.warn("Notification to '{}' failed '{}' time(s), releasing " +
+          LOG.warn("Notification to '{}' retried '{}' time(s), releasing " +
               "client, error: {}", clientId, retries, ex.toString(), ex);
           clientRegistry.onMaxFailures(handle);
         }
