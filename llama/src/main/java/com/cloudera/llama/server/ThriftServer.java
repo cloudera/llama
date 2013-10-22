@@ -29,6 +29,13 @@ import org.apache.thrift.transport.TTransportFactory;
 import javax.security.auth.Subject;
 import java.net.InetAddress;
 import java.security.PrivilegedExceptionAction;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public abstract class ThriftServer<T extends TProcessor> extends
     AbstractServer {
@@ -61,6 +68,25 @@ public abstract class ThriftServer<T extends TProcessor> extends
     sConf = ReflectionUtils.newInstance(serverConfClass, conf);
   }
 
+  ExecutorService createExecutorService(int minThreads, final int maxThreads, 
+      final int queueSize) {
+    BlockingQueue<Runnable> queue = 
+        new LinkedBlockingQueue<Runnable>(queueSize);
+    ThreadPoolExecutor executor = new ThreadPoolExecutor(minThreads, maxThreads,
+        60, TimeUnit.SECONDS, queue);
+    executor.prestartAllCoreThreads();
+    executor.setRejectedExecutionHandler(new RejectedExecutionHandler() {
+      @Override
+      public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+        getLog().error("Discarding incoming calls, using maximum threads " +
+            "'{}' and calls queue if full with '{}' entries", maxThreads, 
+            queueSize);
+      }
+    });
+    //TODO: add metric gauge for the queue and the executor active threads.
+    return executor;
+  }
+  
   @Override
   protected void startTransport() {
     try {
@@ -70,6 +96,7 @@ public abstract class ThriftServer<T extends TProcessor> extends
         public Object run() throws Exception {
           int minThreads = sConf.getServerMinThreads();
           int maxThreads = sConf.getServerMaxThreads();
+          int queueSize = sConf.getServerCallsQueueSize();
           tServerSocket = ThriftEndPoint.createTServerSocket(sConf);
           TTransportFactory tTransportFactory = ThriftEndPoint
               .createTTransportFactory(sConf);
@@ -78,11 +105,12 @@ public abstract class ThriftServer<T extends TProcessor> extends
               processor);
           TThreadPoolServer.Args args = new TThreadPoolServer.Args
               (tServerSocket);
-          args.transportFactory(tTransportFactory);
-          args = args.minWorkerThreads(minThreads);
-          args = args.maxWorkerThreads(maxThreads);
-          args = args.processor(processor);
+          args.executorService(createExecutorService(minThreads, maxThreads, 
+              queueSize));
+          args.transportFactory(tTransportFactory);          
+          args.processor(processor);
           tServer = new TThreadPoolServer(args);
+          
           tServer.serve();
           return null;
         }
