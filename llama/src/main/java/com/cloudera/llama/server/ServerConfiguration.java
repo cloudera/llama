@@ -245,4 +245,14 @@ public abstract class ServerConfiguration implements Configurable {
     return getACL(ADMIN_ACL_KEY, false);
   }
 
+  public static String LOGGER_SERVLET_READ_ONLY = KEY_PREFIX +
+      "loggers.servlet.read.only";
+  private static boolean LOGGER_SERVLET_READ_DEFAULT = true;
+
+  public boolean getLoggerServletReadOnly() {
+    return conf.getBoolean(getPropertyName(LOGGER_SERVLET_READ_ONLY),
+        LOGGER_SERVLET_READ_DEFAULT);
+  }
+
+
 }

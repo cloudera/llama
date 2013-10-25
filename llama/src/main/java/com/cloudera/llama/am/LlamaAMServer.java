@@ -87,6 +87,9 @@ public class LlamaAMServer extends
     context.setAttribute("hadoop.conf", new Configuration());
     context.addServlet(JMXJsonServlet.class, "/jmx");
     context.addServlet(LlamaServlet.class, "/*");
+    context.addServlet(Log4jLoggersServlet.class, "/loggers");
+    context.setAttribute(Log4jLoggersServlet.READ_ONLY,
+        getServerConf().getLoggerServletReadOnly());
     httpServer.addHandler(context);
 
     try {

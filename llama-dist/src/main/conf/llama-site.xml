@@ -135,6 +135,15 @@
     </description>
   </property>
 
+  <property>
+    <name>llama.am.server.thrift.loggers.servlet.read.only</name>
+    <value>true</value>
+    <description>
+      If the /loggers servlet is read only.
+      If not in read only mode, the servlet can be used to change logger levels.
+    </description>
+  </property>
+
   <!-- LlamaAM Thrift server Security configuration -->
   <property>
     <name>llama.am.server.thrift.security</name>

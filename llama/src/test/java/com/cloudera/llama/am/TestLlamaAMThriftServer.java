@@ -141,6 +141,9 @@ public class TestLlamaAMThriftServer {
           openConnection();
       Assert.assertEquals(HttpURLConnection.HTTP_NOT_FOUND,
           conn.getResponseCode());
+      conn = (HttpURLConnection) new URL(server.getHttpLlamaUI() +
+          "loggers").openConnection();
+      Assert.assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
     } finally {
       server.stop();
     }
