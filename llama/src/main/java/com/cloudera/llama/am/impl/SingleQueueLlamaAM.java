@@ -223,7 +223,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
 
   @Override
   @SuppressWarnings("unchecked")
-  public void releaseReservation(final UUID reservationId)
+  public PlacedReservation releaseReservation(final UUID reservationId)
       throws LlamaAMException {
     PlacedReservationImpl reservation;
     synchronized (this) {
@@ -235,11 +235,12 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
     } else {
       getLog().warn("Unknown reservationId '{}'", reservationId);
     }
+    return reservation;
   }
 
   @Override
   @SuppressWarnings("unchecked")
-  public List<UUID> releaseReservationsForHandle(UUID handle)
+  public List<PlacedReservation> releaseReservationsForHandle(UUID handle)
       throws LlamaAMException {
     List<PlacedReservation> reservations = new ArrayList<PlacedReservation>();
     synchronized (this) {
@@ -254,11 +255,12 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
             handle, reservation.getReservationId());
       }
     }
-    List<UUID> ids = new ArrayList<UUID>(reservations.size());
+    List<PlacedReservation> ids =
+        new ArrayList<PlacedReservation>(reservations.size());
     for (PlacedReservation reservation : reservations) {
       rmConnector.release((List<RMPlacedResource>) (List) reservation
           .getResources());
-      ids.add(reservation.getReservationId());
+      ids.add(reservation);
     }
     return ids;
   }

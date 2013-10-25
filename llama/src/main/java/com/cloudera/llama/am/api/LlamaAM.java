@@ -118,10 +118,11 @@ public abstract class LlamaAM {
   public abstract PlacedReservation getReservation(UUID reservationId)
       throws LlamaAMException;
 
-  public abstract void releaseReservation(UUID reservationId)
+  public abstract PlacedReservation releaseReservation(UUID reservationId)
       throws LlamaAMException;
 
-  public abstract List<UUID> releaseReservationsForHandle(UUID handle)
+  public abstract List<PlacedReservation> releaseReservationsForHandle(
+      UUID handle)
       throws LlamaAMException;
 
   public abstract void addListener(LlamaAMListener listener);

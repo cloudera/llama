@@ -69,11 +69,13 @@ public class TestLlamaAMImpl {
     }
 
     @Override
-    public void releaseReservation(UUID reservationId) throws LlamaAMException {
+    public PlacedReservation releaseReservation(UUID reservationId)
+        throws LlamaAMException {
+      return null;
     }
 
     @Override
-    public List<UUID> releaseReservationsForHandle(UUID handle)
+    public List<PlacedReservation> releaseReservationsForHandle(UUID handle)
         throws LlamaAMException {
       return null;
     }

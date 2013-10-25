@@ -212,26 +212,35 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
   }
 
   @Override
-  public void releaseReservation(UUID reservationId) throws LlamaAMException {
-    gReleaseReservation(reservationId);
-    am.releaseReservation(reservationId);
+  public PlacedReservation releaseReservation(UUID reservationId)
+      throws LlamaAMException {
+    PlacedReservation gPlacedReservation = gReleaseReservation(reservationId);
+    PlacedReservation placedReservation = am.releaseReservation(reservationId);
+    return (placedReservation != null) ? placedReservation : gPlacedReservation;
   }
 
-  private synchronized void gReleaseReservation(UUID reservationId) {
-    localReservations.remove(reservationId);
+  private synchronized PlacedReservation gReleaseReservation(UUID reservationId) {
+    PlacedReservationImpl pr = localReservations.remove(reservationId);
+    if (pr != null) {
+      pr.setStatus(PlacedReservation.Status.ENDED);
+    }
     submittedReservations.remove(reservationId);
+    return pr;
   }
 
   @Override
-  public List<UUID> releaseReservationsForHandle(UUID handle)
+  public List<PlacedReservation> releaseReservationsForHandle(UUID handle)
       throws LlamaAMException {
-    List<UUID> ids = am.releaseReservationsForHandle(handle);
-    ids.addAll(gReleaseReservationsForHandle(handle));
-    return new ArrayList<UUID>(new HashSet<UUID>(ids));
+    List<PlacedReservation> reservations =
+        am.releaseReservationsForHandle(handle);
+    reservations.addAll(gReleaseReservationsForHandle(handle));
+    return new ArrayList<PlacedReservation>(
+        new HashSet<PlacedReservation>(reservations));
   }
 
-  private synchronized List<UUID> gReleaseReservationsForHandle(UUID handle) {
-    List<UUID> ids = new ArrayList<UUID>();
+  private synchronized List<PlacedReservation> gReleaseReservationsForHandle(
+      UUID handle) {
+    List<PlacedReservation> reservations = new ArrayList<PlacedReservation>();
     Iterator<PlacedReservationImpl> it =
         localReservations.values().iterator();
     while (it.hasNext()) {
@@ -239,10 +248,10 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
       if (pr.getClientId().equals(handle)) {
         it.remove();
         submittedReservations.remove(pr.getReservationId());
-        ids.add(pr.getReservationId());
+        reservations.add(pr);
       }
     }
-    return ids;
+    return reservations;
   }
 
   @Override

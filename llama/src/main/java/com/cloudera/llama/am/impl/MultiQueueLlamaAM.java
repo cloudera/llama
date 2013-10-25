@@ -187,25 +187,27 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
 
   @SuppressWarnings("deprecation")
   @Override
-  public void releaseReservation(UUID reservationId) throws LlamaAMException {
+  public PlacedReservation releaseReservation(UUID reservationId) throws LlamaAMException {
+    PlacedReservation pr = null;
     String queue = reservationToQueue.remove(reservationId);
     if (queue != null) {
       LlamaAM am = getLlamaAM(queue);
-      am.releaseReservation(reservationId);
+      pr = am.releaseReservation(reservationId);
     } else {
       getLog().warn("releaseReservation({}), reservationId not found",
           reservationId);
     }
+    return pr;
   }
 
   @Override
-  public List<UUID> releaseReservationsForHandle(UUID handle)
+  public List<PlacedReservation> releaseReservationsForHandle(UUID handle)
       throws LlamaAMException {
-    List<UUID> ids = new ArrayList<UUID>();
+    List<PlacedReservation> reservations = new ArrayList<PlacedReservation>();
     LlamaAMException thrown = null;
     for (LlamaAM am : getLlamaAMs()) {
       try {
-        ids.addAll(am.releaseReservationsForHandle(handle));
+        reservations.addAll(am.releaseReservationsForHandle(handle));
       } catch (LlamaAMException ex) {
         if (thrown != null) {
           getLog().error("releaseReservationsForHandle({}), error: {}",
@@ -217,7 +219,7 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
     if (thrown != null) {
       throw thrown;
     }
-    return ids;
+    return reservations;
   }
 
   @Override
