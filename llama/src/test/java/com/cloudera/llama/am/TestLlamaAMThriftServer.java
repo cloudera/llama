@@ -139,13 +139,8 @@ public class TestLlamaAMThriftServer {
       Assert.assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
       conn = (HttpURLConnection) new URL(server.getHttpLlamaUI() + "foo").
           openConnection();
-      Assert.assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
-      conn = (HttpURLConnection) new URL(server.getHttpLlamaUI() +
-          "/llama.png").openConnection();
-      Assert.assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
-      conn = (HttpURLConnection) new URL(server.getHttpLlamaUI() +
-          "/monkey.gif").openConnection();
-      Assert.assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+      Assert.assertEquals(HttpURLConnection.HTTP_NOT_FOUND,
+          conn.getResponseCode());
     } finally {
       server.stop();
     }

@@ -36,18 +36,8 @@ public class LlamaServlet extends HttpServlet {
       resp.setStatus(HttpServletResponse.SC_OK);
       IOUtils.copyBytes(cl.getResourceAsStream("llama.html"),
           resp.getOutputStream(), 1024);
-    } else if (req.getPathInfo().equals("/llama.png")) {
-      resp.setContentType("image/png");
-      resp.setStatus(HttpServletResponse.SC_OK);
-      IOUtils.copyBytes(cl.getResourceAsStream("llama.png"),
-          resp.getOutputStream(), 1024);
-    } else if (req.getPathInfo().equals("/monkey.gif")) {
-      resp.setContentType("image/gif");
-      resp.setStatus(HttpServletResponse.SC_OK);
-      IOUtils.copyBytes(cl.getResourceAsStream("monkey.gif"),
-          resp.getOutputStream(), 1024);
     } else {
-      resp.sendRedirect("/");
+      resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
     }
   }
 
