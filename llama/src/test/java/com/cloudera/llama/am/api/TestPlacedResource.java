@@ -30,7 +30,7 @@ public class TestPlacedResource {
     }
 
     @Override
-    public UUID getClientId() {
+    public UUID getHandle() {
       return null;
     }
 

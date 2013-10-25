@@ -33,7 +33,7 @@ public class TestRMPlacedResource {
     RMPlacedResource pr = new RMPlacedResource(resource) {
 
       @Override
-      public UUID getClientId() {
+      public UUID getHandle() {
         return null;
       }
 

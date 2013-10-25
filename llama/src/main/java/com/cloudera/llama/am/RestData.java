@@ -153,7 +153,7 @@ public class RestData implements LlamaAMObserver,
 
   private void add(PlacedReservation r) {
     reservationsMap.put(r.getReservationId(), r);
-    addToMapList(clientReservationsMap, r.getClientId(), r);
+    addToMapList(clientReservationsMap, r.getHandle(), r);
     addToMapList(queueReservationsMap, r.getQueue(), r);
     for (PlacedResource resource : r.getResources()) {
       addToMapList(nodeResourcesMap, resource.getLocation(), resource);
@@ -201,7 +201,7 @@ public class RestData implements LlamaAMObserver,
 
   private void update(PlacedReservation r) {
     reservationsMap.put(r.getReservationId(), r);
-    updateToMapList(clientReservationsMap, r.getClientId(), r);
+    updateToMapList(clientReservationsMap, r.getHandle(), r);
     updateToMapList(queueReservationsMap, r.getQueue(), r);
     for (PlacedResource resource : r.getResources()) {
       updateNodeResourceMapList(nodeResourcesMap, resource.getLocation(),
@@ -228,7 +228,7 @@ public class RestData implements LlamaAMObserver,
 
   private void delete(PlacedReservation r) {
     reservationsMap.remove(r.getReservationId());
-    deleteFromMapList(clientReservationsMap, r.getClientId(), r);
+    deleteFromMapList(clientReservationsMap, r.getHandle(), r);
     deleteFromMapList(queueReservationsMap, r.getQueue(), r);
     for (PlacedResource resource : r.getResources()) {
       deleteFromMapList(nodeResourcesMap, resource.getLocation(), resource);
@@ -296,7 +296,7 @@ public class RestData implements LlamaAMObserver,
       jgen.writeStartObject();
       jgen.writeObjectField("reservationId", value.getReservationId());
       jgen.writeStringField("placedOn", formatDateTime(value.getPlacedOn()));
-      jgen.writeObjectField("handle", value.getClientId());
+      jgen.writeObjectField("handle", value.getHandle());
       jgen.writeStringField("queue", value.getQueue());
       jgen.writeBooleanField("gang", value.isGang());
       jgen.writeStringField("status", value.getStatus().toString());
@@ -328,7 +328,7 @@ public class RestData implements LlamaAMObserver,
       jgen.writeStringField("locationEnforcement", value.getEnforcement().toString());
       jgen.writeNumberField("cpuVCores", value.getCpuVCores());
       jgen.writeNumberField("memoryMb", value.getMemoryMb());
-      jgen.writeObjectField("handle", value.getClientId());
+      jgen.writeObjectField("handle", value.getHandle());
       jgen.writeStringField("queue", value.getQueue());
       jgen.writeObjectField("reservationId", value.getReservationId());
       jgen.writeStringField("rmResourceId", value.getRmResourceId());
@@ -451,15 +451,15 @@ public class RestData implements LlamaAMObserver,
   }
 
   @SuppressWarnings("unchecked")
-  public void writeClientReservationsAsJson(UUID clientId, Writer out)
+  public void writeHandleReservationsAsJson(UUID handle, Writer out)
       throws IOException, NotFoundException {
     lock.readLock().lock();
     try {
-      ClientInfo ci = clientInfoMap.get(clientId);
+      ClientInfo ci = clientInfoMap.get(handle);
       if (ci == null) {
         throw new NotFoundException();
       }
-      List<PlacedReservation> prs = clientReservationsMap.get(clientId);
+      List<PlacedReservation> prs = clientReservationsMap.get(handle);
       prs = (prs != null) ? prs : Collections.EMPTY_LIST;
       Map map = new LinkedHashMap();
       map.put("clientInfo", ci);

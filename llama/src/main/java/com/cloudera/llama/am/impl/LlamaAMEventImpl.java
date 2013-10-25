@@ -26,7 +26,7 @@ import java.util.List;
 import com.cloudera.llama.util.UUID;
 
 public class LlamaAMEventImpl implements LlamaAMEvent {
-  private final UUID clientId;
+  private final UUID handle;
   private final List<UUID> allocatedReservationIds = new ArrayList<UUID>();
   private final List<PlacedResource> allocatedResources =
       new ArrayList<PlacedResource>();
@@ -40,8 +40,8 @@ public class LlamaAMEventImpl implements LlamaAMEvent {
   private final List<PlacedReservation> changes =
       new ArrayList<PlacedReservation>();
 
-  public LlamaAMEventImpl(UUID clientId) {
-    this.clientId = clientId;
+  public LlamaAMEventImpl(UUID handle) {
+    this.handle = handle;
   }
 
   @Override
@@ -56,8 +56,8 @@ public class LlamaAMEventImpl implements LlamaAMEvent {
   }
 
   @Override
-  public UUID getClientId() {
-    return clientId;
+  public UUID getHandle() {
+    return handle;
   }
 
   @Override

@@ -25,14 +25,14 @@ import java.util.List;
 import com.cloudera.llama.util.UUID;
 
 public class Reservation<T extends Resource> {
-  private final UUID clientId;
+  private final UUID handle;
   private final String queue;
   private final List<T> resources;
   private final boolean gang;
 
-  public Reservation(UUID clientId, String queue,
+  public Reservation(UUID handle, String queue,
       List<? extends Resource> resources, boolean gang) {
-    this.clientId = ParamChecker.notNull(clientId, "clientId");
+    this.handle = ParamChecker.notNull(handle, "handle");
     this.queue = ParamChecker.notEmpty(queue, "queue");
     this.gang = gang;
     ParamChecker.notNulls(resources, "resources");
@@ -42,7 +42,7 @@ public class Reservation<T extends Resource> {
 
   @SuppressWarnings("unchecked")
   protected Reservation(Reservation reservation) {
-    this(reservation.getClientId(), reservation.getQueue(),
+    this(reservation.getHandle(), reservation.getQueue(),
         reservation.getResources(), reservation.isGang());
   }
 
@@ -51,8 +51,8 @@ public class Reservation<T extends Resource> {
     return new ArrayList(resources);
   }
 
-  public UUID getClientId() {
-    return clientId;
+  public UUID getHandle() {
+    return handle;
   }
 
   public String getQueue() {
@@ -67,11 +67,11 @@ public class Reservation<T extends Resource> {
     return gang;
   }
 
-  private static final String TO_STRING_MSG = "reservation[clientId: {} " +
+  private static final String TO_STRING_MSG = "reservation[handle: {} " +
       "queue: {} resources: {} gang: {}]";
 
   public String toString() {
-    return FastFormat.format(TO_STRING_MSG, getClientId(), getQueue(),
+    return FastFormat.format(TO_STRING_MSG, getHandle(), getQueue(),
         getResources(), isGang());
   }
 

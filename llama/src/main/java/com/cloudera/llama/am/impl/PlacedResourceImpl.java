@@ -23,7 +23,7 @@ import com.cloudera.llama.am.spi.RMPlacedResource;
 import com.cloudera.llama.util.UUID;
 
 public class PlacedResourceImpl extends RMPlacedResource {
-  private UUID clientId;
+  private UUID handle;
   private UUID reservationId;
   private String queue;
   private Status status;
@@ -37,16 +37,16 @@ public class PlacedResourceImpl extends RMPlacedResource {
     status = Status.PENDING;
   }
 
-  public void setReservationInfo(UUID clientId, String queue,
+  public void setReservationInfo(UUID handle, String queue,
       UUID reservationId) {
-    this.clientId = clientId;
+    this.handle = handle;
     this.reservationId = reservationId;
     this.queue = queue;
   }
 
   @Override
-  public UUID getClientId() {
-    return clientId;
+  public UUID getHandle() {
+    return handle;
   }
 
   @Override

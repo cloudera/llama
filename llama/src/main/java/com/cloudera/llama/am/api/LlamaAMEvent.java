@@ -22,7 +22,7 @@ import com.cloudera.llama.util.UUID;
 
 public interface LlamaAMEvent {
 
-  public UUID getClientId();
+  public UUID getHandle();
 
   public boolean isEmpty();
 

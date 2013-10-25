@@ -253,7 +253,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
     synchronized (this) {
       for (PlacedReservation reservation :
           new ArrayList<PlacedReservation>(reservationsMap.values())) {
-        if (reservation.getClientId().equals(handle)) {
+        if (reservation.getHandle().equals(handle)) {
           _deleteReservation(reservation.getReservationId());
           reservations.add(reservation);
         }
@@ -286,7 +286,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
           "handling", reservationId, resource.getClientResourceId());
     } else {
       LlamaAMEventImpl event = getEventForClientId(eventsMap,
-          reservation.getClientId());
+          reservation.getHandle());
       // if reservation is ALLOCATED, or it is PARTIAL and not GANG we let it be
       // and in the ELSE we notify the resource rejection
       switch (reservation.getStatus()) {
@@ -327,7 +327,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
           new ReservationResourceLogContext(resource));
 
       LlamaAMEventImpl event = getEventForClientId(eventsMap,
-          reservation.getClientId());
+          reservation.getHandle());
       List<PlacedResourceImpl> resources = reservation.getResourceImpls();
       boolean fulfilled = true;
       for (int i = 0; fulfilled && i < resources.size(); i++) {
@@ -369,7 +369,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
           resource.getClientResourceId());
     } else {
       LlamaAMEventImpl event = getEventForClientId(eventsMap,
-          reservation.getClientId());
+          reservation.getHandle());
       switch (reservation.getStatus()) {
         case ALLOCATED:
           event.getPreemptedClientResourceIds().add(
@@ -410,7 +410,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
           "for '{}'", reservationId, resource.getClientResourceId());
     } else {
       LlamaAMEventImpl event = getEventForClientId(eventsMap,
-          reservation.getClientId());
+          reservation.getHandle());
       switch (reservation.getStatus()) {
         case ALLOCATED:
           event.getLostClientResourcesIds().add(resource.getClientResourceId());

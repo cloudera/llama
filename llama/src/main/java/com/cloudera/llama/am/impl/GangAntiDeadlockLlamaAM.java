@@ -245,7 +245,7 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
         localReservations.values().iterator();
     while (it.hasNext()) {
       PlacedReservation pr = it.next();
-      if (pr.getClientId().equals(handle)) {
+      if (pr.getHandle().equals(handle)) {
         it.remove();
         submittedReservations.remove(pr.getReservationId());
         reservations.add(pr);
@@ -367,7 +367,7 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
             submitted.remove(reservationId);
 
             LlamaAMEventImpl event = getEventForClientId(eventsMap,
-                reservation.getClientId());
+                reservation.getHandle());
             event.getChanges().add(new PlacedReservationImpl(reservation));
 
             MetricUtil.meter(getMetricRegistry(), BACKED_OFF_RESERVATIONS_METER,
@@ -404,14 +404,14 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
           PlacedReservation pr = am.reserve(reservationId, br.getReservation());
 
           LlamaAMEventImpl event = getEventForClientId(eventsMap,
-              pr.getClientId());
+              pr.getHandle());
           event.getChanges().add(new PlacedReservationImpl(pr));
 
           submittedReservations.add(reservationId);
         } catch (LlamaAMException ex) {
           localReservations.remove(reservationId);
           LlamaAMEvent event = new LlamaAMEventImpl(br.getReservation().
-              getClientId());
+              getHandle());
           event.getRejectedReservationIds().add(reservationId);
           dispatch(event);
         }

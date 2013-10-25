@@ -27,7 +27,7 @@ public class TestLlamaAMEventImpl {
   public void testMethods() {
     UUID cId = UUID.randomUUID();
     LlamaAMEventImpl event = new LlamaAMEventImpl(cId);
-    Assert.assertEquals(cId, event.getClientId());
+    Assert.assertEquals(cId, event.getHandle());
     Assert.assertTrue(event.isEmpty());
     Assert.assertNotNull(event.getAllocatedReservationIds());
     Assert.assertNotNull(event.getAllocatedResources());

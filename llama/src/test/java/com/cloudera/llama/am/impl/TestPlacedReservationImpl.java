@@ -47,7 +47,7 @@ public class TestPlacedReservationImpl {
     Assert.assertEquals(r, pres);
     Assert.assertTrue(PlacedResource.class.isInstance(pres));
     Assert.assertEquals("q", pres.getQueue());
-    Assert.assertEquals(pri.getClientId(), pres.getClientId());
+    Assert.assertEquals(pri.getHandle(), pres.getHandle());
     Assert.assertEquals(pri.getReservationId(), pres.getReservationId());
     Assert.assertEquals(pri.getResourceImpls(), pri.getResources());
     Assert.assertEquals(r, pri.getResource(r.getClientResourceId()));

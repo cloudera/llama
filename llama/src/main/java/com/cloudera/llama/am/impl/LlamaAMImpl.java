@@ -79,11 +79,11 @@ public abstract class LlamaAMImpl extends LlamaAM {
   }
 
   protected LlamaAMEventImpl getEventForClientId(Map<UUID,
-      LlamaAMEventImpl> eventsMap, UUID clientId) {
-    LlamaAMEventImpl event = eventsMap.get(clientId);
+      LlamaAMEventImpl> eventsMap, UUID handle) {
+    LlamaAMEventImpl event = eventsMap.get(handle);
     if (event == null) {
-      event = new LlamaAMEventImpl(clientId);
-      eventsMap.put(clientId, event);
+      event = new LlamaAMEventImpl(handle);
+      eventsMap.put(handle, event);
     }
     return event;
   }

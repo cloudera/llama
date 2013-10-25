@@ -25,7 +25,7 @@ class ReservationResourceLogContext extends MetricUtil.LogContext {
       "handle:{} - queue:{} - reservation:{} - resources:{}";
 
   public ReservationResourceLogContext(PlacedReservationImpl reservation) {
-    super(RESERVATION_PATTERN, reservation.getClientId(),
+    super(RESERVATION_PATTERN, reservation.getHandle(),
         reservation.getQueue(), reservation.getReservationId(),
         reservation.getResources().size());
   }
@@ -34,7 +34,7 @@ class ReservationResourceLogContext extends MetricUtil.LogContext {
       "handle:{} - queue:{} - reservation:{} - clientResource:{} location:{}";
 
   public ReservationResourceLogContext(PlacedResourceImpl resource) {
-    super(RESOURCE_PATTERN, resource.getClientId(),
+    super(RESOURCE_PATTERN, resource.getHandle(),
         resource.getQueue(), resource.getReservationId(),
         resource.getClientResourceId(), resource.getActualLocation());
   }

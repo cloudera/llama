@@ -31,7 +31,7 @@ public class TestPlacedResourceImpl {
         createResource());
     r.toString();
     Assert.assertEquals(PlacedResource.Status.PENDING, r.getStatus());
-    Assert.assertNull(r.getClientId());
+    Assert.assertNull(r.getHandle());
     Assert.assertNull(r.getReservationId());
     Assert.assertNull(r.getQueue());
     Assert.assertNull(r.getRmResourceId());
@@ -42,7 +42,7 @@ public class TestPlacedResourceImpl {
     UUID cId = UUID.randomUUID();
     UUID rId = UUID.randomUUID();
     r.setReservationInfo(cId, "q", rId);
-    Assert.assertEquals(cId, r.getClientId());
+    Assert.assertEquals(cId, r.getHandle());
     Assert.assertEquals(rId, r.getReservationId());
     Assert.assertEquals("q", r.getQueue());
     r.setAllocationInfo(1, 2, "l", "id");

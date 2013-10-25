@@ -122,7 +122,7 @@ public class ClientNotifier implements LlamaAMListener {
           "NodeMapper implementation");
     }
     if (!event.isEmpty()) {
-      queueNotifier(new Notifier(event.getClientId(),
+      queueNotifier(new Notifier(event.getHandle(),
           TypeUtils.toAMNotification(event, nodeMapper)));
     }
   }

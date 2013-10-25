@@ -65,7 +65,7 @@ public class TestReservation {
     resources.add(createResource());
     Reservation r1 = new Reservation(UUID.randomUUID(), "q", resources, false);
     Reservation r2 = new Reservation(r1);
-    Assert.assertEquals(r1.getClientId(), r2.getClientId());
+    Assert.assertEquals(r1.getHandle(), r2.getHandle());
     Assert.assertEquals(r1.getQueue(), r2.getQueue());
     Assert.assertEquals(r1.getResources(), r2.getResources());
     Assert.assertEquals(r1.isGang(), r2.isGang());
@@ -78,7 +78,7 @@ public class TestReservation {
     UUID cId = UUID.randomUUID();
     Reservation r = new Reservation(cId, "q", resources, true);
     r.toString();
-    Assert.assertEquals(cId, r.getClientId());
+    Assert.assertEquals(cId, r.getHandle());
     Assert.assertEquals("q", r.getQueue());
     Assert.assertEquals(resources, r.getResources());
     Assert.assertNotSame(resources, r.getResources());

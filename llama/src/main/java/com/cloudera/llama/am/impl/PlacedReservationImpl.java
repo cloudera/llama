@@ -38,7 +38,7 @@ public class PlacedReservationImpl extends RMPlacedReservation {
     for (int i = 0; i < reservation.getResources().size(); i++) {
       PlacedResource pr = reservation.getResources().get(i);
       PlacedResourceImpl pri = getResourceImpls().get(i);
-      pri.setReservationInfo(reservation.getClientId(), reservation.getQueue(),
+      pri.setReservationInfo(reservation.getHandle(), reservation.getQueue(),
           reservationId);
       pri.setAllocationInfo(pr.getActualCpuVCores(), pr.getActualMemoryMb(),
           pr.getActualLocation(), pr.getRmResourceId());
@@ -53,7 +53,7 @@ public class PlacedReservationImpl extends RMPlacedReservation {
     status = Status.PENDING;
     for (PlacedResource resource : getResources()) {
       ((PlacedResourceImpl) resource).setReservationInfo(
-          reservation.getClientId(), reservation.getQueue(), reservationId);
+          reservation.getHandle(), reservation.getQueue(), reservationId);
     }
   }
 

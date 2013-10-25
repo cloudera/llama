@@ -143,7 +143,7 @@ public class TypeUtils {
       LlamaAMEvent event, NodeMapper nodeMapper) {
     TLlamaAMNotificationRequest request = new TLlamaAMNotificationRequest();
     request.setVersion(TLlamaServiceVersion.V1);
-    request.setAm_handle(toTUniqueId(event.getClientId()));
+    request.setAm_handle(toTUniqueId(event.getHandle()));
     request.setHeartbeat(false);
 
     request.setAllocated_reservation_ids(toTUniqueIds(

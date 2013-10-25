@@ -93,7 +93,7 @@ public class LlamaJsonServlet extends HttpServlet {
         restData.writeReservationAsJson(id, resp.getWriter());
       } else if (requestType.startsWith(HANDLE)) {
         UUID id = UUID.fromString(requestType.substring(HANDLE.length()));
-        restData.writeClientReservationsAsJson(id, resp.getWriter());
+        restData.writeHandleReservationsAsJson(id, resp.getWriter());
       } else if (requestType.startsWith(NODE)) {
         String node = requestType.substring(NODE.length());
         restData.writeNodeResourcesAsJson(node, resp.getWriter());
