@@ -106,13 +106,13 @@ public abstract class LlamaAM {
 
   public abstract List<String> getNodes() throws LlamaAMException;
 
-  public abstract void reserve(UUID reservationId, Reservation reservation)
+  public abstract PlacedReservation reserve(UUID reservationId,
+      Reservation reservation)
       throws LlamaAMException;
 
-  public UUID reserve(Reservation reservation) throws LlamaAMException {
+  public PlacedReservation reserve(Reservation reservation) throws LlamaAMException {
     UUID reservationId = UUID.randomUUID();
-    reserve(reservationId, reservation);
-    return reservationId;
+    return reserve(reservationId, reservation);
   }
 
   public abstract PlacedReservation getReservation(UUID reservationId)

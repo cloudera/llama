@@ -220,15 +220,15 @@ public class TestLlamaAMWithYarn {
         Resource r = new Resource(UUID.randomUUID(), nodes.get(0),
             Resource.LocationEnforcement.MUST, 1, 1024);
         UUID pr1 = llama.reserve(new Reservation(UUID.randomUUID(), "queue1",
-            Arrays.asList(r), true));
+            Arrays.asList(r), true)).getReservationId();
         r = new Resource(UUID.randomUUID(), nodes.get(0),
             Resource.LocationEnforcement.PREFERRED, 1, 1024);
         UUID pr2 = llama.reserve(new Reservation(UUID.randomUUID(), "queue1",
-            Arrays.asList(r), true));
+            Arrays.asList(r), true)).getReservationId();
         r = new Resource(UUID.randomUUID(), nodes.get(0),
             Resource.LocationEnforcement.DONT_CARE, 1, 1024);
         UUID pr3 = llama.reserve(new Reservation(UUID.randomUUID(), "queue1",
-            Arrays.asList(r), true));
+            Arrays.asList(r), true)).getReservationId();
         while (listener.events.size() < 3) {
           Thread.sleep(100);
         }

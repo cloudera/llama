@@ -56,8 +56,10 @@ public class TestLlamaAMImpl {
     }
 
     @Override
-    public void reserve(UUID reservationId, Reservation reservation)
+    public PlacedReservation reserve(UUID reservationId,
+        Reservation reservation)
         throws LlamaAMException {
+      return null;
     }
 
     @Override

@@ -178,7 +178,7 @@ public class TestSingleQueueLlamaAM {
     SingleQueueLlamaAM llama = createLlamaAM();
     try {
       llama.start();
-      llama.reserve(RESERVATION1_NONGANG);
+      llama.reserve(RESERVATION1_NONGANG).getReservationId();
       Assert.assertEquals(Arrays.asList("node"), llama.getNodes());
     } finally {
       llama.stop();
@@ -190,7 +190,7 @@ public class TestSingleQueueLlamaAM {
     SingleQueueLlamaAM llama = createLlamaAM();
     try {
       llama.start();
-      UUID reservationId = llama.reserve(RESERVATION1_NONGANG);
+      UUID reservationId = llama.reserve(RESERVATION1_NONGANG).getReservationId();
 
       Assert.assertTrue(((MyRMLlamaAMConnector) llama.getRMConnector()).reserve);
       Assert.assertFalse(((MyRMLlamaAMConnector) llama.getRMConnector()).release);
@@ -222,7 +222,7 @@ public class TestSingleQueueLlamaAM {
     SingleQueueLlamaAM llama = createLlamaAM();
     try {
       llama.start();
-      UUID reservationId = llama.reserve(RESERVATION1_NONGANG);
+      UUID reservationId = llama.reserve(RESERVATION1_NONGANG).getReservationId();
       llama.releaseReservation(reservationId);
       llama.releaseReservation(UUID.randomUUID());
       Assert.assertTrue(((MyRMLlamaAMConnector) llama.getRMConnector()).release);
@@ -239,7 +239,7 @@ public class TestSingleQueueLlamaAM {
     try {
       llama.start();
       llama.addListener(listener);
-      UUID reservationId = llama.reserve(RESERVATION1_NONGANG);
+      UUID reservationId = llama.reserve(RESERVATION1_NONGANG).getReservationId();
       RMResourceChange change = RMResourceChange.createResourceAllocation
           (RESOURCE1.getClientResourceId(), "cid1", 3, 4096, "a1");
       llama.changesFromRM(Arrays.asList(change));
@@ -270,7 +270,7 @@ public class TestSingleQueueLlamaAM {
     try {
       llama.start();
       llama.addListener(listener);
-      UUID reservationId = llama.reserve(RESERVATION1_GANG);
+      UUID reservationId = llama.reserve(RESERVATION1_GANG).getReservationId();
       RMResourceChange change = RMResourceChange.createResourceAllocation
           (RESOURCE1.getClientResourceId(), "cid1", 3, 4096, "a1");
       llama.changesFromRM(Arrays.asList(change));
@@ -303,7 +303,7 @@ public class TestSingleQueueLlamaAM {
     try {
       llama.start();
       llama.addListener(listener);
-      UUID reservationId = llama.reserve(RESERVATION2_NONGANG);
+      UUID reservationId = llama.reserve(RESERVATION2_NONGANG).getReservationId();
       RMResourceChange change1 = RMResourceChange.createResourceAllocation
           (RESOURCE1.getClientResourceId(), "cid1", 3, 4096, "a1");
       RMResourceChange change2 = RMResourceChange.createResourceAllocation
@@ -336,7 +336,7 @@ public class TestSingleQueueLlamaAM {
     try {
       llama.start();
       llama.addListener(listener);
-      UUID reservationId = llama.reserve(RESERVATION2_GANG);
+      UUID reservationId = llama.reserve(RESERVATION2_GANG).getReservationId();
       RMResourceChange change1 = RMResourceChange.createResourceAllocation
           (RESOURCE1.getClientResourceId(), "cid1", 3, 4096, "a1");
       RMResourceChange change2 = RMResourceChange.createResourceAllocation
@@ -371,7 +371,7 @@ public class TestSingleQueueLlamaAM {
     try {
       llama.start();
       llama.addListener(listener);
-      UUID reservationId = llama.reserve(RESERVATION2_NONGANG);
+      UUID reservationId = llama.reserve(RESERVATION2_NONGANG).getReservationId();
       RMResourceChange change1 = RMResourceChange.createResourceAllocation
           (RESOURCE1.getClientResourceId(), "cid1", 3, 4096, "a1");
       llama.changesFromRM(Arrays.asList(change1));
@@ -417,7 +417,7 @@ public class TestSingleQueueLlamaAM {
     try {
       llama.start();
       llama.addListener(listener);
-      UUID reservationId = llama.reserve(RESERVATION2_GANG);
+      UUID reservationId = llama.reserve(RESERVATION2_GANG).getReservationId();
       RMResourceChange change1 = RMResourceChange.createResourceAllocation
           (RESOURCE1.getClientResourceId(), "cid1", 3, 4096, "a1");
       llama.changesFromRM(Arrays.asList(change1));
@@ -458,7 +458,7 @@ public class TestSingleQueueLlamaAM {
     try {
       llama.start();
       llama.addListener(listener);
-      UUID reservationId = llama.reserve(RESERVATION1_GANG);
+      UUID reservationId = llama.reserve(RESERVATION1_GANG).getReservationId();
       RMResourceChange change = RMResourceChange.createResourceChange
           (RESOURCE1.getClientResourceId(), PlacedResource.Status.REJECTED);
       llama.changesFromRM(Arrays.asList(change));
@@ -480,7 +480,7 @@ public class TestSingleQueueLlamaAM {
     try {
       llama.start();
       llama.addListener(listener);
-      UUID reservationId = llama.reserve(RESERVATION2_GANG);
+      UUID reservationId = llama.reserve(RESERVATION2_GANG).getReservationId();
 
       RMResourceChange change1 = RMResourceChange.createResourceAllocation
           (RESOURCE1.getClientResourceId(), "cid1", 3, 4096, "a1");
@@ -506,7 +506,7 @@ public class TestSingleQueueLlamaAM {
     try {
       llama.start();
       llama.addListener(listener);
-      UUID reservationId = llama.reserve(RESERVATION2_NONGANG);
+      UUID reservationId = llama.reserve(RESERVATION2_NONGANG).getReservationId();
 
       RMResourceChange change1 = RMResourceChange.createResourceAllocation
           (RESOURCE1.getClientResourceId(), "cid1", 3, 4096, "a1");
@@ -536,7 +536,7 @@ public class TestSingleQueueLlamaAM {
     try {
       llama.start();
       llama.addListener(listener);
-      UUID reservationId = llama.reserve(RESERVATION2_GANG);
+      UUID reservationId = llama.reserve(RESERVATION2_GANG).getReservationId();
 
       RMResourceChange change1 = RMResourceChange.createResourceAllocation
           (RESOURCE1.getClientResourceId(), "cid1", 3, 4096, "a1");
@@ -562,7 +562,7 @@ public class TestSingleQueueLlamaAM {
     try {
       llama.start();
       llama.addListener(listener);
-      UUID reservationId = llama.reserve(RESERVATION2_NONGANG);
+      UUID reservationId = llama.reserve(RESERVATION2_NONGANG).getReservationId();
 
       RMResourceChange change1 = RMResourceChange.createResourceAllocation
           (RESOURCE1.getClientResourceId(), "cid1", 3, 4096, "a1");
@@ -593,7 +593,7 @@ public class TestSingleQueueLlamaAM {
     try {
       llama.start();
       llama.addListener(listener);
-      UUID reservationId = llama.reserve(RESERVATION1_GANG);
+      UUID reservationId = llama.reserve(RESERVATION1_GANG).getReservationId();
 
       RMResourceChange change1 = RMResourceChange.createResourceAllocation
           (RESOURCE1.getClientResourceId(), "cid1", 3, 4096, "a1");
@@ -626,7 +626,7 @@ public class TestSingleQueueLlamaAM {
     try {
       llama.start();
       llama.addListener(listener);
-      UUID reservationId = llama.reserve(RESERVATION1_NONGANG);
+      UUID reservationId = llama.reserve(RESERVATION1_NONGANG).getReservationId();
 
       RMResourceChange change1 = RMResourceChange.createResourceAllocation
           (RESOURCE1.getClientResourceId(), "cid1", 3, 4096, "a1");
@@ -660,7 +660,7 @@ public class TestSingleQueueLlamaAM {
     try {
       llama.start();
       llama.addListener(listener);
-      UUID reservationId = llama.reserve(RESERVATION2_GANG);
+      UUID reservationId = llama.reserve(RESERVATION2_GANG).getReservationId();
 
       RMResourceChange change1 = RMResourceChange.createResourceAllocation
           (RESOURCE1.getClientResourceId(), "cid1", 3, 4096, "a1");
@@ -686,7 +686,7 @@ public class TestSingleQueueLlamaAM {
     try {
       llama.start();
       llama.addListener(listener);
-      UUID reservationId = llama.reserve(RESERVATION2_NONGANG);
+      UUID reservationId = llama.reserve(RESERVATION2_NONGANG).getReservationId();
 
       RMResourceChange change1 = RMResourceChange.createResourceAllocation
           (RESOURCE1.getClientResourceId(), "cid1", 3, 4096, "a1");
@@ -720,7 +720,7 @@ public class TestSingleQueueLlamaAM {
       llama.addListener(listener);
       llama.start();
       llama.addListener(listener);
-      UUID reservationId = llama.reserve(RESERVATION1_GANG);
+      UUID reservationId = llama.reserve(RESERVATION1_GANG).getReservationId();
 
       RMResourceChange change1 = RMResourceChange.createResourceAllocation
           (RESOURCE1.getClientResourceId(), "cid1", 3, 4096, "a1");
@@ -754,7 +754,7 @@ public class TestSingleQueueLlamaAM {
       llama.addListener(listener);
       llama.start();
       llama.addListener(listener);
-      UUID reservationId = llama.reserve(RESERVATION1_NONGANG);
+      UUID reservationId = llama.reserve(RESERVATION1_NONGANG).getReservationId();
 
       RMResourceChange change1 = RMResourceChange.createResourceAllocation
           (RESOURCE1.getClientResourceId(), "cid1", 3, 4096, "a1");
@@ -814,11 +814,11 @@ public class TestSingleQueueLlamaAM {
       UUID cId1 = UUID.randomUUID();
       UUID cId2 = UUID.randomUUID();
       UUID reservationId1 = llama.reserve(new Reservation(cId1, "queue",
-          Arrays.asList(RESOURCE1), true));
+          Arrays.asList(RESOURCE1), true)).getReservationId();
       UUID reservationId2 = llama.reserve(new Reservation(cId1, "queue",
-          Arrays.asList(RESOURCE2), true));
+          Arrays.asList(RESOURCE2), true)).getReservationId();
       UUID reservationId3 = llama.reserve(new Reservation(cId2, "queue",
-          Arrays.asList(RESOURCE3), true));
+          Arrays.asList(RESOURCE3), true)).getReservationId();
       Assert.assertNotNull(llama._getReservation(reservationId1));
       Assert.assertNotNull(llama._getReservation(reservationId2));
       Assert.assertNotNull(llama._getReservation(reservationId3));
@@ -842,11 +842,11 @@ public class TestSingleQueueLlamaAM {
       UUID cId1 = UUID.randomUUID();
       UUID cId2 = UUID.randomUUID();
       UUID reservationId1 = llama.reserve(new Reservation(cId1, "queue",
-          Arrays.asList(RESOURCE1), true));
+          Arrays.asList(RESOURCE1), true)).getReservationId();
       UUID reservationId2 = llama.reserve(new Reservation(cId1, "queue",
-          Arrays.asList(RESOURCE2), true));
+          Arrays.asList(RESOURCE2), true)).getReservationId();
       UUID reservationId3 = llama.reserve(new Reservation(cId2, "queue",
-          Arrays.asList(RESOURCE3), true));
+          Arrays.asList(RESOURCE3), true)).getReservationId();
       llama.loseAllReservations();
       Assert.assertNull(llama._getReservation(reservationId1));
       Assert.assertNull(llama._getReservation(reservationId2));

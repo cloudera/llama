@@ -77,8 +77,10 @@ public class TestAPIContractLlamaAM {
     }
 
     @Override
-    public void reserve(UUID reservationId, Reservation reservation)
+    public PlacedReservation reserve(UUID reservationId,
+        Reservation reservation)
         throws LlamaAMException {
+      return new PlacedReservationImpl(UUID.randomUUID(), createReservation());
     }
 
     @Override

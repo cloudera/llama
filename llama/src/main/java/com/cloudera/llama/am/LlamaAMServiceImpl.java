@@ -101,7 +101,7 @@ public class LlamaAMServiceImpl implements LlamaAMService.Iface {
       UUID handle = TypeUtils.toUUID(request.getAm_handle());
       clientNotificationService.validateHandle(handle);
       Reservation reservation = TypeUtils.toReservation(request, nodeMapper);
-      UUID reservationId = llamaAM.reserve(reservation);
+      UUID reservationId = llamaAM.reserve(reservation).getReservationId();
       response.setReservation_id(TypeUtils.toTUniqueId(reservationId));
       response.setStatus(TypeUtils.OK);
     } catch (Throwable ex) {

@@ -162,18 +162,20 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
   }
 
   @Override
-  public void reserve(UUID reservationId, Reservation reservation)
+  public PlacedReservation reserve(UUID reservationId, Reservation reservation)
       throws LlamaAMException {
+    PlacedReservation placedReservation = null;
     boolean doActualReservation = true;
     if (reservation.isGang()) {
-      PlacedReservationImpl placedReservation =
-          new PlacedReservationImpl(reservationId, reservation);
-      doActualReservation = gReserve(reservationId, placedReservation);
+      placedReservation = new PlacedReservationImpl(reservationId, reservation);
+      doActualReservation = gReserve(reservationId,
+          (PlacedReservationImpl) placedReservation);
       reservation = placedReservation;
     }
     if (doActualReservation) {
-      am.reserve(reservationId, reservation);
+      placedReservation = am.reserve(reservationId, reservation);
     }
+    return placedReservation;
   }
 
   private synchronized boolean gReserve(UUID reservationId,

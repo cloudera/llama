@@ -198,7 +198,8 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
   }
 
   @Override
-  public void reserve(UUID reservationId, final Reservation reservation)
+  public PlacedReservation reserve(UUID reservationId,
+      final Reservation reservation)
       throws LlamaAMException {
     final PlacedReservationImpl impl = new PlacedReservationImpl(reservationId,
         reservation);
@@ -206,6 +207,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
     synchronized (this) {
       _addReservation(impl);
     }
+    return impl;
   }
 
   @Override

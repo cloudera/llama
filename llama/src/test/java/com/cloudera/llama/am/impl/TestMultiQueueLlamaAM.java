@@ -151,7 +151,8 @@ public class TestMultiQueueLlamaAM {
         }
       };
       UUID id = am.reserve(new Reservation(UUID.randomUUID(), "q",
-          Arrays.asList(TestReservation.createResource()), true));
+          Arrays.asList(TestReservation.createResource()), true)).
+          getReservationId();
       am.getNodes();
       am.addListener(listener);
       am.removeListener(listener);
@@ -266,7 +267,7 @@ public class TestMultiQueueLlamaAM {
       UUID cId = UUID.randomUUID();
       Resource resource = TestReservation.createResource();
       UUID id = am.reserve(new Reservation(cId, "q",
-          Arrays.asList(resource), true));
+          Arrays.asList(resource), true)).getReservationId();
       am.getNodes();
       am.addListener(listener);
       am.getReservation(id);
