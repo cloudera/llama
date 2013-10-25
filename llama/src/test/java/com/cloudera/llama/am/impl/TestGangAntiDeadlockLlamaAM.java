@@ -294,6 +294,9 @@ public class TestGangAntiDeadlockLlamaAM {
   @SuppressWarnings("unchecked")
   public void testGangReserveBackoffReReserve()
       throws Exception {
+    Map<UUID, LlamaAMEventImpl> eventsMap =
+        new HashMap<UUID, LlamaAMEventImpl>();
+
     Configuration conf = createGangConfig();
     MyLlamaAM am = new MyLlamaAM(conf);
     GangAntiDeadlockLlamaAM gAm = new MyGangAntiDeadlockLlamaAM(conf, am);
@@ -330,7 +333,7 @@ public class TestGangAntiDeadlockLlamaAM {
 
       //deadlock avoidance without victims
       gAm.timeOfLastAllocation = System.currentTimeMillis();
-      long sleep = gAm.deadlockAvoidance();
+      long sleep = gAm.deadlockAvoidance(eventsMap);
       Assert.assertTrue(NO_ALLOCATION_LIMIT >= sleep);
       Assert.assertEquals(4, am.reservations.size());
       Assert.assertEquals(4, gAm.localReservations.size());
@@ -340,7 +343,7 @@ public class TestGangAntiDeadlockLlamaAM {
       //deadlock avoidance with victims
       gAm.timeOfLastAllocation = System.currentTimeMillis() -
           NO_ALLOCATION_LIMIT - 1;
-      sleep = gAm.deadlockAvoidance();
+      sleep = gAm.deadlockAvoidance(eventsMap);
       Assert.assertEquals(NO_ALLOCATION_LIMIT, sleep);
       Assert.assertEquals(2, am.reservations.size());
       Assert.assertEquals(4, gAm.localReservations.size());
@@ -350,7 +353,7 @@ public class TestGangAntiDeadlockLlamaAM {
       //2nd deadlock avoidance with victims
       gAm.timeOfLastAllocation = System.currentTimeMillis() -
           NO_ALLOCATION_LIMIT;
-      sleep = gAm.deadlockAvoidance();
+      sleep = gAm.deadlockAvoidance(eventsMap);
       Assert.assertEquals(NO_ALLOCATION_LIMIT, sleep);
       Assert.assertEquals(1, am.reservations.size());
       Assert.assertEquals(4, gAm.localReservations.size());
@@ -367,11 +370,11 @@ public class TestGangAntiDeadlockLlamaAM {
       Assert.assertEquals(3, gAm.backedOffReservations.size());
       Assert.assertEquals(0, gAm.submittedReservations.size());
 
-      sleep = gAm.reReserveBackOffs();
+      sleep = gAm.reReserveBackOffs(eventsMap);
       Assert.assertTrue(BACKOFF_MAX_DELAY > sleep);
 
       Thread.sleep(BACKOFF_MAX_DELAY + 10);
-      sleep = gAm.reReserveBackOffs();
+      sleep = gAm.reReserveBackOffs(eventsMap);
       Assert.assertEquals(Long.MAX_VALUE, sleep);
       Assert.assertEquals(4, am.reservations.size());
       Assert.assertEquals(3, gAm.localReservations.size());
@@ -408,10 +411,13 @@ public class TestGangAntiDeadlockLlamaAM {
       Reservation<Resource> reservation4 = createReservation(clientId, 1, true);
       UUID id4 = gAm.reserve(reservation4).getReservationId();
 
+      Map<UUID, LlamaAMEventImpl> eventsMap =
+          new HashMap<UUID, LlamaAMEventImpl>();
+
       //deadlock avoidance with victims
       gAm.timeOfLastAllocation = System.currentTimeMillis() -
           NO_ALLOCATION_LIMIT - 1;
-      long sleep = gAm.deadlockAvoidance();
+      long sleep = gAm.deadlockAvoidance(eventsMap);
       Assert.assertEquals(NO_ALLOCATION_LIMIT, sleep);
       Assert.assertEquals(2, am.reservations.size());
       Assert.assertEquals(4, gAm.localReservations.size());

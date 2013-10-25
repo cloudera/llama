@@ -40,4 +40,5 @@ public interface LlamaAMEvent {
 
   public List<UUID> getPreemptedClientResourceIds();
 
+  public List<PlacedReservation> getChanges();
 }

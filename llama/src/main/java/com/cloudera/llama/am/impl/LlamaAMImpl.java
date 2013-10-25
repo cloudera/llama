@@ -20,12 +20,14 @@ package com.cloudera.llama.am.impl;
 import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.LlamaAMEvent;
 import com.cloudera.llama.am.api.LlamaAMListener;
+import com.cloudera.llama.util.UUID;
 import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 public abstract class LlamaAMImpl extends LlamaAM {
@@ -76,6 +78,16 @@ public abstract class LlamaAMImpl extends LlamaAM {
         }
       }
     }
+  }
+
+  protected LlamaAMEventImpl getEventForClientId(Map<UUID,
+      LlamaAMEventImpl> eventsMap, UUID clientId) {
+    LlamaAMEventImpl event = eventsMap.get(clientId);
+    if (event == null) {
+      event = new LlamaAMEventImpl(clientId);
+      eventsMap.put(clientId, event);
+    }
+    return event;
   }
 
 }

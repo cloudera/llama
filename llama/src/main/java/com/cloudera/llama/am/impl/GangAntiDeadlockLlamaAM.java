@@ -284,9 +284,16 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
     }
     while (isRunning()) {
       try {
-        long sleepTime1 = deadlockAvoidance();
-        long sleepTime2 = reReserveBackOffs();
+        Map<UUID, LlamaAMEventImpl> eventsMap =
+            new HashMap<UUID, LlamaAMEventImpl>();
+        long sleepTime1 = deadlockAvoidance(eventsMap);
+        long sleepTime2 = reReserveBackOffs(eventsMap);
         long sleepTime = Math.min(sleepTime1, sleepTime2);
+
+        if (eventsMap.isEmpty()) {
+          dispatch(eventsMap.values());
+        }
+
         getLog().debug("Deadlock avoidance thread sleeping for '{}' ms",
             sleepTime);
         Thread.sleep(sleepTime);
@@ -296,12 +303,12 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
     }
   }
 
-  long deadlockAvoidance() {
+  long deadlockAvoidance(Map<UUID, LlamaAMEventImpl> eventsMap) {
     long sleepTime;
     long timeWithoutAllocations = System.currentTimeMillis() -
         timeOfLastAllocation;
     if (timeWithoutAllocations >= noAllocationLimit) {
-      doReservationsBackOff();
+      doReservationsBackOff(eventsMap);
       sleepTime = noAllocationLimit;
     } else {
       getLog().debug("Recent allocation, '{}' ms ago, skipping back off",
@@ -316,7 +323,8 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
         (backOffMaxDelay - backOffMinDelay));
   }
 
-  synchronized void doReservationsBackOff() {
+  synchronized void doReservationsBackOff(Map<UUID, LlamaAMEventImpl>
+      eventsMap) {
     if (submittedReservations.isEmpty()) {
       getLog().debug("No pending gang reservations to back off");
     } else {
@@ -343,10 +351,15 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
                 reservation.getReservationId(),
                 reservation.getResources().size());
             am.releaseReservation(reservation.getReservationId());
+            reservation.setStatus(PlacedReservation.Status.BACKED_OFF);
             backedOffReservations.add(
                 new BackedOffReservation(reservation, getBackOffDelay()));
             submittedReservations.remove(reservationId);
             submitted.remove(reservationId);
+
+            LlamaAMEventImpl event = getEventForClientId(eventsMap,
+                reservation.getClientId());
+            event.getChanges().add(reservation);
 
             MetricUtil.meter(getMetricRegistry(), BACKED_OFF_RESERVATIONS_METER,
                 1);
@@ -366,7 +379,7 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
     timeOfLastAllocation = System.currentTimeMillis();
   }
 
-  synchronized long reReserveBackOffs() {
+  synchronized long reReserveBackOffs(Map<UUID, LlamaAMEventImpl> eventsMap) {
     BackedOffReservation br = backedOffReservations.poll();
     if (br != null) {
       getLog().debug("Starting re-reserving backed off gang reservations");
@@ -379,7 +392,12 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
         try {
           getLog().info("Re-reserving gang reservation '{}'",
               br.getReservation().getReservationId());
-          am.reserve(reservationId, br.getReservation());
+          PlacedReservation pr = am.reserve(reservationId, br.getReservation());
+
+          LlamaAMEventImpl event = getEventForClientId(eventsMap,
+              pr.getClientId());
+          event.getChanges().add(pr);
+
           submittedReservations.add(reservationId);
         } catch (LlamaAMException ex) {
           localReservations.remove(reservationId);

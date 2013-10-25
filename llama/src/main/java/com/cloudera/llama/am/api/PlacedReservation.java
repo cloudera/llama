@@ -24,7 +24,7 @@ import com.cloudera.llama.util.UUID;
 public abstract class PlacedReservation extends Reservation<PlacedResource> {
 
   public enum Status {
-    PENDING, PARTIAL, ALLOCATED
+    PENDING, BACKED_OFF, PARTIAL, ALLOCATED, ENDED
   }
 
   private long placedOn;

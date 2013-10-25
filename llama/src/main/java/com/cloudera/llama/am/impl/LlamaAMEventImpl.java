@@ -18,6 +18,7 @@
 package com.cloudera.llama.am.impl;
 
 import com.cloudera.llama.am.api.LlamaAMEvent;
+import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.PlacedResource;
 
 import java.util.ArrayList;
@@ -36,6 +37,8 @@ public class LlamaAMEventImpl implements LlamaAMEvent {
   private final List<UUID> preemptedResourceIds = new ArrayList<UUID>();
   private final List<PlacedResource> allocatedGangResources =
       new ArrayList<PlacedResource>();
+  private final List<PlacedReservation> changes =
+      new ArrayList<PlacedReservation>();
 
   public LlamaAMEventImpl(UUID clientId) {
     this.clientId = clientId;
@@ -96,4 +99,8 @@ public class LlamaAMEventImpl implements LlamaAMEvent {
     return allocatedGangResources;
   }
 
+  @Override
+  public List<PlacedReservation> getChanges() {
+    return changes;
+  }
 }
