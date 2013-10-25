@@ -18,6 +18,7 @@
 package com.cloudera.llama.server;
 
 import com.cloudera.llama.am.impl.FastFormat;
+import com.cloudera.llama.util.NamedThreadFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.thrift.TProcessor;
@@ -33,7 +34,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -73,7 +73,7 @@ public abstract class ThriftServer<T extends TProcessor> extends
     BlockingQueue<Runnable> queue = 
         new LinkedBlockingQueue<Runnable>(queueSize);
     ThreadPoolExecutor executor = new ThreadPoolExecutor(minThreads, maxThreads,
-        60, TimeUnit.SECONDS, queue);
+        60, TimeUnit.SECONDS, queue, new NamedThreadFactory("llama-thrift"));
     executor.prestartAllCoreThreads();
     executor.setRejectedExecutionHandler(new RejectedExecutionHandler() {
       @Override

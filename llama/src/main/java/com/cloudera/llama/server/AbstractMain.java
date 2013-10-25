@@ -181,7 +181,7 @@ public abstract class AbstractMain {
   private static void addShutdownHook(final AbstractServer server) {
     if (!System.getProperty(TEST_LLAMA_JVM_EXIT_SYS_PROP,
         "false").equals("true")) {
-      Runtime.getRuntime().addShutdownHook(new Thread() {
+      Runtime.getRuntime().addShutdownHook(new Thread("llama-shutdownhook") {
         @Override
         public void run() {
           server.shutdown(0);

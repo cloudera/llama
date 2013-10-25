@@ -71,7 +71,7 @@ public abstract class AbstractServer implements Configurable {
     startService();
     runLevel = 3;
     getLog().trace("Starting transport");
-    Thread transportThread = new Thread(getClass().getSimpleName()) {
+    Thread transportThread = new Thread("llama-transport-server") {
       @Override
       public void run() {
         try {

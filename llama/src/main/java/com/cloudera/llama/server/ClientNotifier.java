@@ -21,6 +21,7 @@ import com.cloudera.llama.am.api.LlamaAMEvent;
 import com.cloudera.llama.am.api.LlamaAMListener;
 import com.cloudera.llama.thrift.TLlamaAMNotificationRequest;
 import com.cloudera.llama.thrift.TLlamaAMNotificationResponse;
+import com.cloudera.llama.util.NamedThreadFactory;
 import com.cloudera.llama.util.UUID;
 import com.codahale.metrics.MetricRegistry;
 import org.apache.thrift.TException;
@@ -92,7 +93,8 @@ public class ClientNotifier implements LlamaAMListener {
     int threads = conf.getClientNotifierThreads();
     //funny downcasting and upcasting because javac gets goofy here
     executor = new ThreadPoolExecutor(threads, threads, 0, TimeUnit.SECONDS,
-        (BlockingQueue<Runnable>) (BlockingQueue) eventsQueue);
+        (BlockingQueue<Runnable>) (BlockingQueue) eventsQueue,
+        new NamedThreadFactory("llama-notifier"));
     executor.prestartAllCoreThreads();
     subject = Security.loginClientSubject(conf);
   }

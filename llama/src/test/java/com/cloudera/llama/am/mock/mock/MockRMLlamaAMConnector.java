@@ -27,6 +27,7 @@ import com.cloudera.llama.am.spi.RMLlamaAMConnector;
 import com.cloudera.llama.am.spi.RMPlacedReservation;
 import com.cloudera.llama.am.spi.RMPlacedResource;
 import com.cloudera.llama.am.spi.RMResourceChange;
+import com.cloudera.llama.util.NamedThreadFactory;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 
@@ -157,7 +158,8 @@ public class MockRMLlamaAMConnector
     maxWait = getConf().getInt(EVENTS_MAX_WAIT_KEY, EVENTS_MAX_WAIT_DEFAULT);
     nodes = Collections.unmodifiableList(Arrays.asList(getConf().
         getStrings(NODES_KEY, NODES_DEFAULT)));
-    scheduler = new ScheduledThreadPoolExecutor(1);
+    scheduler = new ScheduledThreadPoolExecutor(1,
+        new NamedThreadFactory("llama-mock"));
     if (queue != null) {
       Collection<String> validQueues = getConf().
           getTrimmedStringCollection(QUEUES_KEY);

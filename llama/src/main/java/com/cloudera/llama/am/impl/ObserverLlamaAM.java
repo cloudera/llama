@@ -44,7 +44,7 @@ public class ObserverLlamaAM extends LlamaAM implements LlamaAMListener,
     this.observer = ParamChecker.notNull(observer, "observer");
     changes = new LinkedBlockingQueue<PlacedReservation>();
     llamaAM.addListener(this);
-    processorThread = new Thread(this, "ObserverLlamaAM processor thread");
+    processorThread = new Thread(this, "llama-am-observer-processor");
     processorThread.setDaemon(true);
   }
 

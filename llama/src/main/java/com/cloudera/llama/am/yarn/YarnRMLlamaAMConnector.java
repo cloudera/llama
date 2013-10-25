@@ -26,6 +26,7 @@ import com.cloudera.llama.am.spi.RMLlamaAMConnector;
 import com.cloudera.llama.am.spi.RMPlacedReservation;
 import com.cloudera.llama.am.spi.RMPlacedResource;
 import com.cloudera.llama.am.spi.RMResourceChange;
+import com.cloudera.llama.util.NamedThreadFactory;
 import com.cloudera.llama.util.UUID;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
@@ -215,7 +216,8 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
       // funny down-casting and up-casting because javac gets goofy here
       containerHandlerExecutor = new ThreadPoolExecutor(threads, threads, 0,
           TimeUnit.SECONDS, (BlockingQueue<Runnable>) (BlockingQueue)
-          containerHandlerQueue);
+          containerHandlerQueue,
+          new NamedThreadFactory("llama-container-handler"));
       containerHandlerExecutor.prestartAllCoreThreads();
     } catch (Exception ex) {
       throw new LlamaAMException(ex);

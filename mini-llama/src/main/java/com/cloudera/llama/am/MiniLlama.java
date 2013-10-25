@@ -88,7 +88,7 @@ public class MiniLlama {
         llama.getAddressHost() + ":" + llama.getAddressPort());
     LOG.info("*************************************************************" +
         "********************************************************");
-    Runtime.getRuntime().addShutdownHook(new Thread() {
+    Runtime.getRuntime().addShutdownHook(new Thread("minillama-shutdownhoock") {
       @Override
       public void run() {
         llama.stop();

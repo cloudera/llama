@@ -36,12 +36,14 @@ import org.mortbay.jetty.Connector;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.bio.SocketConnector;
 import org.mortbay.jetty.servlet.Context;
+import org.mortbay.thread.QueuedThreadPool;
 
 import java.net.InetSocketAddress;
 
 public class LlamaAMServer extends
     ThriftServer<com.cloudera.llama.thrift.LlamaAMService.Processor>
     implements ClientNotificationService.Listener {
+  private static final int JETTY_MAX_THREADS = 20;
   private LlamaAM llamaAm;
   private ClientNotificationService clientNotificationService;
   private NodeMapper nodeMapper;
@@ -77,6 +79,10 @@ public class LlamaAMServer extends
   private void startHttpServer() {
     restData = new RestData();
     httpServer = new Server();
+    QueuedThreadPool qtp = new QueuedThreadPool(JETTY_MAX_THREADS);
+    qtp.setName("llama-jetty");
+    qtp.setDaemon(true);
+    httpServer.setThreadPool(qtp);
     String strAddress = getServerConf().getHttpAddress();
     InetSocketAddress address = NetUtils.createSocketAddr(strAddress,
         getServerConf().getHttpDefaultPort());

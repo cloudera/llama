@@ -142,7 +142,7 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
   void startDeadlockResolverThread() {
     Thread deadlockResolverThread = new Thread(this);
     deadlockResolverThread.setDaemon(true);
-    deadlockResolverThread.setName("GangAntiDeadlockLlamaAM");
+    deadlockResolverThread.setName("llama-gang-antideadlock");
     deadlockResolverThread.start();
   }
 
