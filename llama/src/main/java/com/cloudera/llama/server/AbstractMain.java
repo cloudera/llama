@@ -17,18 +17,16 @@
  */
 package com.cloudera.llama.server;
 
+import com.cloudera.llama.util.VersionInfo;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.ReflectionUtils;
-import org.apache.hadoop.util.VersionInfo;
 import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.InputStream;
 import java.net.URL;
-import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 
 public abstract class AbstractMain {
@@ -67,8 +65,6 @@ public abstract class AbstractMain {
     }
   }
 
-  private static final String BUILD_INFO_PROPERTIES =
-      "llama-build-info.properties";
   private static final String LOG4J_PROPERTIES = "llama-log4j.properties";
   private static final String SITE_XML = "llama-site.xml";
 
@@ -155,30 +151,16 @@ public abstract class AbstractMain {
     if (LOG == null) {
       LOG = LoggerFactory.getLogger(AbstractMain.class);
     }
-    Properties props = new Properties();
-    ClassLoader cl = Thread.currentThread().getContextClassLoader();
-    InputStream is = cl.getResourceAsStream(BUILD_INFO_PROPERTIES);
-    if (is != null) {
-      try {
-        props.load(is);
-        is.close();
-      } catch (Exception ex) {
-        LOG.warn("Could not read '{}' from classpath: {}",
-            BUILD_INFO_PROPERTIES, ex.toString(), ex);
-      }
-    }
     LOG.info("-----------------------------------------------------------------");
     LOG.info("  Java runtime version : {}",
         System.getProperty("java.runtime.version"));
-    LOG.info("  Llama version        : {}", props.getProperty("llama.version",
-        "?"));
-    LOG.info("  Llama built date     : {}", props.getProperty("llama.built.date",
-        "?"));
-    LOG.info("  Llama built by       : {}", props.getProperty("llama.built.by",
-        "?"));
-    LOG.info("  Llama revision       : {}", props.getProperty("llama.revision",
-        "?"));
-    LOG.info("  Hadoop version       : {}", VersionInfo.getVersion());
+    LOG.info("  Llama version        : {}", VersionInfo.getVersion());
+    LOG.info("  Llama built date     : {}", VersionInfo.getBuiltDate());
+    LOG.info("  Llama built by       : {}", VersionInfo.getBuiltBy());
+    LOG.info("  Llama SCM URI        : {}", VersionInfo.getSCMURI());
+    LOG.info("  Llama SCM revision   : {}", VersionInfo.getSCMRevision());
+    LOG.info("  Llama source MD5     : {}", VersionInfo.getSourceMD5());
+    LOG.info("  Hadoop version       : {}", VersionInfo.getHadoopVersion());
     LOG.info("-----------------------------------------------------------------");
   }
 

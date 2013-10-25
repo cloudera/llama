@@ -23,6 +23,7 @@ import com.cloudera.llama.am.api.PlacedResource;
 import com.cloudera.llama.server.ClientInfo;
 import com.cloudera.llama.server.ClientNotificationService;
 import com.cloudera.llama.util.UUID;
+import com.cloudera.llama.util.VersionInfo;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.Version;
@@ -52,9 +53,23 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class RestData implements LlamaAMObserver,
     ClientNotificationService.Listener {
 
-  public static final String REST_VERSION_KEY = "llamaRestJsonVersion";
-  public final static String REST_VERSION_VALUE = "1.0.0";
+  private static final Map<String, String> VERSION_INFO =
+      new LinkedHashMap<String, String>();
+  
+  static {
+    VERSION_INFO.put("llama.version", VersionInfo.getVersion());
+    VERSION_INFO.put("llama.built.date", VersionInfo.getBuiltDate());
+    VERSION_INFO.put("llama.built.by", VersionInfo.getBuiltBy());
+    VERSION_INFO.put("llama.scm.uri", VersionInfo.getSCMURI());
+    VERSION_INFO.put("llama.scm.revision", VersionInfo.getSCMRevision());
+    VERSION_INFO.put("llama.source.md5", VersionInfo.getSourceMD5());
+    VERSION_INFO.put("llama.hadoop.version", VersionInfo.getHadoopVersion());
+  }
 
+  public static final String REST_VERSION_KEY = "llamaRestJsonVersion";
+  public static final String REST_VERSION_VALUE = "1.0.0";
+
+  private static final String VERSION_INFO_KEY = "llamaVersionInfo";
   private static final String RESERVATIONS_COUNT_KEY = "reservationsCount";
   private static final String QUEUES_SUMMARY_KEY = "queuesSummary";
   private static final String CLIENTS_SUMMARY_KEY = "clientsSummary";
@@ -412,6 +427,7 @@ public class RestData implements LlamaAMObserver,
     lock.readLock().lock();
     try {
       Map summary = new LinkedHashMap();
+      summary.put(VERSION_INFO_KEY, VERSION_INFO);
       summary.put(RESERVATIONS_COUNT_KEY, reservationsMap.size());
       summary.put(QUEUES_SUMMARY_KEY, createMapSummaryList("queue",
           queueReservationsMap));
