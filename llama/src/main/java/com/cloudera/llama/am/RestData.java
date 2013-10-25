@@ -268,7 +268,7 @@ public class RestData implements LlamaAMObserver,
         SerializerProvider provider)
         throws IOException {
       jgen.writeStartObject();
-      jgen.writeStringField("clientId", value.getClientId());
+      jgen.writeObjectField("clientId", value.getClientId());
       jgen.writeObjectField("handle", value.getHandle());
       jgen.writeStringField("callbackAddress", value.getCallbackAddress());
       jgen.writeNumberField("reservations", value.getReservations());
@@ -386,7 +386,7 @@ public class RestData implements LlamaAMObserver,
       this.reservations = reservations;
     }
     @Override
-    public String getClientId() {
+    public UUID getClientId() {
       return clientInfo.getClientId();
     }
 

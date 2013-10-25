@@ -21,7 +21,7 @@ import com.cloudera.llama.util.UUID;
 
 public interface ClientInfo {
 
-  public String getClientId();
+  public UUID getClientId();
 
   public UUID getHandle();
 

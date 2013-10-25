@@ -207,7 +207,7 @@ public class ClientNotifier implements LlamaAMListener {
 
     @Override
     public void run() {
-      String clientId = null;
+      UUID clientId = null;
       try {
         ClientCaller clientCaller = clientRegistry.getClientCaller(handle);
         if (clientCaller != null) {

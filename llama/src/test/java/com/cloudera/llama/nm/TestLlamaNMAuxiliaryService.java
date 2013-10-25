@@ -27,6 +27,7 @@ import com.cloudera.llama.thrift.TLlamaServiceVersion;
 import com.cloudera.llama.thrift.TNetworkAddress;
 import com.cloudera.llama.thrift.TStatusCode;
 import com.cloudera.llama.thrift.TUniqueId;
+import com.cloudera.llama.util.UUID;
 import junit.framework.Assert;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.authorize.ProxyUsers;
@@ -117,7 +118,7 @@ public class TestLlamaNMAuxiliaryService {
 
           TLlamaNMRegisterRequest trReq = new TLlamaNMRegisterRequest();
           trReq.setVersion(TLlamaServiceVersion.V1);
-          trReq.setClient_id("c1");
+          trReq.setClient_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
           TNetworkAddress tAddress = new TNetworkAddress();
           tAddress.setHostname("localhost");
           tAddress.setPort(0);

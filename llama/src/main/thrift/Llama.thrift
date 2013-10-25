@@ -78,7 +78,7 @@ struct TNodeCapacity {
 
 struct TLlamaAMRegisterRequest {
   1: required TLlamaServiceVersion version;
-  2: required string               client_id;
+  2: required TUniqueId            client_id;
   3: required TNetworkAddress      notification_callback_service;
 }
 
@@ -151,7 +151,7 @@ service LlamaAMService {
 
 struct TLlamaNMRegisterRequest {
   1: required TLlamaServiceVersion version;
-  2: required string               client_id;
+  2: required TUniqueId            client_id;
   3: required TNetworkAddress      notification_callback_service;
 }
 

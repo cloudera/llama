@@ -46,7 +46,7 @@ public class LlamaNMServiceImpl implements LlamaNMService.Iface {
       throws TException {
     TLlamaNMRegisterResponse response = new TLlamaNMRegisterResponse();
     try {
-      String clientId = request.getClient_id();
+      UUID clientId = TypeUtils.toUUID(request.getClient_id());
       TNetworkAddress tAddress = request.getNotification_callback_service();
       UUID handle = clientNotificationService.register(clientId,
           tAddress.getHostname(), tAddress.getPort());

@@ -50,7 +50,8 @@ public class TestClientNotificationService {
     cns.addListener(ul);
     cns.start();
     try {
-      UUID handle = cns.register("c1", "h", 0);
+      UUID c1 = UUID.randomUUID();
+      UUID handle = cns.register(c1, "h", 0);
       Assert.assertTrue(ul.registered);
       Assert.assertFalse(ul.unregistered);
       Assert.assertNotNull(handle);
@@ -71,9 +72,11 @@ public class TestClientNotificationService {
     cns.addListener(ul);
     cns.start();
     try {
-      UUID handle1 = cns.register("c1", "h", 0);
+      UUID c1 = UUID.randomUUID();
+      UUID handle1 = cns.register(c1, "h", 0);
       Assert.assertNotNull(handle1);
-      UUID handle2 = cns.register("c2", "h", 0);
+      UUID c2 = UUID.randomUUID();
+      UUID handle2 = cns.register(c2, "h", 0);
       Assert.assertNotSame(handle1 ,handle2);
       Assert.assertTrue(ul.unregistered);
       ul.unregistered = false;
@@ -93,9 +96,10 @@ public class TestClientNotificationService {
     cns.addListener(ul);
     cns.start();
     try {
-      UUID handle1 = cns.register("c1", "h", 0);
+      UUID c1 = UUID.randomUUID();
+      UUID handle1 = cns.register(c1, "h", 0);
       Assert.assertNotNull(handle1);
-      UUID handle2 = cns.register("c1", "h", 0);
+      UUID handle2 = cns.register(c1, "h", 0);
       Assert.assertEquals(handle1, handle2);
       Assert.assertFalse(ul.unregistered);
       Assert.assertTrue(cns.unregister(handle2));
@@ -114,12 +118,14 @@ public class TestClientNotificationService {
     cns.addListener(ul);
     cns.start();
     try {
-      UUID handle1 = cns.register("c1", "h1", 0);
+      UUID c1 = UUID.randomUUID();
+      UUID handle1 = cns.register(c1, "h1", 0);
       Assert.assertNotNull(handle1);
-      UUID handle2 = cns.register("c2", "h2", 0);
+      UUID c2 = UUID.randomUUID();
+      UUID handle2 = cns.register(c2, "h2", 0);
       Assert.assertNotNull(handle2);
       Assert.assertNotSame(handle1, handle2);
-      cns.register("c1", "h2", 0);
+      cns.register(c1, "h2", 0);
     } finally {
       Assert.assertFalse(ul.unregistered);
       cns.stop();
@@ -135,9 +141,10 @@ public class TestClientNotificationService {
     cns.addListener(ul);
     cns.start();
     try {
-      UUID handle1 = cns.register("c1", "h1", 0);
+      UUID c1 = UUID.randomUUID();
+      UUID handle1 = cns.register(c1, "h1", 0);
       Assert.assertNotNull(handle1);
-      cns.register("c1", "h2", 0);
+      cns.register(c1, "h2", 0);
     } finally {
       Assert.assertFalse(ul.unregistered);
       cns.stop();

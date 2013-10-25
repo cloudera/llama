@@ -60,13 +60,14 @@ import java.util.Map;
 
 public class LlamaClient {
 
-  private static final String HELP = "help";
-  private static final String REGISTER = "register";
-  private static final String UNREGISTER = "unregister";
-  private static final String GET_NODES = "getnodes";
-  private static final String RESERVE = "reserve";
-  private static final String RELEASE = "release";
-  private static final String CALLBACK_SERVER = "callbackserver";
+  private static final String HELP_CMD = "help";
+  private static final String UUID_CMD = "uuid";
+  private static final String REGISTER_CMD = "register";
+  private static final String UNREGISTER_CMD = "unregister";
+  private static final String GET_NODES_CMD = "getnodes";
+  private static final String RESERVE_CMD = "reserve";
+  private static final String RELEASE_CMD = "release";
+  private static final String CALLBACK_SERVER_CMD = "callbackserver";
 
   private static final String LLAMA = "llama";
   private static final String CLIENT_ID = "clientid";
@@ -124,8 +125,12 @@ public class LlamaClient {
 
     //help
     Options options = new Options();
-    parser.addCommand(HELP, "",
+    parser.addCommand(HELP_CMD, "",
         "display usage for all commands or specified command", options, false);
+
+    //uuid
+    options = new Options();
+    parser.addCommand(UUID_CMD, "", "generate an UUID", options, false);
 
     //register
     options = new Options();
@@ -133,21 +138,21 @@ public class LlamaClient {
     options.addOption(clientId);
     options.addOption(callback);
     options.addOption(secure);
-    parser.addCommand(REGISTER, "", "register client", options, false);
+    parser.addCommand(REGISTER_CMD, "", "register client", options, false);
 
     //unregister
     options = new Options();
     options.addOption(llama);
     options.addOption(handle);
     options.addOption(secure);
-    parser.addCommand(UNREGISTER, "", "unregister client", options, false);
+    parser.addCommand(UNREGISTER_CMD, "", "unregister client", options, false);
 
     //get nodes
     options = new Options();
     options.addOption(llama);
     options.addOption(handle);
     options.addOption(secure);
-    parser.addCommand(GET_NODES, "", "get cluster nodes", options, false);
+    parser.addCommand(GET_NODES_CMD, "", "get cluster nodes", options, false);
 
     //reservation
     options = new Options();
@@ -160,7 +165,7 @@ public class LlamaClient {
     options.addOption(relaxLocality);
     options.addOption(noGang);
     options.addOption(secure);
-    parser.addCommand(RESERVE, "", "make a reservation", options, false);
+    parser.addCommand(RESERVE_CMD, "", "make a reservation", options, false);
 
     //release
     options = new Options();
@@ -168,18 +173,19 @@ public class LlamaClient {
     options.addOption(handle);
     options.addOption(reservation);
     options.addOption(secure);
-    parser.addCommand(RELEASE, "", "release a reservation", options, false);
+    parser.addCommand(RELEASE_CMD, "", "release a reservation", options, false);
 
     //callback server
     options = new Options();
     options.addOption(port);
     options.addOption(secure);
-    parser.addCommand(CALLBACK_SERVER, "", "run callback server", options,
+    parser.addCommand(CALLBACK_SERVER_CMD, "", "run callback server", options,
         false);
 
     return parser;
   }
 
+  // uuid
   // register   -llama HOST:PORT -callback HOST:PORT -clientid CLIENTID -secure >>> HANDLE
   // unregister -llama HOST:PORT -handle HANDLE -secure
   // getnodes   -llama HOST:PORT -handle HANDLE -secure
@@ -197,21 +203,22 @@ public class LlamaClient {
         throw new UnsupportedOperationException("'-secure' is not supported");
       }
 
-      if (command.getName().equals(HELP)) {
+      if (command.getName().equals(HELP_CMD)) {
         parser.showHelp(command.getCommandLine());
-      } else if (command.getName().equals(REGISTER)) {
-        String clientId = cl.getOptionValue(CLIENT_ID);
+      } else if (command.getName().equals(UUID_CMD)) {
+        System.out.println(UUID.randomUUID());
+      } else if (command.getName().equals(REGISTER_CMD)) {
+        UUID clientId = UUID.fromString(cl.getOptionValue(CLIENT_ID));
         String llama = cl.getOptionValue(LLAMA);
         String callback = cl.getOptionValue(CALLBACK);
         UUID handle = register(secure, getHost(llama), getPort(llama), clientId,
             getHost(callback), getPort(callback));
         System.out.println(handle);
-
-      } else if (command.getName().equals(UNREGISTER)) {
+      } else if (command.getName().equals(UNREGISTER_CMD)) {
         String llama = cl.getOptionValue(LLAMA);
         UUID handle = UUID.fromString(cl.getOptionValue(HANDLE));
         unregister(secure, getHost(llama), getPort(llama), handle);
-      } else if (command.getName().equals(GET_NODES)) {
+      } else if (command.getName().equals(GET_NODES_CMD)) {
         String llama = cl.getOptionValue(LLAMA);
         UUID handle = UUID.fromString(cl.getOptionValue(HANDLE));
         List<String> nodes = getNodes(secure, getHost(llama), getPort(llama),
@@ -219,7 +226,7 @@ public class LlamaClient {
         for (String node : nodes) {
           System.out.println(node);
         }
-      } else if (command.getName().equals(RESERVE)) {
+      } else if (command.getName().equals(RESERVE_CMD)) {
         String llama = cl.getOptionValue(LLAMA);
         UUID handle = UUID.fromString(cl.getOptionValue(HANDLE));
         String queue = cl.getOptionValue(QUEUE);
@@ -232,12 +239,12 @@ public class LlamaClient {
         UUID reservation = reserve(secure, getHost(llama), getPort(llama),
             handle, queue, locations, cpus, memory, relaxLocality, gang);
         System.out.println(reservation);
-      } else if (command.getName().equals(RELEASE)) {
+      } else if (command.getName().equals(RELEASE_CMD)) {
         String llama = cl.getOptionValue(LLAMA);
         UUID handle = UUID.fromString(cl.getOptionValue(HANDLE));
         UUID reservation = UUID.fromString(cl.getOptionValue(RESERVATION));
         release(secure, getHost(llama), getPort(llama), handle, reservation);
-      } else if (command.getName().equals(CALLBACK_SERVER)) {
+      } else if (command.getName().equals(CALLBACK_SERVER_CMD)) {
         int port = Integer.parseInt(cl.getOptionValue(PORT));
         runCallbackServer(secure, port);
       }
@@ -299,7 +306,7 @@ public class LlamaClient {
   }
 
   static UUID register(final boolean secure, final String llamaHost,
-      final int llamaPort, final String clientId, final String callbackHost,
+      final int llamaPort, final UUID clientId, final String callbackHost,
       final int callbackPort) throws Exception {
     return Subject.doAs(getSubject(secure),
         new PrivilegedExceptionAction<UUID>() {
@@ -309,7 +316,7 @@ public class LlamaClient {
                 llamaPort);
             TLlamaAMRegisterRequest req = new TLlamaAMRegisterRequest();
             req.setVersion(TLlamaServiceVersion.V1);
-            req.setClient_id(clientId);
+            req.setClient_id(TypeUtils.toTUniqueId(clientId));
             TNetworkAddress tAddress = new TNetworkAddress();
             tAddress.setHostname(callbackHost);
             tAddress.setPort(callbackPort);

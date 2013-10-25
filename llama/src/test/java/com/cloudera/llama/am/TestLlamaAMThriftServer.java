@@ -164,7 +164,7 @@ public class TestLlamaAMThriftServer {
 
           TLlamaAMRegisterRequest trReq = new TLlamaAMRegisterRequest();
           trReq.setVersion(TLlamaServiceVersion.V1);
-          trReq.setClient_id("c1");
+          trReq.setClient_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
           TNetworkAddress tAddress = new TNetworkAddress();
           tAddress.setHostname("localhost");
           tAddress.setPort(0);
@@ -224,7 +224,7 @@ public class TestLlamaAMThriftServer {
 
           TLlamaAMRegisterRequest trReq = new TLlamaAMRegisterRequest();
           trReq.setVersion(TLlamaServiceVersion.V1);
-          trReq.setClient_id("c1");
+          trReq.setClient_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
           TNetworkAddress tAddress = new TNetworkAddress();
           tAddress.setHostname("localhost");
           tAddress.setPort(0);
@@ -277,7 +277,7 @@ public class TestLlamaAMThriftServer {
 
           TLlamaAMRegisterRequest trReq = new TLlamaAMRegisterRequest();
           trReq.setVersion(TLlamaServiceVersion.V1);
-          trReq.setClient_id("c1");
+          trReq.setClient_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
           TNetworkAddress tAddress = new TNetworkAddress();
           tAddress.setHostname("localhost");
           tAddress.setPort(0);
@@ -352,7 +352,7 @@ public class TestLlamaAMThriftServer {
 
           TLlamaAMRegisterRequest trReq = new TLlamaAMRegisterRequest();
           trReq.setVersion(TLlamaServiceVersion.V1);
-          trReq.setClient_id("c1");
+          trReq.setClient_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
           TNetworkAddress tAddress = new TNetworkAddress();
           tAddress.setHostname(callbackServer.getAddressHost());
           tAddress.setPort(callbackServer.getAddressPort());
@@ -440,7 +440,7 @@ public class TestLlamaAMThriftServer {
 
           TLlamaAMRegisterRequest trReq = new TLlamaAMRegisterRequest();
           trReq.setVersion(TLlamaServiceVersion.V1);
-          trReq.setClient_id("c1");
+          trReq.setClient_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
           TNetworkAddress tAddress = new TNetworkAddress();
           tAddress.setHostname(callbackServer.getAddressHost());
           tAddress.setPort(callbackServer.getAddressPort());
@@ -523,7 +523,7 @@ public class TestLlamaAMThriftServer {
 
           TLlamaAMRegisterRequest trReq = new TLlamaAMRegisterRequest();
           trReq.setVersion(TLlamaServiceVersion.V1);
-          trReq.setClient_id("c1");
+          trReq.setClient_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
           TNetworkAddress tAddress = new TNetworkAddress();
           tAddress.setHostname(callbackServer.getAddressHost());
           tAddress.setPort(callbackServer.getAddressPort());

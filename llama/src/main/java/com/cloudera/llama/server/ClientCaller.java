@@ -27,7 +27,7 @@ import org.apache.thrift.transport.TTransport;
 
 public class ClientCaller {
   private final ServerConfiguration conf;
-  private final String clientId;
+  private final UUID clientId;
   private final UUID handle;
   private final String host;
   private final int port;
@@ -37,7 +37,7 @@ public class ClientCaller {
   private boolean lastSuccessful;
   private long lastCall;
 
-  public ClientCaller(ServerConfiguration conf, String clientId, UUID handle,
+  public ClientCaller(ServerConfiguration conf, UUID clientId, UUID handle,
       String host, int port, MetricRegistry metricRegistry) {
     this.conf = conf;
     this.clientId = clientId;
@@ -48,7 +48,7 @@ public class ClientCaller {
     this.metricRegistry = metricRegistry;
   }
 
-  public String getClientId() {
+  public UUID getClientId() {
     return clientId;
   }
 
@@ -58,7 +58,7 @@ public class ClientCaller {
 
   public static abstract class Callable<T> implements
       java.util.concurrent.Callable<T> {
-    private String clientId;
+    private UUID clientId;
     private UUID handle;
     private LlamaNotificationService.Iface client;
 
@@ -66,7 +66,7 @@ public class ClientCaller {
       return handle;
     }
 
-    protected String getClientId() {
+    protected UUID getClientId() {
       return clientId;
     }
 

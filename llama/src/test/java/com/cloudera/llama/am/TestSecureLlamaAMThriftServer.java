@@ -22,11 +22,13 @@ import com.cloudera.llama.minikdc.MiniKdc;
 import com.cloudera.llama.server.Security;
 import com.cloudera.llama.server.ServerConfiguration;
 import com.cloudera.llama.server.TestAbstractMain;
+import com.cloudera.llama.server.TypeUtils;
 import com.cloudera.llama.thrift.TLlamaAMRegisterRequest;
 import com.cloudera.llama.thrift.TLlamaAMRegisterResponse;
 import com.cloudera.llama.thrift.TLlamaServiceVersion;
 import com.cloudera.llama.thrift.TNetworkAddress;
 import com.cloudera.llama.thrift.TStatusCode;
+import com.cloudera.llama.util.UUID;
 import junit.framework.Assert;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.thrift.protocol.TBinaryProtocol;
@@ -162,7 +164,7 @@ public class TestSecureLlamaAMThriftServer extends TestLlamaAMThriftServer {
 
           TLlamaAMRegisterRequest trReq = new TLlamaAMRegisterRequest();
           trReq.setVersion(TLlamaServiceVersion.V1);
-          trReq.setClient_id("c1");
+          trReq.setClient_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
           TNetworkAddress tAddress = new TNetworkAddress();
           tAddress.setHostname("localhost");
           tAddress.setPort(0);
@@ -199,7 +201,7 @@ public class TestSecureLlamaAMThriftServer extends TestLlamaAMThriftServer {
 
           TLlamaAMRegisterRequest trReq = new TLlamaAMRegisterRequest();
           trReq.setVersion(TLlamaServiceVersion.V1);
-          trReq.setClient_id("c1");
+          trReq.setClient_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
           TNetworkAddress tAddress = new TNetworkAddress();
           tAddress.setHostname("localhost");
           tAddress.setPort(0);
@@ -236,7 +238,7 @@ public class TestSecureLlamaAMThriftServer extends TestLlamaAMThriftServer {
 
           TLlamaAMRegisterRequest trReq = new TLlamaAMRegisterRequest();
           trReq.setVersion(TLlamaServiceVersion.V1);
-          trReq.setClient_id("c1");
+          trReq.setClient_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
           TNetworkAddress tAddress = new TNetworkAddress();
           tAddress.setHostname("localhost");
           tAddress.setPort(0);

@@ -181,6 +181,8 @@ $ bin/minillama --hadoop-conf=/Users/tucu/myhadoopconf --hadoop-nodes=3
 +---+
       llamaclient help : display usage for all commands or specified command
 
+      llamaclient uuid : generate an UUID
+
       llamaclient register <OPTIONS> : register client
 
                            -callback <arg>   <HOST>:<PORT> of client's callback server

@@ -58,14 +58,14 @@ public class ClientNotificationService implements ClientNotifier.ClientRegistry,
   }
 
   private class Entry implements ClientInfo {
-    private final String clientId;
+    private final UUID clientId;
     private final UUID handle;
     private final String host;
     private final int port;
     private final String address;
     private final ClientCaller caller;
 
-    public Entry(String clientId, UUID handle, String host, int port) {
+    public Entry(UUID clientId, UUID handle, String host, int port) {
       this.clientId = clientId;
       this.handle = handle;
       this.host = host;
@@ -76,7 +76,7 @@ public class ClientNotificationService implements ClientNotifier.ClientRegistry,
     }
 
     @Override
-    public String getClientId() {
+    public UUID getClientId() {
       return clientId;
     }
 
@@ -98,7 +98,7 @@ public class ClientNotificationService implements ClientNotifier.ClientRegistry,
   //MAP of handle to client Entry
   private final ConcurrentHashMap<UUID, Entry> clients;
   //Map of clientId to handle (for reverse lookup)
-  private final ConcurrentHashMap<String, UUID> clientIdToHandle;
+  private final ConcurrentHashMap<UUID, UUID> clientIdToHandle;
   //Map of callback-address to handle (for reverse lookup)
   private final ConcurrentHashMap<String, UUID> callbackToHandle;
   private final MetricRegistry metricRegistry;
@@ -109,7 +109,7 @@ public class ClientNotificationService implements ClientNotifier.ClientRegistry,
     this.conf = conf;
     lock = new ReentrantReadWriteLock();
     clients = new ConcurrentHashMap<UUID, Entry>();
-    clientIdToHandle = new ConcurrentHashMap<String, UUID>();
+    clientIdToHandle = new ConcurrentHashMap<UUID, UUID>();
     callbackToHandle = new ConcurrentHashMap<String, UUID>();
     this.metricRegistry = metricRegistry;
     if (metricRegistry != null) {
@@ -141,7 +141,7 @@ public class ClientNotificationService implements ClientNotifier.ClientRegistry,
   private String getAddress(String host, int port) {
     return host.toLowerCase() + ":" + port;
   }
-  private UUID registerNewClient(String clientId, String host, int port) {
+  private UUID registerNewClient(UUID clientId, String host, int port) {
     UUID handle = UUID.randomUUID();
     clients.put(handle, new Entry(clientId, handle, host, port));
     clientIdToHandle.put(clientId, handle);
@@ -151,7 +151,7 @@ public class ClientNotificationService implements ClientNotifier.ClientRegistry,
   }
 
 
-  public synchronized UUID register(String clientId, String host, int port)
+  public synchronized UUID register(UUID clientId, String host, int port)
       throws ClientRegistryException {
     lock.writeLock().lock();
     try {

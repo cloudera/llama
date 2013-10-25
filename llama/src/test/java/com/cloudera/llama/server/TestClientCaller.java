@@ -47,7 +47,7 @@ public class TestClientCaller {
 
   public static class MyClientCaller extends ClientCaller {
 
-    public MyClientCaller(String clientId, UUID handle,
+    public MyClientCaller(UUID clientId, UUID handle,
         String host, int port) {
       super(new CSServerConfiguration(), clientId, handle, host, port, null);
     }
@@ -61,7 +61,7 @@ public class TestClientCaller {
 
   @Test
   public void testClientCallerOK() throws Exception {
-    final String cId = "id";
+    final UUID cId = UUID.randomUUID();
     final UUID handle = UUID.randomUUID();
     ClientCaller cc = new MyClientCaller(cId, handle, "h", 0);
     Assert.assertEquals(cId, cc.getClientId());
@@ -86,7 +86,7 @@ public class TestClientCaller {
 
   @Test(expected = ClientException.class)
   public void testClientCallerFail() throws Exception {
-    final String cId = "id";
+    final UUID cId = UUID.randomUUID();
     final UUID handle = UUID.randomUUID();
     ClientCaller cc = new MyClientCaller(cId, handle, "h", 0);
     Assert.assertEquals(cId, cc.getClientId());

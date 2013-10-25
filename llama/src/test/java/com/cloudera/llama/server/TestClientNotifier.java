@@ -81,7 +81,7 @@ public class TestClientNotifier {
     volatile int clientCallerCalls = 0;
     boolean maxFailures;
 
-    public MyClientRegistry(ServerConfiguration conf, String clientId,
+    public MyClientRegistry(ServerConfiguration conf, UUID clientId,
         UUID handle, String host, int port) {
       clientCaller = new ClientCaller(conf, clientId, handle, host, port, null);
     }
@@ -105,7 +105,7 @@ public class TestClientNotifier {
     conf.setInt(nsConf.getPropertyName(
         ServerConfiguration.CLIENT_NOTIFIER_HEARTBEAT_KEY), 300);
     ServerConfiguration sConf = new NSServerConfiguration(conf);
-    String clientId = "cId";
+    UUID clientId = UUID.randomUUID();
     UUID handle = UUID.randomUUID();
     MyClientRegistry cr = new MyClientRegistry(sConf, clientId, handle,
         notificationServer.getAddressHost(),
@@ -134,7 +134,7 @@ public class TestClientNotifier {
     conf.setInt(nsConf.getPropertyName(
         ServerConfiguration.CLIENT_NOTIFIER_HEARTBEAT_KEY), 300);
     ServerConfiguration sConf = new NSServerConfiguration(conf);
-    String clientId = "cId";
+    UUID clientId = UUID.randomUUID();
     UUID handle = UUID.randomUUID();
     MyClientRegistry cr = new MyClientRegistry(sConf, clientId, handle,
         notificationServer.getAddressHost(),
@@ -173,7 +173,7 @@ public class TestClientNotifier {
     conf.setInt(nsConf.getPropertyName(
         ServerConfiguration.TRANSPORT_TIMEOUT_KEY), 10);
     ServerConfiguration sConf = new NSServerConfiguration(conf);
-    String clientId = "cId";
+    UUID clientId = UUID.randomUUID();
     UUID handle = UUID.randomUUID();
     MyClientRegistry cr = new MyClientRegistry(sConf, clientId, handle,
         notificationServer.getAddressHost(), 0);
@@ -202,7 +202,7 @@ public class TestClientNotifier {
     conf.setInt(nsConf.getPropertyName(
         ServerConfiguration.TRANSPORT_TIMEOUT_KEY), 50);
     ServerConfiguration sConf = new NSServerConfiguration(conf);
-    String clientId = "cId";
+    UUID clientId = UUID.randomUUID();
     UUID handle = UUID.randomUUID();
     MyClientRegistry cr = new MyClientRegistry(sConf, clientId, handle,
         notificationServer.getAddressHost(),
