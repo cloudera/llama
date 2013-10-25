@@ -102,9 +102,9 @@ public class ObserverLlamaAM extends LlamaAM implements LlamaAMListener,
   }
 
   @Override
-  public PlacedReservation releaseReservation(UUID reservationId)
+  public PlacedReservation releaseReservation(UUID handle, UUID reservationId)
       throws LlamaAMException {
-    PlacedReservation pr = llamaAM.releaseReservation(reservationId);
+    PlacedReservation pr = llamaAM.releaseReservation(handle, reservationId);
     if (pr != null) {
       changes.add(pr);
     }

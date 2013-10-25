@@ -111,7 +111,7 @@ public class TestObserverLlamaAM {
     }
 
     @Override
-    public PlacedReservation releaseReservation(UUID reservationId)
+    public PlacedReservation releaseReservation(UUID handle, UUID reservationId)
         throws LlamaAMException {
       invoked.add("releaseReservation");
       return reservations.remove(reservationId);
@@ -172,7 +172,7 @@ public class TestObserverLlamaAM {
     Assert.assertFalse(am.reservations.isEmpty());
     Assert.assertTrue(am.reservations.containsKey(id));
     oAm.getReservation(id);
-    oAm.releaseReservation(id);
+    oAm.releaseReservation(reservation.getHandle(), id);
     Assert.assertFalse(am.reservations.containsKey(id));
     oAm.releaseReservationsForHandle(UUID.randomUUID());
     oAm.stop();
@@ -218,7 +218,7 @@ public class TestObserverLlamaAM {
     UUID handle = UUID.randomUUID();
     PlacedReservation pr1 = llama.reserve(createReservation(handle, MockLlamaAMFlags.ALLOCATE, 2));
     waitFor(observer.reservations.size() == 3, 300);
-    llama.releaseReservation(pr1.getReservationId());
+    llama.releaseReservation(handle, pr1.getReservationId());
     waitFor(observer.reservations.size() == 4, 300);
     Assert.assertEquals(4, observer.reservations.size());
     Assert.assertEquals(PlacedReservation.Status.PENDING, observer.reservations.get(0).getStatus());
@@ -254,7 +254,7 @@ public class TestObserverLlamaAM {
     UUID handle = UUID.randomUUID();
     PlacedReservation pr1 = llama.reserve(createReservation(handle, MockLlamaAMFlags.LOSE, 1));
     waitFor(observer.reservations.size() == 3, 300);
-    llama.releaseReservation(pr1.getReservationId());
+    llama.releaseReservation(handle, pr1.getReservationId());
     waitFor(observer.reservations.size() == 3, 300);
     Assert.assertEquals(4, observer.reservations.size());
     Assert.assertEquals(PlacedReservation.Status.PENDING, observer.reservations.get(0).getStatus());
@@ -275,7 +275,7 @@ public class TestObserverLlamaAM {
     UUID handle = UUID.randomUUID();
     PlacedReservation pr1 = llama.reserve(createReservation(handle, MockLlamaAMFlags.PREEMPT, 1));
     waitFor(observer.reservations.size() == 3, 300);
-    llama.releaseReservation(pr1.getReservationId());
+    llama.releaseReservation(handle, pr1.getReservationId());
     waitFor(observer.reservations.size() == 4, 300);
     Assert.assertEquals(4, observer.reservations.size());
     Assert.assertEquals(PlacedReservation.Status.PENDING, observer.reservations.get(0).getStatus());

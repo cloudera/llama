@@ -212,10 +212,10 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
   }
 
   @Override
-  public PlacedReservation releaseReservation(UUID reservationId)
+  public PlacedReservation releaseReservation(UUID handle, UUID reservationId)
       throws LlamaAMException {
     PlacedReservation gPlacedReservation = gReleaseReservation(reservationId);
-    PlacedReservation placedReservation = am.releaseReservation(reservationId);
+    PlacedReservation placedReservation = am.releaseReservation(handle, reservationId);
     return (placedReservation != null) ? placedReservation : gPlacedReservation;
   }
 
@@ -359,7 +359,8 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
                 "Backing off gang reservation '{}' with '{}' resources",
                 reservation.getReservationId(),
                 reservation.getResources().size());
-            am.releaseReservation(reservation.getReservationId());
+            am.releaseReservation(reservation.getHandle(), reservation.getReservationId()
+            );
             reservation.setStatus(PlacedReservation.Status.BACKED_OFF);
             backedOffReservations.add(
                 new BackedOffReservation(reservation, getBackOffDelay()));

@@ -230,11 +230,20 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
 
   @Override
   @SuppressWarnings("unchecked")
-  public PlacedReservation releaseReservation(final UUID reservationId)
+  public PlacedReservation releaseReservation(UUID handle,
+      final UUID reservationId)
       throws LlamaAMException {
     PlacedReservationImpl reservation;
     synchronized (this) {
-      reservation = _deleteReservation(reservationId);
+      reservation = _getReservation(reservationId);
+      if (reservation != null) {
+        if (!reservation.getHandle().equals(handle)) {
+          throw new LlamaAMException(FastFormat.format(
+              "handle '{}' does not own reservation '{}'", handle,
+              reservation.getReservationId()));
+        }
+        _deleteReservation(reservationId);
+      }
     }
     if (reservation != null) {
       rmConnector.release((List<RMPlacedResource>) (List) reservation

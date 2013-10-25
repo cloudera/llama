@@ -223,10 +223,22 @@ public class TestSingleQueueLlamaAM {
     try {
       llama.start();
       UUID reservationId = llama.reserve(RESERVATION1_NONGANG).getReservationId();
-      llama.releaseReservation(reservationId);
-      llama.releaseReservation(UUID.randomUUID());
+      llama.releaseReservation(RESERVATION1_NONGANG.getHandle(), reservationId);
+      llama.releaseReservation(UUID.randomUUID(), UUID.randomUUID());
       Assert.assertTrue(((MyRMLlamaAMConnector) llama.getRMConnector()).release);
       Assert.assertNull(llama._getReservation(reservationId));
+    } finally {
+      llama.stop();
+    }
+  }
+
+  @Test(expected = LlamaAMException.class)
+  public void testReleaseUsingWrongHandle() throws Exception {
+    SingleQueueLlamaAM llama = createLlamaAM();
+    try {
+      llama.start();
+      UUID reservationId = llama.reserve(RESERVATION1_NONGANG).getReservationId();
+      llama.releaseReservation(UUID.randomUUID(), reservationId);
     } finally {
       llama.stop();
     }
@@ -812,7 +824,7 @@ public class TestSingleQueueLlamaAM {
   }
 
   @Test
-  public void testReleaseReservationsForClientId() throws Exception {
+  public void testReleaseReservationsForHandle() throws Exception {
     SingleQueueLlamaAM llama = createLlamaAM();
     try {
       llama.start();

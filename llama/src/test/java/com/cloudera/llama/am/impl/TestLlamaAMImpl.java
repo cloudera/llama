@@ -69,7 +69,7 @@ public class TestLlamaAMImpl {
     }
 
     @Override
-    public PlacedReservation releaseReservation(UUID reservationId)
+    public PlacedReservation releaseReservation(UUID handle, UUID reservationId)
         throws LlamaAMException {
       return null;
     }

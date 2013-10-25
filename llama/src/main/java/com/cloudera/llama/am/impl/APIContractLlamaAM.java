@@ -137,10 +137,12 @@ public class APIContractLlamaAM extends LlamaAM {
   }
 
   @Override
-  public PlacedReservation releaseReservation(UUID reservationId) throws LlamaAMException {
+  public PlacedReservation releaseReservation(UUID handle, UUID reservationId)
+      throws LlamaAMException {
     checkIsRunning();
     ParamChecker.notNull(reservationId, "reservationId");
-    PlacedReservation pr = llamaAM.releaseReservation(reservationId);
+    ParamChecker.notNull(handle, "handle");
+    PlacedReservation pr = llamaAM.releaseReservation(handle, reservationId);
     getLog().trace("releaseReservation({})", reservationId);
     return pr;
   }

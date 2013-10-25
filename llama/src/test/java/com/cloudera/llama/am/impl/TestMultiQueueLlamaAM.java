@@ -150,14 +150,15 @@ public class TestMultiQueueLlamaAM {
         public void handle(LlamaAMEvent event) {
         }
       };
-      UUID id = am.reserve(new Reservation(UUID.randomUUID(), "q",
+      UUID handle = UUID.randomUUID();
+      UUID id = am.reserve(new Reservation(handle, "q",
           Arrays.asList(TestReservation.createResource()), true)).
           getReservationId();
       am.getNodes();
       am.addListener(listener);
       am.removeListener(listener);
       am.getReservation(id);
-      am.releaseReservation(id);
+      am.releaseReservation(handle, id);
       am.releaseReservationsForHandle(UUID.randomUUID());
       am.stop();
 
@@ -245,7 +246,7 @@ public class TestMultiQueueLlamaAM {
         RMLlamaAMConnector.class);
     LlamaAM am = LlamaAM.create(conf);
     am.start();
-    am.releaseReservation(UUID.randomUUID());
+    am.releaseReservation(UUID.randomUUID(), UUID.randomUUID());
   }
 
   private boolean listenerCalled;
@@ -264,9 +265,9 @@ public class TestMultiQueueLlamaAM {
           listenerCalled = true;
         }
       };
-      UUID cId = UUID.randomUUID();
+      UUID handle = UUID.randomUUID();
       Resource resource = TestReservation.createResource();
-      UUID id = am.reserve(new Reservation(cId, "q",
+      UUID id = am.reserve(new Reservation(handle, "q",
           Arrays.asList(resource), true)).getReservationId();
       am.getNodes();
       am.addListener(listener);
@@ -276,7 +277,7 @@ public class TestMultiQueueLlamaAM {
           .createResourceChange(resource.getClientResourceId(),
               PlacedResource.Status.REJECTED)));
       Assert.assertTrue(listenerCalled);
-      am.releaseReservation(id);
+      am.releaseReservation(handle, id);
       am.releaseReservationsForHandle(UUID.randomUUID());
       am.removeListener(listener);
       listenerCalled = false;

@@ -136,7 +136,7 @@ public class TestGangAntiDeadlockLlamaAM {
     }
 
     @Override
-    public PlacedReservation releaseReservation(UUID reservationId) throws LlamaAMException {
+    public PlacedReservation releaseReservation(UUID handle, UUID reservationId) throws LlamaAMException {
       invoked.add("releaseReservation");
       return reservations.remove(reservationId);
     }
@@ -205,7 +205,8 @@ public class TestGangAntiDeadlockLlamaAM {
     gAm.getNodes();
     gAm.addListener(null);
     gAm.removeListener(null);
-    Reservation<Resource> reservation = createReservation(UUID.randomUUID(), 1,
+    UUID handle = UUID.randomUUID();
+    Reservation<Resource> reservation = createReservation(handle, 1,
         gang);
     Assert.assertTrue(gAm.localReservations.isEmpty());
     Assert.assertTrue(gAm.backedOffReservations.isEmpty());
@@ -216,7 +217,7 @@ public class TestGangAntiDeadlockLlamaAM {
     Assert.assertEquals(reservation.getResources().get(0).getClientResourceId
         (), gAm.getReservation(id).getResources().get(0).getClientResourceId());
     Assert.assertTrue(am.reservations.containsKey(id));
-    gAm.releaseReservation(id);
+    gAm.releaseReservation(handle, id);
     Assert.assertTrue(gAm.localReservations.isEmpty());
     Assert.assertTrue(gAm.backedOffReservations.isEmpty());
     Assert.assertFalse(am.reservations.containsKey(id));

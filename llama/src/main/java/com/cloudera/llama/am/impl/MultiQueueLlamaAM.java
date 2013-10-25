@@ -187,12 +187,12 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
 
   @SuppressWarnings("deprecation")
   @Override
-  public PlacedReservation releaseReservation(UUID reservationId) throws LlamaAMException {
+  public PlacedReservation releaseReservation(UUID handle, UUID reservationId) throws LlamaAMException {
     PlacedReservation pr = null;
     String queue = reservationToQueue.remove(reservationId);
     if (queue != null) {
       LlamaAM am = getLlamaAM(queue);
-      pr = am.releaseReservation(reservationId);
+      pr = am.releaseReservation(handle, reservationId);
     } else {
       getLog().warn("releaseReservation({}), reservationId not found",
           reservationId);
