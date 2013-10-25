@@ -20,6 +20,7 @@ package com.cloudera.llama.am.api;
 import com.cloudera.llama.am.impl.APIContractLlamaAM;
 import com.cloudera.llama.am.impl.GangAntiDeadlockLlamaAM;
 import com.cloudera.llama.am.impl.MultiQueueLlamaAM;
+import com.cloudera.llama.am.impl.ObserverLlamaAM;
 import com.cloudera.llama.am.impl.ParamChecker;
 import com.cloudera.llama.util.UUID;
 import com.codahale.metrics.MetricRegistry;
@@ -70,11 +71,19 @@ public abstract class LlamaAM {
   }
 
   public static LlamaAM create(Configuration conf) throws LlamaAMException {
+    return create(conf, null);
+  }
+
+  public static LlamaAM create(Configuration conf, LlamaAMObserver observer)
+      throws LlamaAMException {
     conf = cloneConfiguration(conf);
     LlamaAM am = new MultiQueueLlamaAM(conf);
     if (conf.getBoolean(GANG_ANTI_DEADLOCK_ENABLED_KEY,
         GANG_ANTI_DEADLOCK_ENABLED_DEFAULT)) {
       am = new GangAntiDeadlockLlamaAM(conf, am);
+    }
+    if (observer != null) {
+      am = new ObserverLlamaAM(am, observer);
     }
     return new APIContractLlamaAM(am);
   }

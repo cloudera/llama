@@ -45,6 +45,8 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+// if CPU value is greater than 10, that is the number of milliseconds for the
+// change status delay (instead being random)
 public class MockRMLlamaAMConnector
     implements RMLlamaAMConnector, Configurable {
   public static final String PREFIX_KEY = LlamaAM.PREFIX_KEY + "mock.";
@@ -78,6 +80,7 @@ public class MockRMLlamaAMConnector
     MOCK_FLAGS.put(MockLlamaAMFlags.REJECT, PlacedResource.Status.REJECTED);
     MOCK_FLAGS.put(MockLlamaAMFlags.LOSE, PlacedResource.Status.LOST);
     MOCK_FLAGS.put(MockLlamaAMFlags.PREEMPT, PlacedResource.Status.PREEMPTED);
+    MOCK_FLAGS.put(MockLlamaAMFlags.PENDING, PlacedResource.Status.PENDING);
   }
 
   private static final Random RANDOM = new Random();
@@ -236,11 +239,18 @@ public class MockRMLlamaAMConnector
 
             MockRMAllocator mocker = new MockRMAllocator(llama, resource,
                 status, false);
-            int delay = minWait + RANDOM.nextInt(maxWait);
+            int delay;
+            if (resource.getCpuVCores()  > 10) {
+              delay = resource.getCpuVCores();
+            } else {
+              delay = minWait + RANDOM.nextInt(maxWait);
+            }
             scheduler.schedule(mocker, delay, TimeUnit.MILLISECONDS);
           } else {
             toStatus(status);
           }
+          break;
+        case PENDING:
           break;
       }
       return null;

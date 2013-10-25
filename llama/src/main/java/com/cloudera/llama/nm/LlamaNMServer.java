@@ -64,7 +64,7 @@ public class LlamaNMServer extends ThriftServer<LlamaNMService.Processor> {
 
     try {
       clientNotificationService = new ClientNotificationService(getServerConf(),
-          getMetricRegistry());
+          null, getMetricRegistry());
       clientNotificationService.start();
     } catch (Exception ex) {
       throw new RuntimeException(ex);

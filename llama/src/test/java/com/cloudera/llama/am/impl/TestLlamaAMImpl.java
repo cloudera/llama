@@ -104,7 +104,8 @@ public class TestLlamaAMImpl {
     Assert.assertEquals(event, listener.event);
     listener.event = null;
     am.dispatch(Arrays.asList(event));
-    Assert.assertNull(listener.event);
+    Assert.assertEquals(event, listener.event);
+
     event.getAllocatedReservationIds().add(UUID.randomUUID());
     am.dispatch(Arrays.asList(event));
     Assert.assertEquals(event, listener.event);

@@ -147,7 +147,6 @@ public class TestMiniLlama {
       turReq.setAm_handle(trRes.getAm_handle());
       TLlamaAMUnregisterResponse turRes = client.Unregister(turReq);
       Assert.assertEquals(TStatusCode.OK, turRes.getStatus().getStatus_code());
-
     } finally {
       server.stop();
     }

@@ -15,23 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.cloudera.llama.am.spi;
+package com.cloudera.llama.server;
 
-import com.cloudera.llama.am.api.PlacedReservation;
-import com.cloudera.llama.am.api.Reservation;
-import com.cloudera.llama.am.api.Resource;
+import com.cloudera.llama.util.UUID;
 
-import java.util.List;
+public interface ClientInfo {
 
-public abstract class RMPlacedReservation extends PlacedReservation {
+  public String getClientId();
 
-  protected RMPlacedReservation(Reservation<? extends Resource> reservation) {
-    super(reservation);
-  }
+  public UUID getHandle();
 
-  @SuppressWarnings("unchecked")
-  public List<RMPlacedResource> getRMResources() {
-    return (List<RMPlacedResource>) (List) getResources();
-  }
+  public String getCallbackAddress();
 
 }

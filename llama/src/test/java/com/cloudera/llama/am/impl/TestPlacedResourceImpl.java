@@ -52,14 +52,4 @@ public class TestPlacedResourceImpl {
     Assert.assertEquals("l", r.getActualLocation());
   }
 
-  @Test(expected = IllegalStateException.class)
-  public void testSetReservationFail() {
-    PlacedResourceImpl r = new PlacedResourceImpl(TestReservation.
-        createResource());
-    UUID cId = UUID.randomUUID();
-    UUID rId = UUID.randomUUID();
-    r.setReservationInfo(cId, "q", rId);
-    r.setReservationInfo(cId, "q", rId);
-  }
-
 }

@@ -206,9 +206,16 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
       throws LlamaAMException {
     final PlacedReservationImpl impl = new PlacedReservationImpl(reservationId,
         reservation);
-    rmConnector.reserve(impl);
     synchronized (this) {
-      _addReservation(impl);
+      _addReservation(new PlacedReservationImpl(impl));
+    }
+    try {
+      rmConnector.reserve(impl);
+    } catch (LlamaAMException ex) {
+      synchronized (this) {
+        _deleteReservation(impl.getReservationId());
+      }
+      throw ex;
     }
     return impl;
   }
@@ -299,7 +306,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
               resource.getClientResourceId());
           break;
       }
-      event.getChanges().add(reservation);
+      event.getChanges().add(new PlacedReservationImpl(reservation));
     }
     return toRelease;
   }
@@ -346,7 +353,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
           event.getAllocatedResources().add(resource);
         }
       }
-      event.getChanges().add(reservation);
+      event.getChanges().add(new PlacedReservationImpl(reservation));
     }
   }
 
@@ -387,7 +394,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
           event.getRejectedReservationIds().add(reservationId);
           break;
       }
-      event.getChanges().add(reservation);
+      event.getChanges().add(new PlacedReservationImpl(reservation));
     }
     return toRelease;
   }
@@ -427,7 +434,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
           event.getRejectedReservationIds().add(reservationId);
           break;
       }
-      event.getChanges().add(reservation);
+      event.getChanges().add(new PlacedReservationImpl(reservation));
     }
     return toRelease;
   }

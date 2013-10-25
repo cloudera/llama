@@ -72,9 +72,7 @@ public abstract class LlamaAMImpl extends LlamaAM {
     synchronized (listeners) {
       if (!listeners.isEmpty()) {
         for (LlamaAMEventImpl event : events) {
-          if (!event.isEmpty()) {
-            dispatch(event);
-          }
+          dispatch(event);
         }
       }
     }

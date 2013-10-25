@@ -62,4 +62,15 @@ public abstract class PlacedResource extends Resource {
         getStatus());
   }
 
+  @Override
+  public int hashCode() {
+    return getClientResourceId().hashCode();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    return (obj != null) && (obj instanceof PlacedResource) &&
+        getClientResourceId().equals(((PlacedResource) obj).getClientResourceId());
+  }
+
 }

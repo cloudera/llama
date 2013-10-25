@@ -368,7 +368,7 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
 
             LlamaAMEventImpl event = getEventForClientId(eventsMap,
                 reservation.getClientId());
-            event.getChanges().add(reservation);
+            event.getChanges().add(new PlacedReservationImpl(reservation));
 
             MetricUtil.meter(getMetricRegistry(), BACKED_OFF_RESERVATIONS_METER,
                 1);
@@ -405,7 +405,7 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
 
           LlamaAMEventImpl event = getEventForClientId(eventsMap,
               pr.getClientId());
-          event.getChanges().add(pr);
+          event.getChanges().add(new PlacedReservationImpl(pr));
 
           submittedReservations.add(reservationId);
         } catch (LlamaAMException ex) {

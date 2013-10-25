@@ -25,5 +25,6 @@ public class MockLlamaAMFlags {
   public static final String REJECT = "|REJECT|";
   public static final String LOSE = "|LOSE|";
   public static final String PREEMPT = "|PREEMPT|";
+  public static final String PENDING = "|PENDING|";
 
 }

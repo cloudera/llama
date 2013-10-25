@@ -50,7 +50,8 @@ public abstract class PlacedReservation extends Reservation<PlacedResource> {
   @Override
   public String toString() {
     return FastFormat.format(TO_STRING_MSG, getClientId(), getQueue(),
-        getResources(), isGang(), getReservationId(), getStatus());
+        getResources(), isGang(), getReservationId(), getPlacedOn(),
+        getStatus());
   }
 
   @Override

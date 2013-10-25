@@ -24,28 +24,40 @@ import org.junit.Test;
 
 public class TestClientNotificationService {
 
-  public static class MyUnregisterListener implements
-      ClientNotificationService.UnregisterListener {
+  public static class MyListener implements
+      ClientNotificationService.Listener {
 
-    private boolean called;
+    private boolean registered;
+    private boolean unregistered;
 
     @Override
-    public void onUnregister(UUID handle) {
-      called = true;
+    public void onRegister(ClientInfo clientInfo) {
+      registered = true;
     }
+
+    @Override
+    public void onUnregister(ClientInfo clientInfo) {
+      unregistered = true;
+    }
+
   }
 
   @Test
   public void testRegisterNewClientIdNewCallback() throws Exception {
-    MyUnregisterListener ul = new MyUnregisterListener();
+    MyListener ul = new MyListener();
     ClientNotificationService cns = new ClientNotificationService(
-        new AMServerConfiguration(), null, null, ul);
+        new AMServerConfiguration(), null, null);
+    cns.addListener(ul);
     cns.start();
     try {
       UUID handle = cns.register("c1", "h", 0);
+      Assert.assertTrue(ul.registered);
+      Assert.assertFalse(ul.unregistered);
       Assert.assertNotNull(handle);
+      ul.registered = false;
       Assert.assertTrue(cns.unregister(handle));
-      Assert.assertTrue(ul.called);
+      Assert.assertFalse(ul.registered);
+      Assert.assertTrue(ul.unregistered);
     } finally {
       cns.stop();
     }
@@ -53,19 +65,20 @@ public class TestClientNotificationService {
 
   @Test
   public void testRegisterNewClientIdExistingCallback() throws Exception {
-    MyUnregisterListener ul = new MyUnregisterListener();
+    MyListener ul = new MyListener();
     ClientNotificationService cns = new ClientNotificationService(
-        new AMServerConfiguration(), null, null, ul);
+        new AMServerConfiguration(), null, null);
+    cns.addListener(ul);
     cns.start();
     try {
       UUID handle1 = cns.register("c1", "h", 0);
       Assert.assertNotNull(handle1);
       UUID handle2 = cns.register("c2", "h", 0);
       Assert.assertNotSame(handle1 ,handle2);
-      Assert.assertTrue(ul.called);
-      ul.called = false;
+      Assert.assertTrue(ul.unregistered);
+      ul.unregistered = false;
       Assert.assertTrue(cns.unregister(handle2));
-      Assert.assertTrue(ul.called);
+      Assert.assertTrue(ul.unregistered);
     } finally {
       cns.stop();
     }
@@ -74,18 +87,19 @@ public class TestClientNotificationService {
   @Test
   public void testRegisterExistingClientIdExistingCallbackSameHandle()
       throws Exception {
-    MyUnregisterListener ul = new MyUnregisterListener();
+    MyListener ul = new MyListener();
     ClientNotificationService cns = new ClientNotificationService(
-        new AMServerConfiguration(), null, null, ul);
+        new AMServerConfiguration(), null, null);
+    cns.addListener(ul);
     cns.start();
     try {
       UUID handle1 = cns.register("c1", "h", 0);
       Assert.assertNotNull(handle1);
       UUID handle2 = cns.register("c1", "h", 0);
       Assert.assertEquals(handle1, handle2);
-      Assert.assertFalse(ul.called);
+      Assert.assertFalse(ul.unregistered);
       Assert.assertTrue(cns.unregister(handle2));
-      Assert.assertTrue(ul.called);
+      Assert.assertTrue(ul.unregistered);
     } finally {
       cns.stop();
     }
@@ -94,9 +108,10 @@ public class TestClientNotificationService {
   @Test(expected = ClientRegistryException.class)
   public void testRegisterExistingClientIdExistingCallbackDifferentHandle()
       throws Exception {
-    MyUnregisterListener ul = new MyUnregisterListener();
+    MyListener ul = new MyListener();
     ClientNotificationService cns = new ClientNotificationService(
-        new AMServerConfiguration(), null, null, ul);
+        new AMServerConfiguration(), null, null);
+    cns.addListener(ul);
     cns.start();
     try {
       UUID handle1 = cns.register("c1", "h1", 0);
@@ -106,7 +121,7 @@ public class TestClientNotificationService {
       Assert.assertNotSame(handle1, handle2);
       cns.register("c1", "h2", 0);
     } finally {
-      Assert.assertFalse(ul.called);
+      Assert.assertFalse(ul.unregistered);
       cns.stop();
     }
   }
@@ -114,16 +129,17 @@ public class TestClientNotificationService {
   @Test(expected = ClientRegistryException.class)
   public void testRegisterExistingClientIdNonExistingCallback()
       throws Exception {
-    MyUnregisterListener ul = new MyUnregisterListener();
+    MyListener ul = new MyListener();
     ClientNotificationService cns = new ClientNotificationService(
-        new AMServerConfiguration(), null, null, ul);
+        new AMServerConfiguration(), null, null);
+    cns.addListener(ul);
     cns.start();
     try {
       UUID handle1 = cns.register("c1", "h1", 0);
       Assert.assertNotNull(handle1);
       cns.register("c1", "h2", 0);
     } finally {
-      Assert.assertFalse(ul.called);
+      Assert.assertFalse(ul.unregistered);
       cns.stop();
     }
   }

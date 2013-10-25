@@ -20,10 +20,12 @@ package com.cloudera.llama.server;
 import com.cloudera.llama.am.api.LlamaAMEvent;
 import com.cloudera.llama.am.api.LlamaAMListener;
 import com.cloudera.llama.am.impl.FastFormat;
+import com.cloudera.llama.am.impl.ParamChecker;
 import com.cloudera.llama.util.UUID;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -41,25 +43,53 @@ public class ClientNotificationService implements ClientNotifier.ClientRegistry,
   public static final List<String> METRIC_KEYS = Arrays.asList(
       CLIENTS_GAUGE, CLIENTS_EVICTION_METER);
 
+  public interface Listener {
+
+    public void onRegister(ClientInfo clientInfo);
+
+    public void onUnregister(ClientInfo clientInfo);
+
+  }
+
   public interface UnregisterListener {
 
     public void onUnregister(UUID handle);
 
   }
 
-  private class Entry {
+  private class Entry implements ClientInfo {
     private final String clientId;
+    private final UUID handle;
     private final String host;
     private final int port;
+    private final String address;
     private final ClientCaller caller;
 
     public Entry(String clientId, UUID handle, String host, int port) {
       this.clientId = clientId;
+      this.handle = handle;
       this.host = host;
       this.port = port;
+      this.address = host + ":" + port;
       caller = new ClientCaller(conf, clientId, handle, host, port,
           metricRegistry);
     }
+
+    @Override
+    public String getClientId() {
+      return clientId;
+    }
+
+    @Override
+    public UUID getHandle() {
+      return handle;
+    }
+
+    @Override
+    public String getCallbackAddress() {
+      return address;
+    }
+
   }
 
   private final ServerConfiguration conf;
@@ -71,22 +101,16 @@ public class ClientNotificationService implements ClientNotifier.ClientRegistry,
   private final ConcurrentHashMap<String, UUID> clientIdToHandle;
   //Map of callback-address to handle (for reverse lookup)
   private final ConcurrentHashMap<String, UUID> callbackToHandle;
-  private final UnregisterListener unregisterListener;
   private final MetricRegistry metricRegistry;
-
-  public ClientNotificationService(ServerConfiguration conf, MetricRegistry metricRegistry) {
-    this(conf, null, metricRegistry, null);
-  }
+  private final List<Listener> listeners;
 
   public ClientNotificationService(ServerConfiguration conf,
-      NodeMapper nodeMapper, MetricRegistry metricRegistry,
-      UnregisterListener unregisterListener) {
+      NodeMapper nodeMapper, MetricRegistry metricRegistry) {
     this.conf = conf;
     lock = new ReentrantReadWriteLock();
     clients = new ConcurrentHashMap<UUID, Entry>();
     clientIdToHandle = new ConcurrentHashMap<String, UUID>();
     callbackToHandle = new ConcurrentHashMap<String, UUID>();
-    this.unregisterListener = unregisterListener;
     this.metricRegistry = metricRegistry;
     if (metricRegistry != null) {
       MetricClientLlamaNotificationService.registerMetric(metricRegistry);
@@ -95,6 +119,15 @@ public class ClientNotificationService implements ClientNotifier.ClientRegistry,
       ClientNotifier.registerMetric(metricRegistry);
     }
     clientNotifier = new ClientNotifier(conf, nodeMapper, this, metricRegistry);
+    listeners = new ArrayList<Listener>();
+  }
+
+  public void addListener(Listener listener) {
+    listeners.add(ParamChecker.notNull(listener, "listener"));
+  }
+
+  public void removeListener(Listener listener) {
+    listeners.remove(ParamChecker.notNull(listener, "listener"));
   }
 
   public void start() throws Exception {
@@ -147,6 +180,14 @@ public class ClientNotificationService implements ClientNotifier.ClientRegistry,
             "active registrations '{}' and '{}'", clientId,
             getAddress(host, port), clientIdHandle, callbackHandle));
       }
+      Entry entry = clients.get(handle);
+      for (Listener listener : listeners) {
+        try {
+          listener.onRegister(entry);
+        } catch (Throwable ex) {
+          //TODO LOG ERROR
+        }
+      }
       return handle;
     } finally {
       lock.writeLock().unlock();
@@ -162,13 +203,17 @@ public class ClientNotificationService implements ClientNotifier.ClientRegistry,
         entry.caller.cleanUpClient();
         clientIdToHandle.remove(entry.clientId);
         callbackToHandle.remove(getAddress(entry.host, entry.port));
+        for (Listener listener : listeners) {
+          try {
+            listener.onUnregister(entry);
+          } catch (Throwable ex) {
+            //TODO LOG ERROR
+          }
+        }
         ret = true;
       }
     } finally {
       lock.writeLock().unlock();
-    }
-    if (ret & unregisterListener != null) {
-      unregisterListener.onUnregister(handle);
     }
     return ret;
   }

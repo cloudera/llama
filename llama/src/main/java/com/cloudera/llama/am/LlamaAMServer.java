@@ -19,6 +19,7 @@ package com.cloudera.llama.am;
 
 import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.yarn.YarnRMLlamaAMConnector;
+import com.cloudera.llama.server.ClientInfo;
 import com.cloudera.llama.server.ClientNotificationService;
 import com.cloudera.llama.server.NodeMapper;
 import com.cloudera.llama.server.Security;
@@ -40,12 +41,13 @@ import java.net.InetSocketAddress;
 
 public class LlamaAMServer extends
     ThriftServer<com.cloudera.llama.thrift.LlamaAMService.Processor>
-    implements ClientNotificationService.UnregisterListener {
+    implements ClientNotificationService.Listener {
   private LlamaAM llamaAm;
   private ClientNotificationService clientNotificationService;
   private NodeMapper nodeMapper;
   private String httpJmx;
   private String httpLlama;
+  private RestData restData;
 
   public LlamaAMServer() {
     super("LlamaAM", AMServerConfiguration.class);
@@ -73,6 +75,7 @@ public class LlamaAMServer extends
   }
 
   private void startHttpServer() {
+    restData = new RestData();
     httpServer = new Server();
     String strAddress = getServerConf().getHttpAddress();
     InetSocketAddress address = NetUtils.createSocketAddr(strAddress,
@@ -90,6 +93,8 @@ public class LlamaAMServer extends
     context.addServlet(Log4jLoggersServlet.class, "/loggers");
     context.setAttribute(Log4jLoggersServlet.READ_ONLY,
         getServerConf().getLoggerServletReadOnly());
+    context.addServlet(LlamaJsonServlet.class, LlamaJsonServlet.BIND_PATH);
+    context.setAttribute(LlamaJsonServlet.REST_DATA, restData);
     httpServer.addHandler(context);
 
     try {
@@ -122,8 +127,10 @@ public class LlamaAMServer extends
       Class<? extends NodeMapper> klass = getServerConf().getNodeMappingClass();
       nodeMapper = ReflectionUtils.newInstance(klass, getConf());
       clientNotificationService = new ClientNotificationService(getServerConf(),
-          nodeMapper, getMetricRegistry(), this);
+          nodeMapper, getMetricRegistry());
+      clientNotificationService.addListener(this);
       clientNotificationService.start();
+      clientNotificationService.addListener(restData);
 
       getConf().set(YarnRMLlamaAMConnector.ADVERTISED_HOSTNAME_KEY,
           ThriftEndPoint.getServerAddress(getServerConf()));
@@ -131,7 +138,7 @@ public class LlamaAMServer extends
           ThriftEndPoint.getServerPort(getServerConf()));
       getConf().set(YarnRMLlamaAMConnector.ADVERTISED_TRACKING_URL_KEY,
           getHttpLlamaUI());
-      llamaAm = LlamaAM.create(getConf());
+      llamaAm = LlamaAM.create(getConf(), restData);
       llamaAm.setMetricRegistry(getMetricRegistry());
       llamaAm.start();
     } catch (Exception ex) {
@@ -156,12 +163,16 @@ public class LlamaAMServer extends
   }
 
   @Override
-  public void onUnregister(UUID handle) {
+  public void onRegister(ClientInfo clientInfo) {
+  }
+
+  @Override
+  public void onUnregister(ClientInfo clientInfo) {
     try {
-      llamaAm.releaseReservationsForHandle(handle);
+      llamaAm.releaseReservationsForHandle(clientInfo.getHandle());
     } catch (Throwable ex) {
       getLog().warn("Error releasing reservations for handle '{}', {}",
-          handle, ex.toString(), ex);
+          clientInfo.getHandle(), ex.toString(), ex);
     }
   }
 }

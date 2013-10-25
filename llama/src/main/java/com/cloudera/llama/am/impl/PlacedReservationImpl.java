@@ -17,6 +17,7 @@
  */
 package com.cloudera.llama.am.impl;
 
+import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.PlacedResource;
 import com.cloudera.llama.am.api.Reservation;
 import com.cloudera.llama.am.api.Resource;
@@ -29,6 +30,21 @@ import com.cloudera.llama.util.UUID;
 public class PlacedReservationImpl extends RMPlacedReservation {
   private final UUID reservationId;
   private Status status;
+
+  public PlacedReservationImpl(PlacedReservation reservation) {
+    super(reservation);
+    reservationId = reservation.getReservationId();
+    status = reservation.getStatus();
+    for (int i = 0; i < reservation.getResources().size(); i++) {
+      PlacedResource pr = reservation.getResources().get(i);
+      PlacedResourceImpl pri = getResourceImpls().get(i);
+      pri.setReservationInfo(reservation.getClientId(), reservation.getQueue(),
+          reservationId);
+      pri.setAllocationInfo(pr.getActualCpuVCores(), pr.getActualMemoryMb(),
+          pr.getActualLocation(), pr.getRmResourceId());
+      pri.setStatus(pr.getStatus());
+    }
+  }
 
   @SuppressWarnings("unchecked")
   public PlacedReservationImpl(UUID reservationId, Reservation reservation) {

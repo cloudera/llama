@@ -40,9 +40,6 @@ public class PlacedResourceImpl extends RMPlacedResource {
   public void setReservationInfo(UUID clientId, String queue,
       UUID reservationId) {
     this.clientId = clientId;
-    if (this.reservationId != null) {
-      throw new IllegalStateException("reservationId already set");
-    }
     this.reservationId = reservationId;
     this.queue = queue;
   }
