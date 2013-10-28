@@ -18,6 +18,7 @@
 package com.cloudera.llama.am;
 
 import com.cloudera.llama.util.UUID;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.ObjectWriter;
 
 import javax.servlet.ServletException;
@@ -40,7 +41,8 @@ public class LlamaJsonServlet extends HttpServlet {
   public static final String V1_PATH =  PATH + "/v1";
 
   public static final String ROOT = "/";
-  public static final String SUMMARY =  V1 + "/summary";
+  public static final String SUMMARY = V1 + "/summary";
+  public static final String ALL = V1 + "/all";
   public static final String RESERVATION = V1 + "/reservation/";
   public static final String HANDLE = V1 + "/handle/";
   public static final String NODE = V1 + "/node/";
@@ -51,6 +53,7 @@ public class LlamaJsonServlet extends HttpServlet {
   static {
     Map urls = new LinkedHashMap();
     urls.put("summary", SUMMARY);
+    urls.put("all", ALL);
     urls.put("queue", QUEUE + "<?>");
     urls.put("handle", HANDLE + "<?>");
     urls.put("node", NODE + "<?>");
@@ -71,7 +74,8 @@ public class LlamaJsonServlet extends HttpServlet {
     if (restData == null) {
       throw new RuntimeException("RestData not available in the ServletContext");
     }
-    jsonWriter = RestData.createJsonWriter();
+    ObjectMapper mapper = new ObjectMapper();
+    jsonWriter = mapper.defaultPrettyPrintingWriter();
   }
 
   @Override
@@ -86,8 +90,10 @@ public class LlamaJsonServlet extends HttpServlet {
         resp.sendRedirect(V1_PATH);
       } else if (requestType.equals(V1) || requestType.equals(V1 + "/")) {
         jsonWriter.writeValue(resp.getWriter(), REST_API);
-      } else if (requestType.equals(SUMMARY) || requestType.equals(SUMMARY + "/")) {
+      } else if (requestType.equals(SUMMARY)) {
         restData.writeSummaryAsJson(resp.getWriter());
+      } else if (requestType.equals(ALL)) {
+        restData.writeAllAsJson(resp.getWriter());
       } else if (requestType.startsWith(RESERVATION)) {
         UUID id = UUID.fromString(requestType.substring(RESERVATION.length()));
         restData.writeReservationAsJson(id, resp.getWriter());

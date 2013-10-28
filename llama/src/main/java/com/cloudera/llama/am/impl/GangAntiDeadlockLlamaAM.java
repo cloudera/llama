@@ -174,6 +174,9 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
     }
     if (doActualReservation) {
       placedReservation = am.reserve(reservationId, reservation);
+    } else {
+      ((PlacedReservationImpl)placedReservation).
+          setStatus(PlacedReservation.Status.BACKED_OFF);
     }
     return placedReservation;
   }

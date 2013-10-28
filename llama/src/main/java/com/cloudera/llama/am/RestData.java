@@ -33,6 +33,8 @@ import org.codehaus.jackson.map.ObjectWriter;
 import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.module.SimpleModule;
 import org.codehaus.jackson.map.ser.SerializerBase;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -42,9 +44,11 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -53,17 +57,19 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class RestData implements LlamaAMObserver,
     ClientNotificationService.Listener {
 
+  private static Logger LOG = LoggerFactory.getLogger(RestData.class);
+
   private static final Map<String, String> VERSION_INFO =
       new LinkedHashMap<String, String>();
   
   static {
-    VERSION_INFO.put("llama.version", VersionInfo.getVersion());
-    VERSION_INFO.put("llama.built.date", VersionInfo.getBuiltDate());
-    VERSION_INFO.put("llama.built.by", VersionInfo.getBuiltBy());
-    VERSION_INFO.put("llama.scm.uri", VersionInfo.getSCMURI());
-    VERSION_INFO.put("llama.scm.revision", VersionInfo.getSCMRevision());
-    VERSION_INFO.put("llama.source.md5", VersionInfo.getSourceMD5());
-    VERSION_INFO.put("llama.hadoop.version", VersionInfo.getHadoopVersion());
+    VERSION_INFO.put("llamaVersion", VersionInfo.getVersion());
+    VERSION_INFO.put("llamaBuiltDate", VersionInfo.getBuiltDate());
+    VERSION_INFO.put("llamaBuiltBy", VersionInfo.getBuiltBy());
+    VERSION_INFO.put("llamaScmUri", VersionInfo.getSCMURI());
+    VERSION_INFO.put("llamaScmRevision", VersionInfo.getSCMRevision());
+    VERSION_INFO.put("llamaSourceMD5", VersionInfo.getSourceMD5());
+    VERSION_INFO.put("llamaHadoopVersion", VersionInfo.getHadoopVersion());
   }
 
   public static final String REST_VERSION_KEY = "llamaRestJsonVersion";
@@ -76,20 +82,34 @@ public class RestData implements LlamaAMObserver,
   private static final String NODES_SUMMARY_KEY = "nodesSummary";
 
   private static final String SUMMARY_DATA = "summaryData";
+  private static final String ALL_DATA = "allData";
   private static final String RESERVATION_DATA = "reservationData";
   private static final String QUEUE_DATA = "queueData";
   private static final String HANDLE_DATA = "handleData";
   private static final String NODE_DATA = "nodeData";
 
+  private static final String COUNT = "count";
+  private static final String RESERVATIONS = "reservations";
+  private static final String CLIENT_INFOS = "clientInfos";
+  private static final String NODES_CROSSREF = "nodesCrossref";
+  private static final String HANDLES_CROSSREF = "handlesCrossref";
+  private static final String QUEUES_CROSSREF = "queuesCrossref";
+
+  private static final String CLIENT_INFO = "clientInfo";
+  private static final String QUEUE = "queue";
+  private static final String NODE = "node";
+
   private final ObjectWriter jsonWriter;
   private final ReadWriteLock lock;
   private final Map<UUID, PlacedReservation> reservationsMap;
-  private final Map<UUID, List<PlacedReservation>> clientReservationsMap;
+  private final Map<UUID, List<PlacedReservation>> handleReservationsMap;
   private final Map<String, List<PlacedReservation>> queueReservationsMap;
-  private final Map<String, List<PlacedResource>> nodeResourcesMap;
+  private final Map<String, List<PlacedReservation>> nodeReservationsMap;
   private final Map<UUID, ClientInfo> clientInfoMap;
+  private final Set<UUID> hasBeenBackedOff;
 
-  public static ObjectWriter createJsonWriter() {
+
+  private ObjectWriter createJsonWriter() {
     ObjectMapper mapper = new ObjectMapper();
     SimpleModule module = new SimpleModule("LlamaModule",
         new Version(1, 0, 0, null));
@@ -105,10 +125,11 @@ public class RestData implements LlamaAMObserver,
     jsonWriter = createJsonWriter();
     lock = new ReentrantReadWriteLock();
     reservationsMap = new LinkedHashMap<UUID, PlacedReservation>();
-    clientReservationsMap = new LinkedHashMap<UUID, List<PlacedReservation>>();
+    handleReservationsMap = new LinkedHashMap<UUID, List<PlacedReservation>>();
     queueReservationsMap = new TreeMap<String, List<PlacedReservation>>();
-    nodeResourcesMap = new TreeMap<String, List<PlacedResource>>();
+    nodeReservationsMap = new TreeMap<String, List<PlacedReservation>>();
     clientInfoMap = new LinkedHashMap<UUID, ClientInfo>();
+    hasBeenBackedOff = new HashSet<UUID>();
   }
 
   public void onRegister(ClientInfo clientInfo) {
@@ -126,15 +147,27 @@ public class RestData implements LlamaAMObserver,
     try {
       switch (reservation.getStatus()) {
         case PENDING:
-          add(reservation);
+          if (!reservationsMap.containsKey(reservation.getReservationId())) {
+            add(reservation);
+          } else {
+            update(reservation);
+          }
+          break;
+        case BACKED_OFF:
+          if (!reservationsMap.containsKey(reservation.getReservationId())) {
+            add(reservation);
+          } else {
+            update(reservation);
+          }
+          hasBeenBackedOff.add(reservation.getReservationId());
           break;
         case PARTIAL:
-        case BACKED_OFF:
         case ALLOCATED:
           update(reservation);
           break;
         case ENDED:
           delete(reservation);
+          hasBeenBackedOff.remove(reservation.getReservationId());
           break;
       }
     } finally {
@@ -151,87 +184,73 @@ public class RestData implements LlamaAMObserver,
     list.add(value);
   }
 
-  private void add(PlacedReservation r) {
-    reservationsMap.put(r.getReservationId(), r);
-    addToMapList(clientReservationsMap, r.getHandle(), r);
-    addToMapList(queueReservationsMap, r.getQueue(), r);
-    for (PlacedResource resource : r.getResources()) {
-      addToMapList(nodeResourcesMap, resource.getLocation(), resource);
+  private void add(PlacedReservation reservation) {
+    reservationsMap.put(reservation.getReservationId(), reservation);
+    addToMapList(handleReservationsMap, reservation.getHandle(), reservation);
+    addToMapList(queueReservationsMap, reservation.getQueue(), reservation);
+    for (PlacedResource resource : reservation.getResources()) {
+      addToMapList(nodeReservationsMap, resource.getLocation(), reservation);
     }
   }
 
-  private <K, V> void updateToMapList(Map<K, List<V>> map, K key, V value) {
+  private <K, V> void updateToMapList(Map<K, List<V>> map, K key, V value,
+      String msg) {
     List<V> list = map.get(key);
     if (list != null) {
       int index = list.indexOf(value);
       if (index >= 0) {
         list.set(index, value);
       } else {
-        //LOG ERROR
+        LOG.error("RestData update, inconsistency key '{}' not found in {}",
+            key, msg);
       }
     } else {
-      //LOG ERROR
+      LOG.error("RestData update, inconsistency value '{}' not found in {}",
+          value, msg);
     }
   }
 
-  private void updateNodeResourceMapList(Map<String, List<PlacedResource>> map,
-      String key, PlacedResource newValue) {
-    List<PlacedResource> list = map.get(key);
-    if (list != null) {
-      int index = list.indexOf(newValue);
-      if (index >= 0) {
-        PlacedResource oldValue = list.get(index);
-        if (newValue.getStatus() != PlacedResource.Status.ALLOCATED ||
-            newValue.getActualLocation().equals(oldValue.getLocation())) {
-         list.set(index, newValue);
-        } else {
-          list.remove(index);
-          if (list.isEmpty()) {
-            map.remove(key);
-          }
-          addToMapList(map, key, newValue);
-        }
-      } else {
-        //LOG ERROR
-      }
-    } else {
-      //LOG ERROR
+  private void update(PlacedReservation reservation) {
+    reservationsMap.put(reservation.getReservationId(), reservation);
+    updateToMapList(handleReservationsMap, reservation.getHandle(), reservation,
+        "handleReservationsMap");
+    updateToMapList(queueReservationsMap, reservation.getQueue(), reservation,
+        "queueReservationsMap");
+    for (PlacedResource resource : reservation.getResources()) {
+      updateToMapList(nodeReservationsMap, resource.getLocation(), reservation,
+          "nodeReservations");
     }
   }
 
-  private void update(PlacedReservation r) {
-    reservationsMap.put(r.getReservationId(), r);
-    updateToMapList(clientReservationsMap, r.getHandle(), r);
-    updateToMapList(queueReservationsMap, r.getQueue(), r);
-    for (PlacedResource resource : r.getResources()) {
-      updateNodeResourceMapList(nodeResourcesMap, resource.getLocation(),
-          resource);
-    }
-  }
-
-  private <K, V> void deleteFromMapList(Map<K, List<V>> map, K key, V value) {
+  private <K, V> void deleteFromMapList(Map<K, List<V>> map, K key, V value,
+      String msg) {
     List<V> list = map.get(key);
     if (list != null) {
       int index = list.indexOf(value);
       if (index >= 0) {
         list.remove(index);
       } else {
-        //LOG ERROR
+        LOG.error("RestData delete, inconsistency key '{}' not found in {}",
+            key, msg);
       }
       if (list.isEmpty()) {
         map.remove(key);
       }
     } else {
-      //LOG ERROR
+      LOG.error("RestData delete, inconsistency value '{}' not found in {}",
+          value, msg);
     }
   }
 
-  private void delete(PlacedReservation r) {
-    reservationsMap.remove(r.getReservationId());
-    deleteFromMapList(clientReservationsMap, r.getHandle(), r);
-    deleteFromMapList(queueReservationsMap, r.getQueue(), r);
-    for (PlacedResource resource : r.getResources()) {
-      deleteFromMapList(nodeResourcesMap, resource.getLocation(), resource);
+  private void delete(PlacedReservation reservation) {
+    reservationsMap.remove(reservation.getReservationId());
+    deleteFromMapList(handleReservationsMap, reservation.getHandle(),
+        reservation, "handleReservationsMap");
+    deleteFromMapList(queueReservationsMap, reservation.getQueue(), reservation,
+        "queueReservationsMap");
+    for (PlacedResource resource : reservation.getResources()) {
+      deleteFromMapList(nodeReservationsMap, resource.getLocation(),
+          reservation, "nodeReservations");
     }
   }
 
@@ -281,8 +300,7 @@ public class RestData implements LlamaAMObserver,
       return createSchemaNode("object");
     }
   }
-
-  public static class PlacedReservationSerializer extends
+    public class PlacedReservationSerializer extends
       SerializerBase<PlacedReservation> {
 
     protected PlacedReservationSerializer() {
@@ -300,6 +318,8 @@ public class RestData implements LlamaAMObserver,
       jgen.writeStringField("queue", value.getQueue());
       jgen.writeBooleanField("gang", value.isGang());
       jgen.writeStringField("status", value.getStatus().toString());
+      jgen.writeBooleanField("hasBeenBackedOff",
+          hasBeenBackedOff.contains(value.getReservationId()));
       jgen.writeObjectField("resources", value.getResources());
       jgen.writeEndObject();
     }
@@ -325,7 +345,7 @@ public class RestData implements LlamaAMObserver,
       jgen.writeStartObject();
       jgen.writeObjectField("clientResourceId", value.getClientResourceId());
       jgen.writeStringField("location", value.getLocation());
-      jgen.writeStringField("locationEnforcement", value.getEnforcement().toString());
+      jgen.writeStringField("enforcement", value.getEnforcement().toString());
       jgen.writeNumberField("cpuVCores", value.getCpuVCores());
       jgen.writeNumberField("memoryMb", value.getMemoryMb());
       jgen.writeObjectField("handle", value.getHandle());
@@ -371,7 +391,7 @@ public class RestData implements LlamaAMObserver,
     for (Map.Entry<K, List<V>> entry : map.entrySet()) {
       Map item = new LinkedHashMap();
       item.put(itemName, entry.getKey());
-      item.put("count", entry.getValue().size());
+      item.put(COUNT, entry.getValue().size());
       summary.add(item);
     }
     return summary;
@@ -408,7 +428,7 @@ public class RestData implements LlamaAMObserver,
   private List<ClientInfoImpl> createClientInfoSummary() {
     Map<UUID, Integer> summary = new LinkedHashMap<UUID, Integer>();
     for (Map.Entry<UUID, List<PlacedReservation>> entry :
-        clientReservationsMap.entrySet()) {
+        handleReservationsMap.entrySet()) {
       summary.put(entry.getKey(), entry.getValue().size());
     }
     List<ClientInfoImpl> list = new ArrayList<ClientInfoImpl>(
@@ -429,12 +449,48 @@ public class RestData implements LlamaAMObserver,
       Map summary = new LinkedHashMap();
       summary.put(VERSION_INFO_KEY, VERSION_INFO);
       summary.put(RESERVATIONS_COUNT_KEY, reservationsMap.size());
-      summary.put(QUEUES_SUMMARY_KEY, createMapSummaryList("queue",
+      summary.put(QUEUES_SUMMARY_KEY, createMapSummaryList(QUEUE,
           queueReservationsMap));
       summary.put(CLIENTS_SUMMARY_KEY, createClientInfoSummary());
-      summary.put(NODES_SUMMARY_KEY, createMapSummaryList("node",
-          nodeResourcesMap));
+      summary.put(NODES_SUMMARY_KEY, createMapSummaryList(NODE,
+          nodeReservationsMap));
       writeAsJson(SUMMARY_DATA, summary, out);
+    } finally {
+      lock.readLock().unlock();
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  private <K> Map<K, List<UUID>> createCrossRef(Map<K, List<PlacedReservation>>
+      map) {
+    Map<K, List<UUID>> crossRef = new LinkedHashMap<K, List<UUID>>();
+    for (Map.Entry<K, List<PlacedReservation>> entry : map.entrySet()) {
+      K key = entry.getKey();
+      List<UUID> list = crossRef.get(key);
+      if (list == null) {
+        list = new ArrayList<UUID>();
+        crossRef.put(key, list);
+      }
+      for (PlacedReservation value : entry.getValue()) {
+        list.add(value.getReservationId());
+      }
+    }
+    return crossRef;
+  }
+
+  @SuppressWarnings("unchecked")
+  public void writeAllAsJson(Writer out)
+      throws IOException, NotFoundException {
+    lock.readLock().lock();
+    try {
+      Map all = new LinkedHashMap();
+      all.put(VERSION_INFO_KEY, VERSION_INFO);
+      all.put(RESERVATIONS, reservationsMap);
+      all.put(CLIENT_INFOS, createClientInfoSummary());
+      all.put(QUEUES_CROSSREF, createCrossRef(queueReservationsMap));
+      all.put(HANDLES_CROSSREF, createCrossRef(handleReservationsMap));
+      all.put(NODES_CROSSREF, createCrossRef(nodeReservationsMap));
+      writeAsJson(ALL_DATA, all, out);
     } finally {
       lock.readLock().unlock();
     }
@@ -459,11 +515,11 @@ public class RestData implements LlamaAMObserver,
       if (ci == null) {
         throw new NotFoundException();
       }
-      List<PlacedReservation> prs = clientReservationsMap.get(handle);
+      List<PlacedReservation> prs = handleReservationsMap.get(handle);
       prs = (prs != null) ? prs : Collections.EMPTY_LIST;
       Map map = new LinkedHashMap();
-      map.put("clientInfo", ci);
-      map.put("reservations", prs);
+      map.put(CLIENT_INFO, ci);
+      map.put(RESERVATIONS, prs);
       writeAsJson(HANDLE_DATA, map, out);
     } finally {
       lock.readLock().unlock();
@@ -484,13 +540,13 @@ public class RestData implements LlamaAMObserver,
       throws IOException, NotFoundException {
     lock.readLock().lock();
     try {
-      writeAsJson(NODE_DATA, nodeResourcesMap.get(node), out);
+      writeAsJson(NODE_DATA, nodeReservationsMap.get(node), out);
     } finally {
       lock.readLock().unlock();
     }
   }
 
-  public static final String ISO8601_UTC_MASK = "yyyy-MM-dd'T'HH:mm'Z'";
+  private static final String ISO8601_UTC_MASK = "yyyy-MM-dd'T'HH:mm'Z'";
   private static final TimeZone UTC = TimeZone.getTimeZone("UTC");
 
   private static String formatDateTime(long epoc) {
