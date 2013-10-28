@@ -128,7 +128,7 @@ public class Security {
   }
 
   public static void logout(Subject subject) {
-    LoginContext loginContext = SUBJECT_LOGIN_CTX_MAP.get(subject);
+    LoginContext loginContext = SUBJECT_LOGIN_CTX_MAP.remove(subject);
     if (loginContext != null) {
       try {
         loginContext.logout();
