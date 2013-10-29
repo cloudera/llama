@@ -17,7 +17,6 @@
  */
 package com.cloudera.llama.nm;
 
-import com.cloudera.llama.am.impl.ParamChecker;
 import com.cloudera.llama.minikdc.MiniKdc;
 import com.cloudera.llama.server.Security;
 import com.cloudera.llama.server.ServerConfiguration;
@@ -103,7 +102,7 @@ public class TestSecureLlamaNMAuxiliaryService
     Subject subject = new Subject(false, principals, new HashSet<Object>(),
         new HashSet<Object>());
     LoginContext context = new LoginContext("", subject, null,
-        new Security.KerberosConfiguration("client", keytab, true));
+        new Security.KeytabKerberosConfiguration("client", keytab, true));
     context.login();
     return context.getSubject();
   }

@@ -20,6 +20,7 @@ package com.cloudera.llama.am;
 import com.cloudera.llama.server.AbstractMain;
 import com.cloudera.llama.server.AbstractServer;
 import com.cloudera.llama.server.LlamaClientCallback;
+import com.cloudera.llama.server.Security;
 import com.cloudera.llama.server.TypeUtils;
 import com.cloudera.llama.thrift.LlamaAMService;
 import com.cloudera.llama.thrift.TLlamaAMGetNodesRequest;
@@ -199,10 +200,6 @@ public class LlamaClient {
       CLIParser.Command command = parser.parse(args);
       CommandLine cl = command.getCommandLine();
       boolean secure = cl.hasOption(SECURE);
-      if (secure) {
-        throw new UnsupportedOperationException("'-secure' is not supported");
-      }
-
       if (command.getName().equals(HELP_CMD)) {
         parser.showHelp(command.getCommandLine());
       } else if (command.getName().equals(UUID_CMD)) {
@@ -278,17 +275,7 @@ public class LlamaClient {
   }
 
   static Subject getSubject(boolean secure) throws Exception {
-    return new Subject();
-//    if (secure) {
-//      File keytab = new File(TestAbstractMain.createTestDir(),
-//          "client.keytab");
-//      Set<Principal> principals = new HashSet<Principal>();
-//      principals.add(new KerberosPrincipal("client"));
-//      LoginContext context = new LoginContext("", subject, null,
-//          new Security.KerberosConfiguration("client", keytab, true));
-//      context.login();
-//      return context.getSubject();
-//
+    return (secure) ? Security.loginClientFromKinit() : new Subject();
   }
 
   static LlamaAMService.Client createClient(boolean secure, String host,

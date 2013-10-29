@@ -23,6 +23,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 import javax.security.auth.Subject;
 import javax.security.auth.kerberos.KerberosPrincipal;
 import javax.security.auth.login.AppConfigurationEntry;
+import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 import java.io.File;
@@ -35,23 +36,22 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class Security {
 
-  public static class KerberosConfiguration extends
-      javax.security.auth.login.Configuration {
+  private static String getKrb5LoginModuleName() {
+    return System.getProperty("java.vendor").contains("IBM")
+           ? "com.ibm.security.auth.module.Krb5LoginModule"
+           : "com.sun.security.auth.module.Krb5LoginModule";
+  }
+
+  public static class KeytabKerberosConfiguration extends Configuration {
     private String principal;
     private String keytab;
     private boolean isInitiator;
 
-    public KerberosConfiguration(String principal, File keytab,
+    public KeytabKerberosConfiguration(String principal, File keytab,
         boolean client) {
       this.principal = principal;
       this.keytab = keytab.getAbsolutePath();
       this.isInitiator = client;
-    }
-
-    private static String getKrb5LoginModuleName() {
-      return System.getProperty("java.vendor").contains("IBM")
-             ? "com.ibm.security.auth.module.Krb5LoginModule"
-             : "com.sun.security.auth.module.Krb5LoginModule";
     }
 
     @Override
@@ -72,6 +72,38 @@ public class Security {
       }
       options.put("debug", System.getProperty("sun.security.krb5.debug=true",
           "false"));
+
+      return new AppConfigurationEntry[]{
+          new AppConfigurationEntry(getKrb5LoginModuleName(),
+              AppConfigurationEntry.LoginModuleControlFlag.REQUIRED,
+              options)};
+    }
+  }
+
+  private static class KinitKerberosConfiguration extends Configuration {
+
+    private KinitKerberosConfiguration() {
+    }
+
+    public static Configuration createClientConfig() {
+      return new KinitKerberosConfiguration();
+    }
+
+    @Override
+    public AppConfigurationEntry[] getAppConfigurationEntry(String name) {
+      Map<String, String> options = new HashMap<String, String>();
+      options.put("useKeyTab", "false");
+      options.put("storeKey", "false");
+      options.put("doNotPrompt", "true");
+      options.put("useTicketCache", "true");
+      options.put("renewTGT", "true");
+      options.put("refreshKrb5Config", "true");
+      options.put("isInitiator", "true");
+      String ticketCache = System.getenv("KRB5CCNAME");
+      if (ticketCache != null) {
+        options.put("ticketCache", ticketCache);
+      }
+      options.put("debug", "true");
 
       return new AppConfigurationEntry[]{
           new AppConfigurationEntry(getKrb5LoginModuleName(),
@@ -107,7 +139,7 @@ public class Security {
       subject = new Subject(false, principals, new HashSet<Object>(),
           new HashSet<Object>());
       LoginContext context = new LoginContext("", subject, null,
-          new KerberosConfiguration(principalName, keytabFile, isClient));
+          new KeytabKerberosConfiguration(principalName, keytabFile, isClient));
       context.login();
       subject = context.getSubject();
       SUBJECT_LOGIN_CTX_MAP.put(subject, context);
@@ -117,6 +149,15 @@ public class Security {
     return subject;
   }
 
+  public static Subject loginClientFromKinit() throws Exception {
+    LoginContext context = new LoginContext("", new Subject(), null,
+        KinitKerberosConfiguration.createClientConfig());
+    context.login();
+    Subject subject = context.getSubject();
+    SUBJECT_LOGIN_CTX_MAP.put(subject, context);
+    return subject;
+  }
+  
   public static Subject loginServerSubject(ServerConfiguration conf)
       throws Exception {
     return loginSubject(conf, false);

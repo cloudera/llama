@@ -135,7 +135,7 @@ public class TestSecureLlamaAMThriftServer extends TestLlamaAMThriftServer {
     Subject subject = new Subject(false, principals, new HashSet<Object>(),
         new HashSet<Object>());
     LoginContext context = new LoginContext("", subject, null,
-        new Security.KerberosConfiguration("client", keytab, true));
+        new Security.KeytabKerberosConfiguration("client", keytab, true));
     context.login();
     return context.getSubject();
   }
