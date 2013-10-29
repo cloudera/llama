@@ -144,6 +144,18 @@ public class TestLlamaAMThriftServer {
       conn = (HttpURLConnection) new URL(server.getHttpLlamaUI() +
           "loggers").openConnection();
       Assert.assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+      conn = (HttpURLConnection) new URL(server.getHttpLlamaUI() +
+          "json").openConnection();
+      Assert.assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+      conn = (HttpURLConnection) new URL(server.getHttpLlamaUI() +
+          "json/v1").openConnection();
+      Assert.assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+      conn = (HttpURLConnection) new URL(server.getHttpLlamaUI() +
+          "json/v1/summary").openConnection();
+      Assert.assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+      conn = (HttpURLConnection) new URL(server.getHttpLlamaUI() +
+          "json/v1/all").openConnection();
+      Assert.assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
     } finally {
       server.stop();
     }
@@ -181,6 +193,10 @@ public class TestLlamaAMThriftServer {
           Assert.assertEquals(TStatusCode.OK, trRes.getStatus().getStatus_code());
           Assert.assertNotNull(trRes.getAm_handle());
           Assert.assertNotNull(TypeUtils.toUUID(trRes.getAm_handle()));
+
+          HttpURLConnection conn = (HttpURLConnection) new URL(server.getHttpLlamaUI() +
+              "json/v1/handle/" + TypeUtils.toUUID(trRes.getAm_handle()).toString()).openConnection();
+          Assert.assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
 
           //invalid re-register different address
           tAddress.setPort(1);
@@ -377,10 +393,25 @@ public class TestLlamaAMThriftServer {
           tresReq.setResources(Arrays.asList(tResource));
           tresReq.setGang(true);
           TLlamaAMReservationResponse tresRes = client.Reserve(tresReq);
-          Assert.assertEquals(TStatusCode.OK, tresRes.getStatus().getStatus_code());
+          Assert.assertEquals(TStatusCode.OK, 
+              tresRes.getStatus().getStatus_code());
           //check notification delivery
           Thread.sleep(300);
           Assert.assertEquals(1, callbackServer.notifications.size());
+
+          HttpURLConnection conn = (HttpURLConnection) 
+              new URL(server.getHttpLlamaUI() + "json/v1/reservation/" + 
+                  TypeUtils.toUUID(tresRes.getReservation_id()).toString())
+                  .openConnection();
+          Assert.assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+
+          conn = (HttpURLConnection) new URL(server.getHttpLlamaUI() +
+              "json/v1/queue/q1").openConnection();
+          Assert.assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+
+          conn = (HttpURLConnection) new URL(server.getHttpLlamaUI() +
+              "json/v1/node/n1").openConnection();
+          Assert.assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
 
           //invalid reservation
           tresReq = new TLlamaAMReservationRequest();
@@ -410,7 +441,8 @@ public class TestLlamaAMThriftServer {
           turReq.setVersion(TLlamaServiceVersion.V1);
           turReq.setAm_handle(trRes.getAm_handle());
           TLlamaAMUnregisterResponse turRes = client.Unregister(turReq);
-          Assert.assertEquals(TStatusCode.OK, turRes.getStatus().getStatus_code());
+          Assert.assertEquals(TStatusCode.OK, 
+              turRes.getStatus().getStatus_code());
 
           //test metric registration
           verifyMetricRegistration(server);

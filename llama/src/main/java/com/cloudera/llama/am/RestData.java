@@ -75,29 +75,29 @@ public class RestData implements LlamaAMObserver,
   public static final String REST_VERSION_KEY = "llamaRestJsonVersion";
   public static final String REST_VERSION_VALUE = "1.0.0";
 
-  private static final String VERSION_INFO_KEY = "llamaVersionInfo";
-  private static final String RESERVATIONS_COUNT_KEY = "reservationsCount";
-  private static final String QUEUES_SUMMARY_KEY = "queuesSummary";
-  private static final String CLIENTS_SUMMARY_KEY = "clientsSummary";
-  private static final String NODES_SUMMARY_KEY = "nodesSummary";
+  static final String VERSION_INFO_KEY = "llamaVersionInfo";
+  static final String RESERVATIONS_COUNT_KEY = "reservationsCount";
+  static final String QUEUES_SUMMARY_KEY = "queuesSummary";
+  static final String CLIENTS_SUMMARY_KEY = "clientsSummary";
+  static final String NODES_SUMMARY_KEY = "nodesSummary";
 
-  private static final String SUMMARY_DATA = "summaryData";
-  private static final String ALL_DATA = "allData";
-  private static final String RESERVATION_DATA = "reservationData";
-  private static final String QUEUE_DATA = "queueData";
-  private static final String HANDLE_DATA = "handleData";
-  private static final String NODE_DATA = "nodeData";
+  static final String SUMMARY_DATA = "summaryData";
+  static final String ALL_DATA = "allData";
+  static final String RESERVATION_DATA = "reservationData";
+  static final String QUEUE_DATA = "queueData";
+  static final String HANDLE_DATA = "handleData";
+  static final String NODE_DATA = "nodeData";
 
-  private static final String COUNT = "count";
-  private static final String RESERVATIONS = "reservations";
-  private static final String CLIENT_INFOS = "clientInfos";
-  private static final String NODES_CROSSREF = "nodesCrossref";
-  private static final String HANDLES_CROSSREF = "handlesCrossref";
-  private static final String QUEUES_CROSSREF = "queuesCrossref";
+  static final String COUNT = "count";
+  static final String RESERVATIONS = "reservations";
+  static final String CLIENT_INFOS = "clientInfos";
+  static final String NODES_CROSSREF = "nodesCrossref";
+  static final String HANDLES_CROSSREF = "handlesCrossref";
+  static final String QUEUES_CROSSREF = "queuesCrossref";
 
-  private static final String CLIENT_INFO = "clientInfo";
-  private static final String QUEUE = "queue";
-  private static final String NODE = "node";
+  static final String CLIENT_INFO = "clientInfo";
+  static final String QUEUE = "queue";
+  static final String NODE = "node";
 
   private final ObjectWriter jsonWriter;
   private final ReadWriteLock lock;
@@ -201,12 +201,61 @@ public class RestData implements LlamaAMObserver,
       if (index >= 0) {
         list.set(index, value);
       } else {
-        LOG.error("RestData update, inconsistency key '{}' not found in {}",
+        LOG.error("RestData update inconsistency, key '{}' not found in {}",
             key, msg);
       }
     } else {
-      LOG.error("RestData update, inconsistency value '{}' not found in {}",
+      LOG.error("RestData update inconsistency, value '{}' not found in {}",
           value, msg);
+    }
+  }
+
+  private void updateResource( PlacedResource resource, 
+      PlacedReservation reservation) {
+    boolean actualLocation = false;
+    List<PlacedReservation> list = 
+        nodeReservationsMap.get(resource.getLocation());
+    if (list == null) {
+      list = nodeReservationsMap.get(resource.getActualLocation());
+      actualLocation = true;
+    }
+    if (list != null) {
+      int index = list.indexOf(reservation);
+      if (index >= 0) {
+        PlacedReservation oldReservation = list.get(index);
+        PlacedResource oldResource = null;
+        List<PlacedResource> oldResources = oldReservation.getResources();
+        for (int i = 0; oldResource == null && i < oldResources.size(); i++) {
+          if (oldResources.get(i).getClientResourceId().
+              equals(resource.getClientResourceId())) {
+            oldResource = oldResources.get(i);
+          }
+        }
+        if (oldResource == null) {
+          LOG.error("RestData update inconsistency resource '{}' not found " +
+              "in nodeReservations", resource);
+        } else {
+          if (actualLocation || 
+              resource.getActualLocation() == null ||
+              oldResource.getLocation().equals(resource.getActualLocation())) {
+            list.set(index, reservation);
+          } else {
+            list.remove(index);
+            list = nodeReservationsMap.get(resource.getActualLocation());
+            if (list == null) {
+              list = new ArrayList<PlacedReservation>();
+              nodeReservationsMap.put(resource.getActualLocation(), list);
+            }
+            list.add(reservation);
+          }
+        }
+      } else {
+        LOG.error("RestData update inconsistency, key '{}' not found " +
+            "in nodeReservations", reservation.getReservationId());
+      }
+    } else {
+      LOG.error("RestData update inconsistency, value '{}' not found " +
+            "in nodeReservations", reservation);
     }
   }
 
@@ -217,8 +266,7 @@ public class RestData implements LlamaAMObserver,
     updateToMapList(queueReservationsMap, reservation.getQueue(), reservation,
         "queueReservationsMap");
     for (PlacedResource resource : reservation.getResources()) {
-      updateToMapList(nodeReservationsMap, resource.getLocation(), reservation,
-          "nodeReservations");
+      updateResource(resource, reservation);
     }
   }
 
@@ -251,6 +299,10 @@ public class RestData implements LlamaAMObserver,
     for (PlacedResource resource : reservation.getResources()) {
       deleteFromMapList(nodeReservationsMap, resource.getLocation(),
           reservation, "nodeReservations");
+      if (resource.getActualLocation() != null) {
+        deleteFromMapList(nodeReservationsMap, resource.getActualLocation(),
+            reservation, "nodeReservations");
+      }
     }
   }
 
@@ -500,7 +552,11 @@ public class RestData implements LlamaAMObserver,
       throws IOException, NotFoundException {
     lock.readLock().lock();
     try {
-      writeAsJson(RESERVATION_DATA, reservationsMap.get(reservationId), out);
+      PlacedReservation r = reservationsMap.get(reservationId);
+      if (r == null) {
+        throw new NotFoundException();
+      }
+      writeAsJson(RESERVATION_DATA, r, out);
     } finally {
       lock.readLock().unlock();
     }
@@ -530,7 +586,11 @@ public class RestData implements LlamaAMObserver,
       throws IOException, NotFoundException {
     lock.readLock().lock();
     try {
-      writeAsJson(QUEUE_DATA, queueReservationsMap.get(queue), out);
+      List<PlacedReservation> l = queueReservationsMap.get(queue);
+      if (l == null) {
+        throw new NotFoundException();
+      }
+      writeAsJson(QUEUE_DATA, l, out);
     } finally {
       lock.readLock().unlock();
     }
@@ -540,7 +600,11 @@ public class RestData implements LlamaAMObserver,
       throws IOException, NotFoundException {
     lock.readLock().lock();
     try {
-      writeAsJson(NODE_DATA, nodeReservationsMap.get(node), out);
+      List<PlacedReservation> l = nodeReservationsMap.get(node);
+      if (l == null) {
+        throw new NotFoundException();
+      }
+      writeAsJson(NODE_DATA, l, out);
     } finally {
       lock.readLock().unlock();
     }
