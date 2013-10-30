@@ -60,6 +60,11 @@
 
   <dependencies>
     <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-minicluster</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
       <groupId>com.cloudera.llama</groupId>
       <artifactId>llama</artifactId>
       <scope>compile</scope>
@@ -107,11 +112,6 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-minicluster</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>jul-to-slf4j</artifactId>
       <exclusions>
@@ -146,20 +146,6 @@
   </build>
 
   <profiles>
-    <profile>
-      <id>intellij</id>
-      <activation>
-        <activeByDefault>false</activeByDefault>
-      </activation>
-      <dependencies>
-        <!-- This is not 100% correct, but IntelliJ gets funny if not  -->
-        <dependency>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-minicluster</artifactId>
-          <scope>compile</scope>
-        </dependency>
-      </dependencies>
-    </profile>
     <profile>
       <id>dist</id>
       <activation>
