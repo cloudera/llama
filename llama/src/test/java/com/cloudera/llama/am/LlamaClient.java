@@ -92,7 +92,7 @@ public class LlamaClient {
     Option secure = new Option(SECURE, false, "uses kerberos");
     secure.setRequired(false);
     Option clientId = new Option(CLIENT_ID, true, "client ID");
-    llama.setRequired(true);
+    clientId.setRequired(true);
     Option callback = new Option(CALLBACK, true,
         "<HOST>:<PORT> of client's callback server");
     callback.setRequired(true);
