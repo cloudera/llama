@@ -49,9 +49,10 @@ public class ThriftEndPoint {
     return tTransport;
   }
 
-  public static TProcessor getAuthorizationTProcessor(ServerConfiguration conf,
+  public static TProcessor createTProcessorWrapper(ServerConfiguration conf,
       boolean isAdmin, TProcessor tProcessor) {
     if (Security.isSecure(conf)) {
+      tProcessor = new ClientPrincipalTProcessor(tProcessor);
       tProcessor = new AuthzTProcessor(conf, isAdmin, tProcessor);
     }
     return tProcessor;
