@@ -156,4 +156,15 @@ public class APIContractLlamaAM extends LlamaAM {
     getLog().trace("releaseReservationsForHandle({})", handle);
     return ids;
   }
+
+  @Override
+  public List<PlacedReservation> releaseReservationsForQueue(
+      String queue) throws LlamaAMException {
+    checkIsRunning();
+    ParamChecker.notNull(queue, "queue");
+    List<PlacedReservation> ids = llamaAM.releaseReservationsForQueue(queue);
+    getLog().trace("releaseReservationsForQueue({})", queue);
+    return ids;
+  }
+
 }

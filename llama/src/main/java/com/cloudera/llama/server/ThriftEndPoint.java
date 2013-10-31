@@ -68,6 +68,16 @@ public class ThriftEndPoint {
     return new TServerSocket(address, timeout);
   }
 
+  public static TServerSocket createAdminTServerSocket(ServerConfiguration conf)
+      throws Exception {
+    String strAddress = conf.getAdminThriftAddress();
+    int timeout = 2000;
+    int defaultPort = conf.getAdminThriftDefaultPort();
+    InetSocketAddress address = NetUtils.createSocketAddr(strAddress,
+        defaultPort);
+    return new TServerSocket(address, timeout);
+  }
+
   /**
    * Extracts name from name, name/host@REALM or name/host.
    */

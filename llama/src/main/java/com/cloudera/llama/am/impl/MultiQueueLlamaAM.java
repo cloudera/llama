@@ -22,6 +22,7 @@ import com.cloudera.llama.am.api.LlamaAMEvent;
 import com.cloudera.llama.am.api.LlamaAMException;
 import com.cloudera.llama.am.api.LlamaAMListener;
 import com.cloudera.llama.am.api.PlacedReservation;
+import com.cloudera.llama.am.api.PlacedResource;
 import com.cloudera.llama.am.api.Reservation;
 import com.cloudera.llama.server.MetricUtil;
 import com.cloudera.llama.util.UUID;
@@ -31,6 +32,7 @@ import com.codahale.metrics.MetricRegistry;
 import org.apache.hadoop.conf.Configuration;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -47,14 +49,14 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
   private static final String RESERVATIONS_GAUGE = METRIC_PREFIX +
       "reservations.gauge";
 
-  private final Map<String, LlamaAM> ams;
+  private final Map<String, SingleQueueLlamaAM> ams;
   private SingleQueueLlamaAM llamaAMForGetNodes;
   private final ConcurrentHashMap<UUID, String> reservationToQueue;
   private boolean running;
 
   public MultiQueueLlamaAM(Configuration conf) {
     super(conf);
-    ams = new HashMap<String, LlamaAM>();
+    ams = new HashMap<String, SingleQueueLlamaAM>();
     reservationToQueue = new ConcurrentHashMap<UUID, String>();
     if (SingleQueueLlamaAM.getRMConnectorClass(conf) == null) {
       throw new IllegalArgumentException(FastFormat.format(
@@ -99,7 +101,7 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
   // LlamaAM API
 
   private LlamaAM getLlamaAM(String queue) throws LlamaAMException {
-    LlamaAM am;
+    SingleQueueLlamaAM am;
     synchronized (ams) {
       am = ams.get(queue);
       if (am == null) {
@@ -220,6 +222,23 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
       throw thrown;
     }
     return reservations;
+  }
+
+  @Override
+  public List<PlacedReservation> releaseReservationsForQueue(String queue)
+      throws LlamaAMException {
+    List<PlacedReservation> list;
+    SingleQueueLlamaAM am;
+    synchronized (ams) {
+      am = ams.remove(queue);
+    }
+    if (am != null) {
+      list = am.releaseReservationsForQueue(queue);
+      am.stop();
+    } else {
+      list = Collections.EMPTY_LIST;
+    }
+    return list;
   }
 
   @Override

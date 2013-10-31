@@ -257,6 +257,31 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
     return reservations;
   }
 
+  public List<PlacedReservation> releaseReservationsForQueue(
+      String queue) throws LlamaAMException {
+    List<PlacedReservation> reservations =
+        am.releaseReservationsForQueue(queue);
+    reservations.addAll(gReleaseReservationsForQueue(queue));
+    return new ArrayList<PlacedReservation>(
+        new HashSet<PlacedReservation>(reservations));
+  }
+
+  private synchronized List<PlacedReservation> gReleaseReservationsForQueue(
+      String queue) {
+    List<PlacedReservation> reservations = new ArrayList<PlacedReservation>();
+    Iterator<PlacedReservationImpl> it =
+        localReservations.values().iterator();
+    while (it.hasNext()) {
+      PlacedReservation pr = it.next();
+      if (pr.getQueue().equals(queue)) {
+        it.remove();
+        submittedReservations.remove(pr.getReservationId());
+        reservations.add(pr);
+      }
+    }
+    return reservations;
+  }
+
   @Override
   public void addListener(LlamaAMListener listener) {
     am.addListener(listener);

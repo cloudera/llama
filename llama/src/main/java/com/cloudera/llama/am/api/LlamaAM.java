@@ -127,6 +127,8 @@ public abstract class LlamaAM {
   public abstract PlacedReservation getReservation(UUID reservationId)
       throws LlamaAMException;
 
+  public static final UUID ADMIN_HANDLE = UUID.randomUUID();
+
   public abstract PlacedReservation releaseReservation(UUID handle,
       UUID reservationId)
       throws LlamaAMException;
@@ -134,6 +136,9 @@ public abstract class LlamaAM {
   public abstract List<PlacedReservation> releaseReservationsForHandle(
       UUID handle)
       throws LlamaAMException;
+
+  public abstract List<PlacedReservation> releaseReservationsForQueue(
+      String queue) throws LlamaAMException;
 
   public abstract void addListener(LlamaAMListener listener);
 

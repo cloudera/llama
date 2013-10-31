@@ -37,15 +37,19 @@ import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-public abstract class ThriftServer<T extends TProcessor> extends
-    AbstractServer {
+public abstract class ThriftServer<T extends TProcessor, A extends TProcessor>
+    extends AbstractServer {
   private Class<? extends ServerConfiguration> serverConfClass;
   private ServerConfiguration sConf;
   private TServer tServer;
   private TServerSocket tServerSocket;
-  private Subject subject;
+  private TServer tAdminServer;
+  private TServerSocket tAdminServerSocket;
   private String hostname;
   private int port;
+  private String adminHostname;
+  private int adminPort;
+
 
   protected ThriftServer(String serviceName,
       Class<? extends ServerConfiguration> serverConfClass) {
@@ -68,12 +72,12 @@ public abstract class ThriftServer<T extends TProcessor> extends
     sConf = ReflectionUtils.newInstance(serverConfClass, conf);
   }
 
-  ExecutorService createExecutorService(int minThreads, final int maxThreads, 
-      final int queueSize) {
+  ExecutorService createExecutorService(String name, int minThreads,
+      final int maxThreads,  final int queueSize) {
     BlockingQueue<Runnable> queue = 
         new LinkedBlockingQueue<Runnable>(queueSize);
     ThreadPoolExecutor executor = new ThreadPoolExecutor(minThreads, maxThreads,
-        60, TimeUnit.SECONDS, queue, new NamedThreadFactory("llama-thrift"));
+        60, TimeUnit.SECONDS, queue, new NamedThreadFactory(name));
     executor.prestartAllCoreThreads();
     executor.setRejectedExecutionHandler(new RejectedExecutionHandler() {
       @Override
@@ -86,12 +90,20 @@ public abstract class ThriftServer<T extends TProcessor> extends
     //TODO: add metric gauge for the queue and the executor active threads.
     return executor;
   }
-  
+
+  @Override
+  protected Subject loginServerSubject() {
+    try {
+      return Security.loginServerSubject(sConf);
+    } catch (Exception ex) {
+      throw new RuntimeException(ex);
+    }
+  }
+
   @Override
   protected void startTransport() {
     try {
-      subject = Security.loginServerSubject(sConf);
-      Subject.doAs(subject, new PrivilegedExceptionAction<Object>() {
+      Subject.doAs(getServerSubject(), new PrivilegedExceptionAction<Object>() {
         @Override
         public Object run() throws Exception {
           int minThreads = sConf.getServerMinThreads();
@@ -105,8 +117,8 @@ public abstract class ThriftServer<T extends TProcessor> extends
               processor);
           TThreadPoolServer.Args args = new TThreadPoolServer.Args
               (tServerSocket);
-          args.executorService(createExecutorService(minThreads, maxThreads, 
-              queueSize));
+          args.executorService(createExecutorService("llama-thrift", minThreads,
+              maxThreads,  queueSize));
           args.transportFactory(tTransportFactory);          
           args.processor(processor);
           tServer = new TThreadPoolServer(args);
@@ -121,9 +133,42 @@ public abstract class ThriftServer<T extends TProcessor> extends
   }
 
   @Override
+  protected void startAdminTransport() {
+    final TProcessor processor = createAdminServiceProcessor();
+    if (processor != null) {
+      try {
+        Subject.doAs(getServerSubject(), new PrivilegedExceptionAction<Object>() {
+          @Override
+          public Object run() throws Exception {
+            int minThreads = 1;
+            int maxThreads = 10;
+            int queueSize = 10;
+            tAdminServerSocket = ThriftEndPoint.createAdminTServerSocket(sConf);
+            TTransportFactory tTransportFactory = ThriftEndPoint
+                .createTTransportFactory(sConf);
+            TProcessor tProcessor = ThriftEndPoint.createTProcessorWrapper(
+                sConf, true, processor);
+            TThreadPoolServer.Args args = new TThreadPoolServer.Args
+                (tAdminServerSocket);
+            args.executorService(createExecutorService("llama-thrift-admin",
+                minThreads, maxThreads, queueSize));
+            args.transportFactory(tTransportFactory);
+            args.processor(tProcessor);
+            tAdminServer = new TThreadPoolServer(args);
+
+            tAdminServer.serve();
+            return null;
+          }
+        });
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
+
+  @Override
   protected void stopTransport() {
     tServer.stop();
-    Security.logout(subject);
   }
 
   @Override
@@ -148,7 +193,33 @@ public abstract class ThriftServer<T extends TProcessor> extends
     return port;
   }
 
+  @Override
+  public synchronized String getAdminAddressHost() {
+    if (adminHostname == null) {
+      adminHostname = (tAdminServerSocket != null &&
+          tAdminServerSocket.getServerSocket().isBound())
+                 ? getHostname(tAdminServerSocket.getServerSocket().
+          getInetAddress().getHostName())
+                 : null;
+    }
+    return adminHostname;
+  }
+
+  @Override
+  public synchronized int getAdminAddressPort() {
+    if (adminPort == 0) {
+      adminPort = (tAdminServerSocket != null &&
+          tAdminServerSocket.getServerSocket().isBound())
+             ? tAdminServerSocket.getServerSocket().getLocalPort() : 0;
+    }
+    return adminPort;
+  }
+
   protected abstract T createServiceProcessor();
+
+  protected A createAdminServiceProcessor() {
+    return null;
+  }
 
   public static String getHostname(String address) {
     try {

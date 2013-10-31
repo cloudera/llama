@@ -120,6 +120,14 @@ public class ObserverLlamaAM extends LlamaAM implements LlamaAMListener,
   }
 
   @Override
+  public List<PlacedReservation> releaseReservationsForQueue(String queue)
+      throws LlamaAMException {
+    List<PlacedReservation> ids = llamaAM.releaseReservationsForQueue(queue);
+    changes.addAll(ids);
+    return ids;
+  }
+
+  @Override
   public void handle(LlamaAMEvent event) {
     changes.addAll(event.getChanges());
   }

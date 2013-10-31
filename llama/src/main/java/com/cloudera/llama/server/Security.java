@@ -103,7 +103,8 @@ public class Security {
       if (ticketCache != null) {
         options.put("ticketCache", ticketCache);
       }
-      options.put("debug", "true");
+      options.put("debug", System.getProperty("sun.security.krb5.debug=true",
+          "false"));
 
       return new AppConfigurationEntry[]{
           new AppConfigurationEntry(getKrb5LoginModuleName(),

@@ -34,6 +34,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -55,6 +56,7 @@ public class TestObserverLlamaAM {
     EXPECTED.add("releaseReservationsForClientId");
     EXPECTED.add("addListener");
     EXPECTED.add("removeListener");
+    EXPECTED.add("releaseReservationsForQueue");
   }
 
   public class TestLlamaAM extends LlamaAMImpl {
@@ -136,6 +138,12 @@ public class TestObserverLlamaAM {
       super.removeListener(listener);
     }
 
+    @Override
+    public List<PlacedReservation> releaseReservationsForQueue(String queue)
+        throws LlamaAMException {
+      invoked.add("releaseReservationsForQueue");
+      return Collections.EMPTY_LIST;
+    }
   }
 
   public class TestLlamaAMObserver implements LlamaAMObserver {
@@ -175,6 +183,7 @@ public class TestObserverLlamaAM {
     oAm.releaseReservation(reservation.getHandle(), id);
     Assert.assertFalse(am.reservations.containsKey(id));
     oAm.releaseReservationsForHandle(UUID.randomUUID());
+    oAm.releaseReservationsForQueue("q");
     oAm.stop();
     Assert.assertFalse(oAm.isRunning());
     Assert.assertEquals(EXPECTED, am.invoked);

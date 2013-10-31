@@ -32,6 +32,8 @@ import java.io.InputStream;
 import java.io.Writer;
 import com.cloudera.llama.util.UUID;
 
+import javax.security.auth.Subject;
+
 public class TestAbstractMain {
   public static final String LLAMA_BUILD_DIR = "test.llama.build.dir";
 
@@ -94,6 +96,11 @@ public class TestAbstractMain {
 
     public MyServer() {
       super("foo");
+    }
+
+    @Override
+    protected Subject loginServerSubject() {
+      return new Subject();
     }
 
     @Override

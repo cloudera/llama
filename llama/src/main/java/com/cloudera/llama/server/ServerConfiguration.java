@@ -107,6 +107,18 @@ public abstract class ServerConfiguration implements Configurable {
 
   public abstract int getThriftDefaultPort();
 
+  public static String SERVER_ADMIN_ADDRESS_KEY = KEY_PREFIX + "admin.address";
+  private static String SERVER_ADMIN_ADDRESS_DEFAULT = "localhost";
+
+  public String getAdminThriftAddress() {
+    return conf.get(getPropertyName(SERVER_ADMIN_ADDRESS_KEY),
+        SERVER_ADMIN_ADDRESS_DEFAULT);
+  }
+
+  public int getAdminThriftDefaultPort() {
+    return -1;
+  }
+
   public static String HTTP_ADDRESS_KEY = KEY_PREFIX + "http.address";
   private static String HTTP_ADDRESS_DEFAULT = "0.0.0.0";
 

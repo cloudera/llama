@@ -25,8 +25,8 @@ import com.cloudera.llama.server.NodeMapper;
 import com.cloudera.llama.server.Security;
 import com.cloudera.llama.server.ThriftEndPoint;
 import com.cloudera.llama.server.ThriftServer;
+import com.cloudera.llama.thrift.LlamaAMAdminService;
 import com.cloudera.llama.thrift.LlamaAMService;
-import com.cloudera.llama.util.UUID;
 import com.codahale.metrics.JmxReporter;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.jmx.JMXJsonServlet;
@@ -41,7 +41,7 @@ import org.mortbay.thread.QueuedThreadPool;
 import java.net.InetSocketAddress;
 
 public class LlamaAMServer extends
-    ThriftServer<com.cloudera.llama.thrift.LlamaAMService.Processor>
+    ThriftServer<LlamaAMService.Processor, LlamaAMAdminService.Processor>
     implements ClientNotificationService.Listener {
   private static final int JETTY_MAX_THREADS = 20;
   private LlamaAM llamaAm;
@@ -166,6 +166,13 @@ public class LlamaAMServer extends
     MetricLlamaAMService.registerMetric(getMetricRegistry());
     handler = new MetricLlamaAMService(handler, getMetricRegistry());
     return new LlamaAMService.Processor<LlamaAMService.Iface>(handler);
+  }
+
+  @Override
+  protected LlamaAMAdminService.Processor createAdminServiceProcessor() {
+    LlamaAMAdminService.Iface handler = new LlamaAMAdminServiceImpl(llamaAm,
+        clientNotificationService);
+    return new LlamaAMAdminService.Processor<LlamaAMAdminService.Iface>(handler);
   }
 
   @Override

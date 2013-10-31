@@ -23,10 +23,13 @@ import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.security.auth.Subject;
+
 public abstract class AbstractServer implements Configurable {
   private final Logger log;
   private final String serverName;
   private Configuration llamaConf;
+  private Subject serverSubject;
   private int runLevel = 0;
   private int exitCode = 0;
 
@@ -55,11 +58,18 @@ public abstract class AbstractServer implements Configurable {
 
   private volatile Exception transportException = null;
 
+  protected abstract Subject loginServerSubject();
+
+  protected Subject getServerSubject() {
+    return serverSubject;
+  }
+
   // non blocking
   public synchronized void start() {
     if (runLevel != 0) {
       throw new RuntimeException("AbstractServer already started");
     }
+    serverSubject = loginServerSubject();
     runLevel = 0;
     getLog().trace("Starting metrics");
     startMetrics();
@@ -83,6 +93,18 @@ public abstract class AbstractServer implements Configurable {
       }
     };
     transportThread.start();
+    Thread adminTransportThread = new Thread("llama-admin-transport-server") {
+      @Override
+      public void run() {
+        try {
+          startAdminTransport();
+        } catch (Exception ex) {
+          transportException = ex;
+          getLog().error(ex.toString(), ex);
+        }
+      }
+    };
+    adminTransportThread.start();
     while (getAddressPort() == 0) {
       if (transportException != null) {
         stop();
@@ -144,6 +166,9 @@ public abstract class AbstractServer implements Configurable {
         getLog().warn("Failed to stop Metrics: {}", ex.toString(), ex);
       }
     }
+    if (serverSubject != null) {
+      Security.logout(serverSubject);
+    }
     getLog().info("Llama shutdown!");
     runLevel = -1;
   }
@@ -175,10 +200,21 @@ public abstract class AbstractServer implements Configurable {
   //blocking
   protected abstract void startTransport();
 
+  protected void startAdminTransport() {
+  }
+
   protected abstract void stopTransport();
 
   public abstract String getAddressHost();
 
   public abstract int getAddressPort();
+
+  public String getAdminAddressHost() {
+    return null;
+  }
+
+  public int getAdminAddressPort() {
+    return -1;
+  }
 
 }

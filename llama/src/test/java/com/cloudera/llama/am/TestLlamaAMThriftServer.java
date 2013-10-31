@@ -32,6 +32,10 @@ import com.cloudera.llama.server.NotificationEndPoint;
 import com.cloudera.llama.server.ServerConfiguration;
 import com.cloudera.llama.server.TestAbstractMain;
 import com.cloudera.llama.server.TypeUtils;
+import com.cloudera.llama.thrift.LlamaAMAdminService;
+import com.cloudera.llama.thrift.LlamaAMService;
+import com.cloudera.llama.thrift.TLlamaAMAdminReleaseRequest;
+import com.cloudera.llama.thrift.TLlamaAMAdminReleaseResponse;
 import com.cloudera.llama.thrift.TLlamaAMGetNodesRequest;
 import com.cloudera.llama.thrift.TLlamaAMGetNodesResponse;
 import com.cloudera.llama.thrift.TLlamaAMRegisterRequest;
@@ -62,8 +66,10 @@ import javax.security.auth.Subject;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.PrivilegedExceptionAction;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -114,6 +120,8 @@ public class TestLlamaAMThriftServer {
     conf.setInt(MockRMLlamaAMConnector.EVENTS_MAX_WAIT_KEY, 10);
 
     conf.set(sConf.getPropertyName(ServerConfiguration.SERVER_ADDRESS_KEY),
+        "localhost:0");
+    conf.set(sConf.getPropertyName(ServerConfiguration.SERVER_ADMIN_ADDRESS_KEY),
         "localhost:0");
     conf.set(sConf.getPropertyName(ServerConfiguration.HTTP_ADDRESS_KEY),
         "localhost:0");
@@ -604,6 +612,180 @@ public class TestLlamaAMThriftServer {
       server.stop();
       callbackServer.stop();
     }
+  }
+
+  protected Subject getAdminSubject() throws Exception {
+    return new Subject();
+  }
+
+  protected boolean isSecure() {
+    return false;
+  }
+
+  protected com.cloudera.llama.thrift.LlamaAMAdminService.Client
+  createAdminClient(LlamaAMServer server)
+      throws Exception {
+    TTransport transport = new TSocket(server.getAdminAddressHost(),
+        server.getAdminAddressPort());
+    transport.open();
+    TProtocol protocol = new TBinaryProtocol(transport);
+    return new com.cloudera.llama.thrift.LlamaAMAdminService.Client(protocol);
+  }
+
+  @Test
+  public void testLlamaAdminThrift() throws Exception {
+    testLlamaAdmin(false);
+  }
+
+  @Test
+  public void testLlamaAdminCli() throws Exception {
+    testLlamaAdmin(true);
+  }
+
+  private void testLlamaAdmin(final boolean useCLI) throws Exception {
+    Subject.doAs(getAdminSubject(), new PrivilegedExceptionAction<Object>() {
+      @Override
+      public Object run() throws Exception {
+
+        final MyLlamaAMServer server = new MyLlamaAMServer();
+        final NotificationEndPoint callbackServer = new NotificationEndPoint();
+        try {
+          callbackServer.setConf(createCallbackConfiguration());
+          callbackServer.start();
+          server.setConf(createLlamaConfiguration());
+          server.start();
+
+          Subject.doAs(getClientSubject(), new PrivilegedExceptionAction<Object>() {
+            @Override
+            public Object run() throws Exception {
+              LlamaAMService.Client client = createClient(server);
+              LlamaAMAdminService.Client admin = (useCLI)
+                                                 ? null
+                                                 : createAdminClient(server);
+
+              String llamaURI = null;
+              List<String> cliArgs = null;
+              if (useCLI) {
+                llamaURI = server.getAdminAddressHost() + ":" +
+                    server.getAdminAddressPort();
+                cliArgs = new ArrayList<String>(Arrays.asList("release", "-llama",
+                    llamaURI));
+                if (isSecure()) {
+                  cliArgs.add("-secure");
+                }
+              }
+
+              TLlamaAMRegisterRequest trReq = new TLlamaAMRegisterRequest();
+              trReq.setVersion(TLlamaServiceVersion.V1);
+              trReq.setClient_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
+              TNetworkAddress tAddress = new TNetworkAddress();
+              tAddress.setHostname(callbackServer.getAddressHost());
+              tAddress.setPort(callbackServer.getAddressPort());
+              trReq.setNotification_callback_service(tAddress);
+
+              //register
+              TLlamaAMRegisterResponse trRes = client.Register(trReq);
+              Assert.assertEquals(TStatusCode.OK, trRes.getStatus().
+                  getStatus_code());
+
+              //valid reservation2
+              TLlamaAMReservationRequest tresReq = new TLlamaAMReservationRequest();
+              tresReq.setVersion(TLlamaServiceVersion.V1);
+              tresReq.setAm_handle(trRes.getAm_handle());
+              tresReq.setQueue("q1");
+              TResource tResource = new TResource();
+              tResource.setClient_resource_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
+              tResource.setAskedLocation(MockLlamaAMFlags.ALLOCATE + "n1");
+              tResource.setV_cpu_cores((short) 1);
+              tResource.setMemory_mb(1024);
+              tResource.setEnforcement(TLocationEnforcement.MUST);
+              tresReq.setResources(Arrays.asList(tResource));
+              tresReq.setGang(true);
+              TLlamaAMReservationResponse tresRes1 = client.Reserve(tresReq);
+              Assert.assertEquals(TStatusCode.OK,
+                  tresRes1.getStatus().getStatus_code());
+
+              tresReq.setQueue("q2");
+              TLlamaAMReservationResponse tresRes2 = client.Reserve(tresReq);
+              Assert.assertEquals(TStatusCode.OK,
+                  tresRes2.getStatus().getStatus_code());
+              //check notification delivery
+              Thread.sleep(300);
+              Assert.assertEquals(2, callbackServer.notifications.size());
+
+              callbackServer.notifications.clear();
+
+              if (!useCLI) {
+                TLlamaAMAdminReleaseRequest adminReq = new TLlamaAMAdminReleaseRequest();
+                adminReq.setVersion(TLlamaServiceVersion.V1);
+                adminReq.setReservations(Arrays.asList(tresRes1.getReservation_id()));
+                TLlamaAMAdminReleaseResponse adminRes = admin.Release(adminReq);
+                Assert.assertEquals(TStatusCode.OK,
+                    adminRes.getStatus().getStatus_code());
+              } else {
+                List<String> args = new ArrayList<String>(cliArgs);
+                args.add("-reservations");
+                args.add(TypeUtils.toUUID(tresRes1.getReservation_id()).toString());
+                int exit = LlamaAdminClient.execute(args.toArray(new String[args.size()]));
+                Assert.assertEquals(0, exit);
+              }
+
+              Thread.sleep(300);
+              Assert.assertEquals(1, callbackServer.notifications.size());
+              Assert.assertEquals(tresRes1.getReservation_id(),
+                  callbackServer.notifications.get(0).getPreempted_reservation_ids().get(0));
+
+              callbackServer.notifications.clear();
+              if (!useCLI) {
+                TLlamaAMAdminReleaseRequest adminReq = new TLlamaAMAdminReleaseRequest();
+                adminReq.setVersion(TLlamaServiceVersion.V1);
+                adminReq.setQueues(Arrays.asList("q2"));
+                TLlamaAMAdminReleaseResponse adminRes = admin.Release(adminReq);
+                Assert.assertEquals(TStatusCode.OK,
+                    adminRes.getStatus().getStatus_code());
+              } else {
+                List<String> args = new ArrayList<String>(cliArgs);
+                args.add("-queues");
+                args.add("q2");
+                int exit = LlamaAdminClient.execute(args.toArray(new String[args.size()]));
+                Assert.assertEquals(0, exit);
+              }
+
+              Thread.sleep(300);
+              Assert.assertEquals(1, callbackServer.notifications.size());
+              Assert.assertEquals(tresRes2.getReservation_id(),
+                  callbackServer.notifications.get(0).getPreempted_reservation_ids().get(0));
+
+              callbackServer.notifications.clear();
+              if (!useCLI) {
+                TLlamaAMAdminReleaseRequest adminReq = new TLlamaAMAdminReleaseRequest();
+                adminReq.setVersion(TLlamaServiceVersion.V1);
+                adminReq.setHandles(Arrays.asList(trRes.getAm_handle()));
+                TLlamaAMAdminReleaseResponse adminRes = admin.Release(adminReq);
+                Assert.assertEquals(TStatusCode.OK,
+                    adminRes.getStatus().getStatus_code());
+              } else {
+                List<String> args = new ArrayList<String>(cliArgs);
+                args.add("-handles");
+                args.add(TypeUtils.toUUID(trRes.getAm_handle()).toString());
+                int exit = LlamaAdminClient.execute(args.toArray(new String[args.size()]));
+                Assert.assertEquals(0, exit);
+              }
+
+              Thread.sleep(300);
+              Assert.assertEquals(0, callbackServer.notifications.size());
+
+              return null;
+            }
+          });
+        } finally {
+          server.stop();
+          callbackServer.stop();
+        }
+
+        return null;
+      }
+    });
   }
 
 }

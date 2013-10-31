@@ -40,6 +40,12 @@ import com.cloudera.llama.util.UUID;
 public class TypeUtils {
   public static final TStatus OK = new TStatus().setStatus_code(TStatusCode.OK);
 
+  public static TStatus okWithMsgs(List<String> msgs) {
+    TStatus ok = new TStatus().setStatus_code(TStatusCode.OK);
+    ok.setError_msgs(msgs);
+    return ok;
+  }
+
   public static TStatus createRuntimeError(Throwable ex) {
     TStatus error = new TStatus().setStatus_code(TStatusCode.RUNTIME_ERROR);
     error.setError_msgs(Arrays.asList(ExceptionUtils.getRootCause(ex,
@@ -56,6 +62,14 @@ public class TypeUtils {
 
   public static UUID toUUID(TUniqueId id) {
     return new UUID(id.getHi(), id.getLo());
+  }
+
+  public static List<UUID> toUUIDs(List<TUniqueId> ids) {
+    List<UUID> uuids = new ArrayList<UUID>(ids.size());
+    for (TUniqueId id : ids) {
+      uuids.add(toUUID(id));
+    }
+    return uuids;
   }
 
   public static TUniqueId toTUniqueId(UUID uuid) {

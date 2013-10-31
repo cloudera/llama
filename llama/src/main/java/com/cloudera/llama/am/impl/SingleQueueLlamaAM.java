@@ -237,12 +237,16 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
     synchronized (this) {
       reservation = _getReservation(reservationId);
       if (reservation != null) {
-        if (!reservation.getHandle().equals(handle)) {
+        if (!reservation.getHandle().equals(handle)
+            && !handle.equals(ADMIN_HANDLE)) {
           throw new LlamaAMException(FastFormat.format(
               "handle '{}' does not own reservation '{}'", handle,
               reservation.getReservationId()));
         }
         _deleteReservation(reservationId);
+        LlamaAMEventImpl event = new LlamaAMEventImpl(reservation.getHandle());
+        event.getPreemptedReservationIds().add(reservationId);
+        dispatch(event);
       }
     }
     if (reservation != null) {
@@ -279,6 +283,19 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
       ids.add(reservation);
     }
     return ids;
+  }
+
+  @Override
+  public List<PlacedReservation> releaseReservationsForQueue(String queue)
+      throws LlamaAMException {
+    List<PlacedReservation> list;
+    synchronized (this) {
+      list = new ArrayList<PlacedReservation>(reservationsMap.values());
+      for (PlacedReservation res : list) {
+        releaseReservation(res.getHandle(), res.getReservationId());
+      }
+    }
+    return list;
   }
 
   // PRIVATE METHODS

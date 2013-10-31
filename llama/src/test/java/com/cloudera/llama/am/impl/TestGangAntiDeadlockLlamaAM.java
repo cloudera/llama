@@ -31,6 +31,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -70,6 +71,7 @@ public class TestGangAntiDeadlockLlamaAM {
     EXPECTED.add("releaseReservationsForClientId");
     EXPECTED.add("addListener");
     EXPECTED.add("removeListener");
+    EXPECTED.add("releaseReservationsForQueue");
   }
 
   public class MyGangAntiDeadlockLlamaAM extends GangAntiDeadlockLlamaAM {
@@ -149,6 +151,13 @@ public class TestGangAntiDeadlockLlamaAM {
     }
 
     @Override
+    public List<PlacedReservation> releaseReservationsForQueue(String queue)
+        throws LlamaAMException {
+      invoked.add("releaseReservationsForQueue");
+      return Collections.EMPTY_LIST;
+    }
+
+    @Override
     public void addListener(LlamaAMListener listener) {
       invoked.add("addListener");
       super.addListener(listener);
@@ -222,6 +231,7 @@ public class TestGangAntiDeadlockLlamaAM {
     Assert.assertTrue(gAm.backedOffReservations.isEmpty());
     Assert.assertFalse(am.reservations.containsKey(id));
     gAm.releaseReservationsForHandle(UUID.randomUUID());
+    gAm.releaseReservationsForQueue("q");
     gAm.stop();
     Assert.assertFalse(gAm.isRunning());
 

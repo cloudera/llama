@@ -100,6 +100,12 @@ public class TestAPIContractLlamaAM {
         throws LlamaAMException {
       return null;
     }
+
+    @Override
+    public List<PlacedReservation> releaseReservationsForQueue(String queue)
+        throws LlamaAMException {
+      return Collections.EMPTY_LIST;
+    }
   }
 
   public static Reservation createReservation() {
@@ -164,6 +170,17 @@ public class TestAPIContractLlamaAM {
     try {
       am.start();
       am.releaseReservation(null, UUID.randomUUID());
+    } finally {
+      am.stop();
+    }
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testReleaseReservationsForQueueNull() throws Exception {
+    LlamaAM am = createLlamaAM();
+    try {
+      am.start();
+      am.releaseReservationsForQueue(null);
     } finally {
       am.stop();
     }
@@ -276,6 +293,13 @@ public class TestAPIContractLlamaAM {
       @Override
       public Object call() throws Exception {
         am.releaseReservationsForHandle(null);
+        return null;
+      }
+    }, IllegalStateException.class);
+    AssertUtils.assertException(new Callable<Object>() {
+      @Override
+      public Object call() throws Exception {
+        am.releaseReservationsForQueue(null);
         return null;
       }
     }, IllegalStateException.class);

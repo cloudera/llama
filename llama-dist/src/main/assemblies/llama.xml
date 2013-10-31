@@ -31,6 +31,11 @@
       <fileMode>0755</fileMode>
     </file>
     <file>
+      <source>${basedir}/src/main/bin/llamaadmin</source>
+      <outputDirectory>/bin</outputDirectory>
+      <fileMode>0755</fileMode>
+    </file>
+    <file>
       <source>${basedir}/../README.txt</source>
       <outputDirectory>/</outputDirectory>
       <filtered>true</filtered>

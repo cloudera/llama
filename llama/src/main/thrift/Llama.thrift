@@ -147,6 +147,27 @@ service LlamaAMService {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// Llama AM Admin Service
+
+struct TLlamaAMAdminReleaseRequest {
+  1: required TLlamaServiceVersion version;
+  2: optional list<string>         queues;
+  3: optional list<TUniqueId>      handles;
+  4: optional list<TUniqueId>      reservations;
+}
+
+struct TLlamaAMAdminReleaseResponse {
+  1: required TStatus status;
+}
+
+service LlamaAMAdminService {
+
+  TLlamaAMAdminReleaseResponse Release
+  (1: TLlamaAMAdminReleaseRequest request);
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // Llama NM Service
 
 struct TLlamaNMRegisterRequest {

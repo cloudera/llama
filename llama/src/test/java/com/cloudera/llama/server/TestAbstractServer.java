@@ -21,6 +21,7 @@ import junit.framework.Assert;
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Test;
 
+import javax.security.auth.Subject;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -73,6 +74,11 @@ public class TestAbstractServer {
     protected void stopJMX() {
       trace("stop.jmx");
       failIf("stop.jmx");
+    }
+
+    @Override
+    protected Subject loginServerSubject() {
+      return new Subject();
     }
 
     @Override

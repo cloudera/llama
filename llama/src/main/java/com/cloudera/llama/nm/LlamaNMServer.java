@@ -24,11 +24,13 @@ import com.cloudera.llama.thrift.LlamaNMService;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
+import org.apache.thrift.TProcessor;
 
 import java.io.File;
 import java.net.URL;
 
-public class LlamaNMServer extends ThriftServer<LlamaNMService.Processor> {
+public class LlamaNMServer extends
+    ThriftServer<LlamaNMService.Processor, TProcessor> {
   private Configuration conf;
   private ClientNotificationService clientNotificationService;
   private Resource totalCapacity;

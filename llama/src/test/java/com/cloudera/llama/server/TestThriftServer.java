@@ -75,7 +75,7 @@ public class TestThriftServer {
       protected void stopService() {
       }
     };
-    ExecutorService ex = ts.createExecutorService(1, 2, 1);
+    ExecutorService ex = ts.createExecutorService("test", 1, 2, 1);
     try {
       int extra = (exceedQueue) ? 2 : 0;
       int expectedToRun = (exceedQueue) ? 3 : 2;

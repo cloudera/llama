@@ -23,13 +23,14 @@ import com.cloudera.llama.thrift.TLlamaAMNotificationResponse;
 import com.cloudera.llama.thrift.TLlamaNMNotificationRequest;
 import com.cloudera.llama.thrift.TLlamaNMNotificationResponse;
 import org.apache.thrift.TException;
+import org.apache.thrift.TProcessor;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 public class NotificationEndPoint extends
-    ThriftServer<LlamaNotificationService.Processor> {
+    ThriftServer<LlamaNotificationService.Processor, TProcessor> {
   public List<TLlamaAMNotificationRequest> notifications;
   public volatile long delayResponse;
 

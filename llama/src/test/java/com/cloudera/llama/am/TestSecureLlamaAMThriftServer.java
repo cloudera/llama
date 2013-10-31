@@ -23,6 +23,7 @@ import com.cloudera.llama.server.Security;
 import com.cloudera.llama.server.ServerConfiguration;
 import com.cloudera.llama.server.TestAbstractMain;
 import com.cloudera.llama.server.TypeUtils;
+import com.cloudera.llama.thrift.TLlamaAMAdminReleaseRequest;
 import com.cloudera.llama.thrift.TLlamaAMRegisterRequest;
 import com.cloudera.llama.thrift.TLlamaAMRegisterResponse;
 import com.cloudera.llama.thrift.TLlamaServiceVersion;
@@ -49,6 +50,7 @@ import java.io.File;
 import java.security.Principal;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -257,4 +259,78 @@ public class TestSecureLlamaAMThriftServer extends TestLlamaAMThriftServer {
     }
   }
 
+  private Subject adminSubject;
+
+  @Override
+  protected Subject getAdminSubject() throws Exception {
+    if (adminSubject == null) {
+      File keytab = new File(TestAbstractMain.createTestDir(), "admin.keytab");
+      miniKdc.createPrincipal(keytab, "admin");
+      Set<Principal> principals = new HashSet<Principal>();
+      principals.add(new KerberosPrincipal("admin"));
+      Subject subject = new Subject(false, principals, new HashSet<Object>(),
+          new HashSet<Object>());
+      LoginContext context = new LoginContext("", subject, null,
+          new Security.KeytabKerberosConfiguration("admin", keytab, true));
+      context.login();
+      adminSubject = context.getSubject();
+    }
+    return adminSubject;
+  }
+
+  @Override
+  protected com.cloudera.llama.thrift.LlamaAMAdminService.Client
+    createAdminClient(LlamaAMServer server) throws Exception {
+    TTransport transport = new TSocket(server.getAdminAddressHost(),
+        server.getAdminAddressPort());
+    Map<String, String> saslProperties = new HashMap<String, String>();
+    saslProperties.put(Sasl.QOP, "auth-conf");
+    transport = new TSaslClientTransport("GSSAPI", null, "llama",
+        server.getAddressHost(), saslProperties, null, transport);
+    transport.open();
+    TProtocol protocol = new TBinaryProtocol(transport);
+    return new com.cloudera.llama.thrift.LlamaAMAdminService.Client(protocol);
+  }
+
+  @Override
+  protected boolean isSecure() {
+    return true;
+  }
+
+  @Override
+  public void testLlamaAdminCli() throws Exception {
+    //TODO: subject kerberos credentials are not being picked up by Admin CLI
+    //      it works correctly from command line.
+  }
+
+  @Test(expected = TTransportException.class)
+  public void testAdminUnauthorized() throws Throwable {
+    final LlamaAMServer server = new LlamaAMServer();
+    try {
+      Configuration conf = createLlamaConfiguration();
+      conf.set("hadoop.security.group.mapping", MockGroupMapping.class.getName());
+      conf.set("llama.am.server.thrift.admin.acl", "nobody");
+      server.setConf(conf);
+      server.start();
+
+      Subject.doAs(getAdminSubject(), new PrivilegedExceptionAction<Object>() {
+        @Override
+        public Object run() throws Exception {
+          com.cloudera.llama.thrift.LlamaAMAdminService.Client admin =
+              createAdminClient(server);
+
+          TLlamaAMAdminReleaseRequest adminReq = new TLlamaAMAdminReleaseRequest();
+          adminReq.setVersion(TLlamaServiceVersion.V1);
+          adminReq.setQueues(Arrays.asList("q1"));
+          admin.Release(adminReq);
+
+          return null;
+        }
+      });
+    } catch (PrivilegedActionException ex) {
+      throw ex.getCause();
+    } finally {
+      server.stop();
+    }
+  }
 }

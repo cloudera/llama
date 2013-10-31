@@ -24,11 +24,12 @@ import com.cloudera.llama.thrift.TLlamaNMNotificationRequest;
 import com.cloudera.llama.thrift.TLlamaNMNotificationResponse;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.thrift.TException;
+import org.apache.thrift.TProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class LlamaClientCallback extends
-    ThriftServer<LlamaNotificationService.Processor> {
+    ThriftServer<LlamaNotificationService.Processor, TProcessor> {
   public static final String PORT_KEY = LlamaClientCallback.class.getName() +
       ".port";
   private static final Logger LOG =

@@ -79,6 +79,13 @@ public class TestLlamaAMImpl {
         throws LlamaAMException {
       return null;
     }
+
+    @Override
+    public List<PlacedReservation> releaseReservationsForQueue(String queue)
+        throws LlamaAMException {
+      return null;
+    }
+
   }
 
   public class MyListener implements LlamaAMListener {

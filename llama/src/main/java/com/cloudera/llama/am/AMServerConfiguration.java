@@ -38,6 +38,13 @@ public class AMServerConfiguration extends ServerConfiguration {
     return SERVER_PORT_DEFAULT;
   }
 
+  private static int SERVER_ADMIN_PORT_DEFAULT = 15002;
+
+  @Override
+  public int getAdminThriftDefaultPort() {
+    return SERVER_ADMIN_PORT_DEFAULT;
+  }
+
   private static int HTTP_PORT_DEFAULT = 15001;
 
   @Override

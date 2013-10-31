@@ -119,6 +119,20 @@
     </description>
   </property>
 
+  <property>
+    <name>llama.am.server.thrift.admin.address</name>
+    <value>localhost:15002</value>
+    <description>The admin address the LlamaAM server listen at.
+      If 0.0.0.0 is specified as IP, the server will listen in all available
+      network addresses. If the port is not specified, the default port is
+      15002.
+      If the specified port is 0, an ephemeral port will be used, the port in
+      use will be printed in the logs at startup.
+      IMPORTANT: It is strongly recommended to use 'localhost' as the bind
+      address when security is not enabled.
+    </description>
+  </property>
+
   <!-- LlamaAM Thrift server HTTP configuration -->
   <property>
     <name>llama.am.server.thrift.http.address</name>
