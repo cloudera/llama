@@ -259,6 +259,8 @@ public class TestSecureLlamaAMThriftServer extends TestLlamaAMThriftServer {
     }
   }
 
+  private String adminKeytab;
+  private String krb5Conf;
   private Subject adminSubject;
 
   @Override
@@ -274,6 +276,8 @@ public class TestSecureLlamaAMThriftServer extends TestLlamaAMThriftServer {
           new Security.KeytabKerberosConfiguration("admin", keytab, true));
       context.login();
       adminSubject = context.getSubject();
+      adminKeytab = keytab.getAbsolutePath();
+      krb5Conf = miniKdc.getKrb5conf().getAbsolutePath();
     }
     return adminSubject;
   }
@@ -297,10 +301,32 @@ public class TestSecureLlamaAMThriftServer extends TestLlamaAMThriftServer {
     return true;
   }
 
+  private int execute(Map<String, String> env, String[] commandLine)
+      throws Exception {
+    ProcessBuilder pb = new ProcessBuilder();
+    if (env != null) {
+      pb.environment().putAll(env);
+    }
+    pb.command(commandLine);
+    pb.inheritIO();
+    final Process p = pb.start();
+    return p.waitFor();
+  }
+
+  @Test
   @Override
   public void testLlamaAdminCli() throws Exception {
-    //TODO: subject kerberos credentials are not being picked up by Admin CLI
-    //      it works correctly from command line.
+    Assert.assertEquals(0, execute(null, new String[]{"kdestroy"}));
+    try {
+      getAdminSubject();
+      Map<String, String> env = new HashMap<String, String>();
+      env.put("KRB5_CONFIG", krb5Conf);
+      Assert.assertEquals(0, execute(env,
+          new String[]{"kinit", "-kt", adminKeytab, "admin@EXAMPLE.COM"}));
+      super.testLlamaAdminCli();
+    } finally {
+      Assert.assertEquals(0, execute(null, new String[]{"kdestroy"}));
+    }
   }
 
   @Test(expected = TTransportException.class)

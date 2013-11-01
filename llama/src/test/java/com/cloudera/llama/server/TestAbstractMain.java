@@ -59,7 +59,9 @@ public class TestAbstractMain {
 
   public static String createTestDir() {
     File dir = new File(System.getProperty(LLAMA_BUILD_DIR, "target"));
-    dir = new File(dir, UUID.randomUUID().toString()).getAbsoluteFile();
+    //Using JDK UUID because the Llama UUID string format has ':' and this
+    // breaks things when used in ENV vars
+    dir = new File(dir, java.util.UUID.randomUUID().toString()).getAbsoluteFile();
     dir.mkdirs();
     return dir.getAbsolutePath();
   }
