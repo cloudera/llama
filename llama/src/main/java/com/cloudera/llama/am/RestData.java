@@ -242,6 +242,9 @@ public class RestData implements LlamaAMObserver,
             list.set(index, reservation);
           } else {
             list.remove(index);
+            if (list.isEmpty()) {
+              nodeReservationsMap.remove(resource.getLocation());
+            }
             list = nodeReservationsMap.get(resource.getActualLocation());
             if (list == null) {
               list = new ArrayList<PlacedReservation>();
