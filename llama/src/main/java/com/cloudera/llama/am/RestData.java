@@ -144,6 +144,7 @@ public class RestData implements LlamaAMObserver,
   @Override
   public void observe(PlacedReservation reservation) {
     lock.writeLock().lock();
+    LOG.debug("observe({})", reservation);
     try {
       switch (reservation.getStatus()) {
         case PENDING:
@@ -270,38 +271,52 @@ public class RestData implements LlamaAMObserver,
     }
   }
 
-  private <K, V> void deleteFromMapList(Map<K, List<V>> map, K key, V value,
-      String msg) {
+  private <K, V> boolean deleteFromMapList(Map<K, List<V>> map, K key, V value) {
+    boolean deleted = true;
     List<V> list = map.get(key);
     if (list != null) {
       int index = list.indexOf(value);
       if (index >= 0) {
         list.remove(index);
       } else {
-        LOG.error("RestData delete, inconsistency key '{}' not found in {}",
-            key, msg);
+        deleted = false;
       }
       if (list.isEmpty()) {
         map.remove(key);
       }
     } else {
-      LOG.error("RestData delete, inconsistency value '{}' not found in {}",
-          value, msg);
+      deleted = false;
     }
+    return deleted;
   }
 
   private void delete(PlacedReservation reservation) {
     reservationsMap.remove(reservation.getReservationId());
-    deleteFromMapList(handleReservationsMap, reservation.getHandle(),
-        reservation, "handleReservationsMap");
-    deleteFromMapList(queueReservationsMap, reservation.getQueue(), reservation,
-        "queueReservationsMap");
+    if (!deleteFromMapList(handleReservationsMap, reservation.getHandle(),
+        reservation)) {
+      LOG.error(
+          "RestData delete inconsistency, reservation '{}' not found in handle",
+          reservation);
+    }
+    if (!deleteFromMapList(queueReservationsMap, reservation.getQueue(),
+        reservation)) {
+      LOG.error(
+          "RestData delete inconsistency, reservation '{}' not found in queue",
+          reservation);
+    }
     for (PlacedResource resource : reservation.getResources()) {
-      deleteFromMapList(nodeReservationsMap, resource.getLocation(),
-          reservation, "nodeReservations");
+      boolean deleted = deleteFromMapList(nodeReservationsMap,
+          resource.getLocation(), reservation);
       if (resource.getActualLocation() != null) {
-        deleteFromMapList(nodeReservationsMap, resource.getActualLocation(),
-            reservation, "nodeReservations");
+        deleted = deleteFromMapList(nodeReservationsMap,
+            resource.getActualLocation(), reservation) || deleted;
+      }
+      if (!deleted) {
+        LOG.error(
+            "RestData delete inconsistency, reservation '{}' not found in " +
+                "location nor actualLocation",
+            reservation);
+
       }
     }
   }

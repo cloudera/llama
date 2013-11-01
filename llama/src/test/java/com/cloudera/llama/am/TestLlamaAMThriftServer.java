@@ -705,6 +705,7 @@ public class TestLlamaAMThriftServer {
               Assert.assertEquals(TStatusCode.OK,
                   tresRes1.getStatus().getStatus_code());
 
+              tResource.setClient_resource_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
               tresReq.setQueue("q2");
               TLlamaAMReservationResponse tresRes2 = client.Reserve(tresReq);
               Assert.assertEquals(TStatusCode.OK,
