@@ -316,16 +316,22 @@ public class TestSecureLlamaAMThriftServer extends TestLlamaAMThriftServer {
   @Test
   @Override
   public void testLlamaAdminCli() throws Exception {
-    Assert.assertEquals(0, execute(null, new String[]{"kdestroy"}));
-    try {
-      getAdminSubject();
-      Map<String, String> env = new HashMap<String, String>();
-      env.put("KRB5_CONFIG", krb5Conf);
-      Assert.assertEquals(0, execute(env,
-          new String[]{"kinit", "-kt", adminKeytab, "admin@EXAMPLE.COM"}));
-      super.testLlamaAdminCli();
-    } finally {
+    if (execute(null, new String[] { "which", "kdestroy"}) == 0 &&
+        execute(null, new String[]{"which", "kinit"}) == 0) {
       Assert.assertEquals(0, execute(null, new String[]{"kdestroy"}));
+      try {
+        getAdminSubject();
+        Map<String, String> env = new HashMap<String, String>();
+        env.put("KRB5_CONFIG", krb5Conf);
+        Assert.assertEquals(0, execute(env,
+            new String[]{"kinit", "-kt", adminKeytab, "admin@EXAMPLE.COM"}));
+        super.testLlamaAdminCli();
+      } finally {
+        Assert.assertEquals(0, execute(null, new String[]{"kdestroy"}));
+      }
+    } else {
+      System.out.println("WARN, skipping testLlamaAdminCli() because " +
+          "kdestroy or kinit are not available");
     }
   }
 
