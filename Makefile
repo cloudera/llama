@@ -99,6 +99,16 @@ components:
 # We have to prune out avro because it's in cdh5.mk but not yet part of the CDH5 build.
 	@echo $(shell echo $(TARGETS) | sed -e 's/ avro / /g' | sed -e 's/ /,/g')
 
+src-parcel:
+	rm -rf $(CDH_PARCEL_OUTPUT_DIR)
+	mkdir -p $(CDH_PARCEL_OUTPUT_DIR)
+	@echo "PKG_CDH_VERSION=\"$(CDH_PARCEL_BASE_VERSION)\"" > $(CDH_PARCEL_OUTPUT_DIR)/cdh-parcel.props
+	@echo "CDH_PARCEL_BASE_VERSION=\"$(CDH_REL_STRING)\"" >> $(CDH_PARCEL_OUTPUT_DIR)/cdh-parcel.props
+	@echo "CDH_CUSTOMER_PATCH=\"$(CDH_CUSTOMER_PATCH)\"" >> $(CDH_PARCEL_OUTPUT_DIR)/cdh-parcel.props
+	@echo "CDH_PARCEL_VERSION=\"$(REL_STRING)\"" >> $(CDH_PARCEL_OUTPUT_DIR)/cdh-parcel.props
+	@echo "CDH_PARCEL_RELEASE=\"$(CDH_PARCEL_RELEASE)\"" >> $(CDH_PARCEL_OUTPUT_DIR)/cdh-parcel.props
+
+
 .DEFAULT_GOAL:= help
-.PHONY: realclean clean distclean package-help help-header packages all world help tgz srpm sdeb install-pom relnotes components
+.PHONY: realclean clean distclean package-help help-header packages all world help tgz srpm sdeb install-pom relnotes components src-parcel
 
