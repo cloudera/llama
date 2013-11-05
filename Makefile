@@ -96,8 +96,7 @@ install-pom:
 	[ -f "$(BASE_DIR)/pom.xml" ] && mvn -N install $(DO_MAVEN_DEPLOY)
 
 components:
-# We have to prune out avro because it's in cdh5.mk but not yet part of the CDH5 build.
-	@echo $(shell echo $(TARGETS) | sed -e 's/ avro / /g' | sed -e 's/ /,/g')
+	@echo $(shell echo $(TARGETS) | sed -e 's/ /,/g')
 
 src-parcel:
 	rm -rf $(CDH_PARCEL_OUTPUT_DIR)
