@@ -18,7 +18,7 @@
 package com.cloudera.llama.server;
 
 import com.cloudera.llama.am.api.LlamaAM;
-import com.cloudera.llama.am.mock.mock.MockRMLlamaAMConnector;
+import com.cloudera.llama.am.mock.MockRMLlamaAMConnector;
 import junit.framework.Assert;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;

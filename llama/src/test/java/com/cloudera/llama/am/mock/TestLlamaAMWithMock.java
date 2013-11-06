@@ -22,8 +22,6 @@ import com.cloudera.llama.am.api.LlamaAMEvent;
 import com.cloudera.llama.am.api.LlamaAMListener;
 import com.cloudera.llama.am.api.Reservation;
 import com.cloudera.llama.am.api.Resource;
-import com.cloudera.llama.am.mock.mock.MockLlamaAMFlags;
-import com.cloudera.llama.am.mock.mock.MockRMLlamaAMConnector;
 import com.cloudera.llama.util.UUID;
 import junit.framework.Assert;
 import org.apache.hadoop.conf.Configuration;
