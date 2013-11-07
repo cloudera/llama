@@ -19,6 +19,7 @@ package com.cloudera.llama.server;
 
 import com.cloudera.llama.am.impl.FastFormat;
 import com.cloudera.llama.util.NamedThreadFactory;
+import com.codahale.metrics.Gauge;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.thrift.TProcessor;
@@ -76,8 +77,8 @@ public abstract class ThriftServer<T extends TProcessor, A extends TProcessor>
       final int maxThreads,  final int queueSize) {
     BlockingQueue<Runnable> queue = 
         new LinkedBlockingQueue<Runnable>(queueSize);
-    ThreadPoolExecutor executor = new ThreadPoolExecutor(minThreads, maxThreads,
-        60, TimeUnit.SECONDS, queue, new NamedThreadFactory(name));
+    final ThreadPoolExecutor executor = new ThreadPoolExecutor(minThreads,
+        maxThreads, 60, TimeUnit.SECONDS, queue, new NamedThreadFactory(name));
     executor.prestartAllCoreThreads();
     executor.setRejectedExecutionHandler(new RejectedExecutionHandler() {
       @Override
@@ -87,7 +88,15 @@ public abstract class ThriftServer<T extends TProcessor, A extends TProcessor>
             queueSize);
       }
     });
-    //TODO: add metric gauge for the queue and the executor active threads.
+    if (getMetricRegistry() != null) {
+      getMetricRegistry().register("llama.am." + name + ".threads.in.use.gauge",
+          new Gauge<Integer>() {
+            @Override
+            public Integer getValue() {
+              return executor.getActiveCount();
+            }
+          });
+    }
     return executor;
   }
 
