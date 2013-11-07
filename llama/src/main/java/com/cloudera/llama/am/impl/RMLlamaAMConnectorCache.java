@@ -17,6 +17,7 @@
  */
 package com.cloudera.llama.am.impl;
 
+import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.LlamaAMException;
 import com.cloudera.llama.am.api.PlacedResource;
 import com.cloudera.llama.am.api.Resource;
@@ -25,6 +26,9 @@ import com.cloudera.llama.am.spi.RMLlamaAMConnector;
 import com.cloudera.llama.am.spi.RMPlacedResource;
 import com.cloudera.llama.am.spi.RMResourceChange;
 import com.cloudera.llama.util.UUID;
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.RatioGauge;
 import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,16 +44,35 @@ public class RMLlamaAMConnectorCache implements RMLlamaAMConnector,
   private static final Logger LOG =
       LoggerFactory.getLogger(RMLlamaAMConnectorCache.class);
 
+  private static final String METRIC_PREFIX_TEMPLATE = LlamaAM.METRIC_PREFIX +
+      "queue({}).cache.";
+
+  private static final String ONE_MIN_CACHE_RATIO_TEMPLATE
+      = METRIC_PREFIX_TEMPLATE + "one.min.ratio.gauge";
+
+  private static final String FIVE_MIN_CACHE_RATIO_TEMPLATE
+      = METRIC_PREFIX_TEMPLATE + "five.min.ratio.gauge";
+
   private Configuration conf;
   private ResourceCache cache;
   private final RMLlamaAMConnector connector;
   private RMLlamaAMCallback callback;
+  private MetricRegistry metricRegistry;
+  private String queue;
+  private final Meter resourcesAsked;
+  private final Meter cacheHits;
 
   public RMLlamaAMConnectorCache(Configuration conf,
       RMLlamaAMConnector connector) {
     this.conf = conf;
     this.connector = connector;
     connector.setLlamaAMCallback(this);
+    resourcesAsked = new Meter();
+    cacheHits = new Meter();
+  }
+
+  public void setMetricRegistry(MetricRegistry metricRegistry) {
+    this.metricRegistry = metricRegistry;
   }
 
   @Override
@@ -69,8 +92,29 @@ public class RMLlamaAMConnectorCache implements RMLlamaAMConnector,
 
   @Override
   public void register(String queue) throws LlamaAMException {
+    this.queue = queue;
     cache = new ResourceCache(queue, conf, this);
     cache.start();
+    if (metricRegistry != null) {
+      RatioGauge oneMinGauge = new RatioGauge() {
+        @Override
+        protected Ratio getRatio() {
+          return Ratio.of(cacheHits.getOneMinuteRate(),
+              resourcesAsked.getOneMinuteRate());
+        }
+      };
+      RatioGauge fiveMinGauge = new RatioGauge() {
+        @Override
+        protected Ratio getRatio() {
+          return Ratio.of(cacheHits.getFiveMinuteRate(),
+              resourcesAsked.getFiveMinuteRate());
+        }
+      };
+      metricRegistry.register(FastFormat.format(ONE_MIN_CACHE_RATIO_TEMPLATE,
+          queue), oneMinGauge);
+      metricRegistry.register(FastFormat.format(FIVE_MIN_CACHE_RATIO_TEMPLATE,
+          queue), fiveMinGauge);
+    }
     connector.register(queue);
   }
 
@@ -78,6 +122,12 @@ public class RMLlamaAMConnectorCache implements RMLlamaAMConnector,
   public void unregister() {
     connector.unregister();
     cache.stop();
+    if (metricRegistry != null) {
+      metricRegistry.remove(FastFormat.format(ONE_MIN_CACHE_RATIO_TEMPLATE,
+          queue));
+      metricRegistry.remove(FastFormat.format(FIVE_MIN_CACHE_RATIO_TEMPLATE,
+          queue));
+    }
   }
 
   @Override
@@ -94,7 +144,9 @@ public class RMLlamaAMConnectorCache implements RMLlamaAMConnector,
     while (it.hasNext()) {
       RMPlacedResource resource = it.next();
       ResourceCache.CachedResource cached = cache.findAndRemove(resource);
+      resourcesAsked.mark();
       if (cached != null) {
+        cacheHits.mark();
         LOG.debug("Using cached resource '{}' for placed resource '{}'",
             cached, resource);
         it.remove();

@@ -135,7 +135,10 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
     rmConnector = ReflectionUtils.newInstance(klass, getConf());
     if (getConf().getBoolean(RESOURCES_CACHING_ENABLED_KEY,
         RESOURCES_CACHING_ENABLED_DEFAULT)) {
-      rmConnector = new RMLlamaAMConnectorCache(getConf(), rmConnector);
+      RMLlamaAMConnectorCache connectorCache =
+          new RMLlamaAMConnectorCache(getConf(), rmConnector);
+      connectorCache.setMetricRegistry(getMetricRegistry());
+      rmConnector = connectorCache;
     }
     rmConnector.setLlamaAMCallback(this);
     rmConnector.start();
