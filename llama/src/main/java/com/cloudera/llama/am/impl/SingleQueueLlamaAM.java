@@ -276,10 +276,10 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
         if (reservation.getHandle().equals(handle)) {
           _deleteReservation(reservation.getReservationId());
           reservations.add(reservation);
+          getLog().debug(
+              "Releasing all reservations for handle '{}', reservationId '{}'",
+              handle, reservation.getReservationId());
         }
-        getLog().debug(
-            "Releasing all reservations for handle '{}', reservationId '{}'",
-            handle, reservation.getReservationId());
       }
     }
     List<PlacedReservation> ids =
@@ -300,6 +300,9 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
       list = new ArrayList<PlacedReservation>(reservationsMap.values());
       for (PlacedReservation res : list) {
         releaseReservation(res.getHandle(), res.getReservationId());
+        getLog().debug(
+            "Releasing all reservations for queue '{}', reservationId '{}'",
+            queue, res.getReservationId());
       }
     }
     return list;

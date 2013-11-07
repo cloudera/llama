@@ -31,9 +31,11 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -87,12 +89,12 @@ public class TestGangAntiDeadlockLlamaAM {
   public class MyLlamaAM extends LlamaAMImpl {
     private boolean running;
     Set<String> invoked;
-    Map<UUID, PlacedReservation> reservations;
+    Map<UUID, PlacedReservationImpl> reservations;
 
     protected MyLlamaAM(Configuration conf) {
       super(conf);
       invoked = new HashSet<String>();
-      reservations = new HashMap<UUID, PlacedReservation>();
+      reservations = new HashMap<UUID, PlacedReservationImpl>();
     }
 
     @Override
@@ -124,7 +126,7 @@ public class TestGangAntiDeadlockLlamaAM {
         Reservation reservation)
         throws LlamaAMException {
       invoked.add("reserve");
-      PlacedReservation pr = new PlacedReservationImpl(reservationId,
+      PlacedReservationImpl pr = new PlacedReservationImpl(reservationId,
           reservation);
       reservations.put(reservationId, pr);
       return pr;
@@ -138,23 +140,50 @@ public class TestGangAntiDeadlockLlamaAM {
     }
 
     @Override
-    public PlacedReservation releaseReservation(UUID handle, UUID reservationId) throws LlamaAMException {
+    public PlacedReservation releaseReservation(UUID handle, UUID reservationId)
+        throws LlamaAMException {
       invoked.add("releaseReservation");
-      return reservations.remove(reservationId);
+      PlacedReservationImpl r = reservations.remove(reservationId);
+      if (r != null) {
+        r.setStatus(PlacedReservation.Status.ENDED);
+      }
+      return r;
     }
 
     @Override
     public List<PlacedReservation> releaseReservationsForHandle(UUID handle)
         throws LlamaAMException {
       invoked.add("releaseReservationsForClientId");
-      return new ArrayList<PlacedReservation>(reservations.values());
+      List<PlacedReservation> list = new ArrayList<PlacedReservation>();
+      Iterator<Map.Entry<UUID, PlacedReservationImpl>> it =
+          reservations.entrySet().iterator();
+      while (it.hasNext()) {
+        Map.Entry<UUID, PlacedReservationImpl> entry = it.next();
+        if (entry.getValue().getHandle().equals(handle)) {
+          it.remove();
+          entry.getValue().setStatus(PlacedReservation.Status.ENDED);
+          list.add(entry.getValue());
+        }
+      }
+      return list;
     }
 
     @Override
     public List<PlacedReservation> releaseReservationsForQueue(String queue)
         throws LlamaAMException {
       invoked.add("releaseReservationsForQueue");
-      return Collections.EMPTY_LIST;
+      List<PlacedReservation> list = new ArrayList<PlacedReservation>();
+      Iterator<Map.Entry<UUID, PlacedReservationImpl>> it =
+          reservations.entrySet().iterator();
+      while (it.hasNext()) {
+        Map.Entry<UUID, PlacedReservationImpl> entry = it.next();
+        if (entry.getValue().getQueue().equals(queue)) {
+          it.remove();
+          entry.getValue().setStatus(PlacedReservation.Status.ENDED);
+          list.add(entry.getValue());
+        }
+      }
+      return list;
     }
 
     @Override
@@ -403,7 +432,51 @@ public class TestGangAntiDeadlockLlamaAM {
 
   @Test
   @SuppressWarnings("unchecked")
-  public void testReleaseReservationsForClientId() throws Exception {
+  public void testReleaseReservation() throws Exception {
+    Configuration conf = createGangConfig();
+    MyLlamaAM am = new MyLlamaAM(conf);
+    GangAntiDeadlockLlamaAM gAm = new MyGangAntiDeadlockLlamaAM(conf, am);
+    try {
+      gAm.start();
+
+      //reserve
+      UUID handle = UUID.randomUUID();
+      Reservation<Resource> reservation1 = createReservation(handle, 1, true);
+      UUID id1 = gAm.reserve(reservation1).getReservationId();
+      Reservation<Resource> reservation2 = createReservation(handle, 1, true);
+      UUID id2 = gAm.reserve(reservation2).getReservationId();
+      Reservation<Resource> reservation3 = createReservation(handle, 1, true);
+      UUID id3 = gAm.reserve(reservation3).getReservationId();
+      Reservation<Resource> reservation4 = createReservation(handle, 1, true);
+      UUID id4 = gAm.reserve(reservation4).getReservationId();
+
+      Map<UUID, LlamaAMEventImpl> eventsMap =
+          new HashMap<UUID, LlamaAMEventImpl>();
+
+      //deadlock avoidance with victims
+      gAm.timeOfLastAllocation = System.currentTimeMillis() -
+          NO_ALLOCATION_LIMIT - 1;
+      long sleep = gAm.deadlockAvoidance(eventsMap);
+      Assert.assertEquals(NO_ALLOCATION_LIMIT, sleep);
+      Assert.assertEquals(2, am.reservations.size());
+      Assert.assertEquals(4, gAm.localReservations.size());
+      Assert.assertEquals(2, gAm.backedOffReservations.size());
+      Assert.assertEquals(2, gAm.submittedReservations.size());
+
+      List<UUID> ids = Arrays.asList(id1, id2, id3, id4);
+      for (UUID id : ids) {
+        PlacedReservation pr = gAm.releaseReservation(handle, id);
+        Assert.assertNotNull(pr);
+        Assert.assertEquals(PlacedReservation.Status.ENDED, pr.getStatus());
+      }
+    } finally {
+      gAm.stop();
+    }
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  public void testReleaseReservationsForHandle() throws Exception {
     Configuration conf = createGangConfig();
     MyLlamaAM am = new MyLlamaAM(conf);
     GangAntiDeadlockLlamaAM gAm = new MyGangAntiDeadlockLlamaAM(conf, am);
@@ -436,6 +509,52 @@ public class TestGangAntiDeadlockLlamaAM {
 
       List<PlacedReservation> prs = gAm.releaseReservationsForHandle(handle);
       Assert.assertEquals(4, prs.size());
+      for (PlacedReservation pr : prs) {
+        Assert.assertEquals(PlacedReservation.Status.ENDED, pr.getStatus());
+      }
+    } finally {
+      gAm.stop();
+    }
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  public void testReleaseReservationsForQueue() throws Exception {
+    Configuration conf = createGangConfig();
+    MyLlamaAM am = new MyLlamaAM(conf);
+    GangAntiDeadlockLlamaAM gAm = new MyGangAntiDeadlockLlamaAM(conf, am);
+    try {
+      gAm.start();
+
+      //reserve
+      UUID handle = UUID.randomUUID();
+      Reservation<Resource> reservation1 = createReservation(handle, 1, true);
+      UUID id1 = gAm.reserve(reservation1).getReservationId();
+      Reservation<Resource> reservation2 = createReservation(handle, 1, true);
+      UUID id2 = gAm.reserve(reservation2).getReservationId();
+      Reservation<Resource> reservation3 = createReservation(handle, 1, true);
+      UUID id3 = gAm.reserve(reservation3).getReservationId();
+      Reservation<Resource> reservation4 = createReservation(handle, 1, true);
+      UUID id4 = gAm.reserve(reservation4).getReservationId();
+
+      Map<UUID, LlamaAMEventImpl> eventsMap =
+          new HashMap<UUID, LlamaAMEventImpl>();
+
+      //deadlock avoidance with victims
+      gAm.timeOfLastAllocation = System.currentTimeMillis() -
+          NO_ALLOCATION_LIMIT - 1;
+      long sleep = gAm.deadlockAvoidance(eventsMap);
+      Assert.assertEquals(NO_ALLOCATION_LIMIT, sleep);
+      Assert.assertEquals(2, am.reservations.size());
+      Assert.assertEquals(4, gAm.localReservations.size());
+      Assert.assertEquals(2, gAm.backedOffReservations.size());
+      Assert.assertEquals(2, gAm.submittedReservations.size());
+
+      List<PlacedReservation> prs = gAm.releaseReservationsForQueue("q");
+      Assert.assertEquals(4, prs.size());
+      for (PlacedReservation pr : prs) {
+        Assert.assertEquals(PlacedReservation.Status.ENDED, pr.getStatus());
+      }
     } finally {
       gAm.stop();
     }
