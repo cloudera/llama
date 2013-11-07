@@ -18,6 +18,7 @@
 package com.cloudera.llama.am.spi;
 
 import com.cloudera.llama.am.api.LlamaAMException;
+import com.cloudera.llama.util.UUID;
 
 import java.util.Collection;
 import java.util.List;
@@ -36,10 +37,12 @@ public interface RMLlamaAMConnector {
 
   public List<String> getNodes() throws LlamaAMException;
 
-  public void reserve(RMPlacedReservation reservation)
+  public void reserve(Collection<RMPlacedResource> resources)
       throws LlamaAMException;
 
   public void release(Collection<RMPlacedResource> resources)
       throws LlamaAMException;
+
+  public boolean reassignResource(String rmResourceId, UUID resourceId);
 
 }

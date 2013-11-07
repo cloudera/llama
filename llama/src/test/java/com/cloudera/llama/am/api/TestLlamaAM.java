@@ -65,13 +65,18 @@ public class TestLlamaAM {
     }
 
     @Override
-    public void reserve(RMPlacedReservation reservation)
+    public void reserve(Collection<RMPlacedResource> resources)
         throws LlamaAMException {
     }
 
     @Override
     public void release(Collection<RMPlacedResource> resources)
         throws LlamaAMException {
+    }
+
+    @Override
+    public boolean reassignResource(String rmResourceId, UUID resourceId) {
+      return false;
     }
   }
 

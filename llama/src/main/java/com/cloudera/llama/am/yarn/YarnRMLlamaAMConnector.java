@@ -23,7 +23,6 @@ import com.cloudera.llama.am.api.PlacedResource;
 import com.cloudera.llama.am.impl.FastFormat;
 import com.cloudera.llama.am.spi.RMLlamaAMCallback;
 import com.cloudera.llama.am.spi.RMLlamaAMConnector;
-import com.cloudera.llama.am.spi.RMPlacedReservation;
 import com.cloudera.llama.am.spi.RMPlacedResource;
 import com.cloudera.llama.am.spi.RMResourceChange;
 import com.cloudera.llama.util.NamedThreadFactory;
@@ -54,6 +53,7 @@ import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.client.api.YarnClientApplication;
 import org.apache.hadoop.yarn.client.api.async.AMRMClientAsync;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
+import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.apache.hadoop.yarn.util.Records;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -474,7 +474,7 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
     }
   }
 
-  private void verifyResources(List<RMPlacedResource> resources)
+  private void verifyResources(Collection<RMPlacedResource> resources)
       throws LlamaAMException {
     for (RMPlacedResource r : resources) {
       Resource nodeCapabilites = nodes.get(r.getLocation());
@@ -509,10 +509,10 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
     }
   }
 
-  private void _reserve(RMPlacedReservation reservation)
+  private void _reserve(Collection<RMPlacedResource> resources)
       throws LlamaAMException {
-    verifyResources(reservation.getRMResources());
-    for (RMPlacedResource resource : reservation.getRMResources()) {
+    verifyResources(resources);
+    for (RMPlacedResource resource : resources) {
       LOG.debug("Adding container request for '{}'", resource);
       LlamaContainerRequest request = new LlamaContainerRequest(resource);
       amRmClientAsync.addContainerRequest(request);
@@ -521,13 +521,13 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
   }
 
   @Override
-  public void reserve(final RMPlacedReservation reservation)
+  public void reserve(final Collection<RMPlacedResource> resources)
       throws LlamaAMException {
     try {
       ugi.doAs(new PrivilegedExceptionAction<Void>() {
         @Override
         public Void run() throws Exception {
-          _reserve(reservation);
+          _reserve(resources);
           return null;
         }
       });
@@ -579,6 +579,12 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
         throw new RuntimeException(ex);
       }
     }
+  }
+
+  @Override
+  public boolean reassignResource(String rmResourceId, UUID resourceId) {
+    ContainerId cId = ConverterUtils.toContainerId(rmResourceId);
+    return containerIdToClientResourceIdMap.replace(cId, resourceId) != null;
   }
 
   // YARN AMMRClientAsync#CallbackHandler methods

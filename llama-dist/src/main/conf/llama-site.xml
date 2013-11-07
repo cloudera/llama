@@ -319,6 +319,38 @@
     </description>
   </property>
 
+  <!-- Resource caching configuration -->
+  <property>
+    <name>llama.am.resources.caching.enabled</name>
+    <value>true</value>
+    <description>
+      Indicates if Llama should cache allocated resources on release.
+    </description>
+  </property>
+  <property>
+    <name>llama.am.resources.caching.eviction.run.interval.timeout.ms</name>
+    <value>5000</value>
+    <description>
+      Interval of time between eviction policy runs.
+    </description>
+  </property>
+  <property>
+    <name>llama.am.resources.caching.eviction.policy.class</name>
+    <value>com.cloudera.llama.am.impl.ResourceCache$TimeoutEvictionPolicy</value>
+    <description>
+      The eviction policy for cached resources. The TimeoutEvictionPolicy
+      evicts resources that have been sitting in the cache for a period of time
+      equal or greater than the timeout.
+    </description>
+  </property>
+  <property>
+    <name>llama.am.resources.caching.eviction.timeout.policy.idle.timeout.ms</name>
+    <value>30000</value>
+    <description>
+      TimeoutEvictionPolicy policy timeout for resources sitting in the cache.
+    </description>
+  </property>
+
   <!-- YarnLlamaAM configuration -->
   <property>
     <name>llama.am.hadoop.user.name</name>

@@ -27,7 +27,6 @@ import com.cloudera.llama.am.api.Reservation;
 import com.cloudera.llama.am.api.Resource;
 import com.cloudera.llama.am.spi.RMLlamaAMCallback;
 import com.cloudera.llama.am.spi.RMLlamaAMConnector;
-import com.cloudera.llama.am.spi.RMPlacedReservation;
 import com.cloudera.llama.am.spi.RMPlacedResource;
 import com.cloudera.llama.am.spi.RMResourceChange;
 import com.cloudera.llama.util.UUID;
@@ -82,7 +81,7 @@ public class TestSingleQueueLlamaAM {
     }
 
     @Override
-    public void reserve(RMPlacedReservation reservation)
+    public void reserve(Collection<RMPlacedResource> resources)
         throws LlamaAMException {
       reserve = true;
     }
@@ -91,6 +90,11 @@ public class TestSingleQueueLlamaAM {
     public void release(Collection<RMPlacedResource> resources)
         throws LlamaAMException {
       release = true;
+    }
+
+    @Override
+    public boolean reassignResource(String rmResourceId, UUID resourceId) {
+      return false;
     }
 
   }
@@ -120,6 +124,7 @@ public class TestSingleQueueLlamaAM {
     Configuration conf = new Configuration(false);
     conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MyRMLlamaAMConnector.class,
         RMLlamaAMConnector.class);
+    conf.setBoolean(LlamaAM.RESOURCES_CACHING_ENABLED_KEY, false);
     return new SingleQueueLlamaAM(conf, "queue",
         new DummySingleQueueLlamaAMCallback());
   }

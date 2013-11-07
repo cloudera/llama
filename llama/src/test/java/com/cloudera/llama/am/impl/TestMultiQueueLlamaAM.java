@@ -27,7 +27,6 @@ import com.cloudera.llama.am.api.Resource;
 import com.cloudera.llama.am.api.TestReservation;
 import com.cloudera.llama.am.spi.RMLlamaAMCallback;
 import com.cloudera.llama.am.spi.RMLlamaAMConnector;
-import com.cloudera.llama.am.spi.RMPlacedReservation;
 import com.cloudera.llama.am.spi.RMPlacedResource;
 import com.cloudera.llama.am.spi.RMResourceChange;
 import com.cloudera.llama.util.UUID;
@@ -121,7 +120,7 @@ public class TestMultiQueueLlamaAM {
     }
 
     @Override
-    public void reserve(RMPlacedReservation reservation)
+    public void reserve(Collection<RMPlacedResource> resources)
         throws LlamaAMException {
       methods.add("reserve");
     }
@@ -133,6 +132,11 @@ public class TestMultiQueueLlamaAM {
       if (conf.getBoolean("release.fail", false)) {
         throw new LlamaAMException("");
       }
+    }
+
+    @Override
+    public boolean reassignResource(String rmResourceId, UUID resourceId) {
+      return false;
     }
 
   }

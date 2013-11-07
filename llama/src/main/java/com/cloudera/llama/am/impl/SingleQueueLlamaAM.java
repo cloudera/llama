@@ -133,6 +133,10 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
   public void start() throws LlamaAMException {
     Class<? extends RMLlamaAMConnector> klass = getRMConnectorClass(getConf());
     rmConnector = ReflectionUtils.newInstance(klass, getConf());
+    if (getConf().getBoolean(RESOURCES_CACHING_ENABLED_KEY,
+        RESOURCES_CACHING_ENABLED_DEFAULT)) {
+      rmConnector = new RMLlamaAMConnectorCache(getConf(), rmConnector);
+    }
     rmConnector.setLlamaAMCallback(this);
     rmConnector.start();
     if (queue != null) {
@@ -210,7 +214,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
       _addReservation(new PlacedReservationImpl(impl));
     }
     try {
-      rmConnector.reserve(impl);
+      rmConnector.reserve(impl.getRMResources());
     } catch (LlamaAMException ex) {
       synchronized (this) {
         _deleteReservation(impl.getReservationId());

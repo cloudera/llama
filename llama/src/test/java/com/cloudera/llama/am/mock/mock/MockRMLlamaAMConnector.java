@@ -19,15 +19,14 @@ package com.cloudera.llama.am.mock.mock;
 
 import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.LlamaAMException;
-import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.PlacedResource;
 import com.cloudera.llama.am.impl.FastFormat;
 import com.cloudera.llama.am.spi.RMLlamaAMCallback;
 import com.cloudera.llama.am.spi.RMLlamaAMConnector;
-import com.cloudera.llama.am.spi.RMPlacedReservation;
 import com.cloudera.llama.am.spi.RMPlacedResource;
 import com.cloudera.llama.am.spi.RMResourceChange;
 import com.cloudera.llama.util.NamedThreadFactory;
+import com.cloudera.llama.util.UUID;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 
@@ -185,14 +184,19 @@ public class MockRMLlamaAMConnector
   }
 
   @Override
-  public void reserve(RMPlacedReservation reservation)
+  public void reserve(Collection<RMPlacedResource> resources)
       throws LlamaAMException {
-    schedule(this, reservation);
+    schedule(this, resources);
   }
 
   @Override
   public void release(Collection<RMPlacedResource> resources)
       throws LlamaAMException {
+  }
+
+  @Override
+  public boolean reassignResource(String rmResourceId, UUID resourceId) {
+    return false;
   }
 
   private class MockRMAllocator implements Callable<Void> {
@@ -260,8 +264,8 @@ public class MockRMLlamaAMConnector
   }
 
   private void schedule(MockRMLlamaAMConnector allocator,
-      PlacedReservation reservation) {
-    for (PlacedResource resource : reservation.getResources()) {
+      Collection<RMPlacedResource> resources) {
+    for (PlacedResource resource : resources) {
       PlacedResource.Status status = getMockResourceStatus(
           resource.getLocation());
       MockRMAllocator mocker = new MockRMAllocator(allocator, resource, status,
