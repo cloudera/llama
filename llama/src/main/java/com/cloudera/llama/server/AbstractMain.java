@@ -30,7 +30,7 @@ import java.net.URL;
 import java.util.concurrent.CountDownLatch;
 
 public abstract class AbstractMain {
-  static final String TEST_LLAMA_JVM_EXIT_SYS_PROP =
+  public static final String TEST_LLAMA_JVM_EXIT_SYS_PROP =
       "test.llama.disable.jvm.exit";
 
   public static final String SERVER_CLASS_KEY = "llama.server.class";
@@ -90,7 +90,7 @@ public abstract class AbstractMain {
   }
 
   //Used for testing only
-  void waitStopLach() throws InterruptedException {
+  void waitStopLatch() throws InterruptedException {
     stopLatch.await();
 
   }
@@ -102,6 +102,16 @@ public abstract class AbstractMain {
 
     LOG.info("Configuration directory: {}", confDir);
     Configuration llamaConf = loadConfiguration(confDir);
+    if (args != null) {
+      for (String arg : args) {
+        if (arg.startsWith("-D")) {
+          String[] s = arg.substring(2).split("=");
+          if (s.length == 2) {
+            llamaConf.set(s[0], s[1]);
+          }
+        }
+      }
+    }
     Class<? extends AbstractServer> klass =
         llamaConf.getClass(SERVER_CLASS_KEY, getServerClass(),
             AbstractServer.class);
@@ -125,23 +135,25 @@ public abstract class AbstractMain {
   }
 
   private void initLogging(String confDir) {
-    boolean fromClasspath = true;
-    File log4jConf = new File(confDir, LOG4J_PROPERTIES).getAbsoluteFile();
-    if (log4jConf.exists()) {
-      PropertyConfigurator.configureAndWatch(log4jConf.getPath(), 1000);
-      fromClasspath = false;
-    } else {
-      ClassLoader cl = Thread.currentThread().getContextClassLoader();
-      URL log4jUrl = cl.getResource(LOG4J_PROPERTIES);
-      if (log4jUrl != null) {
-        PropertyConfigurator.configure(log4jUrl);
+    if (System.getProperty("log4j.configuration") == null) {
+      boolean fromClasspath = true;
+      File log4jConf = new File(confDir, LOG4J_PROPERTIES).getAbsoluteFile();
+      if (log4jConf.exists()) {
+        PropertyConfigurator.configureAndWatch(log4jConf.getPath(), 1000);
+        fromClasspath = false;
+      } else {
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        URL log4jUrl = cl.getResource(LOG4J_PROPERTIES);
+        if (log4jUrl != null) {
+          PropertyConfigurator.configure(log4jUrl);
+        }
       }
-    }
-    LOG = LoggerFactory.getLogger(this.getClass());
-    LOG.debug("Llama log starting");
-    if (fromClasspath) {
-      LOG.warn("Log4j configuration file '{}' not found", LOG4J_PROPERTIES);
-      LOG.warn("Logging with INFO level to standard output");
+      LOG = LoggerFactory.getLogger(this.getClass());
+      LOG.debug("Llama log starting");
+      if (fromClasspath) {
+        LOG.warn("Log4j configuration file '{}' not found", LOG4J_PROPERTIES);
+        LOG.warn("Logging with INFO level to standard output");
+      }
     }
   }
 

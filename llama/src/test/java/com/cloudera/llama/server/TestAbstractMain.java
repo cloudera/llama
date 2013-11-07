@@ -150,7 +150,7 @@ public class TestAbstractMain {
     final AbstractMain main = new MyMain();
     main.shutdown();
     Assert.assertEquals(0, main.run(null));
-    main.waitStopLach();
+    main.waitStopLatch();
   }
 
   @Test
@@ -166,7 +166,7 @@ public class TestAbstractMain {
     final AbstractMain main = new MyMain();
     main.shutdown();
     Assert.assertEquals(0, main.run(null));
-    main.waitStopLach();
+    main.waitStopLatch();
   }
 
   @Test(expected = RuntimeException.class)

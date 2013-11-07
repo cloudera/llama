@@ -202,25 +202,24 @@ usage:
       llamaclient register <OPTIONS> : register client
 
                            -callback <arg>   <HOST>:<PORT> of client's callback server
-                           -handle <arg>   client ID
+                           -clientid <arg>   client ID
                            -llama <arg>      <HOST>:<PORT> of llama
+                           -nolog            no logging
                            -secure           uses kerberos
-
-        OUTPUT: the registration HANDLE is written to <stdout>.
 
       llamaclient unregister <OPTIONS> : unregister client
 
                              -handle <arg>   <UUID> from registration
                              -llama <arg>    <HOST>:<PORT> of llama
+                             -nolog          no logging
                              -secure         uses kerberos
 
       llamaclient getnodes <OPTIONS> : get cluster nodes
 
                            -handle <arg>   <UUID> from registration
                            -llama <arg>    <HOST>:<PORT> of llama
+                           -nolog          no logging
                            -secure         uses kerberos
-
-        OUTPUT: the nodes are written to <stdout>, one per line.
 
       llamaclient reserve <OPTIONS> : make a reservation
 
@@ -230,30 +229,83 @@ usage:
                           -locations <arg>   locations of reservation, comma separated
                           -memory <arg>      memory (MB) required per location of reservation
                           -nogang            no gang reservation
+                          -nolog             no logging
                           -queue <arg>       queue of reservation
                           -relaxlocality     relax locality
                           -secure            uses kerberos
-
-        OUTPUT: the reservation ID is written to <stdout>.
 
       llamaclient release <OPTIONS> : release a reservation
 
                           -handle <arg>        <UUID> from registration
                           -llama <arg>         <HOST>:<PORT> of llama
+                          -nolog               no logging
                           -reservation <arg>   <UUID> from reservation
                           -secure              uses kerberos
 
       llamaclient callbackserver <OPTIONS> : run callback server
 
+                                 -nolog        no logging
                                  -port <arg>   <PORT> of callback server
                                  -secure       uses kerberos
+
+      llamaclient load <OPTIONS> : run a load
+
+                       -allocationtimeout <arg>   allocation timeout, millisecs (default 10000)
+                       -callback <arg>            <HOST>:<PORT> of client's callback server
+                       -clients <arg>             number of clients
+                       -cpus <arg>                cpus required per location of reservation
+                       -holdtime <arg>            time to hold a reservation once allocated (-1 to
+                                                  not wait for allocation and release immediately),
+                                                  millisecs
+                       -llama <arg>               <HOST>:<PORT> of llama
+                       -locations <arg>           locations of reservation, comma separated
+                       -memory <arg>              memory (MB) required per location of reservation
+                       -nogang                    no gang reservation
+                       -nolog                     no logging
+                       -queue <arg>               queue of reservation
+                       -relaxlocality             relax locality
+                       -rounds <arg>              reservations per client
+                       -sleeptime <arg>           time to sleep between  reservations, millisecs
+
+*** Load Testing
+
+  The <<<llamaclient>>> '<<<load>>>' sub-command allows to simulate basic load
+  in Llama. The main motivation for this load testing is to stress Llama and
+  and find out contention points and critical paths in Llama code.
+
+  For example, a run using 100 clients doing 1000 reservations/releases without
+  waiting for the allocation notification (<<<-holdtime -1>>>) and no sleep time
+  between reservations is:
+
++---+
+$ bin/llamaclient load -llama localhost:15000 -callback localhost:20000 \
+  -clients 100 -rounds 1000 -holdtime 0 -sleeptime 0 -locations node1,node2 \
+  -cpus 1 -memory 1024 -queue queue1 -nolog
+
+Llama load run:
+
+  Number of clients         : 100
+  Reservations per client   : 1000
+  Hold allocations for      : 0 ms
+  Sleep between reservations: 0 ms
+  Allocation timeout        : 10000 ms
+
+  Wall time                 : 31220 ms
+
+  Timed out allocations     : 14
+
+  Reservation rate          : 3204.743738595719 per sec
+
+  Register time   (mean)    : 6.87 ms
+  Reserve time    (mean)    : 0.5457198443579767 ms
+  Allocate time   (mean)    : 23.180933852140075 ms
+  Release time    (mean)    : 0.48540856031128404 ms
+  Unregister time (mean)    : 82.76 ms
+
+$
 +---+
 
-  <<IMPORTANT:>>
-
-    * All options are mandatory except for: <<<-nogang>>>, <<<-relaxlocality>>>
-    and <<<--secure>>>. If omitted it means they are not in effect for the
-    current invocation.
-
-    * The <<<-secure>>> option is not supported yet. Currently, the
-    LlamaClient works on non-secure mode only.
+  If <<<-holdtime>>> is set to <<<-1>>>, the Llama client will not wait for the
+  allocation callback, it will immediately release the reservation. This can be
+  use to add significantly more stress to Llama data structures and their
+  synchronization.

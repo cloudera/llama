@@ -22,16 +22,22 @@ import com.cloudera.llama.thrift.TLlamaAMNotificationRequest;
 import com.cloudera.llama.thrift.TLlamaAMNotificationResponse;
 import com.cloudera.llama.thrift.TLlamaNMNotificationRequest;
 import com.cloudera.llama.thrift.TLlamaNMNotificationResponse;
+import com.cloudera.llama.thrift.TUniqueId;
+import com.cloudera.llama.util.UUID;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.thrift.TException;
 import org.apache.thrift.TProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+
 public class LlamaClientCallback extends
     ThriftServer<LlamaNotificationService.Processor, TProcessor> {
-  public static final String PORT_KEY = LlamaClientCallback.class.getName() +
-      ".port";
+  public static final String PORT_KEY = "llama.client.callback.port";
+
   private static final Logger LOG =
       LoggerFactory.getLogger(LlamaClientCallback.class);
 
@@ -44,12 +50,28 @@ public class LlamaClientCallback extends
 
     @Override
     public int getThriftDefaultPort() {
-      return Integer.parseInt(System.getProperty(PORT_KEY, "0"));
+      return getConf().getInt(PORT_KEY, 0);
     }
 
     @Override
     public int getHttpDefaultPort() {
       return 0;
+    }
+  }
+
+  private static Map<UUID, CountDownLatch> latches =
+      new ConcurrentHashMap<UUID, CountDownLatch>();
+
+  public static CountDownLatch getReservationLatch(UUID reservation) {
+    CountDownLatch latch = new CountDownLatch(1);
+    latches.put(reservation, latch);
+    return latch;
+  }
+
+  private static void notifyStatusChange(UUID reservation) {
+    CountDownLatch latch = latches.remove(reservation);
+    if (latch != null) {
+      latch.countDown();
     }
   }
 
@@ -63,6 +85,31 @@ public class LlamaClientCallback extends
     public TLlamaAMNotificationResponse AMNotification(
         TLlamaAMNotificationRequest request) throws TException {
       LOG.info(request.toString());
+      if (request.isSetAllocated_reservation_ids()) {
+        for (TUniqueId r : request.getAllocated_reservation_ids()) {
+          notifyStatusChange(TypeUtils.toUUID(r));
+        }
+      }
+      if (request.isSetPreempted_reservation_ids()) {
+        for (TUniqueId r : request.getPreempted_reservation_ids()) {
+          notifyStatusChange(TypeUtils.toUUID(r));
+        }
+      }
+      if (request.isSetRejected_reservation_ids()) {
+        for (TUniqueId r : request.getRejected_reservation_ids()) {
+          notifyStatusChange(TypeUtils.toUUID(r));
+        }
+      }
+      if (request.isSetLost_reservation_ids()) {
+        for (TUniqueId r : request.getLost_reservation_ids()) {
+          notifyStatusChange(TypeUtils.toUUID(r));
+        }
+      }
+      if (request.isSetAdmin_released_reservation_ids()) {
+        for (TUniqueId r : request.getAdmin_released_reservation_ids()) {
+          notifyStatusChange(TypeUtils.toUUID(r));
+        }
+      }
       return new TLlamaAMNotificationResponse().setStatus(TypeUtils.OK);
     }
 
