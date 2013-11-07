@@ -68,7 +68,8 @@ TODO: need license header
     <cdh.llama.version>1.0.0-cdh5.0.0-SNAPSHOT</cdh.llama.version>
     <cdh.cdh-parcel.version>5.0.0-SNAPSHOT</cdh.cdh-parcel.version>
     <cdh.sentry.version>1.2.0-cdh5.0.0-SNAPSHOT</cdh.sentry.version>
-    <cdh.parquet.version>1.0.0-cdh5.0-0-SNAPSHOT</cdh.parquet.version>
+    <cdh.parquet.version>1.2.5-cdh5.0.0-SNAPSHOT</cdh.parquet.version>
+    <cdh.parquet-format.version>1.0.0-cdh5.0.0-SNAPSHOT</cdh.parquet-format.version>
     
     <!-- Versions of the dependencies we manage -->
     <!-- <cdh.avro.version>1.7.4-cdh5.0.0-SNAPSHOT</cdh.avro.version> -->
@@ -814,6 +815,84 @@ TODO: need license header
         <version>${cdh.datafu.version}</version>
       </dependency>
 
+      <!-- Parquet (MR and Format)-->
+      <dependency>
+        <groupId>com.twitter</groupId>
+        <artifactId>parquet-format</artifactId>
+        <version>${cdh.parquet-format.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.twitter</groupId>
+        <artifactId>parquet-avro</artifactId>
+        <version>${cdh.parquet.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.twitter</groupId>
+        <artifactId>parquet-cascading</artifactId>
+        <version>${cdh.parquet.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.twitter</groupId>
+        <artifactId>parquet-column</artifactId>
+        <version>${cdh.parquet.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.twitter</groupId>
+        <artifactId>parquet-common</artifactId>
+        <version>${cdh.parquet.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.twitter</groupId>
+        <artifactId>parquet-encoding</artifactId>
+        <version>${cdh.parquet.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.twitter</groupId>
+        <artifactId>parquet-generator</artifactId>
+        <version>${cdh.parquet.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.twitter</groupId>
+        <artifactId>parquet-hadoop</artifactId>
+        <version>${cdh.parquet.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.twitter</groupId>
+        <artifactId>parquet-hive</artifactId>
+        <version>${cdh.parquet.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.twitter</groupId>
+        <artifactId>parquet-pig</artifactId>
+        <version>${cdh.parquet.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.twitter</groupId>
+        <artifactId>parquet-scrooge</artifactId>
+        <version>${cdh.parquet.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.twitter</groupId>
+        <artifactId>parquet-test-hadoop2</artifactId>
+        <version>${cdh.parquet.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.twitter</groupId>
+        <artifactId>parquet-thrift</artifactId>
+        <version>${cdh.parquet.version}</version>
+      </dependency>
         
       <!-- External dependencies consumed by the different projects-->
       
