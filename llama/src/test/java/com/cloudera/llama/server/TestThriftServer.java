@@ -23,7 +23,6 @@ import org.junit.Test;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.RejectedExecutionException;
 
 public class TestThriftServer {
   
@@ -51,16 +50,16 @@ public class TestThriftServer {
   }
   
   @Test
-  public void testMaxingOutThreadPoolWithoutExceedingQueue() throws Exception {
-    testMaxingOutThreadPool(false);
+  public void testMaxingOutThreadPool() throws Exception {
+    testThreadPool(false);
   }
 
   @Test
-  public void testMaxingOutThreadPoolExceedingQueue() throws Exception {
-    testMaxingOutThreadPool(true);
+  public void testOverflowingThreadPool() throws Exception {
+    testThreadPool(true);
   }
 
-  private void testMaxingOutThreadPool(boolean exceedQueue) throws Exception {
+  private void testThreadPool(boolean exceedQueue) throws Exception {
     ThriftServer ts = new ThriftServer("test", null) {
       @Override
       protected TProcessor createServiceProcessor() {
@@ -75,13 +74,12 @@ public class TestThriftServer {
       protected void stopService() {
       }
     };
-    ExecutorService ex = ts.createExecutorService("test", 1, 2, 1);
+    ExecutorService ex = ts.createExecutorService("test", 1, 2);
     try {
-      int extra = (exceedQueue) ? 2 : 0;
-      int expectedToRun = (exceedQueue) ? 3 : 2;
+      int extra = (exceedQueue) ? 1 : 0;
+      int expectedToRun = 2;
       CountDownLatch inLatch = new CountDownLatch(1);
       MyRunnable[] runnables = new MyRunnable[2 + extra];
-      CountDownLatch outLatch = new CountDownLatch(runnables.length);
       for (int i = 0; i < runnables.length; i++) {
         runnables[i] = new MyRunnable(inLatch);
         ex.execute(runnables[i]);

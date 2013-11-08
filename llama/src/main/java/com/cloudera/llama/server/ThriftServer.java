@@ -26,20 +26,25 @@ import org.apache.thrift.TProcessor;
 import org.apache.thrift.server.TServer;
 import org.apache.thrift.server.TThreadPoolServer;
 import org.apache.thrift.transport.TServerSocket;
+import org.apache.thrift.transport.TSocket;
+import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportFactory;
 
 import javax.security.auth.Subject;
+import java.lang.reflect.Field;
 import java.net.InetAddress;
 import java.security.PrivilegedExceptionAction;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public abstract class ThriftServer<T extends TProcessor, A extends TProcessor>
     extends AbstractServer {
+  private static Field clientTTransportField;
+  private static Field clientTTransportSocketField;
+
   private Class<? extends ServerConfiguration> serverConfClass;
   private ServerConfiguration sConf;
   private TServer tServer;
@@ -51,6 +56,21 @@ public abstract class ThriftServer<T extends TProcessor, A extends TProcessor>
   private String adminHostname;
   private int adminPort;
 
+  static {
+    //IMPORTANT: this has been tested with Thrift 0.9.0 only
+    try {
+      Class klass = Thread.currentThread().getContextClassLoader().
+          loadClass(TThreadPoolServer.class.getName() + "$WorkerProcess");
+      clientTTransportField = klass.getDeclaredField("client_");
+      clientTTransportField.setAccessible(true);
+      clientTTransportSocketField = TSocket.class.getDeclaredField("socket_");
+      clientTTransportSocketField.setAccessible(true);
+    } catch (Exception ex) {
+      throw new RuntimeException(
+          "Could not setup for rejected clients cleanup handling: " +
+              ex.toString(), ex);
+    }
+  }
 
   protected ThriftServer(String serviceName,
       Class<? extends ServerConfiguration> serverConfClass) {
@@ -73,27 +93,52 @@ public abstract class ThriftServer<T extends TProcessor, A extends TProcessor>
     sConf = ReflectionUtils.newInstance(serverConfClass, conf);
   }
 
+  //IMPORTANT: this has been tested with Thrift 0.9.0 only
+  // by doing this we make the rejected client get an exception instead of hanging
+  private String cleanupRejectedClient(Runnable r) {
+    String ret = "?";
+    try {
+        TTransport transport = (TTransport) clientTTransportField.get(r);
+        if (transport instanceof TSocket) {
+          Object socket = clientTTransportSocketField.get(transport);
+          ret = socket.toString();
+        }
+        transport.close();
+    } catch (Exception ex) {
+      getLog().warn("Could not clean up rejected client '{}', {}", ret,
+          ex.toString(), ex);
+    }
+    return ret;
+  }
+
   ExecutorService createExecutorService(String name, int minThreads,
-      final int maxThreads,  final int queueSize) {
-    BlockingQueue<Runnable> queue = 
-        new LinkedBlockingQueue<Runnable>(queueSize);
+      final int maxThreads) {
     final ThreadPoolExecutor executor = new ThreadPoolExecutor(minThreads,
-        maxThreads, 60, TimeUnit.SECONDS, queue, new NamedThreadFactory(name));
+        maxThreads, 60, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
+        new NamedThreadFactory(name));
     executor.prestartAllCoreThreads();
     executor.setRejectedExecutionHandler(new RejectedExecutionHandler() {
       @Override
       public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
-        getLog().error("Discarding incoming calls, using maximum threads " +
-            "'{}' and calls queue if full with '{}' entries", maxThreads, 
-            queueSize);
+        String client = cleanupRejectedClient(r);
+        getLog().error(
+            "Discarding new incoming client '{}', using maximum threads '{}'",
+            client, maxThreads);
       }
     });
     if (getMetricRegistry() != null) {
-      getMetricRegistry().register("llama.am." + name + ".threads.in.use.gauge",
+      getMetricRegistry().register("llama.am." + name + ".active.threads.gauge",
           new Gauge<Integer>() {
             @Override
             public Integer getValue() {
               return executor.getActiveCount();
+            }
+          });
+      getMetricRegistry().register("llama.am." + name + ".total.threads.gauge",
+          new Gauge<Integer>() {
+            @Override
+            public Integer getValue() {
+              return executor.getPoolSize();
             }
           });
     }
@@ -117,7 +162,6 @@ public abstract class ThriftServer<T extends TProcessor, A extends TProcessor>
         public Object run() throws Exception {
           int minThreads = sConf.getServerMinThreads();
           int maxThreads = sConf.getServerMaxThreads();
-          int queueSize = sConf.getServerCallsQueueSize();
           tServerSocket = ThriftEndPoint.createTServerSocket(sConf);
           TTransportFactory tTransportFactory = ThriftEndPoint
               .createTTransportFactory(sConf);
@@ -127,7 +171,7 @@ public abstract class ThriftServer<T extends TProcessor, A extends TProcessor>
           TThreadPoolServer.Args args = new TThreadPoolServer.Args
               (tServerSocket);
           args.executorService(createExecutorService("llama-thrift", minThreads,
-              maxThreads,  queueSize));
+              maxThreads));
           args.transportFactory(tTransportFactory);          
           args.processor(processor);
           tServer = new TThreadPoolServer(args);
@@ -151,7 +195,6 @@ public abstract class ThriftServer<T extends TProcessor, A extends TProcessor>
           public Object run() throws Exception {
             int minThreads = 1;
             int maxThreads = 10;
-            int queueSize = 10;
             tAdminServerSocket = ThriftEndPoint.createAdminTServerSocket(sConf);
             TTransportFactory tTransportFactory = ThriftEndPoint
                 .createTTransportFactory(sConf);
@@ -160,7 +203,7 @@ public abstract class ThriftServer<T extends TProcessor, A extends TProcessor>
             TThreadPoolServer.Args args = new TThreadPoolServer.Args
                 (tAdminServerSocket);
             args.executorService(createExecutorService("llama-thrift-admin",
-                minThreads, maxThreads, queueSize));
+                minThreads, maxThreads));
             args.transportFactory(tTransportFactory);
             args.processor(tProcessor);
             tAdminServer = new TThreadPoolServer(args);
