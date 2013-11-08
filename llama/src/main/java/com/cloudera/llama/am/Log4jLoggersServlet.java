@@ -26,6 +26,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
@@ -45,18 +46,16 @@ public class Log4jLoggersServlet extends HttpServlet {
     readOnly = false;
   }
 
-  private String getLogicalParent(String name) {
+  private List<String> getNamesAncestry(String name) {
+    List<String> names = new ArrayList<String>();
+    names.add(name);
     int idx = name.lastIndexOf(".");
-    if (idx == -1) {
-      return null;
+    while (idx > -1) {
+      name = name.substring(0, idx);
+      names.add(name);
+      idx = name.lastIndexOf(".");
     }
-    if (idx > -1) {
-      String firstChar = name.substring(idx + 1, idx + 2);
-      if (firstChar.toLowerCase().equals(firstChar)) {
-        return name;
-      }
-    }
-    return name.substring(0, idx);
+    return names;
   }
 
   /* Get all loggers and sort them in a (loggerName, levelName) map */
@@ -64,15 +63,15 @@ public class Log4jLoggersServlet extends HttpServlet {
   private Map<String, String> getLoggersInfo() {
     TreeMap<String, String> map = new TreeMap<String, String>();
     Enumeration<Logger> loggers = LogManager.getCurrentLoggers();
+    List<String> names = new ArrayList<String>();
     while (loggers.hasMoreElements()) {
       Logger logger = loggers.nextElement();
       if (!logger.getName().equals("ROOT") && !logger.getName().isEmpty()) {
-        String name = getLogicalParent(logger.getName());
-        if (name != null) {
-          map.put(name,
-              LogManager.getLogger(name).getEffectiveLevel().toString());
-        }
+        names.addAll(getNamesAncestry(logger.getName()));
       }
+    }
+    for (String name : names) {
+        map.put(name, LogManager.getLogger(name).getEffectiveLevel().toString());
     }
     return map;
   }
