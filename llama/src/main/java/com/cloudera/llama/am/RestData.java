@@ -99,7 +99,7 @@ public class RestData implements LlamaAMObserver,
   static final String QUEUE = "queue";
   static final String NODE = "node";
 
-  private final ObjectWriter jsonWriter;
+  private final ObjectMapper jsonMapper;
   private final ReadWriteLock lock;
   private final Map<UUID, PlacedReservation> reservationsMap;
   private final Map<UUID, List<PlacedReservation>> handleReservationsMap;
@@ -109,7 +109,7 @@ public class RestData implements LlamaAMObserver,
   private final Set<UUID> hasBeenBackedOff;
 
 
-  private ObjectWriter createJsonWriter() {
+  private ObjectMapper createJsonMapper() {
     ObjectMapper mapper = new ObjectMapper();
     SimpleModule module = new SimpleModule("LlamaModule",
         new Version(1, 0, 0, null));
@@ -118,11 +118,11 @@ public class RestData implements LlamaAMObserver,
     module.addSerializer(new PlacedReservationSerializer());
     module.addSerializer(new PlacedResourceSerializer());
     mapper.registerModule(module);
-    return mapper.defaultPrettyPrintingWriter();
+    return mapper;
   }
 
   public RestData() {
-    jsonWriter = createJsonWriter();
+    jsonMapper = createJsonMapper();
     lock = new ReentrantReadWriteLock();
     reservationsMap = new LinkedHashMap<UUID, PlacedReservation>();
     handleReservationsMap = new LinkedHashMap<UUID, List<PlacedReservation>>();
@@ -133,12 +133,33 @@ public class RestData implements LlamaAMObserver,
   }
 
   public void onRegister(ClientInfo clientInfo) {
-    clientInfoMap.put(clientInfo.getHandle(), clientInfo);
+    lock.writeLock().lock();
+    try {
+      clientInfoMap.put(clientInfo.getHandle(), clientInfo);
+    } finally {
+      lock.writeLock().unlock();
+    }
   }
 
   public void onUnregister(ClientInfo clientInfo) {
-    clientInfoMap.remove(clientInfo.getHandle());
-
+    lock.writeLock().lock();
+    try {
+      if (clientInfoMap.remove(clientInfo.getHandle()) != null) {
+        List<PlacedReservation> list =
+            new ArrayList<PlacedReservation>(reservationsMap.values());
+        int count = 0;
+        for (PlacedReservation reservation : list) {
+          if (reservation.getHandle().equals(clientInfo.getHandle())) {
+            delete(reservation);
+            count++;
+          }
+        }
+        LOG.debug("onUnregister({}), dropped '{}' reservations",
+            clientInfo.getHandle(), count);
+      }
+    } finally {
+      lock.writeLock().unlock();
+    }
   }
 
   @Override
@@ -448,7 +469,7 @@ public class RestData implements LlamaAMObserver,
       Map map = new LinkedHashMap();
       map.put(REST_VERSION_KEY, REST_VERSION_VALUE);
       map.put(payloadType, obj);
-      jsonWriter.writeValue(out, map);
+      jsonMapper.defaultPrettyPrintingWriter().writeValue(out, map);
     } else {
       throw new NotFoundException();
     }
