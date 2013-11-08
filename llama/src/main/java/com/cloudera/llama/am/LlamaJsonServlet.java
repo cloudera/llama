@@ -20,6 +20,8 @@ package com.cloudera.llama.am;
 import com.cloudera.llama.util.UUID;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.ObjectWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -30,6 +32,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class LlamaJsonServlet extends HttpServlet {
+  private static final Logger LOG =
+      LoggerFactory.getLogger(LlamaJsonServlet.class);
 
   public static final String REST_DATA = "llama.rest.data";
 
@@ -114,10 +118,20 @@ public class LlamaJsonServlet extends HttpServlet {
       resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
       resp.getWriter().println("NOT FOUND");
     } catch (Throwable ex) {
+      LOG.warn("Error while processing '{}', {}", getFullUrl(req),
+          ex.toString(), ex);
       resp.setContentType(TEXT_PLAIN_MIME);
       resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
       resp.getWriter().println("BAD REQUEST");
     }
   }
 
+  private StringBuffer getFullUrl(HttpServletRequest req) {
+    StringBuffer sb = req.getRequestURL();
+    String queryString = req.getQueryString();
+    if (queryString != null) {
+      sb.append("?").append(queryString);
+    }
+    return sb;
+  }
 }
