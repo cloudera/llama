@@ -30,6 +30,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.Writer;
+import java.util.concurrent.CountDownLatch;
+
 import com.cloudera.llama.util.UUID;
 
 import javax.security.auth.Subject;
@@ -114,7 +116,8 @@ public class TestAbstractMain {
     }
 
     @Override
-    protected void startTransport() {
+    protected void startTransport(CountDownLatch latch) {
+      latch.countDown();
     }
 
     @Override
@@ -145,7 +148,7 @@ public class TestAbstractMain {
     String testDir = createTestDir();
     createMainConf(testDir, new Configuration(false));
     final AbstractMain main = new MyMain();
-    main.releaseRunningLatch();
+    main.shutdown();
     Assert.assertEquals(0, main.run(null));
     main.waitStopLach();
   }
@@ -161,7 +164,7 @@ public class TestAbstractMain {
     System.setProperty(AbstractMain.CONF_DIR_SYS_PROP, testDir);
     System.setProperty(AbstractMain.LOG_DIR_SYS_PROP, testDir);
     final AbstractMain main = new MyMain();
-    main.releaseRunningLatch();
+    main.shutdown();
     Assert.assertEquals(0, main.run(null));
     main.waitStopLach();
   }

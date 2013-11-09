@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.security.auth.Subject;
+import java.util.concurrent.CountDownLatch;
 
 public abstract class AbstractServer implements Configurable {
   private final Logger log;
@@ -81,11 +82,13 @@ public abstract class AbstractServer implements Configurable {
     startService();
     runLevel = 3;
     getLog().trace("Starting transport");
+
+    final CountDownLatch transportLatch = new CountDownLatch(1);
     Thread transportThread = new Thread("llama-transport-server") {
       @Override
       public void run() {
         try {
-          startTransport();
+          startTransport(transportLatch);
         } catch (Exception ex) {
           transportException = ex;
           getLog().error(ex.toString(), ex);
@@ -93,11 +96,18 @@ public abstract class AbstractServer implements Configurable {
       }
     };
     transportThread.start();
+    try {
+      transportLatch.await();
+    } catch (InterruptedException ex) {
+      throw new RuntimeException(ex);
+    }
+
+    final CountDownLatch adminLatch = new CountDownLatch(1);
     Thread adminTransportThread = new Thread("llama-admin-transport-server") {
       @Override
       public void run() {
         try {
-          startAdminTransport();
+          startAdminTransport(adminLatch);
         } catch (Exception ex) {
           transportException = ex;
           getLog().error(ex.toString(), ex);
@@ -105,6 +115,12 @@ public abstract class AbstractServer implements Configurable {
       }
     };
     adminTransportThread.start();
+    try {
+      adminLatch.await();
+    } catch (InterruptedException ex) {
+      throw new RuntimeException(ex);
+    }
+
     while (getAddressPort() == 0) {
       if (transportException != null) {
         stop();
@@ -198,9 +214,10 @@ public abstract class AbstractServer implements Configurable {
   protected abstract void stopService();
 
   //blocking
-  protected abstract void startTransport();
+  protected abstract void startTransport(CountDownLatch latch);
 
-  protected void startAdminTransport() {
+  protected void startAdminTransport(CountDownLatch latch) {
+    latch.countDown();
   }
 
   protected abstract void stopTransport();

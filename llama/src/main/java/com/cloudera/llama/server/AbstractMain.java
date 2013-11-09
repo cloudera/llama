@@ -85,8 +85,7 @@ public abstract class AbstractMain {
   private CountDownLatch runningLatch = new CountDownLatch(1);
   private CountDownLatch stopLatch = new CountDownLatch(1);
 
-  //Used for testing only
-  void releaseRunningLatch() {
+  public void shutdown() {
     runningLatch.countDown();
   }
 

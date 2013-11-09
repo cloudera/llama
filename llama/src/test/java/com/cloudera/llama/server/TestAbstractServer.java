@@ -24,6 +24,7 @@ import org.junit.Test;
 import javax.security.auth.Subject;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 
 public class TestAbstractServer {
   private static final Set<String> STEPS = new HashSet<String>();
@@ -94,7 +95,8 @@ public class TestAbstractServer {
     }
 
     @Override
-    protected void startTransport() {
+    protected void startTransport(CountDownLatch latch) {
+      latch.countDown();
       trace("start.transport");
       failIf("start.transport");
       started = true;
