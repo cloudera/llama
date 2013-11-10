@@ -690,32 +690,32 @@ TODO: need license header
         <version>${cdh.hive.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.hcatalog</groupId>
+        <groupId>org.apache.hive.hcatalog</groupId>
         <artifactId>hcatalog-core</artifactId>
         <version>${cdh.hive.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.hcatalog</groupId>
+        <groupId>org.apache.hive.hcatalog</groupId>
         <artifactId>hcatalog-pig-adapter</artifactId>
         <version>${cdh.hive.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.hcatalog</groupId>
+        <groupId>org.apache.hive.hcatalog</groupId>
         <artifactId>hcatalog-server-extensions</artifactId>
         <version>${cdh.hive.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.hcatalog</groupId>
+        <groupId>org.apache.hive.hcatalog</groupId>
         <artifactId>webhcat</artifactId>
         <version>${cdh.hive.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.hcatalog</groupId>
+        <groupId>org.apache.hive.hcatalog</groupId>
         <artifactId>webhcat-java-client</artifactId>
         <version>${cdh.hive.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.hcatalog</groupId>
+        <groupId>org.apache.hive.hcatalog</groupId>
         <artifactId>hbase-storage-handler</artifactId>
         <version>${cdh.hive.version}</version>
       </dependency>
