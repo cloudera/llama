@@ -32,6 +32,7 @@ import org.junit.Test;
 
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -222,7 +223,7 @@ public class TestRestData {
     assertReservationHandle(restData, id1, handle1, false);
 
     // pending
-    restData.observe(pr1);
+    restData.observe(Arrays.asList(pr1));
     assertReservationStatus(restData, id1, PlacedReservation.Status.PENDING,
         true);
     assertReservationBackedOffFlag(restData, id1, false);
@@ -235,7 +236,7 @@ public class TestRestData {
 
     // backed off
     pr1.setStatus(PlacedReservation.Status.BACKED_OFF);
-    restData.observe(pr1);
+    restData.observe(Arrays.asList(pr1));
     assertReservationStatus(restData, id1, PlacedReservation.Status.BACKED_OFF,
         true);
     assertReservationBackedOffFlag(restData, id1, true);
@@ -248,7 +249,7 @@ public class TestRestData {
 
     // pending
     pr1.setStatus(PlacedReservation.Status.PENDING);
-    restData.observe(pr1);
+    restData.observe(Arrays.asList(pr1));
     assertReservationStatus(restData, id1, PlacedReservation.Status.PENDING,
         true);
     assertReservationBackedOffFlag(restData, id1, true);
@@ -263,7 +264,7 @@ public class TestRestData {
     pr1.setStatus(PlacedReservation.Status.PARTIAL);
     ((PlacedResourceImpl) pr1.getResources().get(0)).setAllocationInfo(2, 2024,
         "h1", "c1");
-    restData.observe(pr1);
+    restData.observe(Arrays.asList(pr1));
     assertReservationStatus(restData, id1, PlacedReservation.Status.PARTIAL,
         true);
     assertReservationBackedOffFlag(restData, id1, true);
@@ -280,7 +281,7 @@ public class TestRestData {
         "h1", "c1");
     ((PlacedResourceImpl) pr1.getResources().get(1)).setAllocationInfo(3, 3036,
         "h3", "c2"); 
-    restData.observe(pr1);
+    restData.observe(Arrays.asList(pr1));
     assertReservationStatus(restData, id1, PlacedReservation.Status.ALLOCATED,
         true);
     assertReservationBackedOffFlag(restData, id1, true);
@@ -293,7 +294,7 @@ public class TestRestData {
 
     // ended
     pr1.setStatus(PlacedReservation.Status.ENDED);
-    restData.observe(pr1);
+    restData.observe(Arrays.asList(pr1));
     assertReservationStatus(restData, id1, null, false);
     assertReservationQueue(restData, id1, "q1", false);
     assertReservationHandle(restData, id1, handle1, false);
@@ -333,7 +334,7 @@ public class TestRestData {
     };
 
     restData.onRegister(clientInfo);
-    restData.observe(pr1);
+    restData.observe(Arrays.asList(pr1));
 
     StringWriter writer = new StringWriter();
     restData.writeAllAsJson(writer);
@@ -377,7 +378,7 @@ public class TestRestData {
     Assert.assertEquals(id1.toString(), ((List) map1.get("h2")).get(0));
 
     pr1.setStatus(PlacedReservation.Status.ENDED);
-    restData.observe(pr1);
+    restData.observe(Arrays.asList(pr1));
     restData.onUnregister(clientInfo);
   }
 
@@ -422,7 +423,7 @@ public class TestRestData {
     };
 
     restData.onRegister(clientInfo);
-    restData.observe(pr1);
+    restData.observe(Arrays.asList(pr1));
 
     writer = new StringWriter();
     restData.writeSummaryAsJson(writer);
@@ -452,7 +453,7 @@ public class TestRestData {
         ((List) map.get(RestData.NODES_SUMMARY_KEY)).get(1)).get("node"));
 
     pr1.setStatus(PlacedReservation.Status.ENDED);
-    restData.observe(pr1);
+    restData.observe(Arrays.asList(pr1));
     restData.onUnregister(clientInfo);
 
     writer = new StringWriter();

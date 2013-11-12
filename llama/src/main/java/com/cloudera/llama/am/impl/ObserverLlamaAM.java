@@ -24,15 +24,22 @@ import com.cloudera.llama.am.api.LlamaAMListener;
 import com.cloudera.llama.am.api.LlamaAMObserver;
 import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.Reservation;
+import com.cloudera.llama.server.MetricUtil;
+import com.cloudera.llama.util.Clock;
 import com.cloudera.llama.util.UUID;
+import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class ObserverLlamaAM extends LlamaAM implements LlamaAMListener,
     Runnable {
+  private final static String QUEUE_GAUGE = LlamaAM.METRIC_PREFIX +
+      ".observer.queue.size.gauge";
+
   private final LlamaAM llamaAM;
   private final BlockingQueue<PlacedReservation> changes;
   private final Thread processorThread;
@@ -52,6 +59,15 @@ public class ObserverLlamaAM extends LlamaAM implements LlamaAMListener,
   public void setMetricRegistry(MetricRegistry metricRegistry) {
     super.setMetricRegistry(metricRegistry);
     llamaAM.setMetricRegistry(metricRegistry);
+    if (metricRegistry != null) {
+      MetricUtil.registerGauge(metricRegistry, QUEUE_GAUGE,
+          new Gauge<Integer>() {
+            @Override
+            public Integer getValue() {
+              return changes.size();
+            }
+          });
+    }
   }
 
   @Override
@@ -135,8 +151,17 @@ public class ObserverLlamaAM extends LlamaAM implements LlamaAMListener,
   @Override
   public void run() {
       try {
-        while (true) {
-          observer.observe(changes.take());
+        List<PlacedReservation> list = new ArrayList<PlacedReservation>();
+        while (llamaAM.isRunning()) {
+          Clock.sleep(50);
+          if (changes.peek() != null) {
+            changes.drainTo(list, 500);
+            while (!list.isEmpty()) {
+              observer.observe(list);
+              list.clear();
+              changes.drainTo(list, 500);
+            }
+          }
         }
       } catch (InterruptedException ex) {
         //NOP

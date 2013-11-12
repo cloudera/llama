@@ -123,7 +123,7 @@ public class RestData implements LlamaAMObserver,
 
   public RestData() {
     jsonMapper = createJsonMapper();
-    lock = new ReentrantReadWriteLock();
+    lock = new ReentrantReadWriteLock(true);
     reservationsMap = new LinkedHashMap<UUID, PlacedReservation>();
     handleReservationsMap = new LinkedHashMap<UUID, List<PlacedReservation>>();
     queueReservationsMap = new TreeMap<String, List<PlacedReservation>>();
@@ -163,38 +163,49 @@ public class RestData implements LlamaAMObserver,
   }
 
   @Override
-  public void observe(PlacedReservation reservation) {
+  public void observe(List<? extends PlacedReservation> reservations) {
     lock.writeLock().lock();
-    LOG.debug("observe({})", reservation);
     try {
-      switch (reservation.getStatus()) {
-        case PENDING:
-          if (!reservationsMap.containsKey(reservation.getReservationId())) {
-            add(reservation);
-          } else {
-            update(reservation);
+      for (PlacedReservation reservation : reservations) {
+        LOG.debug("observe({})", reservation);
+        if (verifyHandle(reservation)) {
+          switch (reservation.getStatus()) {
+            case PENDING:
+              if (!reservationsMap.containsKey(reservation.getReservationId())) {
+                add(reservation);
+              } else {
+                update(reservation);
+              }
+              break;
+            case BACKED_OFF:
+              if (!reservationsMap.containsKey(reservation.getReservationId())) {
+                add(reservation);
+              } else {
+                update(reservation);
+              }
+              hasBeenBackedOff.add(reservation.getReservationId());
+              break;
+            case PARTIAL:
+            case ALLOCATED:
+              update(reservation);
+              break;
+            case ENDED:
+              delete(reservation);
+              hasBeenBackedOff.remove(reservation.getReservationId());
+              break;
           }
-          break;
-        case BACKED_OFF:
-          if (!reservationsMap.containsKey(reservation.getReservationId())) {
-            add(reservation);
-          } else {
-            update(reservation);
-          }
-          hasBeenBackedOff.add(reservation.getReservationId());
-          break;
-        case PARTIAL:
-        case ALLOCATED:
-          update(reservation);
-          break;
-        case ENDED:
-          delete(reservation);
-          hasBeenBackedOff.remove(reservation.getReservationId());
-          break;
+        } else {
+          LOG.debug("Handle not known anymore for reservation '{}'",
+              reservation);
+        }
       }
     } finally {
       lock.writeLock().unlock();
     }
+  }
+
+  private boolean verifyHandle(PlacedReservation reservation) {
+    return clientInfoMap.containsKey(reservation.getHandle());
   }
 
   private <K,V> void addToMapList(Map<K, List<V>> map, K key, V value) {

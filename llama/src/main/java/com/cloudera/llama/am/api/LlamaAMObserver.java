@@ -17,8 +17,10 @@
  */
 package com.cloudera.llama.am.api;
 
+import java.util.List;
+
 public interface LlamaAMObserver {
 
-  public void observe(PlacedReservation reservation);
+  public void observe(List<? extends PlacedReservation> reservations);
 
 }
