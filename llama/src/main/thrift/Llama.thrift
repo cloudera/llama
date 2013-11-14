@@ -34,13 +34,14 @@ struct TNetworkAddress {
 
 enum TStatusCode {
   OK,
-  RUNTIME_ERROR,
+  REQUEST_ERROR,
   INTERNAL_ERROR
 }
 
 struct TStatus {
   1: required TStatusCode status_code;
-  2: list<string> error_msgs;
+  2: i16 error_code;
+  3: list<string> error_msgs;
 }
 
 enum TLocationEnforcement {

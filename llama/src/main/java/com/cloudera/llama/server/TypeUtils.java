@@ -47,7 +47,8 @@ public class TypeUtils {
   }
 
   public static TStatus createRuntimeError(Throwable ex) {
-    TStatus error = new TStatus().setStatus_code(TStatusCode.RUNTIME_ERROR);
+    TStatus error = new TStatus().setStatus_code(TStatusCode.REQUEST_ERROR);
+    error.setError_code((short)1);
     error.setError_msgs(Arrays.asList(ExceptionUtils.getRootCause(ex,
         LlamaAMException.class).toString()));
     return error;

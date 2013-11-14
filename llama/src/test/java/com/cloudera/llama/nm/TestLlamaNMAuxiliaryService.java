@@ -140,7 +140,7 @@ public class TestLlamaNMAuxiliaryService {
           //invalid re-register different address
           tAddress.setPort(1);
           trRes = client.Register(trReq);
-          Assert.assertEquals(TStatusCode.RUNTIME_ERROR, trRes.getStatus().
+          Assert.assertEquals(TStatusCode.REQUEST_ERROR, trRes.getStatus().
               getStatus_code());
 
           TLlamaNMUnregisterRequest turReq = new TLlamaNMUnregisterRequest();

@@ -209,7 +209,7 @@ public class TestLlamaAMThriftServer {
           //invalid re-register different address
           tAddress.setPort(1);
           trRes = client.Register(trReq);
-          Assert.assertEquals(TStatusCode.RUNTIME_ERROR, trRes.getStatus().
+          Assert.assertEquals(TStatusCode.REQUEST_ERROR, trRes.getStatus().
               getStatus_code());
           return null;
         }
@@ -272,7 +272,7 @@ public class TestLlamaAMThriftServer {
           tgnReq.setVersion(TLlamaServiceVersion.V1);
           tgnReq.setAm_handle(trRes.getAm_handle());
           TLlamaAMGetNodesResponse tgnRes = client.GetNodes(tgnReq);
-          Assert.assertEquals(TStatusCode.RUNTIME_ERROR, tgnRes.getStatus().
+          Assert.assertEquals(TStatusCode.REQUEST_ERROR, tgnRes.getStatus().
               getStatus_code());
 
           //valid re-unRegister
@@ -436,7 +436,7 @@ public class TestLlamaAMThriftServer {
           tresReq.setResources(Arrays.asList(tResource));
           tresReq.setGang(true);
           tresRes = client.Reserve(tresReq);
-          Assert.assertEquals(TStatusCode.RUNTIME_ERROR, tresRes.getStatus()
+          Assert.assertEquals(TStatusCode.REQUEST_ERROR, tresRes.getStatus()
               .getStatus_code());
           Assert.assertTrue(tresRes.getStatus().getError_msgs().get(0).
               contains("IllegalArgumentException"));
@@ -603,7 +603,7 @@ public class TestLlamaAMThriftServer {
           trelReq.setAm_handle(trRes.getAm_handle());
           trelReq.setReservation_id(tresRes.getReservation_id());
           TLlamaAMReleaseResponse trelRes = client.Release(trelReq);
-          Assert.assertEquals(TStatusCode.RUNTIME_ERROR, trelRes.getStatus()
+          Assert.assertEquals(TStatusCode.REQUEST_ERROR, trelRes.getStatus()
               .getStatus_code());
           return null;
         }
