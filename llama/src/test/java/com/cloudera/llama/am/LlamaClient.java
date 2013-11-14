@@ -371,6 +371,7 @@ public class LlamaClient {
             TLlamaAMReservationRequest req = new TLlamaAMReservationRequest();
             req.setVersion(TLlamaServiceVersion.V1);
             req.setAm_handle(TypeUtils.toTUniqueId(handle));
+            req.setUser("dummyUser");
             req.setQueue(queue);
             req.setGang(gang);
             List<TResource> resources = new ArrayList<TResource>();

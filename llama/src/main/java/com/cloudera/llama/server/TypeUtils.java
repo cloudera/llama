@@ -109,6 +109,9 @@ public class TypeUtils {
   public static Reservation toReservation(TLlamaAMReservationRequest request,
       NodeMapper nodeMapper) {
     UUID handle = toUUID(request.getAm_handle());
+    if (!request.isSetQueue()) {
+      throw new RuntimeException("For now queue MUST be set");
+    }
     String queue = request.getQueue();
     boolean isGang = request.isGang();
     List<Resource> resources = toResourceList(request.getResources(),

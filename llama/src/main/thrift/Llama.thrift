@@ -103,9 +103,10 @@ struct TLlamaAMUnregisterResponse {
 struct TLlamaAMReservationRequest {
   1: required TLlamaServiceVersion version;
   2: required TUniqueId            am_handle;
-  3: required string               queue;
-  4: required list<TResource>      resources;
-  5: required bool                 gang;
+  3: required string               user;
+  4: optional string               queue;
+  5: required list<TResource>      resources;
+  6: required bool                 gang;
 }
 
 struct TLlamaAMReservationResponse {

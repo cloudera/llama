@@ -121,6 +121,7 @@ public class TestMiniLlama {
       TLlamaAMReservationRequest tresReq = new TLlamaAMReservationRequest();
       tresReq.setVersion(TLlamaServiceVersion.V1);
       tresReq.setAm_handle(trRes.getAm_handle());
+      tresReq.setUser("dummyuser");
       tresReq.setQueue("default");
       TResource tResource = new TResource();
       tResource.setClient_resource_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
