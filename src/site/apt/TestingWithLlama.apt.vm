@@ -115,7 +115,7 @@ public class TestUsingMiniLlama {
 
 ** Configure MiniLlama
 
-  MiniLlama uses the following 2 configuration files from Llama installation
+  MiniLlama uses the following 2 configuration files from the installation
   directory:
 
   * <<<conf/llama-site.xml>>>
@@ -124,40 +124,56 @@ public class TestUsingMiniLlama {
 
 ** Run MiniLlama
 
-  To run MiniLlama use the <<<minillama>>> script:
+  To run MiniLlama use the <<<minillama>>> script.
+
+  The <<<minillama>>> script supports the following commands and options:
 
 +---+
-$ bin/minillama --hadoop-conf=/Users/tucu/myhadoopconf --hadoop-nodes=3
+usage:
+
+      minillama help : display usage for all commands or specified command
+
+      minillama minicluster <OPTIONS> : start embedded mini HDFS/Yarn cluster
+
+                            -hdfsnoformat          don't format mini HDFS
+                            -hdfswriteconf <arg>   file to write mini HDFS configuration
+                            -nodes <arg>           number of nodes (default: 1)
+
+      minillama cluster : use external HDFS/Yarn cluster
 +---+
 
-  The 2 options shown are required.
+  If MiniLlama is started with the <<<minicluster>>> sub-command, MiniLlama will
+  bootstrap a HDFS/Yarn minicluster.
 
-  The <<<--hadoop-conf>>> option must point to a Hadoop configuration defining
-  the configuration for the HDFS minicluster and Yarn minicluster.
+  If MiniLlama is started with the <<<cluster>>> sub-command, it will use an
+  existing HDFS/Yarn pseudo cluster.
 
-  <<IMPORTANT:>> Hadoop core or hdfs configuration files must define the
-  <<<fs.defaultFS>>> property.
+*** When Running MiniLlama in <<<cluster>>> Mode
 
-  <<IMPORTANT:>> The yarn configuration must define the scheduler configuration
-  and it should not include Map-Reduce's <<<ShuffleHandler>>> auxiliary service
-  to avoid port conflicts.
+    * The pseudo cluster may have several  DataNodes and NodeManagers, but all
+    have to be running in the same host.
 
-  The <<<--hadoop-nodes>>> option indicates how many DataNodes and NodeManagers
-  the minicluster should have.
+    * All DataNodes and NodeManagers must be running at the time MiniLlama
+    starts.
 
-  Once HDFS, Yarn and Llama are running the logs will output the following
-  message:
+    * If the DataNodes or NodeManagers are restarted while MiniLlama is running
+    they should come up in the same port they were running before.
 
-+---+
-2013-09-02 09:14:47,227 INFO  [main] server.MiniLlama (MiniLlama.java:main(62)) - *********************************************************************************************************************
-2013-09-02 09:14:47,244 INFO  [main] server.MiniLlama (MiniLlama.java:main(64)) - Mini Llama running with HDFS/Yarn minicluster with 2 nodes, HDFS URI: hdfs://localhost:8020 Llama URI: 0.0.0.0:15000
-2013-09-02 09:14:47,244 INFO  [main] server.MiniLlama (MiniLlama.java:main(68)) - *********************************************************************************************************************
-+---+
+*** When Running MiniLlama in <<<minicluster>>> Mode
 
-  Additional options:
-  
-    * <<<-no-format>>>: It does not reformats MiniHDFS on startup.
-    * <<<-write-hdfs-config=>>><<FILE>>: Writes out MiniHDFS configuration to 
+    * Hadoop core or hdfs configuration files must define the <<<fs.defaultFS>>>
+    property.
+
+    * The Yarn configuration must define the scheduler configuration and it
+    should not include Map-Reduce's <<<ShuffleHandler>>> auxiliary service to
+    avoid port conflicts.
+
+    * The <<<-nodes>>> option indicates how many DataNodes and NodeManagers
+  the minicluster will have have.
+
+    * The <<<-hdfsnoformat>>> option it does not reformat MiniHDFS on startup.
+
+    * The <<<-hdfswriteconf FILE>>> option writes out MiniHDFS configuration to
     the specified <<FILE>>.
 
 * Using the LlamaClient Command-Line Tool
