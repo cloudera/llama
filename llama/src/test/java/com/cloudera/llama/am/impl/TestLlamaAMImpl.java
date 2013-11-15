@@ -70,21 +70,28 @@ public class TestLlamaAMImpl {
     }
 
     @Override
-    public PlacedReservation releaseReservation(UUID handle, UUID reservationId)
+    public PlacedReservation releaseReservation(UUID handle, UUID reservationId,
+        boolean doNotCache)
         throws LlamaException {
       return null;
     }
 
     @Override
-    public List<PlacedReservation> releaseReservationsForHandle(UUID handle)
+    public List<PlacedReservation> releaseReservationsForHandle(UUID handle,
+        boolean doNotCache)
         throws LlamaException {
       return null;
     }
 
     @Override
-    public List<PlacedReservation> releaseReservationsForQueue(String queue)
+    public List<PlacedReservation> releaseReservationsForQueue(String queue,
+        boolean doNotCache)
         throws LlamaException {
       return null;
+    }
+
+    @Override
+    public void emptyCacheForQueue(String queue) throws LlamaException {
     }
 
   }

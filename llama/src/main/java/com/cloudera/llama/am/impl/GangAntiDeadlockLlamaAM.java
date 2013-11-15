@@ -215,10 +215,11 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
   }
 
   @Override
-  public PlacedReservation releaseReservation(UUID handle, UUID reservationId)
-      throws LlamaException {
+  public PlacedReservation releaseReservation(UUID handle, UUID reservationId,
+      boolean doNotCache) throws LlamaException {
     PlacedReservation gPlacedReservation = gReleaseReservation(reservationId);
-    PlacedReservation placedReservation = am.releaseReservation(handle, reservationId);
+    PlacedReservation placedReservation = am.releaseReservation(handle,
+        reservationId, doNotCache);
     return (placedReservation != null) ? placedReservation : gPlacedReservation;
   }
 
@@ -232,10 +233,11 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
   }
 
   @Override
-  public List<PlacedReservation> releaseReservationsForHandle(UUID handle)
+  public List<PlacedReservation> releaseReservationsForHandle(UUID handle,
+      boolean doNotCache)
       throws LlamaException {
     List<PlacedReservation> reservations =
-        am.releaseReservationsForHandle(handle);
+        am.releaseReservationsForHandle(handle, doNotCache);
     reservations.addAll(gReleaseReservationsForHandle(handle));
     return new ArrayList<PlacedReservation>(
         new HashSet<PlacedReservation>(reservations));
@@ -262,12 +264,17 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
   }
 
   public List<PlacedReservation> releaseReservationsForQueue(
-      String queue) throws LlamaException {
+      String queue, boolean doNotCache) throws LlamaException {
     List<PlacedReservation> reservations =
-        am.releaseReservationsForQueue(queue);
+        am.releaseReservationsForQueue(queue, doNotCache);
     reservations.addAll(gReleaseReservationsForQueue(queue));
     return new ArrayList<PlacedReservation>(
         new HashSet<PlacedReservation>(reservations));
+  }
+
+  @Override
+  public void emptyCacheForQueue(String queue) throws LlamaException {
+    am.emptyCacheForQueue(queue);
   }
 
   private synchronized List<PlacedReservation> gReleaseReservationsForQueue(
@@ -398,7 +405,7 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
                 reservation.getReservationId(),
                 reservation.getResources().size());
             am.releaseReservation(reservation.getHandle(),
-                reservation.getReservationId());
+                reservation.getReservationId(), true);
             reservation.setStatus(PlacedReservation.Status.BACKED_OFF);
             backedOffReservations.add(
                 new BackedOffReservation(reservation, getBackOffDelay()));

@@ -126,7 +126,12 @@ public class TestMultiQueueLlamaAM {
     }
 
     @Override
-    public void release(Collection<RMResource> resources)
+    public void emptyCache() throws LlamaException {
+    }
+
+    @Override
+    public void release(Collection<RMResource> resources,
+        boolean doNotCache)
         throws LlamaException {
       methods.add("release");
       if (conf.getBoolean("release.fail", false)) {
@@ -161,8 +166,8 @@ public class TestMultiQueueLlamaAM {
       am.addListener(listener);
       am.removeListener(listener);
       am.getReservation(id);
-      am.releaseReservation(handle, id);
-      am.releaseReservationsForHandle(UUID.randomUUID());
+      am.releaseReservation(handle, id, false);
+      am.releaseReservationsForHandle(UUID.randomUUID(), false);
       am.stop();
 
       Assert.assertEquals(EXPECTED, MyRMConnector.methods);
@@ -182,7 +187,7 @@ public class TestMultiQueueLlamaAM {
       am.start();
       UUID cId = UUID.randomUUID();
       am.reserve(TestUtils.createReservation(cId, "q", 1, true));
-      am.releaseReservationsForHandle(cId);
+      am.releaseReservationsForHandle(cId, false);
     } finally {
       am.stop();
     }
@@ -201,7 +206,7 @@ public class TestMultiQueueLlamaAM {
       UUID cId = UUID.randomUUID();
       am.reserve(TestUtils.createReservation(cId, "q1", 1, true));
       am.reserve(TestUtils.createReservation(cId, "q2", 1, true));
-      am.releaseReservationsForHandle(cId);
+      am.releaseReservationsForHandle(cId, false);
     } finally {
       am.stop();
     }
@@ -246,7 +251,7 @@ public class TestMultiQueueLlamaAM {
         RMConnector.class);
     LlamaAM am = LlamaAM.create(conf);
     am.start();
-    am.releaseReservation(UUID.randomUUID(), UUID.randomUUID());
+    am.releaseReservation(UUID.randomUUID(), UUID.randomUUID(), false);
   }
 
   private boolean listenerCalled;
@@ -277,8 +282,8 @@ public class TestMultiQueueLlamaAM {
           .createStatusChangeEvent(rr.getPlacedResources().get(0).getResourceId(),
               PlacedResource.Status.REJECTED)));
       Assert.assertTrue(listenerCalled);
-      am.releaseReservation(handle, id);
-      am.releaseReservationsForHandle(UUID.randomUUID());
+      am.releaseReservation(handle, id, false);
+      am.releaseReservationsForHandle(UUID.randomUUID(), false);
       am.removeListener(listener);
       listenerCalled = false;
       Assert.assertFalse(listenerCalled);

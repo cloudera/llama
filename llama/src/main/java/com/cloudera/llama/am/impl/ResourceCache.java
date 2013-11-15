@@ -413,6 +413,12 @@ public class ResourceCache {
     return found;
   }
 
+  public synchronized List<RMResource> emptyCache() {
+    List<RMResource> list = new ArrayList<RMResource>(idToCacheEntryMap.values());
+    idToCacheEntryMap.clear();
+    return list;
+  }
+
   public synchronized int getSize() {
     return idToCacheEntryMap.size();
   }

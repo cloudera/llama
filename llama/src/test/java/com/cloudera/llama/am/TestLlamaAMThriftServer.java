@@ -35,6 +35,8 @@ import com.cloudera.llama.server.TestAbstractMain;
 import com.cloudera.llama.server.TypeUtils;
 import com.cloudera.llama.thrift.LlamaAMAdminService;
 import com.cloudera.llama.thrift.LlamaAMService;
+import com.cloudera.llama.thrift.TLlamaAMAdminEmptyCacheRequest;
+import com.cloudera.llama.thrift.TLlamaAMAdminEmptyCacheResponse;
 import com.cloudera.llama.thrift.TLlamaAMAdminReleaseRequest;
 import com.cloudera.llama.thrift.TLlamaAMAdminReleaseResponse;
 import com.cloudera.llama.thrift.TLlamaAMGetNodesRequest;
@@ -675,17 +677,18 @@ public class TestLlamaAMThriftServer {
                                                  ? null
                                                  : createAdminClient(server);
 
-              String llamaURI = null;
-              List<String> cliArgs = null;
-              if (useCLI) {
-                llamaURI = server.getAdminAddressHost() + ":" +
-                    server.getAdminAddressPort();
-                cliArgs = new ArrayList<String>(Arrays.asList("release", "-llama",
-                    llamaURI));
-                if (isSecure()) {
-                  cliArgs.add("-secure");
-                }
+              List<String> commonOptions = new ArrayList<String>();
+              commonOptions.add("-llama");
+              String llamaURI = server.getAdminAddressHost() + ":" +
+                  server.getAdminAddressPort();
+              commonOptions.add(llamaURI);
+              if (isSecure()) {
+                commonOptions.add("-secure");
               }
+              List<String> releaseCliArgs = new ArrayList<String>(commonOptions);
+              releaseCliArgs.add(0, "release");
+              List<String> emptyCacheCliArgs = new ArrayList<String>(commonOptions);
+              emptyCacheCliArgs.add(0, "emptycache");
 
               TLlamaAMRegisterRequest trReq = new TLlamaAMRegisterRequest();
               trReq.setVersion(TLlamaServiceVersion.V1);
@@ -731,6 +734,23 @@ public class TestLlamaAMThriftServer {
               callbackServer.notifications.clear();
 
               if (!useCLI) {
+                TLlamaAMAdminEmptyCacheRequest adminReq
+                    = new TLlamaAMAdminEmptyCacheRequest();
+                adminReq.setVersion(TLlamaServiceVersion.V1);
+                adminReq.setQueues(Arrays.asList("q2"));
+                TLlamaAMAdminEmptyCacheResponse adminRes
+                    = admin.EmptyCache(adminReq);
+                Assert.assertEquals(TStatusCode.OK,
+                    adminRes.getStatus().getStatus_code());
+              } else {
+                List<String> args = new ArrayList<String>(emptyCacheCliArgs);
+                args.add("-queues");
+                args.add("q2");
+                int exit = LlamaAdminClient.execute(args.toArray(new String[args.size()]));
+                Assert.assertEquals(0, exit);
+              }
+
+              if (!useCLI) {
                 TLlamaAMAdminReleaseRequest adminReq = new TLlamaAMAdminReleaseRequest();
                 adminReq.setVersion(TLlamaServiceVersion.V1);
                 adminReq.setReservations(Arrays.asList(tresRes1.getReservation_id()));
@@ -738,7 +758,7 @@ public class TestLlamaAMThriftServer {
                 Assert.assertEquals(TStatusCode.OK,
                     adminRes.getStatus().getStatus_code());
               } else {
-                List<String> args = new ArrayList<String>(cliArgs);
+                List<String> args = new ArrayList<String>(releaseCliArgs);
                 args.add("-reservations");
                 args.add(TypeUtils.toUUID(tresRes1.getReservation_id()).toString());
                 int exit = LlamaAdminClient.execute(args.toArray(new String[args.size()]));
@@ -760,7 +780,7 @@ public class TestLlamaAMThriftServer {
                 Assert.assertEquals(TStatusCode.OK,
                     adminRes.getStatus().getStatus_code());
               } else {
-                List<String> args = new ArrayList<String>(cliArgs);
+                List<String> args = new ArrayList<String>(releaseCliArgs);
                 args.add("-queues");
                 args.add("q2");
                 int exit = LlamaAdminClient.execute(args.toArray(new String[args.size()]));
@@ -782,7 +802,7 @@ public class TestLlamaAMThriftServer {
                 Assert.assertEquals(TStatusCode.OK,
                     adminRes.getStatus().getStatus_code());
               } else {
-                List<String> args = new ArrayList<String>(cliArgs);
+                List<String> args = new ArrayList<String>(releaseCliArgs);
                 args.add("-handles");
                 args.add(TypeUtils.toUUID(trRes.getAm_handle()).toString());
                 int exit = LlamaAdminClient.execute(args.toArray(new String[args.size()]));

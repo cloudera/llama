@@ -234,15 +234,26 @@ $
 +---+
 usage:
 
+
       llamaadmin help : display usage for all commands or specified command
 
       llamaadmin release <OPTIONS> : release queues, handles or reservations
 
-                         -llama <arg>          <HOST>:<PORT> of llama
-                         -secure               uses kerberos
+                         -donotcache           do not cache resources of released resources
                          -handles <arg>        client handles (comma separated)
+                         -llama <arg>          <HOST>:<PORT> of llama
                          -queues <arg>         queues (comma separated)
                          -reservations <arg>   reservations (comma separated)
+                         -secure               uses kerberos
+
+      llamaadmin errorcodes : list error codes
+
+      llamaadmin emptycache <OPTIONS> : empty cached resources not in use
+
+                            -allqueues      empty cache for all queues
+                            -llama <arg>    <HOST>:<PORT> of llama
+                            -queues <arg>   queues (comma separated)
+                            -secure         uses kerberos
 +---+
 
   If the <<<-llama>>> or <<<-secure>>> options are not specified, they are

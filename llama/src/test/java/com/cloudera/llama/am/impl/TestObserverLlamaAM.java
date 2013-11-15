@@ -129,14 +129,16 @@ public class TestObserverLlamaAM {
     }
 
     @Override
-    public PlacedReservation releaseReservation(UUID handle, UUID reservationId)
+    public PlacedReservation releaseReservation(UUID handle, UUID reservationId,
+        boolean doNotCache)
         throws LlamaException {
       invoked.add("releaseReservation");
       return reservations.remove(reservationId);
     }
 
     @Override
-    public List<PlacedReservation> releaseReservationsForHandle(UUID handle)
+    public List<PlacedReservation> releaseReservationsForHandle(UUID handle,
+        boolean doNotCache)
         throws LlamaException {
       invoked.add("releaseReservationsForClientId");
       return new ArrayList<PlacedReservation>(reservations.values());
@@ -155,12 +157,17 @@ public class TestObserverLlamaAM {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public List<PlacedReservation> releaseReservationsForQueue(String queue)
+    public List<PlacedReservation> releaseReservationsForQueue(String queue,
+        boolean doNotCache)
         throws LlamaException {
       invoked.add("releaseReservationsForQueue");
       return Collections.EMPTY_LIST;
     }
+
+    @Override
+    public void emptyCacheForQueue(String queue) throws LlamaException {
+    }
+
   }
 
   public class ObserverListener implements LlamaAMListener {
@@ -193,10 +200,10 @@ public class TestObserverLlamaAM {
     Assert.assertFalse(am.reservations.isEmpty());
     Assert.assertTrue(am.reservations.containsKey(id));
     oAm.getReservation(id);
-    oAm.releaseReservation(reservation.getHandle(), id);
+    oAm.releaseReservation(reservation.getHandle(), id, false);
     Assert.assertFalse(am.reservations.containsKey(id));
-    oAm.releaseReservationsForHandle(UUID.randomUUID());
-    oAm.releaseReservationsForQueue("q");
+    oAm.releaseReservationsForHandle(UUID.randomUUID(), false);
+    oAm.releaseReservationsForQueue("q", false);
     oAm.stop();
     Assert.assertFalse(oAm.isRunning());
     Assert.assertEquals(EXPECTED, am.invoked);
@@ -259,7 +266,7 @@ public class TestObserverLlamaAM {
         return getAllReservations(observer.events).size() == 3;
       }
     }, 100);
-    llama.releaseReservation(handle, pr1.getReservationId());
+    llama.releaseReservation(handle, pr1.getReservationId(), false);
     clock.increment(51);
     waitFor(new Predicate() {
       @Override
@@ -321,7 +328,7 @@ public class TestObserverLlamaAM {
         return getAllReservations(observer.events).size() == 2;
       }
     }, 100);
-    llama.releaseReservation(handle, pr1.getReservationId());
+    llama.releaseReservation(handle, pr1.getReservationId(), false);
     clock.increment(51);
     waitFor(new Predicate() {
       @Override
@@ -358,7 +365,7 @@ public class TestObserverLlamaAM {
         return getAllReservations(observer.events).size() == 2;
       }
     }, 100);
-    llama.releaseReservation(handle, pr1.getReservationId());
+    llama.releaseReservation(handle, pr1.getReservationId(), false);
     clock.increment(51);
     waitFor(new Predicate() {
       @Override
@@ -395,7 +402,7 @@ public class TestObserverLlamaAM {
         return getAllReservations(observer.events).size() == 3;
       }
     }, 100);
-    llama.releaseReservationsForHandle(handle);
+    llama.releaseReservationsForHandle(handle, false);
     clock.increment(51);
     waitFor(new Predicate() {
       @Override

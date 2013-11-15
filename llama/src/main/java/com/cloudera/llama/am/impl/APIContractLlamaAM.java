@@ -97,6 +97,14 @@ public class APIContractLlamaAM extends LlamaAM {
   }
 
   @Override
+  public void emptyCacheForQueue(String queue) throws LlamaException {
+    checkIsRunning();
+    ParamChecker.notNull(queue, "queue");
+    llamaAM.emptyCacheForQueue(queue);
+    getLog().trace("emptyCacheForQueue({})", queue);
+  }
+
+  @Override
   public void addListener(LlamaAMListener listener) {
     if (stopped) {
       throw new IllegalStateException("LlamaAM stopped");
@@ -138,32 +146,37 @@ public class APIContractLlamaAM extends LlamaAM {
   }
 
   @Override
-  public PlacedReservation releaseReservation(UUID handle, UUID reservationId)
+  public PlacedReservation releaseReservation(UUID handle, UUID reservationId,
+      boolean doNotCache)
       throws LlamaException {
     checkIsRunning();
     ParamChecker.notNull(reservationId, "reservationId");
     ParamChecker.notNull(handle, "handle");
-    PlacedReservation pr = llamaAM.releaseReservation(handle, reservationId);
-    getLog().trace("releaseReservation({})", reservationId);
+    PlacedReservation pr = llamaAM.releaseReservation(handle, reservationId,
+        doNotCache);
+    getLog().trace("releaseReservation({}, {})", reservationId, doNotCache);
     return pr;
   }
 
   @Override
-  public List<PlacedReservation> releaseReservationsForHandle(UUID handle)
+  public List<PlacedReservation> releaseReservationsForHandle(UUID handle,
+      boolean doNotCache)
       throws LlamaException {
     checkIsRunning();
     ParamChecker.notNull(handle, "handle");
-    List<PlacedReservation> ids = llamaAM.releaseReservationsForHandle(handle);
+    List<PlacedReservation> ids = llamaAM.releaseReservationsForHandle(handle,
+        doNotCache);
     getLog().trace("releaseReservationsForHandle({})", handle);
     return ids;
   }
 
   @Override
   public List<PlacedReservation> releaseReservationsForQueue(
-      String queue) throws LlamaException {
+      String queue, boolean doNotCache) throws LlamaException {
     checkIsRunning();
     ParamChecker.notNull(queue, "queue");
-    List<PlacedReservation> ids = llamaAM.releaseReservationsForQueue(queue);
+    List<PlacedReservation> ids = llamaAM.releaseReservationsForQueue(queue,
+        doNotCache);
     getLog().trace("releaseReservationsForQueue({})", queue);
     return ids;
   }

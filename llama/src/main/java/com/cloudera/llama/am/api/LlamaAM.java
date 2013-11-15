@@ -130,15 +130,19 @@ public abstract class LlamaAM {
   public static final UUID ADMIN_HANDLE = UUID.randomUUID();
 
   public abstract PlacedReservation releaseReservation(UUID handle,
-      UUID reservationId)
+      UUID reservationId, boolean doNotCache)
       throws LlamaException;
 
   public abstract List<PlacedReservation> releaseReservationsForHandle(
-      UUID handle)
+      UUID handle, boolean doNotCache)
       throws LlamaException;
 
   public abstract List<PlacedReservation> releaseReservationsForQueue(
-      String queue) throws LlamaException;
+      String queue, boolean doNotCache) throws LlamaException;
+
+  public static final String ALL_QUEUES = "ALL QUEUES";
+
+  public abstract void emptyCacheForQueue(String queue) throws LlamaException;
 
   public abstract void addListener(LlamaAMListener listener);
 

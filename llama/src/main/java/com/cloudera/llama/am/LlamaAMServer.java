@@ -189,7 +189,7 @@ public class LlamaAMServer extends
   @Override
   public void onUnregister(ClientInfo clientInfo) {
     try {
-      llamaAm.releaseReservationsForHandle(clientInfo.getHandle());
+      llamaAm.releaseReservationsForHandle(clientInfo.getHandle(), false);
     } catch (Throwable ex) {
       getLog().warn("Error releasing reservations for handle '{}', {}",
           clientInfo.getHandle(), ex.toString(), ex);

@@ -40,8 +40,11 @@ public interface RMConnector {
 
   public void reserve(Collection<RMResource> resources) throws LlamaException;
 
-  public void release(Collection<RMResource> resources) throws LlamaException;
+  public void release(Collection<RMResource> resources, boolean doNotCache)
+      throws LlamaException;
 
   public boolean reassignResource(Object rmResourceId, UUID resourceId);
+
+  public void emptyCache() throws LlamaException;
 
 }

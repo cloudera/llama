@@ -557,8 +557,8 @@ public class YarnRMConnector implements RMConnector, Configurable,
   }
 
   @Override
-  public void release(final Collection<RMResource> resources)
-      throws LlamaException {
+  public void release(final Collection<RMResource> resources,
+      boolean doNotCache) throws LlamaException {
     try {
       ugi.doAs(new PrivilegedExceptionAction<Void>() {
         @Override
@@ -576,6 +576,9 @@ public class YarnRMConnector implements RMConnector, Configurable,
   public boolean reassignResource(Object rmResourceId, UUID resourceId) {
     return containerToResourceMap.replace((ContainerId)rmResourceId,
         resourceId) != null;
+  }
+
+  public void emptyCache() throws LlamaException {
   }
 
   ConcurrentHashMap<ContainerId, UUID> containerToResourceMap =

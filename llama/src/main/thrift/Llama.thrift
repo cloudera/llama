@@ -153,12 +153,23 @@ service LlamaAMService {
 
 struct TLlamaAMAdminReleaseRequest {
   1: required TLlamaServiceVersion version;
-  2: optional list<string>         queues;
-  3: optional list<TUniqueId>      handles;
-  4: optional list<TUniqueId>      reservations;
+  2: optional bool                 do_not_cache = false;
+  3: optional list<string>         queues;
+  4: optional list<TUniqueId>      handles;
+  5: optional list<TUniqueId>      reservations;
 }
 
 struct TLlamaAMAdminReleaseResponse {
+  1: required TStatus status;
+}
+
+struct TLlamaAMAdminEmptyCacheRequest {
+  1: required TLlamaServiceVersion version;
+  2: optional bool                 allQueues = false;
+  3: optional list<string>         queues;
+}
+
+struct TLlamaAMAdminEmptyCacheResponse {
   1: required TStatus status;
 }
 
@@ -166,6 +177,9 @@ service LlamaAMAdminService {
 
   TLlamaAMAdminReleaseResponse Release
   (1: TLlamaAMAdminReleaseRequest request);
+
+  TLlamaAMAdminEmptyCacheResponse EmptyCache
+  (1: TLlamaAMAdminEmptyCacheRequest request);
 
 }
 

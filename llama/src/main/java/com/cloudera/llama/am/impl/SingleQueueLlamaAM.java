@@ -241,7 +241,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
   @Override
   @SuppressWarnings("unchecked")
   public PlacedReservation releaseReservation(UUID handle,
-      final UUID reservationId)
+      final UUID reservationId, boolean doNotCache)
       throws LlamaException {
     PlacedReservationImpl reservation;
     synchronized (this) {
@@ -256,8 +256,8 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
       }
     }
     if (reservation != null) {
-      rmConnector.release((List<RMResource>) (List) reservation
-          .getResources());
+      rmConnector.release((List<RMResource>) (List) reservation.getResources(),
+          doNotCache);
     } else {
       getLog().warn("Unknown reservationId '{}'", reservationId);
     }
@@ -266,7 +266,8 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
 
   @Override
   @SuppressWarnings("unchecked")
-  public List<PlacedReservation> releaseReservationsForHandle(UUID handle)
+  public List<PlacedReservation> releaseReservationsForHandle(UUID handle,
+      boolean doNotCache)
       throws LlamaException {
     List<PlacedReservation> reservations = new ArrayList<PlacedReservation>();
     synchronized (this) {
@@ -285,27 +286,33 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
     List<PlacedReservation> ids =
         new ArrayList<PlacedReservation>(reservations.size());
     for (PlacedReservation reservation : reservations) {
-      rmConnector.release((List<RMResource>) (List) reservation
-          .getResources());
+      rmConnector.release((List<RMResource>) (List) reservation.getResources(),
+          doNotCache);
       ids.add(reservation);
     }
     return ids;
   }
 
   @Override
-  public List<PlacedReservation> releaseReservationsForQueue(String queue)
+  public List<PlacedReservation> releaseReservationsForQueue(String queue,
+      boolean doNotCache)
       throws LlamaException {
     List<PlacedReservation> list;
     synchronized (this) {
       list = new ArrayList<PlacedReservation>(reservationsMap.values());
       for (PlacedReservation res : list) {
-        releaseReservation(res.getHandle(), res.getReservationId());
+        releaseReservation(res.getHandle(), res.getReservationId(), doNotCache);
         getLog().debug(
             "Releasing all reservations for queue '{}', reservationId '{}'",
             queue, res.getReservationId());
       }
     }
     return list;
+  }
+
+  @Override
+  public void emptyCacheForQueue(String queue) throws LlamaException {
+    rmConnector.emptyCache();
   }
 
   // PRIVATE METHODS
@@ -495,7 +502,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
     }
     if (!toRelease.isEmpty()) {
       try {
-        rmConnector.release((List<RMResource>) (List) toRelease);
+        rmConnector.release((List<RMResource>) (List) toRelease, false);
       } catch (LlamaException ex) {
         getLog().warn("release() error: {}", ex.toString(), ex);
       }

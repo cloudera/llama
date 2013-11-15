@@ -81,9 +81,10 @@ public class ObserverLlamaAM extends LlamaAMImpl implements LlamaAMListener {
   }
 
   @Override
-  public PlacedReservation releaseReservation(UUID handle, UUID reservationId)
-      throws LlamaException {
-    PlacedReservation pr = llamaAM.releaseReservation(handle, reservationId);
+  public PlacedReservation releaseReservation(UUID handle, UUID reservationId,
+      boolean doNotCache) throws LlamaException {
+    PlacedReservation pr = llamaAM.releaseReservation(handle, reservationId,
+        doNotCache);
     if (pr != null) {
       LlamaAMEventImpl event = new LlamaAMEventImpl(!handle.equals(ADMIN_HANDLE));
       event.addReservation(pr);
@@ -93,9 +94,10 @@ public class ObserverLlamaAM extends LlamaAMImpl implements LlamaAMListener {
   }
 
   @Override
-  public List<PlacedReservation> releaseReservationsForHandle(UUID handle)
-      throws LlamaException {
-    List<PlacedReservation> prs = llamaAM.releaseReservationsForHandle(handle);
+  public List<PlacedReservation> releaseReservationsForHandle(UUID handle,
+      boolean doNotCache) throws LlamaException {
+    List<PlacedReservation> prs = llamaAM.releaseReservationsForHandle(handle,
+        doNotCache);
     LlamaAMEventImpl event = new LlamaAMEventImpl(false);
     for (PlacedReservation pr : prs) {
       event.addReservation(pr);
@@ -105,15 +107,22 @@ public class ObserverLlamaAM extends LlamaAMImpl implements LlamaAMListener {
   }
 
   @Override
-  public List<PlacedReservation> releaseReservationsForQueue(String queue)
+  public List<PlacedReservation> releaseReservationsForQueue(String queue,
+      boolean doNotCache)
       throws LlamaException {
-    List<PlacedReservation> prs = llamaAM.releaseReservationsForQueue(queue);
+    List<PlacedReservation> prs = llamaAM.releaseReservationsForQueue(queue,
+        doNotCache);
     LlamaAMEventImpl event = new LlamaAMEventImpl(false);
     for (PlacedReservation pr : prs) {
       event.addReservation(pr);
     }
     dispatch(event);
     return prs;
+  }
+
+  @Override
+  public void emptyCacheForQueue(String queue) throws LlamaException {
+    llamaAM.emptyCacheForQueue(queue);
   }
 
   @Override

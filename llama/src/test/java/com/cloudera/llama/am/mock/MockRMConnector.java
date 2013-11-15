@@ -190,8 +190,12 @@ public class MockRMConnector
   }
 
   @Override
-  public void release(Collection<RMResource> resources)
+  public void release(Collection<RMResource> resources, boolean doNotCache)
       throws LlamaException {
+  }
+
+  @Override
+  public void emptyCache() {
   }
 
   @Override

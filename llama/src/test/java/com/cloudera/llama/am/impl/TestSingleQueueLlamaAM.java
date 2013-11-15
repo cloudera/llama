@@ -48,6 +48,7 @@ public class TestSingleQueueLlamaAM {
     public boolean stop = false;
     public boolean reserve = false;
     public boolean release = false;
+    public boolean doNotCache = false;
     public RMListener callback;
 
     protected MyRMConnector() {
@@ -88,9 +89,13 @@ public class TestSingleQueueLlamaAM {
     }
 
     @Override
-    public void release(Collection<RMResource> resources)
+    public void release(Collection<RMResource> resources, boolean doNotCache)
         throws LlamaException {
       release = true;
+      this.doNotCache = doNotCache;
+    }
+
+    public void emptyCache() throws LlamaException {
     }
 
     @Override
@@ -231,9 +236,10 @@ public class TestSingleQueueLlamaAM {
     try {
       llama.start();
       UUID reservationId = llama.reserve(RESERVATION1_NONGANG).getReservationId();
-      Assert.assertNotNull(llama.releaseReservation(RESERVATION1_NONGANG.getHandle(), reservationId));
-      Assert.assertNull(llama.releaseReservation(RESERVATION1_NONGANG.getHandle(), reservationId));
+      Assert.assertNotNull(llama.releaseReservation(
+          RESERVATION1_NONGANG.getHandle(), reservationId, true));
       Assert.assertTrue(((MyRMConnector) llama.getRMConnector()).release);
+      Assert.assertTrue(((MyRMConnector) llama.getRMConnector()).doNotCache);
       Assert.assertNull(llama._getReservation(reservationId));
     } finally {
       llama.stop();
@@ -246,7 +252,7 @@ public class TestSingleQueueLlamaAM {
     try {
       llama.start();
       UUID reservationId = llama.reserve(RESERVATION1_NONGANG).getReservationId();
-      llama.releaseReservation(UUID.randomUUID(), reservationId);
+      llama.releaseReservation(UUID.randomUUID(), reservationId, false);
     } finally {
       llama.stop();
     }
@@ -258,7 +264,8 @@ public class TestSingleQueueLlamaAM {
     try {
       llama.start();
       UUID reservationId = llama.reserve(RESERVATION1_NONGANG).getReservationId();
-      Assert.assertNotNull(llama.releaseReservation(LlamaAM.ADMIN_HANDLE, reservationId));
+      Assert.assertNotNull(llama.releaseReservation(
+          LlamaAM.ADMIN_HANDLE, reservationId, false));
       Assert.assertTrue(((MyRMConnector) llama.getRMConnector()).release);
       Assert.assertNull(llama._getReservation(reservationId));
     } finally {
@@ -908,7 +915,7 @@ public class TestSingleQueueLlamaAM {
       Assert.assertNotNull(llama._getReservation(reservationId1));
       Assert.assertNotNull(llama._getReservation(reservationId2));
       Assert.assertNotNull(llama._getReservation(reservationId3));
-      llama.releaseReservationsForHandle(cId1);
+      llama.releaseReservationsForHandle(cId1, false);
       Assert.assertNull(llama._getReservation(reservationId1));
       Assert.assertNull(llama._getReservation(reservationId2));
       Assert.assertNotNull(llama._getReservation(reservationId3));

@@ -163,33 +163,41 @@ public class RMConnectorCache implements RMConnector,
   }
 
   @Override
-  public void release(Collection<RMResource> resources)
+  public void release(Collection<RMResource> resources, boolean doNotCache)
       throws LlamaException {
     List<RMResource> list = new ArrayList<RMResource>(resources);
-    Iterator<RMResource> it = list.iterator();
-    while (it.hasNext()) {
-      RMResource resource = it.next();
-      if (resource.getRmResourceId() != null) {
-        UUID cacheId = cache.cache(resource);
-        if (connector.reassignResource(resource.getRmResourceId(), cacheId)) {
-          LOG.debug("Caching released resource '{}'", resource);
-          it.remove();
-        } else {
-          cache.findAndRemove(cacheId);
-          LOG.warn(
-              "RMConnector did not reassign '{}', releasing and discarding it",
-              resource.getResourceId());
+    if (!doNotCache) {
+      Iterator<RMResource> it = list.iterator();
+      while (it.hasNext()) {
+        RMResource resource = it.next();
+        if (resource.getRmResourceId() != null) {
+          UUID cacheId = cache.cache(resource);
+          if (connector.reassignResource(resource.getRmResourceId(), cacheId)) {
+            LOG.debug("Caching released resource '{}'", resource);
+            it.remove();
+          } else {
+            cache.findAndRemove(cacheId);
+            LOG.warn("RMConnector did not reassign '{}', releasing and " +
+                "discarding it", resource.getResourceId());
+          }
         }
       }
     }
     if (!list.isEmpty()) {
-      connector.release(list);
+      connector.release(list, doNotCache);
     }
   }
 
   @Override
   public boolean reassignResource(Object rmResourceId, UUID resourceId) {
     return false;
+  }
+
+  @Override
+  public void emptyCache() throws LlamaException {
+    List<RMResource> cachedList = cache.emptyCache();
+    LOG.debug("Emptying cache for queue '{}'", queue);
+    connector.release(cachedList, true);
   }
 
   @Override
@@ -217,7 +225,7 @@ public class RMConnectorCache implements RMConnector,
     RMResource dummyPlacedResource = new PlacedResourceImpl();
     dummyPlacedResource.getRmData().putAll((Map) cachedRMResource.getRmData());
     try {
-      connector.release(Arrays.asList(dummyPlacedResource));
+      connector.release(Arrays.asList(dummyPlacedResource), false);
     } catch (Throwable ex) {
       LOG.error(
           "Failed to release resource '{}' from RMConnector on eviction, {}",

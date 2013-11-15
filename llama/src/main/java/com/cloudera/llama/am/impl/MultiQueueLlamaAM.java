@@ -100,11 +100,12 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
 
   // LlamaAM API
 
-  private LlamaAM getLlamaAM(String queue) throws LlamaException {
+  private LlamaAM getLlamaAM(String queue, boolean create)
+      throws LlamaException {
     SingleQueueLlamaAM am;
     synchronized (ams) {
       am = ams.get(queue);
-      if (am == null) {
+      if (am == null && create) {
         am = new SingleQueueLlamaAM(getConf(), queue, this);
         am.setMetricRegistry(getMetricRegistry());
         am.start();
@@ -127,7 +128,7 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
     for (String queue :
         getConf().getTrimmedStringCollection(INITIAL_QUEUES_KEY)) {
       try {
-        getLlamaAM(queue);
+        getLlamaAM(queue, true);
       } catch (LlamaException ex) {
         stop();
         throw ex;
@@ -165,7 +166,7 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
   @Override
   public PlacedReservation reserve(UUID reservationId, Reservation reservation)
       throws LlamaException {
-    LlamaAM am = getLlamaAM(reservation.getQueue());
+    LlamaAM am = getLlamaAM(reservation.getQueue(), true);
     PlacedReservation pr = am.reserve(reservationId, reservation);
     reservationToQueue.put(reservationId, reservation.getQueue());
     return pr;
@@ -178,8 +179,12 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
     PlacedReservation reservation = null;
     String queue = reservationToQueue.get(reservationId);
     if (queue != null) {
-      LlamaAM am = getLlamaAM(queue);
-      reservation = am.getReservation(reservationId);
+      LlamaAM am = getLlamaAM(queue, false);
+      if (am != null) {
+        reservation = am.getReservation(reservationId);
+      } else {
+        getLog().warn("Queue '{}' not available anymore", queue);
+      }
     } else {
       getLog().warn("getReservation({}), reservationId not found",
           reservationId);
@@ -189,13 +194,17 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
 
   @SuppressWarnings("deprecation")
   @Override
-  public PlacedReservation releaseReservation(UUID handle, UUID reservationId) throws
-                                                                               LlamaException {
+  public PlacedReservation releaseReservation(UUID handle, UUID reservationId,
+      boolean doNotCache) throws LlamaException {
     PlacedReservation pr = null;
     String queue = reservationToQueue.remove(reservationId);
     if (queue != null) {
-      LlamaAM am = getLlamaAM(queue);
-      pr = am.releaseReservation(handle, reservationId);
+      LlamaAM am = getLlamaAM(queue, false);
+      if (am != null) {
+        pr = am.releaseReservation(handle, reservationId, doNotCache);
+      } else {
+        getLog().warn("Queue '{}' not available anymore", queue);
+      }
     } else {
       getLog().warn("releaseReservation({}), reservationId not found",
           reservationId);
@@ -204,13 +213,14 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
   }
 
   @Override
-  public List<PlacedReservation> releaseReservationsForHandle(UUID handle)
+  public List<PlacedReservation> releaseReservationsForHandle(UUID handle,
+      boolean doNotCache)
       throws LlamaException {
     List<PlacedReservation> reservations = new ArrayList<PlacedReservation>();
     LlamaException thrown = null;
     for (LlamaAM am : getLlamaAMs()) {
       try {
-        reservations.addAll(am.releaseReservationsForHandle(handle));
+        reservations.addAll(am.releaseReservationsForHandle(handle, doNotCache));
       } catch (LlamaException ex) {
         if (thrown != null) {
           getLog().error("releaseReservationsForHandle({}), error: {}",
@@ -226,20 +236,38 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
   }
 
   @Override
-  public List<PlacedReservation> releaseReservationsForQueue(String queue)
+  @SuppressWarnings("unchecked")
+  public List<PlacedReservation> releaseReservationsForQueue(String queue,
+      boolean doNotCache)
       throws LlamaException {
     List<PlacedReservation> list;
     SingleQueueLlamaAM am;
     synchronized (ams) {
-      am = ams.remove(queue);
+      am = (doNotCache) ? ams.remove(queue) : ams.get(queue);
     }
     if (am != null) {
-      list = am.releaseReservationsForQueue(queue);
-      am.stop();
+      list = am.releaseReservationsForQueue(queue, doNotCache);
+      if (doNotCache) {
+        am.stop();
+      }
     } else {
       list = Collections.EMPTY_LIST;
     }
     return list;
+  }
+
+  @Override
+  public void emptyCacheForQueue(String queue) throws LlamaException {
+    if (queue == ALL_QUEUES) {
+      for (LlamaAM am : getLlamaAMs()) {
+        am.emptyCacheForQueue(queue);
+      }
+    } else {
+      LlamaAM am = getLlamaAM(queue, false);
+      if (am != null) {
+        am.emptyCacheForQueue(queue);
+      }
+    }
   }
 
   @Override

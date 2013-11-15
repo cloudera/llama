@@ -20,6 +20,8 @@ package com.cloudera.llama.am;
 import com.cloudera.llama.server.Security;
 import com.cloudera.llama.server.TypeUtils;
 import com.cloudera.llama.thrift.LlamaAMAdminService;
+import com.cloudera.llama.thrift.TLlamaAMAdminEmptyCacheRequest;
+import com.cloudera.llama.thrift.TLlamaAMAdminEmptyCacheResponse;
 import com.cloudera.llama.thrift.TLlamaAMAdminReleaseRequest;
 import com.cloudera.llama.thrift.TLlamaAMAdminReleaseResponse;
 import com.cloudera.llama.thrift.TLlamaServiceVersion;
@@ -63,12 +65,15 @@ public class LlamaAdminClient {
   private static final String HELP_CMD = "help";
   private static final String RELEASE_CMD = "release";
   private static final String ERROR_CODES_CMD = "errorcodes";
+  private static final String EMPTY_CACHE_CMD = "emptycache";
 
   private static final String LLAMA = "llama";
   private static final String SECURE = "secure";
   private static final String HANDLES = "handles";
   private static final String QUEUES = "queues";
   private static final String RESERVATIONS = "reservations";
+  private static final String DO_NOT_CACHE = "donotcache";
+  private static final String ALL_QUEUES = "allqueues";
 
   private static CLIParser createParser() {
     CLIParser parser = new CLIParser("llamaadmin", new String[0]);
@@ -85,6 +90,12 @@ public class LlamaAdminClient {
     Option reservation = new Option(RESERVATIONS, true,
         "reservations (comma separated)");
     reservation.setRequired(false);
+    Option doNotCache = new Option(DO_NOT_CACHE, false,
+        "do not cache resources of released resources");
+    doNotCache.setRequired(false);
+    Option allQueues = new Option(ALL_QUEUES, false,
+        "empty cache for all queues");
+    doNotCache.setRequired(false);
 
     //help
     Options options = new Options();
@@ -98,6 +109,7 @@ public class LlamaAdminClient {
     options.addOption(handle);
     options.addOption(queue);
     options.addOption(reservation);
+    options.addOption(doNotCache);
     parser.addCommand(RELEASE_CMD, "",
         "release queues, handles or reservations", options, false);
 
@@ -105,6 +117,15 @@ public class LlamaAdminClient {
     options = new Options();
     parser.addCommand(ERROR_CODES_CMD, "", "list Llama error codes", options,
         false);
+
+    //emptycache
+    options = new Options();
+    options.addOption(llama);
+    options.addOption(secure);
+    options.addOption(queue);
+    options.addOption(allQueues);
+    parser.addCommand(EMPTY_CACHE_CMD, "",
+        "empty cached resources not in use", options, false);
 
     return parser;
   }
@@ -137,6 +158,7 @@ public class LlamaAdminClient {
         parser.showHelp(command.getCommandLine());
         exitCode = 0;
       } else if (command.getName().equals(RELEASE_CMD)) {
+        boolean doNotCache = cl.hasOption(DO_NOT_CACHE);
         List<UUID> handles = optToHandles(cl.getOptionValue(HANDLES));
         List<UUID> reservations = optToHandles(cl.getOptionValue(RESERVATIONS));
         List<String> queues = optToStrings(cl.getOptionValue(QUEUES));
@@ -148,7 +170,20 @@ public class LlamaAdminClient {
         } else {
           release(secure, getHost(llama),
               getPort(llama, LLAMAADMIN_SERVER_PORT_DEFAULT), handles,
-              reservations, queues);
+              reservations, queues, doNotCache);
+          exitCode = 0;
+        }
+      } else if (command.getName().equals(EMPTY_CACHE_CMD)) {
+        boolean allQueues = cl.hasOption(ALL_QUEUES);
+        List<String> queues = optToStrings(cl.getOptionValue(QUEUES));
+        if ((!allQueues && queues.isEmpty()) ||
+            (allQueues && !queues.isEmpty())) {
+          System.err.print("Either the -allqueues or the -queues option must " +
+              "be specified");
+          exitCode = 1;
+        } else {
+          emptyCache(secure, getHost(llama),
+              getPort(llama, LLAMAADMIN_SERVER_PORT_DEFAULT), queues, allQueues);
           exitCode = 0;
         }
       } else if (command.getName().equals(ERROR_CODES_CMD)) {
@@ -232,7 +267,8 @@ public class LlamaAdminClient {
 
   static void release(final boolean secure, final String llamaHost,
       final int llamaPort, final List<UUID> handles,
-      final List<UUID> reservations, final List<String> queues)
+      final List<UUID> reservations, final List<String> queues,
+      final boolean doNotCache)
       throws Exception {
     Subject.doAs(getSubject(secure),
         new PrivilegedExceptionAction<Void>() {
@@ -244,10 +280,45 @@ public class LlamaAdminClient {
               LlamaAMAdminService.Client client = createClient(transport);
               TLlamaAMAdminReleaseRequest req = new TLlamaAMAdminReleaseRequest();
               req.setVersion(TLlamaServiceVersion.V1);
+              req.setDo_not_cache(doNotCache);
               req.setQueues(queues);
               req.setHandles(TypeUtils.toTUniqueIds(handles));
               req.setReservations(TypeUtils.toTUniqueIds(reservations));
               TLlamaAMAdminReleaseResponse res = client.Release(req);
+              if (res.getStatus().getStatus_code() != TStatusCode.OK) {
+                throw new RuntimeException(res.toString());
+              }
+              if (!res.getStatus().getError_msgs().isEmpty()) {
+                for (String msg : res.getStatus().getError_msgs()) {
+                  System.err.println("  " + msg);
+                }
+              }
+            } finally {
+              transport.close();
+            }
+            return null;
+          }
+        });
+  }
+
+  static void emptyCache(final boolean secure, final String llamaHost,
+      final int llamaPort, final List<String> queues,
+      final boolean allQueues)
+      throws Exception {
+    Subject.doAs(getSubject(secure),
+        new PrivilegedExceptionAction<Void>() {
+          @Override
+          public Void run() throws Exception {
+            TTransport transport = createTransport(secure, llamaHost,
+                llamaPort);
+            try {
+              LlamaAMAdminService.Client client = createClient(transport);
+              TLlamaAMAdminEmptyCacheRequest req =
+                  new TLlamaAMAdminEmptyCacheRequest();
+              req.setVersion(TLlamaServiceVersion.V1);
+              req.setAllQueues(allQueues);
+              req.setQueues(queues);
+              TLlamaAMAdminEmptyCacheResponse res = client.EmptyCache(req);
               if (res.getStatus().getStatus_code() != TStatusCode.OK) {
                 throw new RuntimeException(res.toString());
               }

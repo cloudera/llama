@@ -68,7 +68,7 @@ public class TestLlamaAM {
     }
 
     @Override
-    public void release(Collection<RMResource> resources)
+    public void release(Collection<RMResource> resources, boolean doNotCache)
         throws LlamaException {
     }
 
@@ -76,6 +76,10 @@ public class TestLlamaAM {
     public boolean reassignResource(Object rmResourceId, UUID resourceId) {
       return false;
     }
+
+    public void emptyCache() throws LlamaException {
+    }
+
   }
 
   private void testCreate(Configuration conf) throws Exception {

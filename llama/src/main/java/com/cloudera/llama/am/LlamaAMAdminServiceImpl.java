@@ -24,6 +24,8 @@ import com.cloudera.llama.server.ClientNotificationService;
 import com.cloudera.llama.server.ClientPrincipalTProcessor;
 import com.cloudera.llama.server.TypeUtils;
 import com.cloudera.llama.thrift.LlamaAMAdminService;
+import com.cloudera.llama.thrift.TLlamaAMAdminEmptyCacheRequest;
+import com.cloudera.llama.thrift.TLlamaAMAdminEmptyCacheResponse;
 import com.cloudera.llama.thrift.TLlamaAMAdminReleaseRequest;
 import com.cloudera.llama.thrift.TLlamaAMAdminReleaseResponse;
 import com.cloudera.llama.util.UUID;
@@ -50,13 +52,14 @@ public class LlamaAMAdminServiceImpl implements LlamaAMAdminService.Iface {
   @Override
   public TLlamaAMAdminReleaseResponse Release(
       TLlamaAMAdminReleaseRequest request) throws TException {
+    boolean doNotCache = request.isDo_not_cache();
     List<String> msgs = new ArrayList<String>();
     if (request.isSetQueues()) {
       for (String queue : request.getQueues()) {
         LOG.warn("Admin '{}' release queue '{}'",
             ClientPrincipalTProcessor.getPrincipal(), queue);
         try {
-          llamaAM.releaseReservationsForQueue(queue);
+          llamaAM.releaseReservationsForQueue(queue, doNotCache);
         } catch (LlamaException ex) {
           String msg = FastFormat.format(
               "Could not release queue '{}', error: {}", queue, ex.toString());
@@ -70,7 +73,8 @@ public class LlamaAMAdminServiceImpl implements LlamaAMAdminService.Iface {
         try {
           LOG.warn("Admin '{}' release reservation '{}'",
               ClientPrincipalTProcessor.getPrincipal(), reservation);
-          llamaAM.releaseReservation(LlamaAM.ADMIN_HANDLE, reservation);
+          llamaAM.releaseReservation(LlamaAM.ADMIN_HANDLE, reservation,
+              doNotCache);
         } catch (LlamaException ex) {
           String msg = FastFormat.format(
               "Could not release reservation '{}', error: {}", reservation,
@@ -85,7 +89,7 @@ public class LlamaAMAdminServiceImpl implements LlamaAMAdminService.Iface {
         try {
           LOG.warn("Admin '{}' release handle '{}'",
               ClientPrincipalTProcessor.getPrincipal(), handle);
-          llamaAM.releaseReservationsForHandle(handle);
+          llamaAM.releaseReservationsForHandle(handle, doNotCache);
           clientNotificationService.unregister(handle);
         } catch (LlamaException ex) {
           String msg = FastFormat.format(
@@ -96,6 +100,39 @@ public class LlamaAMAdminServiceImpl implements LlamaAMAdminService.Iface {
       }
     }
     TLlamaAMAdminReleaseResponse resp = new TLlamaAMAdminReleaseResponse();
+    resp.setStatus(TypeUtils.okWithMsgs(msgs));
+    return resp;
+  }
+
+  @Override
+  public TLlamaAMAdminEmptyCacheResponse EmptyCache(
+      TLlamaAMAdminEmptyCacheRequest request) throws TException {
+    boolean allQueues = request.isAllQueues();
+    List<String> msgs = new ArrayList<String>();
+    if (allQueues) {
+      try {
+        llamaAM.emptyCacheForQueue(LlamaAM.ALL_QUEUES);
+      } catch (LlamaException ex) {
+        String msg = FastFormat.format("Could not empty cache for all queues: {}",
+            ex.toString());
+        msgs.add(msg);
+        LOG.warn(msg, ex);
+      }
+    } else if (request.isSetQueues()) {
+      for (String queue : request.getQueues()) {
+        LOG.warn("Admin '{}' empty cache for queue '{}'",
+            ClientPrincipalTProcessor.getPrincipal(), queue);
+        try {
+          llamaAM.emptyCacheForQueue(queue);
+        } catch (LlamaException ex) {
+          String msg = FastFormat.format(
+              "Could not empty cache for queue '{}': {}", queue, ex.toString());
+          msgs.add(msg);
+          LOG.warn(msg, ex);
+        }
+      }
+    }
+    TLlamaAMAdminEmptyCacheResponse resp = new TLlamaAMAdminEmptyCacheResponse();
     resp.setStatus(TypeUtils.okWithMsgs(msgs));
     return resp;
   }

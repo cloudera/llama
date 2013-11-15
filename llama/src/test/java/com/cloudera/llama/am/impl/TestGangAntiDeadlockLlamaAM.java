@@ -138,7 +138,8 @@ public class TestGangAntiDeadlockLlamaAM {
     }
 
     @Override
-    public PlacedReservation releaseReservation(UUID handle, UUID reservationId)
+    public PlacedReservation releaseReservation(UUID handle, UUID reservationId,
+        boolean doNotCache)
         throws LlamaException {
       invoked.add("releaseReservation");
       PlacedReservationImpl r = reservations.remove(reservationId);
@@ -149,7 +150,8 @@ public class TestGangAntiDeadlockLlamaAM {
     }
 
     @Override
-    public List<PlacedReservation> releaseReservationsForHandle(UUID handle)
+    public List<PlacedReservation> releaseReservationsForHandle(UUID handle,
+        boolean doNotCache)
         throws LlamaException {
       invoked.add("releaseReservationsForClientId");
       List<PlacedReservation> list = new ArrayList<PlacedReservation>();
@@ -167,7 +169,8 @@ public class TestGangAntiDeadlockLlamaAM {
     }
 
     @Override
-    public List<PlacedReservation> releaseReservationsForQueue(String queue)
+    public List<PlacedReservation> releaseReservationsForQueue(String queue,
+        boolean doNotCache)
         throws LlamaException {
       invoked.add("releaseReservationsForQueue");
       List<PlacedReservation> list = new ArrayList<PlacedReservation>();
@@ -182,6 +185,10 @@ public class TestGangAntiDeadlockLlamaAM {
         }
       }
       return list;
+    }
+
+    @Override
+    public void emptyCacheForQueue(String queue) throws LlamaException {
     }
 
     @Override
@@ -242,12 +249,12 @@ public class TestGangAntiDeadlockLlamaAM {
     Assert.assertTrue(gAm.backedOffReservations.isEmpty());
     gAm.getReservation(id);
     Assert.assertTrue(am.reservations.containsKey(id));
-    gAm.releaseReservation(handle, id);
+    gAm.releaseReservation(handle, id, false);
     Assert.assertTrue(gAm.localReservations.isEmpty());
     Assert.assertTrue(gAm.backedOffReservations.isEmpty());
     Assert.assertFalse(am.reservations.containsKey(id));
-    gAm.releaseReservationsForHandle(UUID.randomUUID());
-    gAm.releaseReservationsForQueue("q");
+    gAm.releaseReservationsForHandle(UUID.randomUUID(), false);
+    gAm.releaseReservationsForQueue("q", false);
     gAm.stop();
     Assert.assertFalse(gAm.isRunning());
 
@@ -460,7 +467,7 @@ public class TestGangAntiDeadlockLlamaAM {
 
       List<UUID> ids = Arrays.asList(id1, id2, id3, id4);
       for (UUID id : ids) {
-        PlacedReservation pr = gAm.releaseReservation(handle, id);
+        PlacedReservation pr = gAm.releaseReservation(handle, id, false);
         Assert.assertNotNull(pr);
         Assert.assertEquals(PlacedReservation.Status.RELEASED, pr.getStatus());
       }
@@ -501,7 +508,7 @@ public class TestGangAntiDeadlockLlamaAM {
       Assert.assertEquals(2, gAm.backedOffReservations.size());
       Assert.assertEquals(2, gAm.submittedReservations.size());
 
-      List<PlacedReservation> prs = gAm.releaseReservationsForHandle(handle);
+      List<PlacedReservation> prs = gAm.releaseReservationsForHandle(handle, false);
       Assert.assertEquals(4, prs.size());
       for (PlacedReservation pr : prs) {
         Assert.assertEquals(PlacedReservation.Status.RELEASED, pr.getStatus());
@@ -543,7 +550,7 @@ public class TestGangAntiDeadlockLlamaAM {
       Assert.assertEquals(2, gAm.backedOffReservations.size());
       Assert.assertEquals(2, gAm.submittedReservations.size());
 
-      List<PlacedReservation> prs = gAm.releaseReservationsForQueue("q");
+      List<PlacedReservation> prs = gAm.releaseReservationsForQueue("q", false);
       Assert.assertEquals(4, prs.size());
       for (PlacedReservation pr : prs) {
         Assert.assertEquals(PlacedReservation.Status.RELEASED, pr.getStatus());

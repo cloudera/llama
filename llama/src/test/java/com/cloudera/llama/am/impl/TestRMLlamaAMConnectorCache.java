@@ -93,7 +93,7 @@ public class TestRMLlamaAMConnectorCache {
     }
 
     @Override
-    public void release(Collection<RMResource> resources)
+    public void release(Collection<RMResource> resources, boolean doNotCache)
         throws LlamaException {
       invoked.add("release");
     }
@@ -103,6 +103,10 @@ public class TestRMLlamaAMConnectorCache {
       invoked.add("reassignResource");
       return true;
     }
+
+    public void emptyCache() throws LlamaException {
+    }
+
   }
 
   @Test
@@ -148,13 +152,12 @@ public class TestRMLlamaAMConnectorCache {
     expected.add("reserve");
     Assert.assertEquals(expected, connector.invoked);
 
-    cache.release(Arrays.asList((RMResource)pr1));
+    cache.release(Arrays.asList((RMResource)pr1), false);
 
     expected.add("reassignResource");
     Assert.assertEquals(expected, connector.invoked);
 
-    manualClock.increment(ResourceCache.EVICTION_IDLE_TIMEOUT_DEFAULT + 1);
-    Thread.sleep(100);
+    cache.release(Arrays.asList((RMResource) pr1), true);
 
     expected.add("release");
     Assert.assertEquals(expected, connector.invoked);
@@ -166,4 +169,127 @@ public class TestRMLlamaAMConnectorCache {
     cache.stop();
     Assert.assertEquals(expected, connector.invoked);
   }
+
+  @Test
+  public void testDoNotCache() throws Exception {
+    MyRMLlamaConnector connector = new MyRMLlamaConnector();
+
+    RMConnectorCache cache = new RMConnectorCache(
+        new Configuration(false), connector);
+
+    cache.setLlamaAMCallback(new RMListener() {
+      @Override
+      public void stoppedByRM() {
+      }
+
+      @Override
+      public void onEvent(List<RMEvent> events) {
+      }
+    });
+
+    cache.start();
+    cache.getNodes();
+    cache.register("q");
+
+    PlacedResourceImpl pr1 = TestUtils.createPlacedResourceImpl("l1",
+        Resource.Locality.MUST, 1, 1024);
+
+
+    cache.reserve(Arrays.asList((RMResource) pr1));
+    pr1.setAllocationInfo("'l1", 1, 1024);
+    pr1.setRmResourceId("rm1");
+
+    cache.release(Arrays.asList((RMResource) pr1), false);
+
+    Assert.assertFalse(connector.invoked.contains("release"));
+
+    cache.release(Arrays.asList((RMResource) pr1), true);
+
+    Assert.assertTrue(connector.invoked.contains("release"));
+
+    cache.unregister();
+    cache.stop();
+  }
+
+  @Test
+  public void testEviction() throws Exception {
+    MyRMLlamaConnector connector = new MyRMLlamaConnector();
+
+    RMConnectorCache cache = new RMConnectorCache(
+        new Configuration(false), connector);
+
+    cache.setLlamaAMCallback(new RMListener() {
+      @Override
+      public void stoppedByRM() {
+      }
+
+      @Override
+      public void onEvent(List<RMEvent> events) {
+      }
+    });
+
+    cache.start();
+    cache.getNodes();
+    cache.register("q");
+
+    PlacedResourceImpl pr1 = TestUtils.createPlacedResourceImpl("l1",
+        Resource.Locality.MUST, 1, 1024);
+
+
+    cache.reserve(Arrays.asList((RMResource) pr1));
+    pr1.setAllocationInfo("'l1", 1, 1024);
+    pr1.setRmResourceId("rm1");
+
+    cache.release(Arrays.asList((RMResource) pr1), false);
+    Assert.assertFalse(connector.invoked.contains("release"));
+
+    manualClock.increment(ResourceCache.EVICTION_IDLE_TIMEOUT_DEFAULT+1);
+    Thread.sleep(100);
+
+    Assert.assertTrue(connector.invoked.contains("release"));
+
+    cache.unregister();
+    cache.stop();
+  }
+
+  @Test
+  public void testEmptyCache() throws Exception {
+    MyRMLlamaConnector connector = new MyRMLlamaConnector();
+
+    RMConnectorCache cache = new RMConnectorCache(
+        new Configuration(false), connector);
+
+    cache.setLlamaAMCallback(new RMListener() {
+      @Override
+      public void stoppedByRM() {
+      }
+
+      @Override
+      public void onEvent(List<RMEvent> events) {
+      }
+    });
+
+    cache.start();
+    cache.getNodes();
+    cache.register("q");
+
+    PlacedResourceImpl pr1 = TestUtils.createPlacedResourceImpl("l1",
+        Resource.Locality.MUST, 1, 1024);
+
+
+    cache.reserve(Arrays.asList((RMResource) pr1));
+    pr1.setAllocationInfo("'l1", 1, 1024);
+    pr1.setRmResourceId("rm1");
+
+    cache.release(Arrays.asList((RMResource) pr1), false);
+    Assert.assertFalse(connector.invoked.contains("release"));
+
+    cache.emptyCache();
+
+    Assert.assertTrue(connector.invoked.contains("release"));
+
+    cache.unregister();
+    cache.stop();
+  }
+
 }

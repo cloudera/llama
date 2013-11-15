@@ -83,7 +83,8 @@ public class TestAPIContractLlamaAM {
     }
 
     @Override
-    public PlacedReservation releaseReservation(UUID handle, UUID reservationId)
+    public PlacedReservation releaseReservation(UUID handle, UUID reservationId,
+        boolean doNotCache)
         throws LlamaException {
       return null;
     }
@@ -95,16 +96,23 @@ public class TestAPIContractLlamaAM {
     }
 
     @Override
-    public List<PlacedReservation> releaseReservationsForHandle(UUID handle)
+    public List<PlacedReservation> releaseReservationsForHandle(UUID handle,
+        boolean doNotCache)
         throws LlamaException {
       return null;
     }
 
     @Override
-    public List<PlacedReservation> releaseReservationsForQueue(String queue)
+    public List<PlacedReservation> releaseReservationsForQueue(String queue,
+        boolean doNotCache)
         throws LlamaException {
       return Collections.EMPTY_LIST;
     }
+
+    @Override
+    public void emptyCacheForQueue(String queue) throws LlamaException {
+    }
+
   }
 
   private LlamaAM createLlamaAM() throws Exception {
@@ -151,7 +159,7 @@ public class TestAPIContractLlamaAM {
     LlamaAM am = createLlamaAM();
     try {
       am.start();
-      am.releaseReservation(UUID.randomUUID(), null);
+      am.releaseReservation(UUID.randomUUID(), null, false);
     } finally {
       am.stop();
     }
@@ -162,7 +170,7 @@ public class TestAPIContractLlamaAM {
     LlamaAM am = createLlamaAM();
     try {
       am.start();
-      am.releaseReservation(null, UUID.randomUUID());
+      am.releaseReservation(null, UUID.randomUUID(), false);
     } finally {
       am.stop();
     }
@@ -173,7 +181,7 @@ public class TestAPIContractLlamaAM {
     LlamaAM am = createLlamaAM();
     try {
       am.start();
-      am.releaseReservationsForQueue(null);
+      am.releaseReservationsForQueue(null, false);
     } finally {
       am.stop();
     }
@@ -184,7 +192,7 @@ public class TestAPIContractLlamaAM {
     LlamaAM am = createLlamaAM();
     try {
       am.start();
-      am.releaseReservation(UUID.randomUUID(), UUID.randomUUID());
+      am.releaseReservation(UUID.randomUUID(), UUID.randomUUID(), false);
     } finally {
       am.stop();
     }
@@ -278,21 +286,21 @@ public class TestAPIContractLlamaAM {
     AssertUtils.assertException(new Callable<Object>() {
       @Override
       public Object call() throws Exception {
-        am.releaseReservation(null, null);
+        am.releaseReservation(null, null, false);
         return null;
       }
     }, IllegalStateException.class);
     AssertUtils.assertException(new Callable<Object>() {
       @Override
       public Object call() throws Exception {
-        am.releaseReservationsForHandle(null);
+        am.releaseReservationsForHandle(null, false);
         return null;
       }
     }, IllegalStateException.class);
     AssertUtils.assertException(new Callable<Object>() {
       @Override
       public Object call() throws Exception {
-        am.releaseReservationsForQueue(null);
+        am.releaseReservationsForQueue(null, false);
         return null;
       }
     }, IllegalStateException.class);
