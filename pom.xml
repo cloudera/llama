@@ -107,12 +107,12 @@ TODO: need license header
   <distributionManagement>
     <repository>
       <id>cdh.releases.repo</id>
-      <url>https://repository.cloudera.com/artifactory/libs-staging-local</url>
+      <url>http://maven.jenkins.cloudera.com:8081/artifactory/cdh-staging-local</url>
       <name>CDH Releases Repository</name>
     </repository>
     <snapshotRepository>
       <id>cdh.snapshots.repo</id>
-      <url>https://repository.cloudera.com/artifactory/libs-snapshot-local</url>
+      <url>http://maven.jenkins.cloudera.com:8081/artifactory/cdh-snapshot-local</url>
       <name>CDH Snapshots Repository</name>
     </snapshotRepository>
   </distributionManagement>
