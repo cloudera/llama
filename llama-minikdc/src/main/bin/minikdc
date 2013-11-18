@@ -46,4 +46,4 @@ else
 fi
 
 ${JAVA_BIN} ${MINIKDC_OPTS} -cp ${CLASSPATH} \
-  com.cloudera.llama.minikdc.MiniKdc "$@"
+  org.apache.hadoop.minikdc.MiniKdc "$@"
