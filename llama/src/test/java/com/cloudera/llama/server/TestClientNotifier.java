@@ -18,7 +18,8 @@
 package com.cloudera.llama.server;
 
 import com.cloudera.llama.am.HostnameOnlyNodeMapper;
-import com.cloudera.llama.am.api.LlamaAMEvent;
+import com.cloudera.llama.am.api.PlacedReservation;
+import com.cloudera.llama.am.api.TestUtils;
 import com.cloudera.llama.am.impl.LlamaAMEventImpl;
 import junit.framework.Assert;
 import org.apache.hadoop.conf.Configuration;
@@ -144,10 +145,12 @@ public class TestClientNotifier {
     try {
       cn.start();
       cn.registerClientForHeartbeats(handle);
-      LlamaAMEvent event = new LlamaAMEventImpl(handle);
-      event.getAllocatedReservationIds().add(UUID.randomUUID());
+      LlamaAMEventImpl event = new LlamaAMEventImpl();
+      event.addReservation(TestUtils.createPlacedReservation(
+          TestUtils.createReservation(true),
+          PlacedReservation.Status.ALLOCATED));
       Thread.sleep(100);
-      cn.handle(event);
+      cn.onEvent(event);
       Assert.assertEquals(0, notificationServer.notifications.size());
       Thread.sleep(180);
       Assert.assertEquals(1, notificationServer.notifications.size());
@@ -214,9 +217,11 @@ public class TestClientNotifier {
       cn.start();
       cn.registerClientForHeartbeats(handle);
 
-      LlamaAMEvent event = new LlamaAMEventImpl(handle);
-      event.getAllocatedReservationIds().add(UUID.randomUUID());
-      cn.handle(event);
+      LlamaAMEventImpl event = new LlamaAMEventImpl();
+      event.addReservation(TestUtils.createPlacedReservation(
+          TestUtils.createReservation(true),
+          PlacedReservation.Status.ALLOCATED));
+      cn.onEvent(event);
       Thread.sleep(100); //adding 50ms extra
       Assert.assertEquals(1, cr.clientCallerCalls);
       Assert.assertFalse(cr.maxFailures);

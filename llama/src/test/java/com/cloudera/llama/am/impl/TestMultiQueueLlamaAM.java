@@ -150,7 +150,7 @@ public class TestMultiQueueLlamaAM {
       am.start();
       LlamaAMListener listener = new LlamaAMListener() {
         @Override
-        public void handle(LlamaAMEvent event) {
+        public void onEvent(LlamaAMEvent event) {
         }
       };
       UUID handle = UUID.randomUUID();
@@ -260,7 +260,7 @@ public class TestMultiQueueLlamaAM {
       am.start();
       LlamaAMListener listener = new LlamaAMListener() {
         @Override
-        public void handle(LlamaAMEvent event) {
+        public void onEvent(LlamaAMEvent event) {
           listenerCalled = true;
         }
       };

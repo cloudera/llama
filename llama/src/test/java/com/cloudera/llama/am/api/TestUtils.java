@@ -22,6 +22,7 @@ import com.cloudera.llama.am.impl.PlacedResourceImpl;
 import com.cloudera.llama.util.UUID;
 import junit.framework.Assert;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -129,6 +130,14 @@ public class TestUtils {
     return b.build();
   }
 
+  public static PlacedReservation createPlacedReservation(
+      Reservation reservation, PlacedReservation.Status status) {
+    PlacedReservationImpl impl = new PlacedReservationImpl(UUID.randomUUID(),
+        reservation);
+    impl.setStatus(status);
+    return impl;
+  }
+
   public static void assertResource(Resource r1, Resource r2) {
     Assert.assertEquals(r1.getResourceId(), r2.getResourceId());
     Assert.assertEquals(r1.getLocationAsk(), r2.getLocationAsk());
@@ -136,5 +145,50 @@ public class TestUtils {
     Assert.assertEquals(r1.getCpuVCoresAsk(), r2.getCpuVCoresAsk());
     Assert.assertEquals(r2.getMemoryMbsAsk(), r2.getMemoryMbsAsk());
 
+  }
+
+  public static List<PlacedReservation> getReservations(
+      List<LlamaAMEvent> events, PlacedReservation.Status status, boolean echo) {
+    List<PlacedReservation> list = new ArrayList<PlacedReservation>();
+    for (LlamaAMEvent event : events) {
+      if (echo || !event.isEcho()) {
+        list.addAll(getReservations(event, status));
+      }
+    }
+    System.out.println(list);
+    return list;
+  }
+
+    public static List<PlacedReservation> getReservations(LlamaAMEvent event,
+      PlacedReservation.Status status) {
+    List<PlacedReservation> list = new ArrayList<PlacedReservation>();
+    for (PlacedReservation r : event.getReservationChanges()) {
+      if (status == null || r.getStatus() == status) {
+        list.add(r);
+      }
+    }
+    return list;
+  }
+
+  public static List<PlacedResource> getResources(List<LlamaAMEvent> events,
+      PlacedResource.Status status, boolean echo) {
+    List<PlacedResource> list = new ArrayList<PlacedResource>();
+    for (LlamaAMEvent event : events) {
+      if (true || echo || !event.isEcho()) {
+        list.addAll(getResources(event, status));
+      }
+    }
+    return list;
+  }
+
+  public static List<PlacedResource> getResources(LlamaAMEvent event,
+      PlacedResource.Status status) {
+    List<PlacedResource> list = new ArrayList<PlacedResource>();
+    for (PlacedResource r : event.getResourceChanges()) {
+      if (r.getStatus() == status) {
+        list.add(r);
+      }
+    }
+    return list;
   }
 }

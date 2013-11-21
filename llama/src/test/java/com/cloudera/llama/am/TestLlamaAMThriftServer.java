@@ -740,7 +740,8 @@ public class TestLlamaAMThriftServer {
               Thread.sleep(300);
               Assert.assertEquals(1, callbackServer.notifications.size());
               Assert.assertEquals(tresRes1.getReservation_id(),
-                  callbackServer.notifications.get(0).getPreempted_reservation_ids().get(0));
+                  callbackServer.notifications.get(0).
+                      getAdmin_released_reservation_ids().get(0));
 
               callbackServer.notifications.clear();
               if (!useCLI) {
@@ -761,7 +762,8 @@ public class TestLlamaAMThriftServer {
               Thread.sleep(300);
               Assert.assertEquals(1, callbackServer.notifications.size());
               Assert.assertEquals(tresRes2.getReservation_id(),
-                  callbackServer.notifications.get(0).getPreempted_reservation_ids().get(0));
+                  callbackServer.notifications.get(0).
+                      getAdmin_released_reservation_ids().get(0));
 
               callbackServer.notifications.clear();
               if (!useCLI) {

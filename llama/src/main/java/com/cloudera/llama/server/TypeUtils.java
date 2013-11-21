@@ -18,8 +18,8 @@
 package com.cloudera.llama.server;
 
 import com.cloudera.llama.am.api.Builders;
-import com.cloudera.llama.am.api.LlamaAMEvent;
 import com.cloudera.llama.am.api.LlamaAMException;
+import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.PlacedResource;
 import com.cloudera.llama.am.api.Reservation;
 import com.cloudera.llama.am.api.Resource;
@@ -131,23 +131,14 @@ public class TypeUtils {
     TAllocatedResource tResource = new TAllocatedResource();
     tResource.setReservation_id(toTUniqueId(resource.getReservationId()));
     tResource.setClient_resource_id(toTUniqueId(resource.getResourceId()));
-    tResource.setRm_resource_id("TODO"); //flatten container ids resource.getRmResourceIds());
+    tResource.setRm_resource_id("TODO"); //TODO flatten container ids resource.getRmResourceIds());
     tResource.setV_cpu_cores((short) resource.getCpuVCores());
     tResource.setMemory_mb(resource.getMemoryMbs());
     tResource.setLocation(nodeMapper.getDataNode(resource.getLocation()));
     return tResource;
   }
 
-  public static List<TAllocatedResource> toTAllocatedResources(
-      List<PlacedResource> resources, NodeMapper nodeMapper) {
-    List<TAllocatedResource> tResources =
-        new ArrayList<TAllocatedResource>(resources.size());
-    for (PlacedResource resource : resources) {
-      tResources.add(toTAllocatedResource(resource, nodeMapper));
-    }
-    return tResources;
-  }
-
+  @SuppressWarnings("unchecked")
   public static TLlamaAMNotificationRequest createHearbeat(UUID clientId) {
     TLlamaAMNotificationRequest request = new TLlamaAMNotificationRequest();
     request.setVersion(TLlamaServiceVersion.V1);
@@ -164,27 +155,64 @@ public class TypeUtils {
     return request;
   }
 
-  public static TLlamaAMNotificationRequest toAMNotification(
-      LlamaAMEvent event, NodeMapper nodeMapper) {
+  public static TLlamaAMNotificationRequest toAMNotification(UUID handle,
+      List<Object> rrList, NodeMapper nodeMapper) {
     TLlamaAMNotificationRequest request = new TLlamaAMNotificationRequest();
     request.setVersion(TLlamaServiceVersion.V1);
-    request.setAm_handle(toTUniqueId(event.getHandle()));
+    request.setAm_handle(toTUniqueId(handle));
     request.setHeartbeat(false);
 
-    request.setAllocated_reservation_ids(toTUniqueIds(
-        event.getAllocatedReservationIds()));
-    request.setAllocated_resources(toTAllocatedResources(
-        event.getAllocatedResources(), nodeMapper));
-    request.setRejected_reservation_ids(toTUniqueIds(
-        event.getRejectedReservationIds()));
-    request.setRejected_client_resource_ids(toTUniqueIds(
-        event.getRejectedClientResourcesIds()));
-    request.setLost_client_resource_ids(toTUniqueIds(
-        event.getLostClientResourcesIds()));
-    request.setPreempted_reservation_ids(toTUniqueIds(
-        event.getPreemptedReservationIds()));
-    request.setPreempted_client_resource_ids(toTUniqueIds(
-        event.getPreemptedClientResourceIds()));
+    for (Object rr : rrList) {
+      if (rr instanceof PlacedReservation) {
+        PlacedReservation reservation = (PlacedReservation) rr;
+        switch (reservation.getStatus()) {
+          case ALLOCATED:
+            request.addToAllocated_reservation_ids(toTUniqueId(
+                reservation.getReservationId()));
+            break;
+          case REJECTED:
+            request.addToRejected_reservation_ids(toTUniqueId(
+                reservation.getReservationId()));
+            break;
+          case LOST:
+            request.addToLost_reservation_ids(toTUniqueId(
+                reservation.getReservationId()));
+            break;
+          case PREEMPTED:
+            request.addToPreempted_reservation_ids(toTUniqueId(
+                reservation.getReservationId()));
+            break;
+          case RELEASED:
+            request.addToAdmin_released_reservation_ids(toTUniqueId(
+                reservation.getReservationId()));
+            break;
+        }
+      } else if (rr instanceof PlacedResource) {
+        PlacedResource resource = (PlacedResource) rr;
+        switch (resource.getStatus()) {
+          case ALLOCATED:
+            request.addToAllocated_resources(toTAllocatedResource(
+                resource, nodeMapper));
+            break;
+          case REJECTED:
+            request.addToRejected_client_resource_ids(toTUniqueId(
+                resource.getResourceId()));
+            break;
+          case LOST:
+            request.addToLost_client_resource_ids(toTUniqueId(
+                resource.getResourceId()));
+            break;
+          case PREEMPTED:
+            request.addToPreempted_client_resource_ids(toTUniqueId(
+                resource.getResourceId()));
+            break;
+        }
+      } else {
+        throw new IllegalArgumentException("List should contain " +
+            "PlacedReservation or PlaceResource objects only, it has a " +
+            rr.getClass());
+      }
+    }
     return request;
   }
 

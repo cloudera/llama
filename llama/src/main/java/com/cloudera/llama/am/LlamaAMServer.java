@@ -17,6 +17,7 @@
  */
 package com.cloudera.llama.am;
 
+import com.cloudera.llama.am.api.AsyncLlamaAMListener;
 import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.yarn.YarnRMConnector;
 import com.cloudera.llama.server.ClientInfo;
@@ -50,6 +51,7 @@ public class LlamaAMServer extends
   private String httpJmx;
   private String httpLlama;
   private RestData restData;
+  private AsyncLlamaAMListener asyncListener;
 
   public LlamaAMServer() {
     super("LlamaAM", AMServerConfiguration.class);
@@ -144,7 +146,11 @@ public class LlamaAMServer extends
           ThriftEndPoint.getServerPort(getServerConf()));
       getConf().set(YarnRMConnector.ADVERTISED_TRACKING_URL_KEY,
           getHttpLlamaUI());
-      llamaAm = LlamaAM.create(getConf(), restData);
+      llamaAm = LlamaAM.create(getConf());
+      asyncListener = new AsyncLlamaAMListener(restData);
+      asyncListener.setMetricRegistry(getMetricRegistry());
+      asyncListener.start();
+      llamaAm.addListener(asyncListener);
       llamaAm.setMetricRegistry(getMetricRegistry());
       llamaAm.start();
     } catch (Exception ex) {
@@ -155,6 +161,7 @@ public class LlamaAMServer extends
   @Override
   protected void stopService() {
     llamaAm.stop();
+    asyncListener.stop();
     clientNotificationService.stop();
     stopHttpServer();
   }

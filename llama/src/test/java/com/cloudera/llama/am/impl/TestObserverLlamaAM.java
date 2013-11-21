@@ -18,9 +18,9 @@
 package com.cloudera.llama.am.impl;
 
 import com.cloudera.llama.am.api.LlamaAM;
+import com.cloudera.llama.am.api.LlamaAMEvent;
 import com.cloudera.llama.am.api.LlamaAMException;
 import com.cloudera.llama.am.api.LlamaAMListener;
-import com.cloudera.llama.am.api.LlamaAMObserver;
 import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.PlacedResource;
 import com.cloudera.llama.am.api.Reservation;
@@ -59,7 +59,6 @@ public class TestObserverLlamaAM {
     EXPECTED.add("releaseReservation");
     EXPECTED.add("releaseReservationsForClientId");
     EXPECTED.add("addListener");
-    EXPECTED.add("removeListener");
     EXPECTED.add("releaseReservationsForQueue");
   }
 
@@ -156,6 +155,7 @@ public class TestObserverLlamaAM {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public List<PlacedReservation> releaseReservationsForQueue(String queue)
         throws LlamaAMException {
       invoked.add("releaseReservationsForQueue");
@@ -163,21 +163,23 @@ public class TestObserverLlamaAM {
     }
   }
 
-  public class TestLlamaAMObserver implements LlamaAMObserver {
-    private List<? extends PlacedReservation> reservations =
-        new ArrayList<PlacedReservation>();
+  public class ObserverListener implements LlamaAMListener {
+    private List<LlamaAMEvent> events = new ArrayList<LlamaAMEvent>();
+
     @Override
-    public void observe(List<? extends PlacedReservation> reservations) {
-      this.reservations.addAll((List) reservations);
+    public void onEvent(LlamaAMEvent events) {
+      this.events.add(events);
     }
+
   }
 
   @Test
   @SuppressWarnings("unchecked")
   public void testDelegate() throws Exception {
     TestLlamaAM am = new TestLlamaAM();
-    TestLlamaAMObserver observer = new TestLlamaAMObserver();
-    ObserverLlamaAM oAm = new ObserverLlamaAM(am, observer);
+    ObserverListener observer = new ObserverListener();
+    ObserverLlamaAM oAm = new ObserverLlamaAM(am);
+    oAm.addListener(observer);
 
     Assert.assertFalse(oAm.isRunning());
     oAm.start();
@@ -223,130 +225,190 @@ public class TestObserverLlamaAM {
     return TestUtils.createReservation(handle, "u", "q1", resources, true);
   }
 
-  private void waitFor(boolean predicate, long timeout) throws Exception {
+  public interface Predicate {
+    public boolean value();
+  }
+
+  private void waitFor(Predicate predicate, long timeout) throws Exception {
     long start = System.currentTimeMillis();
-    while (!predicate && System.currentTimeMillis() - start < timeout) {
+    while (!predicate.value() && System.currentTimeMillis() - start < timeout) {
       Thread.sleep(10);
     }
+    Assert.assertTrue(predicate.value());
+  }
+
+  private List<PlacedReservation> getAllReservations(List<LlamaAMEvent> events) {
+    return TestUtils.getReservations(events, null, true);
   }
 
   @Test
   @SuppressWarnings("unchecked")
   public void testObserveReserveAllocateRelease() throws Exception {
-    TestLlamaAMObserver observer = new TestLlamaAMObserver();
-    final LlamaAM llama = LlamaAM.create(getConfiguration(), observer);
+    final ObserverListener observer = new ObserverListener();
+    final LlamaAM llama = LlamaAM.create(getConfiguration());
+    llama.addListener(observer);
 
     llama.start();
     UUID handle = UUID.randomUUID();
-    PlacedReservation pr1 = llama.reserve(createReservation(handle, MockLlamaAMFlags.ALLOCATE, 2));
+    PlacedReservation pr1 = llama.reserve(createReservation(handle,
+        MockLlamaAMFlags.ALLOCATE, 2));
     clock.increment(51);
-    Thread.sleep(100);
-    waitFor(observer.reservations.size() == 3, 100);
+    waitFor(new Predicate() {
+      @Override
+      public boolean value() {
+        return getAllReservations(observer.events).size() == 3;
+      }
+    }, 100);
     llama.releaseReservation(handle, pr1.getReservationId());
     clock.increment(51);
-    Thread.sleep(100);
-    waitFor(observer.reservations.size() == 4, 100);
-    Assert.assertEquals(4, observer.reservations.size());
-    Assert.assertEquals(PlacedReservation.Status.PENDING, observer.reservations.get(0).getStatus());
-    Assert.assertEquals(PlacedReservation.Status.PARTIAL, observer.reservations.get(1).getStatus());
-    Assert.assertEquals(PlacedReservation.Status.ALLOCATED, observer.reservations.get(2).getStatus());
-    Assert.assertEquals(PlacedReservation.Status.RELEASED, observer.reservations.get(3).getStatus());
+    waitFor(new Predicate() {
+      @Override
+      public boolean value() {
+        return getAllReservations(observer.events).size() == 4;
+      }
+    }, 100);
+    Assert.assertEquals(PlacedReservation.Status.PENDING,
+        getAllReservations(observer.events).get(0).getStatus());
+    Assert.assertEquals(PlacedReservation.Status.PARTIAL,
+        getAllReservations(observer.events).get(1).getStatus());
+    Assert.assertEquals(PlacedReservation.Status.ALLOCATED,
+        getAllReservations(observer.events).get(2).getStatus());
+    Assert.assertEquals(PlacedReservation.Status.RELEASED,
+        getAllReservations(observer.events).get(3).getStatus());
     llama.stop();
   }
 
   @Test
   @SuppressWarnings("unchecked")
   public void testObserveReserveReject() throws Exception {
-    TestLlamaAMObserver observer = new TestLlamaAMObserver();
-    final LlamaAM llama = LlamaAM.create(getConfiguration(), observer);
+    final ObserverListener observer = new ObserverListener();
+    final LlamaAM llama = LlamaAM.create(getConfiguration());
+    llama.addListener(observer);
 
     llama.start();
     UUID handle = UUID.randomUUID();
     llama.reserve(createReservation(handle, MockLlamaAMFlags.REJECT, 1));
     clock.increment(51);
-    Thread.sleep(100);
-    waitFor(observer.reservations.size() == 2, 300);
+    waitFor(new Predicate() {
+      @Override
+      public boolean value() {
+        return getAllReservations(observer.events).size() == 2;
+      }
+    }, 300);
     clock.increment(51);
-    Thread.sleep(100);
-    Assert.assertEquals(2, observer.reservations.size());
-    Assert.assertEquals(PlacedReservation.Status.PENDING, observer.reservations.get(0).getStatus());
-    Assert.assertEquals(PlacedReservation.Status.REJECTED, observer.reservations.get(1).getStatus());
+    Assert.assertEquals(2, getAllReservations(observer.events).size());
+    Assert.assertEquals(PlacedReservation.Status.PENDING,
+        getAllReservations(observer.events).get(0).getStatus());
+    Assert.assertEquals(PlacedReservation.Status.REJECTED,
+        getAllReservations(observer.events).get(1).getStatus());
     llama.stop();
   }
 
   @Test
   @SuppressWarnings("unchecked")
   public void testObserveLoseRelease() throws Exception {
-    TestLlamaAMObserver observer = new TestLlamaAMObserver();
-    final LlamaAM llama = LlamaAM.create(getConfiguration(), observer);
+    final ObserverListener observer = new ObserverListener();
+    final LlamaAM llama = LlamaAM.create(getConfiguration());
+    llama.addListener(observer);
 
     llama.start();
     UUID handle = UUID.randomUUID();
     PlacedReservation pr1 = llama.reserve(createReservation(handle, MockLlamaAMFlags.LOSE, 1));
     clock.increment(51);
-    Thread.sleep(100);
-    waitFor(observer.reservations.size() == 3, 100);
+    waitFor(new Predicate() {
+      @Override
+      public boolean value() {
+        return getAllReservations(observer.events).size() == 2;
+      }
+    }, 100);
     llama.releaseReservation(handle, pr1.getReservationId());
     clock.increment(51);
-    Thread.sleep(100);
-    waitFor(observer.reservations.size() == 3, 100);
-    Assert.assertEquals(4, observer.reservations.size());
-    Assert.assertEquals(PlacedReservation.Status.PENDING, observer.reservations.get(0).getStatus());
-    Assert.assertEquals(PlacedReservation.Status.ALLOCATED, observer.reservations.get(1).getStatus());
-    Assert.assertEquals(PlacedReservation.Status.ALLOCATED, observer.reservations.get(2).getStatus());
-    Assert.assertEquals(PlacedResource.Status.LOST, observer.reservations.get(2).getPlacedResources().get(0).getStatus());
-    Assert.assertEquals(PlacedReservation.Status.RELEASED, observer.reservations.get(3).getStatus());
+    waitFor(new Predicate() {
+      @Override
+      public boolean value() {
+        return getAllReservations(observer.events).size() == 3;
+      }
+    }, 100);
+    Assert.assertEquals(PlacedReservation.Status.PENDING,
+        getAllReservations(observer.events).get(0).getStatus());
+    Assert.assertEquals(PlacedReservation.Status.ALLOCATED,
+        getAllReservations(observer.events).get(1).getStatus());
+    Assert.assertEquals(PlacedReservation.Status.RELEASED,
+        getAllReservations(observer.events).get(2).getStatus());
+    Assert.assertEquals(PlacedResource.Status.LOST,
+        getAllReservations(observer.events).get(2).getPlacedResources().
+            get(0).getStatus());
     llama.stop();
   }
 
   @Test
   @SuppressWarnings("unchecked")
   public void testObservePreemptRelease() throws Exception {
-    TestLlamaAMObserver observer = new TestLlamaAMObserver();
-    final LlamaAM llama = LlamaAM.create(getConfiguration(), observer);
+    final ObserverListener observer = new ObserverListener();
+    final LlamaAM llama = LlamaAM.create(getConfiguration());
+    llama.addListener(observer);
 
     llama.start();
     UUID handle = UUID.randomUUID();
     PlacedReservation pr1 = llama.reserve(createReservation(handle, MockLlamaAMFlags.PREEMPT, 1));
     clock.increment(51);
-    Thread.sleep(100);
-    waitFor(observer.reservations.size() == 3, 100);
+    waitFor(new Predicate() {
+      @Override
+      public boolean value() {
+        return getAllReservations(observer.events).size() == 2;
+      }
+    }, 100);
     llama.releaseReservation(handle, pr1.getReservationId());
     clock.increment(51);
-    Thread.sleep(100);
-    waitFor(observer.reservations.size() == 4, 100);
-    Assert.assertEquals(4, observer.reservations.size());
-    Assert.assertEquals(PlacedReservation.Status.PENDING, observer.reservations.get(0).getStatus());
-    Assert.assertEquals(PlacedReservation.Status.ALLOCATED, observer.reservations.get(1).getStatus());
-    Assert.assertEquals(PlacedReservation.Status.ALLOCATED, observer.reservations.get(2).getStatus());
-    Assert.assertEquals(PlacedResource.Status.PREEMPTED, observer.reservations.get(2).getPlacedResources().get(0).getStatus());
-    Assert.assertEquals(PlacedReservation.Status.RELEASED, observer.reservations.get(3).getStatus());
+    waitFor(new Predicate() {
+      @Override
+      public boolean value() {
+        return getAllReservations(observer.events).size() == 3;
+      }
+    }, 100);
+    Assert.assertEquals(PlacedReservation.Status.PENDING,
+        getAllReservations(observer.events).get(0).getStatus());
+    Assert.assertEquals(PlacedReservation.Status.ALLOCATED,
+        getAllReservations(observer.events).get(1).getStatus());
+    Assert.assertEquals(PlacedReservation.Status.RELEASED,
+        getAllReservations(observer.events).get(2).getStatus());
+    Assert.assertEquals(PlacedResource.Status.PREEMPTED,
+        getAllReservations(observer.events).get(2).getPlacedResources().get(0).getStatus());
     llama.stop();
   }
 
   @Test
   @SuppressWarnings("unchecked")
   public void testReleaseReservationsForHandle() throws Exception {
-    TestLlamaAMObserver observer = new TestLlamaAMObserver();
-    final LlamaAM llama = LlamaAM.create(getConfiguration(), observer);
+    final ObserverListener observer = new ObserverListener();
+    final LlamaAM llama = LlamaAM.create(getConfiguration());
+    llama.addListener(observer);
 
     llama.start();
     UUID handle = UUID.randomUUID();
     llama.reserve(createReservation(handle, MockLlamaAMFlags.PENDING, 1));
     llama.reserve(createReservation(handle, MockLlamaAMFlags.ALLOCATE, 1));
     clock.increment(51);
-    Thread.sleep(100);
-    waitFor(observer.reservations.size() == 3, 100);
+    waitFor(new Predicate() {
+      @Override
+      public boolean value() {
+        return getAllReservations(observer.events).size() == 3;
+      }
+    }, 100);
     llama.releaseReservationsForHandle(handle);
     clock.increment(51);
-    Thread.sleep(100);
-    waitFor(observer.reservations.size() == 5, 100);
-    Assert.assertEquals(5, observer.reservations.size());
-    Assert.assertEquals(PlacedReservation.Status.PENDING, observer.reservations.get(0).getStatus());
-    Assert.assertEquals(PlacedReservation.Status.PENDING, observer.reservations.get(1).getStatus());
-    Assert.assertEquals(PlacedReservation.Status.ALLOCATED, observer.reservations.get(2).getStatus());
-    Assert.assertEquals(PlacedReservation.Status.RELEASED, observer.reservations.get(3).getStatus());
-    Assert.assertEquals(PlacedReservation.Status.RELEASED, observer.reservations.get(4).getStatus());
+    waitFor(new Predicate() {
+      @Override
+      public boolean value() {
+        return getAllReservations(observer.events).size() == 5;
+      }
+    }, 100);
+    Assert.assertEquals(5, getAllReservations(observer.events).size());
+    Assert.assertEquals(PlacedReservation.Status.PENDING, getAllReservations(observer.events).get(0).getStatus());
+    Assert.assertEquals(PlacedReservation.Status.PENDING, getAllReservations(observer.events).get(1).getStatus());
+    Assert.assertEquals(PlacedReservation.Status.ALLOCATED, getAllReservations(observer.events).get(2).getStatus());
+    Assert.assertEquals(PlacedReservation.Status.RELEASED, getAllReservations(observer.events).get(3).getStatus());
+    Assert.assertEquals(PlacedReservation.Status.RELEASED, getAllReservations(observer.events).get(4).getStatus());
     llama.stop();
   }
 

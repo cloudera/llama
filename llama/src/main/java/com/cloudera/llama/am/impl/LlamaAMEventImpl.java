@@ -22,85 +22,59 @@ import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.PlacedResource;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import com.cloudera.llama.util.UUID;
 
 public class LlamaAMEventImpl implements LlamaAMEvent {
-  private final UUID handle;
-  private final List<UUID> allocatedReservationIds = new ArrayList<UUID>();
-  private final List<PlacedResource> allocatedResources =
-      new ArrayList<PlacedResource>();
-  private final List<UUID> rejectedClientResourceIds = new ArrayList<UUID>();
-  private final List<UUID> lostClientResourceIds = new ArrayList<UUID>();
-  private final List<UUID> rejectedReservationIds = new ArrayList<UUID>();
-  private final List<UUID> preemptedReservationIds = new ArrayList<UUID>();
-  private final List<UUID> preemptedResourceIds = new ArrayList<UUID>();
-  private final List<PlacedResource> allocatedGangResources =
-      new ArrayList<PlacedResource>();
-  private final List<PlacedReservation> changes =
-      new ArrayList<PlacedReservation>();
+  private final List<PlacedResource> resources;
+  private final List<PlacedReservation> reservations;
+  private boolean echo;
 
-  public LlamaAMEventImpl(UUID handle) {
-    this.handle = handle;
+  public LlamaAMEventImpl() {
+    this(false);
+  }
+
+  public LlamaAMEventImpl(boolean echo) {
+    resources = new ArrayList<PlacedResource>();
+    reservations = new ArrayList<PlacedReservation>();
+    this.echo = echo;
+  }
+
+  public void addReservation(PlacedReservation reservation) {
+    reservations.add(new PlacedReservationImpl(reservation));
+  }
+
+  public void addResource(PlacedResource resource) {
+    resources.add(new PlacedResourceImpl(resource));
   }
 
   @Override
   public boolean isEmpty() {
-    return allocatedReservationIds.isEmpty() &&
-        allocatedResources.isEmpty() &&
-        rejectedClientResourceIds.isEmpty() &&
-        lostClientResourceIds.isEmpty() &&
-        rejectedReservationIds.isEmpty() &&
-        preemptedReservationIds.isEmpty() &&
-        preemptedResourceIds.isEmpty();
+    return reservations.isEmpty() && resources.isEmpty();
   }
 
   @Override
-  public UUID getHandle() {
-    return handle;
+  public boolean isEcho() {
+    return echo;
   }
 
   @Override
-  public List<UUID> getAllocatedReservationIds() {
-    return allocatedReservationIds;
+  public List<PlacedReservation> getReservationChanges() {
+    return Collections.unmodifiableList(reservations);
   }
 
   @Override
-  public List<PlacedResource> getAllocatedResources() {
-    return allocatedResources;
+  public List<PlacedResource> getResourceChanges() {
+    return Collections.unmodifiableList(resources);
   }
 
-  @Override
-  public List<UUID> getRejectedReservationIds() {
-    return rejectedReservationIds;
+  public static LlamaAMEvent merge(List<LlamaAMEvent> events) {
+    LlamaAMEventImpl merged = new LlamaAMEventImpl();
+    for (LlamaAMEvent event : events) {
+      merged.reservations.addAll(event.getReservationChanges());
+      merged.resources.addAll(event.getResourceChanges());
+    }
+    return merged;
   }
 
-  @Override
-  public List<UUID> getRejectedClientResourcesIds() {
-    return rejectedClientResourceIds;
-  }
-
-  @Override
-  public List<UUID> getLostClientResourcesIds() {
-    return lostClientResourceIds;
-  }
-
-  @Override
-  public List<UUID> getPreemptedReservationIds() {
-    return preemptedReservationIds;
-  }
-
-  @Override
-  public List<UUID> getPreemptedClientResourceIds() {
-    return preemptedResourceIds;
-  }
-
-  public List<PlacedResource> getAllocatedGangResources() {
-    return allocatedGangResources;
-  }
-
-  @Override
-  public List<PlacedReservation> getChanges() {
-    return changes;
-  }
 }

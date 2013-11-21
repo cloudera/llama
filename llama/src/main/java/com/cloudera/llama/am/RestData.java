@@ -17,7 +17,8 @@
  */
 package com.cloudera.llama.am;
 
-import com.cloudera.llama.am.api.LlamaAMObserver;
+import com.cloudera.llama.am.api.LlamaAMEvent;
+import com.cloudera.llama.am.api.LlamaAMListener;
 import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.PlacedResource;
 import com.cloudera.llama.server.ClientInfo;
@@ -53,7 +54,7 @@ import java.util.TreeMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class RestData implements LlamaAMObserver,
+public class RestData implements LlamaAMListener,
     ClientNotificationService.Listener {
 
   private static Logger LOG = LoggerFactory.getLogger(RestData.class);
@@ -162,11 +163,11 @@ public class RestData implements LlamaAMObserver,
   }
 
   @Override
-  public void observe(List<? extends PlacedReservation> reservations) {
+  public void onEvent(LlamaAMEvent event) {
     lock.writeLock().lock();
     try {
-      for (PlacedReservation reservation : reservations) {
-        LOG.debug("observe({})", reservation);
+      for (PlacedReservation reservation : event.getReservationChanges()) {
+        LOG.debug("onEvents({})", reservation);
         if (verifyHandle(reservation)) {
           if (!reservation.getStatus().isFinal()) {
             if (!reservationsMap.containsKey(reservation.getReservationId())) {
@@ -185,6 +186,10 @@ public class RestData implements LlamaAMObserver,
           LOG.debug("Handle not known anymore for reservation '{}'",
               reservation);
         }
+      }
+      for (PlacedResource resource : event.getResourceChanges()) {
+        LOG.debug("onEvents({})", resource);
+        update(resource);
       }
     } finally {
       lock.writeLock().unlock();
@@ -290,6 +295,20 @@ public class RestData implements LlamaAMObserver,
         "queueReservationsMap");
     for (PlacedResource resource : reservation.getPlacedResources()) {
       updateResource(resource, reservation);
+    }
+  }
+
+  private void update(PlacedResource resource) {
+    PlacedReservation reservation = reservationsMap.get(resource.getReservationId());
+    if (reservation != null) {
+      int idx = reservation.getPlacedResources().indexOf(resource);
+      if (idx > -1) {
+        reservation.getPlacedResources().set(idx, resource);
+        updateResource(resource, reservation);
+      } else{
+        LOG.error("RestData update inconsistency, resource '{}' not found " +
+            "in reservation '{}'", resource, reservation);
+      }
     }
   }
 

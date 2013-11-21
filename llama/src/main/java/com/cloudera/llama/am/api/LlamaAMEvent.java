@@ -18,27 +18,15 @@
 package com.cloudera.llama.am.api;
 
 import java.util.List;
-import com.cloudera.llama.util.UUID;
 
 public interface LlamaAMEvent {
 
-  public UUID getHandle();
-
   public boolean isEmpty();
 
-  public List<UUID> getAllocatedReservationIds();
+  public boolean isEcho();
 
-  public List<PlacedResource> getAllocatedResources();
+  public List<PlacedReservation> getReservationChanges();
 
-  public List<UUID> getRejectedReservationIds();
+  public List<PlacedResource> getResourceChanges();
 
-  public List<UUID> getRejectedClientResourcesIds();
-
-  public List<UUID> getLostClientResourcesIds();
-
-  public List<UUID> getPreemptedReservationIds();
-
-  public List<UUID> getPreemptedClientResourceIds();
-
-  public List<PlacedReservation> getChanges();
 }

@@ -74,11 +74,7 @@ public abstract class LlamaAM {
     return clone;
   }
 
-  public static LlamaAM create(Configuration conf) throws LlamaAMException {
-    return create(conf, null);
-  }
-
-  public static LlamaAM create(Configuration conf, LlamaAMObserver observer)
+  public static LlamaAM create(Configuration conf)
       throws LlamaAMException {
     conf = cloneConfiguration(conf);
     LlamaAM am = new MultiQueueLlamaAM(conf);
@@ -86,9 +82,7 @@ public abstract class LlamaAM {
         GANG_ANTI_DEADLOCK_ENABLED_DEFAULT)) {
       am = new GangAntiDeadlockLlamaAM(conf, am);
     }
-    if (observer != null) {
-      am = new ObserverLlamaAM(am, observer);
-    }
+    am = new ObserverLlamaAM(am);
     return new APIContractLlamaAM(am);
   }
 
@@ -123,7 +117,8 @@ public abstract class LlamaAM {
       Reservation reservation)
       throws LlamaAMException;
 
-  public PlacedReservation reserve(Reservation reservation) throws LlamaAMException {
+  public PlacedReservation reserve(Reservation reservation)
+      throws LlamaAMException {
     UUID reservationId = UUID.randomUUID();
     return reserve(reservationId, reservation);
   }

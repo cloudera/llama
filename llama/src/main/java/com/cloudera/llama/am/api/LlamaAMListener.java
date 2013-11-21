@@ -19,6 +19,6 @@ package com.cloudera.llama.am.api;
 
 public interface LlamaAMListener {
 
-  public void handle(LlamaAMEvent event);
+  public void onEvent(LlamaAMEvent event);
 
 }

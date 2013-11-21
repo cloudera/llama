@@ -17,7 +17,9 @@
  */
 package com.cloudera.llama.am.impl;
 
-import com.cloudera.llama.util.UUID;
+import com.cloudera.llama.am.api.PlacedReservation;
+import com.cloudera.llama.am.api.PlacedResource;
+import com.cloudera.llama.am.api.TestUtils;
 import junit.framework.Assert;
 import org.junit.Test;
 
@@ -25,16 +27,32 @@ public class TestLlamaAMEventImpl {
 
   @Test
   public void testMethods() {
-    UUID cId = UUID.randomUUID();
-    LlamaAMEventImpl event = new LlamaAMEventImpl(cId);
-    Assert.assertEquals(cId, event.getHandle());
+    LlamaAMEventImpl event = new LlamaAMEventImpl(true);
+    Assert.assertTrue(event.isEcho());
+    event = new LlamaAMEventImpl();
+    Assert.assertFalse(event.isEcho());
     Assert.assertTrue(event.isEmpty());
-    Assert.assertNotNull(event.getAllocatedReservationIds());
-    Assert.assertNotNull(event.getAllocatedResources());
-    Assert.assertNotNull(event.getLostClientResourcesIds());
-    Assert.assertNotNull(event.getPreemptedClientResourceIds());
-    Assert.assertNotNull(event.getPreemptedReservationIds());
-    Assert.assertNotNull(event.getRejectedClientResourcesIds());
-    Assert.assertNotNull(event.getRejectedReservationIds());
+    Assert.assertTrue(event.getReservationChanges().isEmpty());
+    Assert.assertTrue(event.getResourceChanges().isEmpty());
+
+    event = new LlamaAMEventImpl();
+    PlacedResource pr = TestUtils.createPlacedResourceImpl(
+        TestUtils.createResource("l"));
+    event.addResource(pr);
+    Assert.assertFalse(event.isEmpty());
+    Assert.assertTrue(event.getReservationChanges().isEmpty());
+    Assert.assertFalse(event.getResourceChanges().isEmpty());
+    Assert.assertEquals(1, event.getResourceChanges().size());
+    Assert.assertEquals(pr, event.getResourceChanges().get(0));
+
+    event = new LlamaAMEventImpl();
+    PlacedReservation prr = TestUtils.createPlacedReservation(
+        TestUtils.createReservation(true), PlacedReservation.Status.ALLOCATED);
+    event.addReservation(prr);
+    Assert.assertFalse(event.isEmpty());
+    Assert.assertEquals(1, event.getReservationChanges().size());
+    Assert.assertEquals(prr, event.getReservationChanges().get(0));
+    Assert.assertTrue(event.getResourceChanges().isEmpty());
+
   }
 }

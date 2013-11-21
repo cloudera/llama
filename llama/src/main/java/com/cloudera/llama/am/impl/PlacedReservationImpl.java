@@ -92,7 +92,6 @@ public class PlacedReservationImpl implements PlacedReservation, Expansion {
         copyResources(r.getPlacedResources()),
         r.getExpansionOf(),
         r.getAllocatedOn());
-    resources = Collections.unmodifiableList(resources);
   }
 
   @SuppressWarnings("unchecked")
@@ -112,7 +111,6 @@ public class PlacedReservationImpl implements PlacedReservation, Expansion {
     for (Resource resource : reservation.getResources()) {
       resources.add(PlacedResourceImpl.createPlaced(this, resource));
     }
-    resources = Collections.unmodifiableList(resources);
   }
 
   private static List<PlacedResourceImpl> copyResources(

@@ -22,12 +22,13 @@ import com.cloudera.llama.am.api.LlamaAMException;
 import com.cloudera.llama.am.api.LlamaAMListener;
 import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.Reservation;
+import com.cloudera.llama.am.api.Resource;
+import com.cloudera.llama.am.api.TestUtils;
 import com.cloudera.llama.util.UUID;
 import junit.framework.Assert;
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Test;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class TestLlamaAMImpl {
@@ -93,7 +94,7 @@ public class TestLlamaAMImpl {
     boolean throwEx;
 
     @Override
-    public void handle(LlamaAMEvent event) {
+    public void onEvent(LlamaAMEvent event) {
       this.event = event;
       if (throwEx) {
         throw new RuntimeException();
@@ -106,15 +107,18 @@ public class TestLlamaAMImpl {
     MyListener listener = new MyListener();
     LlamaAMImpl am = new MyLlamaAMImpl(new Configuration(false));
     am.addListener(listener);
-    LlamaAMEventImpl event = new LlamaAMEventImpl(UUID.randomUUID());
+    LlamaAMEventImpl event = new LlamaAMEventImpl();
+    am.dispatch(event);
+    Assert.assertNull(listener.event);
+    event.addResource(TestUtils.createPlacedResource("l",
+        Resource.Locality.DONT_CARE, 1, 1));
     am.dispatch(event);
     Assert.assertEquals(event, listener.event);
     listener.event = null;
-    am.dispatch(Arrays.asList(event));
-    Assert.assertEquals(event, listener.event);
 
-    event.getAllocatedReservationIds().add(UUID.randomUUID());
-    am.dispatch(Arrays.asList(event));
+    event.addReservation(TestUtils.createPlacedReservation(
+        TestUtils.createReservation(true), PlacedReservation.Status.ALLOCATED));
+    am.dispatch(event);
     Assert.assertEquals(event, listener.event);
     listener.event = null;
     listener.throwEx = true;
@@ -124,7 +128,7 @@ public class TestLlamaAMImpl {
     am.removeListener(listener);
     am.dispatch(event);
     Assert.assertNull(listener.event);
-    am.dispatch(Arrays.asList(event));
+    am.dispatch(event);
     Assert.assertNull(listener.event);
   }
 

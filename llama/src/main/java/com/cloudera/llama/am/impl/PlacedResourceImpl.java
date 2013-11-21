@@ -89,7 +89,7 @@ public class PlacedResourceImpl
   }
 
   @SuppressWarnings("unchecked")
-  protected PlacedResourceImpl(PlacedResource r) {
+  public PlacedResourceImpl(PlacedResource r) {
     this(r.getResourceId(),
         r.getStatus(),
         r.getLocationAsk(),

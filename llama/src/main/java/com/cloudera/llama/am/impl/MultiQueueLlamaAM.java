@@ -95,7 +95,7 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
   // LlamaAMListener API
 
   @Override
-  public void handle(LlamaAMEvent event) {
+  public void onEvent(LlamaAMEvent event) {
     dispatch(event);
   }
 

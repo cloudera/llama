@@ -104,7 +104,7 @@ public class TestSingleQueueLlamaAM {
     public List<LlamaAMEvent> events = new ArrayList<LlamaAMEvent>();
 
     @Override
-    public void handle(LlamaAMEvent event) {
+    public void onEvent(LlamaAMEvent event) {
       events.add(event);
     }
   }
@@ -279,13 +279,14 @@ public class TestSingleQueueLlamaAM {
       RMEvent change = RMEvent.createAllocationEvent
           (resource1Id, "cid1", 3, 4096, "a1");
       llama.onEvent(Arrays.asList(change));
-      Assert.assertEquals(1,
-          listener.events.get(0).getAllocatedResources().size());
-      Assert.assertEquals(1,
-          listener.events.get(0).getAllocatedReservationIds().size
-              ());
-      PlacedResource resource =
-          listener.events.get(0).getAllocatedResources().get(0);
+
+      List<PlacedResource> resources = TestUtils.getResources(listener.events.get(0),
+          PlacedResource.Status.ALLOCATED);
+      List<PlacedReservation> reservations = TestUtils.getReservations(
+          listener.events.get(0), PlacedReservation.Status.ALLOCATED);
+      Assert.assertEquals(1, resources.size());
+      Assert.assertEquals(1, reservations.size());
+      PlacedResource resource = resources.get(0);
       Assert.assertEquals(pr.getPlacedResources().get(0).getRmResourceId(),
           resource.getRmResourceId());
       Assert.assertEquals(3, resource.getCpuVCores());
@@ -313,14 +314,13 @@ public class TestSingleQueueLlamaAM {
       RMEvent change = RMEvent.createAllocationEvent
           (resource1Id, new Object(), 3, 4096, "a1");
       llama.onEvent(Arrays.asList(change));
-      Assert.assertEquals(1,
-          listener.events.get(0).getAllocatedResources().size());
-      Assert.assertEquals(1,
-          listener.events.get(0).getAllocatedReservationIds().size
-              ());
-
-      PlacedResource resource =
-          listener.events.get(0).getAllocatedResources().get(0);
+      List<PlacedResource> resources = TestUtils.getResources(listener.events.get(0),
+          PlacedResource.Status.ALLOCATED);
+      List<PlacedReservation> reservations = TestUtils.getReservations(
+          listener.events.get(0), PlacedReservation.Status.ALLOCATED);
+      Assert.assertEquals(1, resources.size());
+      Assert.assertEquals(1, reservations.size());
+      PlacedResource resource = resources.get(0);
       Assert.assertEquals(pr.getPlacedResources().get(0).getRmResourceId(),
           resource.getRmResourceId());
       Assert.assertEquals(3, resource.getCpuVCores());
@@ -352,17 +352,16 @@ public class TestSingleQueueLlamaAM {
       RMEvent change2 = RMEvent.createAllocationEvent
           (resource2Id, new Object(), 4, 5112, "a2");
       llama.onEvent(Arrays.asList(change1, change2));
-      Assert.assertEquals(2,
-          listener.events.get(0).getAllocatedResources().size());
-      Assert.assertEquals(1,
-          listener.events.get(0).getAllocatedReservationIds().size
-              ());
-      PlacedResource resource1 =
-          listener.events.get(0).getAllocatedResources().get(0);
+      List<PlacedResource> resources = TestUtils.getResources(listener.events.get(0),
+          PlacedResource.Status.ALLOCATED);
+      List<PlacedReservation> reservations = TestUtils.getReservations(
+          listener.events.get(0), PlacedReservation.Status.ALLOCATED);
+      Assert.assertEquals(2, resources.size());
+      Assert.assertEquals(1, reservations.size());
+      PlacedResource resource1 = resources.get(0);
+      PlacedResource resource2 = resources.get(1);
       Assert.assertEquals(pr.getPlacedResources().get(0).getRmResourceId(),
           resource1.getRmResourceId());
-      PlacedResource resource2 =
-          listener.events.get(0).getAllocatedResources().get(1);
       Assert.assertEquals(pr.getPlacedResources().get(1).getRmResourceId(),
           resource2.getRmResourceId());
       PlacedReservation reservation = llama.getReservation(reservationId);
@@ -390,17 +389,16 @@ public class TestSingleQueueLlamaAM {
       RMEvent change2 = RMEvent.createAllocationEvent
           (resource2Id, new Object(), 4, 5112, "a2");
       llama.onEvent(Arrays.asList(change1, change2));
-      Assert.assertEquals(2,
-          listener.events.get(0).getAllocatedResources().size());
-      Assert.assertEquals(1,
-          listener.events.get(0).getAllocatedReservationIds().size
-              ());
-      PlacedResource resource1 =
-          listener.events.get(0).getAllocatedResources().get(0);
+      List<PlacedResource> resources = TestUtils.getResources(listener.events.get(0),
+          PlacedResource.Status.ALLOCATED);
+      List<PlacedReservation> reservations = TestUtils.getReservations(
+          listener.events.get(0), PlacedReservation.Status.ALLOCATED);
+      Assert.assertEquals(2, resources.size());
+      Assert.assertEquals(1, reservations.size());
+      PlacedResource resource1 = resources.get(0);
+      PlacedResource resource2 = resources.get(1);
       Assert.assertEquals(pr.getPlacedResources().get(0).getRmResourceId(),
           resource1.getRmResourceId());
-      PlacedResource resource2 =
-          listener.events.get(0).getAllocatedResources().get(1);
       Assert.assertEquals(pr.getPlacedResources().get(1).getRmResourceId(),
           resource2.getRmResourceId());
       PlacedReservation reservation = llama.getReservation(reservationId);
@@ -428,13 +426,13 @@ public class TestSingleQueueLlamaAM {
       RMEvent change1 = RMEvent.createAllocationEvent
           (resource1Id, new Object(), 3, 4096, "a1");
       llama.onEvent(Arrays.asList(change1));
-      Assert.assertEquals(1,
-          listener.events.get(0).getAllocatedResources().size());
-      Assert.assertEquals(0,
-          listener.events.get(0).getAllocatedReservationIds().size
-              ());
-      PlacedResource resource1 =
-          listener.events.get(0).getAllocatedResources().get(0);
+      List<PlacedResource> resources = TestUtils.getResources(listener.events.get(0),
+          PlacedResource.Status.ALLOCATED);
+      List<PlacedReservation> reservations = TestUtils.getReservations(
+          listener.events.get(0), PlacedReservation.Status.ALLOCATED);
+      Assert.assertEquals(1, resources.size());
+      Assert.assertEquals(0, reservations.size());
+      PlacedResource resource1 = resources.get(0);
       Assert.assertEquals(pr.getPlacedResources().get(0).getRmResourceId(),
           resource1.getRmResourceId());
       PlacedReservation reservation = llama.getReservation(reservationId);
@@ -445,13 +443,13 @@ public class TestSingleQueueLlamaAM {
           (resource2Id, new Object(), 4, 5112, "a2");
       listener.events.clear();
       llama.onEvent(Arrays.asList(change2));
-      Assert.assertEquals(1,
-          listener.events.get(0).getAllocatedResources().size());
-      Assert.assertEquals(1,
-          listener.events.get(0).getAllocatedReservationIds().size
-              ());
-      PlacedResource resource2 =
-          listener.events.get(0).getAllocatedResources().get(0);
+      resources = TestUtils.getResources(listener.events.get(0),
+          PlacedResource.Status.ALLOCATED);
+      reservations = TestUtils.getReservations(listener.events.get(0),
+          PlacedReservation.Status.ALLOCATED);
+      Assert.assertEquals(1, resources.size());
+      Assert.assertEquals(1, reservations.size());
+      PlacedResource resource2 = resources.get(0);
       Assert.assertEquals(pr.getPlacedResources().get(1).getRmResourceId(),
           resource2.getRmResourceId());
       reservation = llama.getReservation(reservationId);
@@ -479,8 +477,8 @@ public class TestSingleQueueLlamaAM {
       RMEvent change1 = RMEvent.createAllocationEvent
           (resource1Id, new Object(), 3, 4096, "a1");
       llama.onEvent(Arrays.asList(change1));
-      Assert.assertFalse(listener.events.isEmpty());
-      Assert.assertTrue(listener.events.get(0).isEmpty());
+      Assert.assertEquals(1, TestUtils.getResources(listener.events, PlacedResource.Status.ALLOCATED, false).size());
+      Assert.assertEquals(1, TestUtils.getReservations(listener.events, PlacedReservation.Status.PARTIAL, false).size());
       listener.events.clear();
       PlacedReservation reservation = llama.getReservation(reservationId);
       Assert.assertNotNull(reservation);
@@ -489,19 +487,15 @@ public class TestSingleQueueLlamaAM {
       RMEvent change2 = RMEvent.createAllocationEvent
           (resource2Id, new Object(), 4, 5112, "a2");
       llama.onEvent(Arrays.asList(change2));
-      Assert.assertNotNull(listener.events.get(0));
-      Assert.assertEquals(2,
-          listener.events.get(0).getAllocatedResources().size());
-      Assert.assertEquals(1,
-          listener.events.get(0).getAllocatedReservationIds().size
-              ());
-      PlacedResource resource1 =
-          listener.events.get(0).getAllocatedResources().get(0);
-      Assert.assertEquals(pr.getPlacedResources().get(0).getRmResourceId(),
+      Assert.assertEquals(1, TestUtils.getResources(listener.events, PlacedResource.Status.ALLOCATED, false).size());
+      Assert.assertEquals(1, TestUtils.getReservations(listener.events, PlacedReservation.Status.ALLOCATED, false).size());
+      List<PlacedResource> resources = TestUtils.getReservations(listener.events,
+          PlacedReservation.Status.ALLOCATED, false).get(0).getPlacedResources();
+      PlacedResource resource1 = resources.get(0);
+      PlacedResource resource2 = resources.get(1);
+      Assert.assertEquals(resource1.getRmResourceId(),
           resource1.getRmResourceId());
-      PlacedResource resource2 =
-          listener.events.get(0).getAllocatedResources().get(1);
-      Assert.assertEquals(pr.getPlacedResources().get(1).getRmResourceId(),
+      Assert.assertEquals(resource2.getRmResourceId(),
           resource2.getRmResourceId());
       reservation = llama.getReservation(reservationId);
       Assert.assertNotNull(reservation);
@@ -526,11 +520,12 @@ public class TestSingleQueueLlamaAM {
       RMEvent change = RMEvent.createStatusChangeEvent
           (resource1Id, PlacedResource.Status.REJECTED);
       llama.onEvent(Arrays.asList(change));
-      Assert.assertEquals(1,
-          listener.events.get(0).getRejectedClientResourcesIds()
-              .size());
-      Assert.assertEquals(1,
-          listener.events.get(0).getRejectedReservationIds().size());
+      List<PlacedResource> resources = TestUtils.getResources(listener.events.get(0),
+          PlacedResource.Status.REJECTED);
+      List<PlacedReservation> reservations = TestUtils.getReservations(
+          listener.events.get(0), PlacedReservation.Status.REJECTED);
+      Assert.assertEquals(1, resources.size());
+      Assert.assertEquals(1, reservations.size());
       Assert.assertNull(llama.getReservation(reservationId));
     } finally {
       llama.stop();
@@ -555,11 +550,12 @@ public class TestSingleQueueLlamaAM {
           (resource2Id, PlacedResource.Status.REJECTED);
       listener.events.clear();
       llama.onEvent(Arrays.asList(change2));
-      Assert.assertEquals(1,
-          listener.events.get(0).getRejectedClientResourcesIds()
-              .size());
-      Assert.assertEquals(1,
-          listener.events.get(0).getRejectedReservationIds().size());
+      List<PlacedResource> resources = TestUtils.getResources(listener.events.get(0),
+          PlacedResource.Status.REJECTED);
+      List<PlacedReservation> reservations = TestUtils.getReservations(
+          listener.events.get(0), PlacedReservation.Status.REJECTED);
+      Assert.assertEquals(1, resources.size());
+      Assert.assertEquals(1, reservations.size());
       Assert.assertNull(llama.getReservation(reservationId));
     } finally {
       llama.stop();
@@ -584,11 +580,12 @@ public class TestSingleQueueLlamaAM {
           (resource2Id, PlacedResource.Status.REJECTED);
       listener.events.clear();
       llama.onEvent(Arrays.asList(change2));
-      Assert.assertEquals(1,
-          listener.events.get(0).getRejectedClientResourcesIds()
-              .size());
-      Assert.assertEquals(0,
-          listener.events.get(0).getRejectedReservationIds().size());
+      List<PlacedResource> resources = TestUtils.getResources(listener.events.get(0),
+          PlacedResource.Status.REJECTED);
+      List<PlacedReservation> reservations = TestUtils.getReservations(
+          listener.events.get(0), PlacedReservation.Status.REJECTED);
+      Assert.assertEquals(1, resources.size());
+      Assert.assertEquals(0, reservations.size());
       PlacedReservation reservation = llama.getReservation(reservationId);
       Assert.assertNotNull(reservation);
       Assert.assertEquals(PlacedReservation.Status.PARTIAL,
@@ -615,11 +612,12 @@ public class TestSingleQueueLlamaAM {
           (resource1Id, PlacedResource.Status.PREEMPTED);
       listener.events.clear();
       llama.onEvent(Arrays.asList(change2));
-      Assert.assertEquals(1,
-          listener.events.get(0).getRejectedReservationIds().size());
-      Assert.assertEquals(0,
-          listener.events.get(0).getPreemptedClientResourceIds()
-              .size());
+      List<PlacedResource> resources = TestUtils.getResources(listener.events.get(0),
+          PlacedResource.Status.PREEMPTED);
+      List<PlacedReservation> reservations = TestUtils.getReservations(
+          listener.events.get(0), PlacedReservation.Status.PREEMPTED);
+      Assert.assertEquals(0, resources.size());
+      Assert.assertEquals(1, reservations.size());
       Assert.assertNull(llama.getReservation(reservationId));
     } finally {
       llama.stop();
@@ -643,12 +641,12 @@ public class TestSingleQueueLlamaAM {
           (resource1Id, PlacedResource.Status.PREEMPTED);
       listener.events.clear();
       llama.onEvent(Arrays.asList(change2));
-      Assert.assertEquals(1,
-          listener.events.get(0).getPreemptedClientResourceIds()
-              .size());
-      Assert.assertEquals(0,
-          listener.events.get(0).getPreemptedReservationIds().size
-              ());
+      List<PlacedResource> resources = TestUtils.getResources(listener.events.get(0),
+          PlacedResource.Status.PREEMPTED);
+      List<PlacedReservation> reservations = TestUtils.getReservations(
+          listener.events.get(0), PlacedReservation.Status.PREEMPTED);
+      Assert.assertEquals(1, resources.size());
+      Assert.assertEquals(0, reservations.size());
       PlacedReservation reservation = llama.getReservation(reservationId);
       Assert.assertNotNull(reservation);
       Assert.assertEquals(PlacedReservation.Status.PARTIAL,
@@ -675,14 +673,15 @@ public class TestSingleQueueLlamaAM {
           (resource1Id, PlacedResource.Status.PREEMPTED);
       listener.events.clear();
       llama.onEvent(Arrays.asList(change2));
-      Assert.assertEquals(0,
-          listener.events.get(0).getRejectedReservationIds().size());
-      Assert.assertEquals(0,
-          listener.events.get(0).getPreemptedReservationIds().size
-              ());
-      Assert.assertEquals(1,
-          listener.events.get(0).getPreemptedClientResourceIds()
-              .size());
+      List<PlacedResource> resources = TestUtils.getResources(listener.events.get(0),
+          PlacedResource.Status.PREEMPTED);
+      List<PlacedReservation> reservations = TestUtils.getReservations(
+          listener.events.get(0), PlacedReservation.Status.PREEMPTED);
+      Assert.assertEquals(1, resources.size());
+      Assert.assertEquals(0, reservations.size());
+      reservations = TestUtils.getReservations(
+          listener.events.get(0), PlacedReservation.Status.REJECTED);
+      Assert.assertEquals(0, reservations.size());
       PlacedReservation reservation = llama.getReservation(reservationId);
       Assert.assertNotNull(reservation);
       Assert.assertEquals(PlacedReservation.Status.ALLOCATED,
@@ -709,14 +708,15 @@ public class TestSingleQueueLlamaAM {
           (resource1Id, PlacedResource.Status.PREEMPTED);
       listener.events.clear();
       llama.onEvent(Arrays.asList(change2));
-      Assert.assertEquals(0,
-          listener.events.get(0).getRejectedReservationIds().size());
-      Assert.assertEquals(0,
-          listener.events.get(0).getPreemptedReservationIds().size
-              ());
-      Assert.assertEquals(1,
-          listener.events.get(0).getPreemptedClientResourceIds()
-              .size());
+      List<PlacedResource> resources = TestUtils.getResources(listener.events.get(0),
+          PlacedResource.Status.PREEMPTED);
+      List<PlacedReservation> reservations = TestUtils.getReservations(
+          listener.events.get(0), PlacedReservation.Status.PREEMPTED);
+      Assert.assertEquals(1, resources.size());
+      Assert.assertEquals(0, reservations.size());
+      reservations = TestUtils.getReservations(
+          listener.events.get(0), PlacedReservation.Status.REJECTED);
+      Assert.assertEquals(0, reservations.size());
       PlacedReservation reservation = llama.getReservation(reservationId);
       Assert.assertNotNull(reservation);
       Assert.assertEquals(PlacedReservation.Status.ALLOCATED,
@@ -744,11 +744,12 @@ public class TestSingleQueueLlamaAM {
           (resource1Id, PlacedResource.Status.LOST);
       listener.events.clear();
       llama.onEvent(Arrays.asList(change2));
-      Assert.assertEquals(1,
-          listener.events.get(0).getRejectedReservationIds().size());
-      Assert.assertEquals(0,
-          listener.events.get(0).getPreemptedClientResourceIds()
-              .size());
+      List<PlacedResource> resources = TestUtils.getResources(listener.events.get(0),
+          PlacedResource.Status.PREEMPTED);
+      List<PlacedReservation> reservations = TestUtils.getReservations(
+          listener.events.get(0), PlacedReservation.Status.LOST);
+      Assert.assertEquals(0, resources.size());
+      Assert.assertEquals(1, reservations.size());
       Assert.assertNull(llama.getReservation(reservationId));
     } finally {
       llama.stop();
@@ -772,13 +773,15 @@ public class TestSingleQueueLlamaAM {
           (resource1Id, PlacedResource.Status.LOST);
       listener.events.clear();
       llama.onEvent(Arrays.asList(change2));
-      Assert.assertEquals(1,
-          listener.events.get(0).getLostClientResourcesIds().size());
-      Assert.assertEquals(0,
-          listener.events.get(0).getRejectedReservationIds().size());
-      Assert.assertEquals(0,
-          listener.events.get(0).getPreemptedReservationIds().size
-              ());
+      List<PlacedResource> resources = TestUtils.getResources(listener.events.get(0),
+          PlacedResource.Status.LOST);
+      List<PlacedReservation> reservations = TestUtils.getReservations(
+          listener.events.get(0), null);
+      Assert.assertEquals(1, resources.size());
+      Assert.assertEquals(0, reservations.size());
+      reservations = TestUtils.getReservations(
+          listener.events.get(0), PlacedReservation.Status.REJECTED);
+      Assert.assertEquals(0, reservations.size());
       PlacedReservation reservation = llama.getReservation(reservationId);
       Assert.assertNotNull(reservation);
       Assert.assertEquals(PlacedReservation.Status.PARTIAL,
@@ -807,13 +810,15 @@ public class TestSingleQueueLlamaAM {
           (resource1Id, PlacedResource.Status.LOST);
       listener.events.clear();
       llama.onEvent(Arrays.asList(change2));
-      Assert.assertEquals(0,
-          listener.events.get(0).getRejectedReservationIds().size());
-      Assert.assertEquals(0,
-          listener.events.get(0).getPreemptedReservationIds().size
-              ());
-      Assert.assertEquals(1,
-          listener.events.get(0).getLostClientResourcesIds().size());
+      List<PlacedResource> resources = TestUtils.getResources(listener.events.get(0),
+          PlacedResource.Status.LOST);
+      List<PlacedReservation> reservations = TestUtils.getReservations(
+          listener.events.get(0), PlacedReservation.Status.PREEMPTED);
+      Assert.assertEquals(1, resources.size());
+      Assert.assertEquals(0, reservations.size());
+      reservations = TestUtils.getReservations(
+          listener.events.get(0), PlacedReservation.Status.REJECTED);
+      Assert.assertEquals(0, reservations.size());
       PlacedReservation reservation = llama.getReservation(reservationId);
       Assert.assertNotNull(reservation);
       Assert.assertEquals(PlacedReservation.Status.ALLOCATED,
@@ -842,13 +847,15 @@ public class TestSingleQueueLlamaAM {
           (resource1Id, PlacedResource.Status.LOST);
       listener.events.clear();
       llama.onEvent(Arrays.asList(change2));
-      Assert.assertEquals(0,
-          listener.events.get(0).getRejectedReservationIds().size());
-      Assert.assertEquals(0,
-          listener.events.get(0).getPreemptedReservationIds().size
-              ());
-      Assert.assertEquals(1,
-          listener.events.get(0).getLostClientResourcesIds().size());
+      List<PlacedResource> resources = TestUtils.getResources(listener.events.get(0),
+          PlacedResource.Status.LOST);
+      List<PlacedReservation> reservations = TestUtils.getReservations(
+          listener.events.get(0), PlacedReservation.Status.PREEMPTED);
+      Assert.assertEquals(1, resources.size());
+      Assert.assertEquals(0, reservations.size());
+      reservations = TestUtils.getReservations(
+          listener.events.get(0), PlacedReservation.Status.REJECTED);
+      Assert.assertEquals(0, reservations.size());
       PlacedReservation reservation = llama.getReservation(reservationId);
       Assert.assertNotNull(reservation);
       Assert.assertEquals(PlacedReservation.Status.ALLOCATED,
@@ -930,10 +937,8 @@ public class TestSingleQueueLlamaAM {
       Assert.assertNull(llama._getReservation(reservationId1));
       Assert.assertNull(llama._getReservation(reservationId2));
       Assert.assertNull(llama._getReservation(reservationId3));
-      Assert.assertEquals(2, listener.events.size());
-      Assert.assertEquals(3,
-          listener.events.get(0).getRejectedReservationIds().size() +
-              listener.events.get(1).getRejectedReservationIds().size());
+      Assert.assertEquals(3, TestUtils.getReservations(listener.events,
+          PlacedReservation.Status.LOST, false).size());
     } finally {
       llama.stop();
     }

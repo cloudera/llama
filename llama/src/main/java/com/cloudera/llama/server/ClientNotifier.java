@@ -19,6 +19,8 @@ package com.cloudera.llama.server;
 
 import com.cloudera.llama.am.api.LlamaAMEvent;
 import com.cloudera.llama.am.api.LlamaAMListener;
+import com.cloudera.llama.am.api.PlacedReservation;
+import com.cloudera.llama.am.api.PlacedResource;
 import com.cloudera.llama.thrift.TLlamaAMNotificationRequest;
 import com.cloudera.llama.thrift.TLlamaAMNotificationResponse;
 import com.cloudera.llama.util.DelayedRunnable;
@@ -31,8 +33,11 @@ import org.slf4j.LoggerFactory;
 
 import javax.security.auth.Subject;
 import java.security.PrivilegedExceptionAction;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.DelayQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -119,14 +124,36 @@ public class ClientNotifier implements LlamaAMListener {
   }
 
   @Override
-  public void handle(LlamaAMEvent event) {
-    if (nodeMapper == null) {
-      throw new IllegalStateException("Cannot handle LlamaAMEvents without a" +
-          "NodeMapper implementation");
-    }
-    if (!event.isEmpty()) {
-      queueNotifier(new Notifier(event.getHandle(),
-          TypeUtils.toAMNotification(event, nodeMapper)));
+  public void onEvent(LlamaAMEvent event) {
+    if (!event.isEcho()) {
+      if (nodeMapper == null) {
+        throw new IllegalStateException("Cannot handle LlamaAMEvents without a" +
+            "NodeMapper implementation");
+      }
+      Map<UUID, List<Object>> mapRR =
+          new HashMap<UUID, List<Object>>();
+      for (PlacedReservation rr : event.getReservationChanges()) {
+        List<Object> list = mapRR.get(rr.getHandle());
+        if (list == null) {
+          list = new ArrayList<Object>();
+          mapRR.put(rr.getHandle(), list);
+        }
+        list.add(rr);
+      }
+      for (PlacedResource r : event.getResourceChanges()) {
+        List<Object> list = mapRR.get(r.getHandle());
+        if (list == null) {
+          list = new ArrayList<Object>();
+          mapRR.put(r.getHandle(), list);
+        }
+        list.add(r);
+      }
+      for (Map.Entry<UUID, List<Object>> entry : mapRR.entrySet()) {
+        queueNotifier(new Notifier(entry.getKey(),
+            TypeUtils.toAMNotification(entry.getKey(), entry.getValue(),
+                nodeMapper)));
+
+      }
     }
   }
 

@@ -21,6 +21,7 @@ import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.LlamaAMEvent;
 import com.cloudera.llama.am.api.LlamaAMListener;
 import com.cloudera.llama.am.api.PlacedReservation;
+import com.cloudera.llama.am.api.PlacedResource;
 import com.cloudera.llama.am.api.Resource;
 import com.cloudera.llama.am.api.TestUtils;
 import com.cloudera.llama.util.UUID;
@@ -41,7 +42,7 @@ public class TestLlamaAMWithMock {
         new ArrayList<LlamaAMEvent>());
 
     @Override
-    public void handle(LlamaAMEvent event) {
+    public void onEvent(LlamaAMEvent event) {
       events.add(event);
     }
   }
@@ -73,15 +74,17 @@ public class TestLlamaAMWithMock {
       Resource a4 = TestUtils.createResource(MockLlamaAMFlags.LOSE + "h3",
           Resource.Locality.DONT_CARE, 1, 1);
       PlacedReservation pr1 = llama.reserve(TestUtils.createReservation(
-          UUID.randomUUID(), "u", "q1", a1, false));
+          UUID.randomUUID(), "u", "q1", a1, true));
       PlacedReservation pr2 = llama.reserve(TestUtils.createReservation(
-          UUID.randomUUID(), "u", "q1", a2, false));
+          UUID.randomUUID(), "u", "q1", a2, true));
       PlacedReservation pr3 = llama.reserve(TestUtils.createReservation(
-          UUID.randomUUID(), "u", "q1", a3, false));
+          UUID.randomUUID(), "u", "q1", a3, true));
       PlacedReservation pr4 = llama.reserve(TestUtils.createReservation(
-          UUID.randomUUID(), "u", "q1", a4, false));
+          UUID.randomUUID(), "u", "q1", a4, true));
       Thread.sleep(100);
-      Assert.assertEquals(6, listener.events.size());
+      //for gang reservations, ALLOCATED to PREEMPTED/LOST don't finish reservation
+      Assert.assertEquals(8,
+          TestUtils.getReservations(listener.events, null, true).size());
       Set<UUID> allocated = new HashSet<UUID>();
       allocated.add(pr1.getPlacedResources().get(0).getResourceId());
       allocated.add(pr3.getPlacedResources().get(0).getResourceId());
@@ -93,18 +96,19 @@ public class TestLlamaAMWithMock {
       Set<UUID> preempted = new HashSet<UUID>();
       preempted.add(pr3.getPlacedResources().get(0).getResourceId());
       for (LlamaAMEvent event : listener.events) {
-        if (!event.getAllocatedResources().isEmpty()) {
-          allocated.remove(event.getAllocatedResources().get(0)
-              .getResourceId());
-        }
-        if (!event.getRejectedClientResourcesIds().isEmpty()) {
-          rejected.remove(event.getRejectedClientResourcesIds().get(0));
-        }
-        if (!event.getLostClientResourcesIds().isEmpty()) {
-          lost.remove(event.getLostClientResourcesIds().get(0));
-        }
-        if (!event.getPreemptedClientResourceIds().isEmpty()) {
-          preempted.remove(event.getPreemptedClientResourceIds().get(0));
+        for (PlacedResource r : event.getResourceChanges()) {
+          if (r.getStatus() == PlacedResource.Status.ALLOCATED) {
+            allocated.remove(r.getResourceId());
+          }
+          if (r.getStatus() == PlacedResource.Status.REJECTED) {
+            rejected.remove(r.getResourceId());
+          }
+          if (r.getStatus() == PlacedResource.Status.LOST) {
+            lost.remove(r.getResourceId());
+          }
+          if (r.getStatus() == PlacedResource.Status.PREEMPTED) {
+            preempted.remove(r.getResourceId());
+          }
         }
       }
       Set<UUID> remaining = new HashSet<UUID>();
@@ -121,11 +125,9 @@ public class TestLlamaAMWithMock {
       llama.reserve(TestUtils.createReservation(UUID.randomUUID(), "u", "q1", a5,
           true));
       Thread.sleep(100);
-      Assert.assertEquals(1, listener.events.size());
-      Assert.assertEquals(1,
-          listener.events.get(0).getRejectedReservationIds().size());
-      Assert.assertEquals(1,
-          listener.events.get(0).getRejectedClientResourcesIds().size());
+      Assert.assertEquals(2, TestUtils.getReservations(listener.events, null, true).size());
+      Assert.assertEquals(1, TestUtils.getReservations(listener.events, PlacedReservation.Status.REJECTED, false).size());
+      Assert.assertEquals(1, TestUtils.getResources(listener.events, PlacedResource.Status.REJECTED, false).size());
     } finally {
       llama.stop();
     }
@@ -153,17 +155,19 @@ public class TestLlamaAMWithMock {
     boolean preempted = false;
     boolean allocated = false;
     for (LlamaAMEvent event : events) {
-      if (!event.getLostClientResourcesIds().isEmpty()) {
-        lost = true;
-      }
-      if (!event.getRejectedClientResourcesIds().isEmpty()) {
-        rejected = true;
-      }
-      if (!event.getPreemptedClientResourceIds().isEmpty()) {
-        preempted = true;
-      }
-      if (!event.getAllocatedResources().isEmpty()) {
-        allocated = true;
+      for (PlacedResource r : event.getResourceChanges()) {
+        if (r.getStatus() == PlacedResource.Status.ALLOCATED) {
+          allocated = true;
+        }
+        if (r.getStatus() == PlacedResource.Status.REJECTED) {
+          rejected = true;
+        }
+        if (r.getStatus() == PlacedResource.Status.LOST) {
+          lost = true;
+        }
+        if (r.getStatus() == PlacedResource.Status.PREEMPTED) {
+          preempted = true;
+        }
       }
     }
     return lost && rejected && preempted && allocated;

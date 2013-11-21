@@ -17,11 +17,13 @@
  */
 package com.cloudera.llama.am;
 
+import com.cloudera.llama.am.api.LlamaAMEvent;
 import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.PlacedResource;
 import com.cloudera.llama.am.api.Reservation;
 import com.cloudera.llama.am.api.Resource;
 import com.cloudera.llama.am.api.TestUtils;
+import com.cloudera.llama.am.impl.LlamaAMEventImpl;
 import com.cloudera.llama.am.impl.PlacedReservationImpl;
 import com.cloudera.llama.am.impl.PlacedResourceImpl;
 import com.cloudera.llama.server.ClientInfo;
@@ -33,7 +35,6 @@ import org.junit.Test;
 
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -182,6 +183,12 @@ public class TestRestData {
       Assert.assertFalse(exists);
     }
   }
+  
+  private LlamaAMEvent createEvents(PlacedReservation pr) {
+    LlamaAMEventImpl event = new LlamaAMEventImpl();
+    event.addReservation(pr);
+    return event;
+  }
 
   @Test
   public void testLifeCycleAndSelectors() throws Exception {
@@ -224,7 +231,7 @@ public class TestRestData {
     assertReservationHandle(restData, id1, handle1, false);
 
     // pending
-    restData.observe(Arrays.asList(pr1));
+    restData.onEvent(createEvents(pr1));
     assertReservationStatus(restData, id1, PlacedReservation.Status.PENDING,
         true);
     assertReservationBackedOffFlag(restData, id1, false);
@@ -237,7 +244,7 @@ public class TestRestData {
 
     // backed off
     pr1.setStatus(PlacedReservation.Status.BACKED_OFF);
-    restData.observe(Arrays.asList(pr1));
+    restData.onEvent(createEvents(pr1));
     assertReservationStatus(restData, id1, PlacedReservation.Status.BACKED_OFF,
         true);
     assertReservationBackedOffFlag(restData, id1, true);
@@ -250,7 +257,7 @@ public class TestRestData {
 
     // pending
     pr1.setStatus(PlacedReservation.Status.PENDING);
-    restData.observe(Arrays.asList(pr1));
+    restData.onEvent(createEvents(pr1));;
     assertReservationStatus(restData, id1, PlacedReservation.Status.PENDING,
         true);
     assertReservationBackedOffFlag(restData, id1, true);
@@ -265,7 +272,7 @@ public class TestRestData {
     pr1.setStatus(PlacedReservation.Status.PARTIAL);
     ((PlacedResourceImpl) pr1.getResources().get(0)).setAllocationInfo("h1", 2,
         2024);
-    restData.observe(Arrays.asList(pr1));
+    restData.onEvent(createEvents(pr1));;
     assertReservationStatus(restData, id1, PlacedReservation.Status.PARTIAL,
         true);
     assertReservationBackedOffFlag(restData, id1, true);
@@ -282,7 +289,7 @@ public class TestRestData {
         2024);
     ((PlacedResourceImpl) pr1.getResources().get(1)).setAllocationInfo("h3", 3,
         3036);
-    restData.observe(Arrays.asList(pr1));
+    restData.onEvent(createEvents(pr1));;
     assertReservationStatus(restData, id1, PlacedReservation.Status.ALLOCATED,
         true);
     assertReservationBackedOffFlag(restData, id1, true);
@@ -295,7 +302,7 @@ public class TestRestData {
 
     // ended
     pr1.setStatus(PlacedReservation.Status.RELEASED);
-    restData.observe(Arrays.asList(pr1));
+    restData.onEvent(createEvents(pr1));;
     assertReservationStatus(restData, id1, null, false);
     assertReservationQueue(restData, id1, "q1", false);
     assertReservationHandle(restData, id1, handle1, false);
@@ -335,7 +342,7 @@ public class TestRestData {
     };
 
     restData.onRegister(clientInfo);
-    restData.observe(Arrays.asList(pr1));
+    restData.onEvent(createEvents(pr1));;
 
     StringWriter writer = new StringWriter();
     restData.writeAllAsJson(writer);
@@ -379,7 +386,7 @@ public class TestRestData {
     Assert.assertEquals(id1.toString(), ((List) map1.get("h2")).get(0));
 
     pr1.setStatus(PlacedReservation.Status.RELEASED);
-    restData.observe(Arrays.asList(pr1));
+    restData.onEvent(createEvents(pr1));;
     restData.onUnregister(clientInfo);
   }
 
@@ -424,7 +431,7 @@ public class TestRestData {
     };
 
     restData.onRegister(clientInfo);
-    restData.observe(Arrays.asList(pr1));
+    restData.onEvent(createEvents(pr1));;
 
     writer = new StringWriter();
     restData.writeSummaryAsJson(writer);
@@ -454,7 +461,7 @@ public class TestRestData {
         ((List) map.get(RestData.NODES_SUMMARY_KEY)).get(1)).get("node"));
 
     pr1.setStatus(PlacedReservation.Status.RELEASED);
-    restData.observe(Arrays.asList(pr1));
+    restData.onEvent(createEvents(pr1));;
     restData.onUnregister(clientInfo);
 
     writer = new StringWriter();

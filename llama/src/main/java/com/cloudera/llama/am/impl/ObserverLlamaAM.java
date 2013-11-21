@@ -21,66 +21,37 @@ import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.LlamaAMEvent;
 import com.cloudera.llama.am.api.LlamaAMException;
 import com.cloudera.llama.am.api.LlamaAMListener;
-import com.cloudera.llama.am.api.LlamaAMObserver;
 import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.Reservation;
-import com.cloudera.llama.server.MetricUtil;
-import com.cloudera.llama.util.Clock;
 import com.cloudera.llama.util.ParamChecker;
 import com.cloudera.llama.util.UUID;
-import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 
-public class ObserverLlamaAM extends LlamaAM implements LlamaAMListener,
-    Runnable {
-  private final static String QUEUE_GAUGE = LlamaAM.METRIC_PREFIX +
-      ".observer.queue.size.gauge";
+public class ObserverLlamaAM extends LlamaAMImpl implements LlamaAMListener {
 
   private final LlamaAM llamaAM;
-  private final BlockingQueue<PlacedReservation> changes;
-  private final Thread processorThread;
-  private final LlamaAMObserver observer;
 
-  public ObserverLlamaAM(LlamaAM llamaAM, LlamaAMObserver observer) {
+  public ObserverLlamaAM(LlamaAM llamaAM) {
     super(llamaAM.getConf());
     this.llamaAM = ParamChecker.notNull(llamaAM, "llamaAM");
-    this.observer = ParamChecker.notNull(observer, "observer");
-    changes = new LinkedBlockingQueue<PlacedReservation>();
     llamaAM.addListener(this);
-    processorThread = new Thread(this, "llama-am-observer-processor");
-    processorThread.setDaemon(true);
   }
 
   @Override
   public void setMetricRegistry(MetricRegistry metricRegistry) {
-    super.setMetricRegistry(metricRegistry);
     llamaAM.setMetricRegistry(metricRegistry);
-    if (metricRegistry != null) {
-      MetricUtil.registerGauge(metricRegistry, QUEUE_GAUGE,
-          new Gauge<Integer>() {
-            @Override
-            public Integer getValue() {
-              return changes.size();
-            }
-          });
-    }
   }
 
   @Override
   public synchronized void start() throws LlamaAMException {
     llamaAM.start();
-    processorThread.start();
   }
 
   @Override
   public synchronized void stop() {
     llamaAM.stop();
-    processorThread.interrupt();
   }
 
   @Override
@@ -94,28 +65,19 @@ public class ObserverLlamaAM extends LlamaAM implements LlamaAMListener,
   }
 
   @Override
-  public void addListener(LlamaAMListener listener) {
-    llamaAM.addListener(listener);
-  }
-
-  @Override
-  public void removeListener(LlamaAMListener listener) {
-    llamaAM.removeListener(listener);
-  }
-
-  @Override
   public PlacedReservation reserve(UUID reservationId, Reservation reservation)
       throws LlamaAMException {
     PlacedReservation pr = llamaAM.reserve(reservationId, reservation);
-    changes.add(pr);
+    LlamaAMEventImpl event = new LlamaAMEventImpl(true);
+    event.addReservation(pr);
+    dispatch(event);
     return pr;
   }
 
   @Override
   public PlacedReservation getReservation(UUID reservationId)
       throws LlamaAMException {
-    PlacedReservation reservation = llamaAM.getReservation(reservationId);
-    return reservation;
+    return llamaAM.getReservation(reservationId);
   }
 
   @Override
@@ -123,7 +85,9 @@ public class ObserverLlamaAM extends LlamaAM implements LlamaAMListener,
       throws LlamaAMException {
     PlacedReservation pr = llamaAM.releaseReservation(handle, reservationId);
     if (pr != null) {
-      changes.add(pr);
+      LlamaAMEventImpl event = new LlamaAMEventImpl(!handle.equals(ADMIN_HANDLE));
+      event.addReservation(pr);
+      dispatch(event);
     }
     return pr;
   }
@@ -131,42 +95,30 @@ public class ObserverLlamaAM extends LlamaAM implements LlamaAMListener,
   @Override
   public List<PlacedReservation> releaseReservationsForHandle(UUID handle)
       throws LlamaAMException {
-    List<PlacedReservation> ids = llamaAM.releaseReservationsForHandle(handle);
-    changes.addAll(ids);
-    return ids;
+    List<PlacedReservation> prs = llamaAM.releaseReservationsForHandle(handle);
+    LlamaAMEventImpl event = new LlamaAMEventImpl(false);
+    for (PlacedReservation pr : prs) {
+      event.addReservation(pr);
+    }
+    dispatch(event);
+    return prs;
   }
 
   @Override
   public List<PlacedReservation> releaseReservationsForQueue(String queue)
       throws LlamaAMException {
-    List<PlacedReservation> ids = llamaAM.releaseReservationsForQueue(queue);
-    changes.addAll(ids);
-    return ids;
+    List<PlacedReservation> prs = llamaAM.releaseReservationsForQueue(queue);
+    LlamaAMEventImpl event = new LlamaAMEventImpl(false);
+    for (PlacedReservation pr : prs) {
+      event.addReservation(pr);
+    }
+    dispatch(event);
+    return prs;
   }
 
   @Override
-  public void handle(LlamaAMEvent event) {
-    changes.addAll(event.getChanges());
-  }
-
-  @Override
-  public void run() {
-      try {
-        List<PlacedReservation> list = new ArrayList<PlacedReservation>();
-        while (llamaAM.isRunning()) {
-          Clock.sleep(50);
-          if (changes.peek() != null) {
-            changes.drainTo(list, 500);
-            while (!list.isEmpty()) {
-              observer.observe(list);
-              list.clear();
-              changes.drainTo(list, 500);
-            }
-          }
-        }
-      } catch (InterruptedException ex) {
-        //NOP
-      }
+  public void onEvent(LlamaAMEvent event) {
+    dispatch(event);
   }
 
 }

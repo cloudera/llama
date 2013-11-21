@@ -247,8 +247,8 @@ public class ClientNotificationService implements ClientNotifier.ClientRegistry,
   }
 
   @Override
-  public void handle(LlamaAMEvent event) {
-    clientNotifier.handle(event);
+  public void onEvent(LlamaAMEvent event) {
+    clientNotifier.onEvent(event);
   }
 
   //metric

@@ -21,6 +21,8 @@ import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.LlamaAMEvent;
 import com.cloudera.llama.am.api.LlamaAMException;
 import com.cloudera.llama.am.api.LlamaAMListener;
+import com.cloudera.llama.am.api.PlacedReservation;
+import com.cloudera.llama.am.api.PlacedResource;
 import com.cloudera.llama.am.api.Resource;
 import com.cloudera.llama.am.api.TestUtils;
 import com.cloudera.llama.util.UUID;
@@ -53,7 +55,7 @@ public class TestLlamaAMWithYarn {
         ArrayList<LlamaAMEvent>());
 
     @Override
-    public void handle(LlamaAMEvent event) {
+    public void onEvent(LlamaAMEvent event) {
       events.add(event);
     }
   }
@@ -171,7 +173,7 @@ public class TestLlamaAMWithYarn {
     testReserve(false);
   }
 
-  @Test(timeout = 600000)
+  @Test(timeout = 60000)
   public void testYarnRestart() throws Exception {
     try {
       startYarn(createMiniYarnConfig(false));
@@ -186,18 +188,18 @@ public class TestLlamaAMWithYarn {
             Resource.Locality.MUST, 1, 1024);
         llama.reserve(TestUtils.createReservation(UUID.randomUUID(), "u",
             "queue1", a1, true));
-        while (listener.events.isEmpty()) {
+        while (listener.events.size() < 2) {
           Thread.sleep(100);
         }
         restartMiniYarn();
         listener.events.clear();
         llama.reserve(TestUtils.createReservation(UUID.randomUUID(), "u",
             "queue1", a1, true));
-        while (listener.events.isEmpty()) {
+        while (listener.events.size() < 2) {
           Thread.sleep(100);
         }
-        LlamaAMEvent event = listener.events.get(0);
-        Assert.assertEquals(1, event.getLostClientResourcesIds().size());
+        Assert.assertEquals(1, TestUtils.getReservations(listener.events,
+            PlacedReservation.Status.LOST, false).size());
       } finally {
         llama.stop();
       }
@@ -229,7 +231,7 @@ public class TestLlamaAMWithYarn {
             Resource.Locality.DONT_CARE, 1, 1024);
         UUID pr3 = llama.reserve(TestUtils.createReservation(UUID.randomUUID(), "u", "queue1",
             Arrays.asList(r), true)).getReservationId();
-        while (listener.events.size() < 3) {
+        while (listener.events.size() < 6) {
           Thread.sleep(100);
         }
         
@@ -240,7 +242,12 @@ public class TestLlamaAMWithYarn {
         
         Set<UUID> got = new HashSet<UUID>();
         for (LlamaAMEvent event : listener.events) {
-          got.addAll(event.getAllocatedReservationIds());
+          Set<UUID> ids = new HashSet<UUID>();
+          for (PlacedReservation rr :
+              TestUtils.getReservations(event, PlacedReservation.Status.ALLOCATED)) {
+            ids.add(rr.getReservationId());
+          };
+          got.addAll(ids);
         }
         Assert.assertEquals(expected, got);
       } finally {
