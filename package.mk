@@ -167,7 +167,7 @@ $(BUILD_DIR)/%/.deb:
 				--preserve-envvar PATH \
 				--preserve-envvar JAVA5_HOME --preserve-envvar FORREST_HOME --preserve-envvar MAVEN3_HOME \
 				--preserve-envvar THRIFT_HOME --preserve-envvar JAVA_HOME --preserve-envvar GIT_REPO \
-				--preserve-envvar NODE_HOME -uc -us -b
+				--preserve-envvar NODE_HOME --preserve-envvar SCALA_HOME -uc -us -b
 	touch $@
 
 $(BUILD_DIR)/%/.relnotes:  $($(PKG)_OUTPUT_DIR)/$($(PKG)_NAME)-$($(PKG)_PKG_VERSION).releasenotes.html
