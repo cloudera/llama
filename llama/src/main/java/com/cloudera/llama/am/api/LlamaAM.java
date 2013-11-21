@@ -21,7 +21,7 @@ import com.cloudera.llama.am.impl.APIContractLlamaAM;
 import com.cloudera.llama.am.impl.GangAntiDeadlockLlamaAM;
 import com.cloudera.llama.am.impl.MultiQueueLlamaAM;
 import com.cloudera.llama.am.impl.ObserverLlamaAM;
-import com.cloudera.llama.am.impl.ParamChecker;
+import com.cloudera.llama.util.ParamChecker;
 import com.cloudera.llama.util.UUID;
 import com.codahale.metrics.MetricRegistry;
 import org.apache.hadoop.conf.Configuration;

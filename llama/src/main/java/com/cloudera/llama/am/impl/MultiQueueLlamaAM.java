@@ -25,6 +25,7 @@ import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.PlacedResource;
 import com.cloudera.llama.am.api.Reservation;
 import com.cloudera.llama.server.MetricUtil;
+import com.cloudera.llama.util.FastFormat;
 import com.cloudera.llama.util.UUID;
 import com.codahale.metrics.CachedGauge;
 import com.codahale.metrics.Gauge;
@@ -60,7 +61,7 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
     reservationToQueue = new ConcurrentHashMap<UUID, String>();
     if (SingleQueueLlamaAM.getRMConnectorClass(conf) == null) {
       throw new IllegalArgumentException(FastFormat.format(
-          "RMLlamaAMConnector class not defined in the configuration under '{}'",
+          "RMConnector class not defined in the configuration under '{}'",
           SingleQueueLlamaAM.RM_CONNECTOR_CLASS_KEY));
     }
   }

@@ -42,8 +42,6 @@ public interface PlacedResource extends Resource {
     }
   }
 
-  public UUID getResourceId();
-
   public Status getStatus();
 
   public long getPlacedOn();

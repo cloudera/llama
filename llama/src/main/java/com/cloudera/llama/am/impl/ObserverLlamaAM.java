@@ -26,6 +26,7 @@ import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.Reservation;
 import com.cloudera.llama.server.MetricUtil;
 import com.cloudera.llama.util.Clock;
+import com.cloudera.llama.util.ParamChecker;
 import com.cloudera.llama.util.UUID;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;

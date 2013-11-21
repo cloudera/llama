@@ -18,7 +18,7 @@
 package com.cloudera.llama.server;
 
 import com.cloudera.llama.am.api.LlamaAM;
-import com.cloudera.llama.am.mock.MockRMLlamaAMConnector;
+import com.cloudera.llama.am.mock.MockRMConnector;
 import junit.framework.Assert;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -85,7 +85,7 @@ public class TestAbstractMain {
   private void createMainConf(String confDir, Configuration conf)
       throws Exception {
     System.setProperty(AbstractMain.CONF_DIR_SYS_PROP, confDir);
-    conf.setIfUnset(LlamaAM.RM_CONNECTOR_CLASS_KEY, MockRMLlamaAMConnector
+    conf.setIfUnset(LlamaAM.RM_CONNECTOR_CLASS_KEY, MockRMConnector
         .class.getName());
     conf.set(sConf.getPropertyName(ServerConfiguration.SERVER_ADDRESS_KEY),
         "localhost:0");

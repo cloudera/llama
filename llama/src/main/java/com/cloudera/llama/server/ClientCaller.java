@@ -17,7 +17,7 @@
  */
 package com.cloudera.llama.server;
 
-import com.cloudera.llama.am.impl.FastFormat;
+import com.cloudera.llama.util.FastFormat;
 import com.cloudera.llama.thrift.LlamaNotificationService;
 import com.cloudera.llama.util.UUID;
 import com.codahale.metrics.MetricRegistry;

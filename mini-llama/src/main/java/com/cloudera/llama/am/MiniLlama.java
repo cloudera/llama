@@ -18,9 +18,9 @@
 package com.cloudera.llama.am;
 
 import com.cloudera.llama.am.api.LlamaAM;
-import com.cloudera.llama.am.impl.FastFormat;
-import com.cloudera.llama.am.impl.ParamChecker;
-import com.cloudera.llama.am.yarn.YarnRMLlamaAMConnector;
+import com.cloudera.llama.util.FastFormat;
+import com.cloudera.llama.util.ParamChecker;
+import com.cloudera.llama.am.yarn.YarnRMConnector;
 import com.cloudera.llama.server.AbstractServer;
 import com.cloudera.llama.server.NodeMapper;
 import com.cloudera.llama.server.ServerConfiguration;
@@ -176,7 +176,7 @@ public class MiniLlama {
     ParamChecker.notNull(conf, "conf");
     ParamChecker.greaterThan(nodes, 0, "nodes");
     conf.set(ServerConfiguration.CONFIG_DIR_KEY, "");
-    conf.setIfUnset(LlamaAM.RM_CONNECTOR_CLASS_KEY, YarnRMLlamaAMConnector
+    conf.setIfUnset(LlamaAM.RM_CONNECTOR_CLASS_KEY, YarnRMConnector
         .class.getName());
     conf.setInt(MINI_CLUSTER_NODES_KEY, nodes);
     conf.setIfUnset(S_CONF.getPropertyName(

@@ -21,9 +21,10 @@ import com.cloudera.llama.am.api.LlamaAMException;
 import com.cloudera.llama.am.api.RMResource;
 import com.cloudera.llama.am.api.Resource;
 import com.cloudera.llama.am.api.TestUtils;
-import com.cloudera.llama.am.spi.RMLlamaAMCallback;
-import com.cloudera.llama.am.spi.RMLlamaAMConnector;
-import com.cloudera.llama.am.spi.RMResourceChange;
+import com.cloudera.llama.am.spi.RMConnector;
+import com.cloudera.llama.am.spi.RMEvent;
+import com.cloudera.llama.am.spi.RMListener;
+import com.cloudera.llama.am.spi.RMEvent;
 import com.cloudera.llama.util.Clock;
 import com.cloudera.llama.util.ManualClock;
 import com.cloudera.llama.util.UUID;
@@ -52,11 +53,11 @@ public class TestRMLlamaAMConnectorCache {
     Clock.setClock(Clock.SYSTEM);
   }
 
-  private static class MyRMLlamaConnector implements RMLlamaAMConnector {
+  private static class MyRMLlamaConnector implements RMConnector {
     private Set<String> invoked = new HashSet<String>();
 
     @Override
-    public void setLlamaAMCallback(RMLlamaAMCallback callback) {
+    public void setLlamaAMCallback(RMListener callback) {
       invoked.add("setLlamaAMCallback");
     }
 
@@ -112,7 +113,7 @@ public class TestRMLlamaAMConnectorCache {
 
     MyRMLlamaConnector connector = new MyRMLlamaConnector();
 
-    RMLlamaAMConnectorCache cache = new RMLlamaAMConnectorCache(
+    RMConnectorCache cache = new RMConnectorCache(
         new Configuration(false), connector);
 
     Assert.assertEquals(expected, connector.invoked);
@@ -121,13 +122,13 @@ public class TestRMLlamaAMConnectorCache {
     expected.add("register");
     expected.add("getNodes");
 
-    cache.setLlamaAMCallback(new RMLlamaAMCallback() {
+    cache.setLlamaAMCallback(new RMListener() {
       @Override
       public void stoppedByRM() {
       }
 
       @Override
-      public void changesFromRM(List<RMResourceChange> changes) {
+      public void onEvent(List<RMEvent> events) {
       }
     });
     cache.start();

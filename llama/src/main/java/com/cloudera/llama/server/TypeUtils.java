@@ -36,6 +36,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
+import com.cloudera.llama.util.ExceptionUtils;
 import com.cloudera.llama.util.UUID;
 
 public class TypeUtils {
@@ -88,15 +90,16 @@ public class TypeUtils {
   }
 
   public static Resource toResource(TResource resource, NodeMapper nodeMapper) {
-    UUID clientId = toUUID(resource.getClient_resource_id());//TODO get rid off
+    UUID resourceId = toUUID(resource.getClient_resource_id());
     int vCpuCores = resource.getV_cpu_cores();
     int memoryMb = resource.getMemory_mb();
     String location = nodeMapper.getNodeManager(resource.getAskedLocation());
     Resource.Locality locality = Resource.Locality.valueOf(
         resource.getEnforcement().toString());
     Resource.Builder builder = Builders.createResourceBuilder();
-    return builder.setLocationAsk(location).setLocalityAsk(locality).
-        setCpuVCoresAsk(vCpuCores).setMemoryMbsAsk(memoryMb).build();
+    return builder.setResourceId(resourceId).setLocationAsk(location).
+        setLocalityAsk(locality).setCpuVCoresAsk(vCpuCores).
+        setMemoryMbsAsk(memoryMb).build();
   }
 
   public static List<Resource> toResourceList(List<TResource> tResources,

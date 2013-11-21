@@ -22,12 +22,11 @@ import com.cloudera.llama.am.api.PlacedResource;
 import com.cloudera.llama.am.api.RMResource;
 import com.cloudera.llama.am.api.Resource;
 import com.cloudera.llama.util.Clock;
+import com.cloudera.llama.util.FastFormat;
+import com.cloudera.llama.util.ParamChecker;
 import com.cloudera.llama.util.UUID;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class PlacedResourceImpl
@@ -112,7 +111,7 @@ public class PlacedResourceImpl
   @SuppressWarnings("unchecked")
   public static PlacedResourceImpl createPlaced(PlacedReservation reservation,
       Resource resource) {
-    return new PlacedResourceImpl(UUID.randomUUID(), Status.PENDING,
+    return new PlacedResourceImpl(resource.getResourceId(), Status.PENDING,
         resource.getLocationAsk(), resource.getLocalityAsk(),
         resource.getCpuVCoresAsk(), resource.getMemoryMbsAsk(),
         reservation.getPlacedOn(), reservation.getReservationId(),
@@ -120,8 +119,8 @@ public class PlacedResourceImpl
         -1, null, -1, -1, null);
   }
 
-  private static final String RESOURCE_TO_STRING = "Resource[locationAsk:{} " +
-      "localityAsk:{} cpuVCoresAsk:{} memoryMbsAsk:{}]";
+  private static final String RESOURCE_TO_STRING = "Resource[resourceId:{} " +
+      "locationAsk:{} localityAsk:{} cpuVCoresAsk:{} memoryMbsAsk:{}]";
 
   private static final String PLACED_RESOURCE_TO_STRING = "PlacedResource[" +
       "resourceId:{} status:{} locationAsk:{} localityAsk:{} cpuVCoresAsk:{} " +
@@ -133,8 +132,9 @@ public class PlacedResourceImpl
   public String toString() {
     String str;
     if (getResourceId() == null) {
-      str = FastFormat.format(RESOURCE_TO_STRING, getLocationAsk(),
-          getLocalityAsk(), getCpuVCoresAsk(), getMemoryMbsAsk());
+      str = FastFormat.format(RESOURCE_TO_STRING, getResourceId(),
+          getLocationAsk(), getLocalityAsk(), getCpuVCoresAsk(),
+          getMemoryMbsAsk());
     } else {
       str= FastFormat.format(PLACED_RESOURCE_TO_STRING, getResourceId(),
           getStatus(), getLocationAsk(), getLocalityAsk(), getCpuVCoresAsk(),
@@ -149,16 +149,15 @@ public class PlacedResourceImpl
   public boolean equals(Object obj) {
     boolean eq = false;
     if (obj instanceof PlacedResourceImpl) {
-      eq = (this == obj) || (getResourceId() != null &&
-          getResourceId().equals(((PlacedResource) obj).getResourceId()));
+      eq = (this == obj) ||
+           getResourceId().equals(((PlacedResource) obj).getResourceId());
     }
     return eq;
   }
 
   @Override
   public int hashCode() {
-    return (getResourceId() != null) ? getResourceId().hashCode()
-                                     : super.hashCode();
+    return getResourceId().hashCode();
   }
 
   @Override
@@ -273,6 +272,13 @@ public class PlacedResourceImpl
     }
 
     @Override
+    public Builder setResourceId(UUID resourceId) {
+      ParamChecker.notNull(resourceId, "resourceId");
+      this.resourceId = resourceId;
+      return this;
+    }
+
+    @Override
     public Builder setLocationAsk(String locationAsk) {
       ParamChecker.notEmpty(locationAsk, "locationAsk");
       this.locationAsk = locationAsk;
@@ -302,6 +308,7 @@ public class PlacedResourceImpl
 
     @Override
     public Resource build() {
+      ParamChecker.notNull(resourceId, "resourceId");
       ParamChecker.notEmpty(locationAsk, "locationAsk");
       ParamChecker.notNull(localityAsk, "localityAsk");
       ParamChecker.greaterEqualZero(cpuVCoresAsk, "cpuVCoresAsk");

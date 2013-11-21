@@ -53,7 +53,7 @@ public class TestLlamaAMWithMock {
     conf.set("llama.am.mock.events.max.wait.ms", "10");
     conf.set("llama.am.mock.nodes", "h0,h1,h2,h3");
     conf.set(LlamaAM.INITIAL_QUEUES_KEY, "q1");
-    conf.set(LlamaAM.RM_CONNECTOR_CLASS_KEY, MockRMLlamaAMConnector.class.getName());
+    conf.set(LlamaAM.RM_CONNECTOR_CLASS_KEY, MockRMConnector.class.getName());
     return conf;
   }
 

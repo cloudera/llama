@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.cloudera.llama.server;
+package com.cloudera.llama.util;
 
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
@@ -28,12 +28,12 @@ public abstract class DelayedRunnable implements Delayed, Runnable {
   }
 
   public void setDelay(long delay) {
-    this.delay = System.currentTimeMillis() + delay;
+    this.delay = Clock.currentTimeMillis() + delay;
   }
 
   @Override
   public long getDelay(TimeUnit unit) {
-    return unit.convert(delay - System.currentTimeMillis(),
+    return unit.convert(delay - Clock.currentTimeMillis(),
         TimeUnit.MILLISECONDS);
   }
 

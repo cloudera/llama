@@ -20,9 +20,10 @@ package com.cloudera.llama.am.impl;
 import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.LlamaAMException;
 import com.cloudera.llama.am.api.RMResource;
-import com.cloudera.llama.am.spi.RMLlamaAMCallback;
-import com.cloudera.llama.am.spi.RMLlamaAMConnector;
-import com.cloudera.llama.am.spi.RMResourceChange;
+import com.cloudera.llama.am.spi.RMEvent;
+import com.cloudera.llama.am.spi.RMListener;
+import com.cloudera.llama.am.spi.RMConnector;
+import com.cloudera.llama.util.FastFormat;
 import com.cloudera.llama.util.UUID;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
@@ -38,10 +39,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-public class RMLlamaAMConnectorCache implements RMLlamaAMConnector,
-    RMLlamaAMCallback, ResourceCache.Listener {
+public class RMConnectorCache implements RMConnector,
+    RMListener, ResourceCache.Listener {
   private static final Logger LOG =
-      LoggerFactory.getLogger(RMLlamaAMConnectorCache.class);
+      LoggerFactory.getLogger(RMConnectorCache.class);
 
   private static final String METRIC_PREFIX_TEMPLATE = LlamaAM.METRIC_PREFIX +
       "queue({}).cache.";
@@ -54,15 +55,15 @@ public class RMLlamaAMConnectorCache implements RMLlamaAMConnector,
 
   private Configuration conf;
   private ResourceCache cache;
-  private final RMLlamaAMConnector connector;
-  private RMLlamaAMCallback callback;
+  private final RMConnector connector;
+  private RMListener callback;
   private MetricRegistry metricRegistry;
   private String queue;
   private final Meter resourcesAsked;
   private final Meter cacheHits;
 
-  public RMLlamaAMConnectorCache(Configuration conf,
-      RMLlamaAMConnector connector) {
+  public RMConnectorCache(Configuration conf,
+      RMConnector connector) {
     this.conf = conf;
     this.connector = connector;
     connector.setLlamaAMCallback(this);
@@ -75,7 +76,7 @@ public class RMLlamaAMConnectorCache implements RMLlamaAMConnector,
   }
 
   @Override
-  public void setLlamaAMCallback(RMLlamaAMCallback callback) {
+  public void setLlamaAMCallback(RMListener callback) {
     this.callback = callback;
   }
 
@@ -138,7 +139,7 @@ public class RMLlamaAMConnectorCache implements RMLlamaAMConnector,
   public void reserve(Collection<RMResource> resources)
       throws LlamaAMException {
     List<RMResource> list = new ArrayList<RMResource>(resources);
-    List<RMResourceChange> changes = new ArrayList<RMResourceChange>();
+    List<RMEvent> changes = new ArrayList<RMEvent>();
     Iterator<RMResource> it = list.iterator();
     while (it.hasNext()) {
       RMResource resource = it.next();
@@ -151,14 +152,14 @@ public class RMLlamaAMConnectorCache implements RMLlamaAMConnector,
         it.remove();
         connector.reassignResource(cached.getRmResourceId(),
             resource.getResourceId());
-        RMResourceChange change = RMResourceChange.createResourceAllocation(
+        RMEvent change = RMEvent.createAllocationEvent(
             resource.getResourceId(), cached.getRmResourceId(),
             cached.getCpuVCores(), cached.getMemoryMbs(), cached.getLocation());
         changes.add(change);
       }
     }
     connector.reserve(resources);
-    changesFromRM(changes);
+    onEvent(changes);
   }
 
   @Override
@@ -197,17 +198,17 @@ public class RMLlamaAMConnectorCache implements RMLlamaAMConnector,
   }
 
   @Override
-  public void changesFromRM(List<RMResourceChange> changes) {
-    Iterator<RMResourceChange> it = changes.iterator();
+  public void onEvent(List<RMEvent> events) {
+    Iterator<RMEvent> it = events.iterator();
     while (it.hasNext()) {
-      RMResourceChange change = it.next();
-      if (cache.findAndRemove(change.getClientResourceId()) != null) {
+      RMEvent change = it.next();
+      if (cache.findAndRemove(change.getResourceId()) != null) {
         LOG.warn("Cached resource '{}' status changed to '{}', discarding it " +
             "from cache", change.getRmResourceId(), change.getStatus());
         it.remove();
       }
     }
-    callback.changesFromRM(changes);
+    callback.onEvent(events);
   }
 
   @Override

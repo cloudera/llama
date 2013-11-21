@@ -17,9 +17,13 @@
  */
 package com.cloudera.llama.am.api;
 
+import com.cloudera.llama.util.UUID;
+
 public interface Resource {
 
   public interface Builder {
+
+    public Builder setResourceId(UUID resourceId);
 
     public Builder setLocationAsk(String locationAsk);
 
@@ -36,6 +40,9 @@ public interface Resource {
   public enum Locality {
     MUST, PREFERRED, DONT_CARE
   }
+
+  public UUID getResourceId();
+
 
   public String getLocationAsk();
 

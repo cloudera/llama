@@ -18,7 +18,7 @@
 package com.cloudera.llama.server;
 
 import com.cloudera.llama.am.HostnameOnlyNodeMapper;
-import com.cloudera.llama.am.impl.FastFormat;
+import com.cloudera.llama.util.FastFormat;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 

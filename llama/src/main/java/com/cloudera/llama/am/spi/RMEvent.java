@@ -18,22 +18,21 @@
 package com.cloudera.llama.am.spi;
 
 import com.cloudera.llama.am.api.PlacedResource;
-import com.cloudera.llama.am.impl.FastFormat;
+import com.cloudera.llama.util.FastFormat;
 
 import com.cloudera.llama.util.UUID;
 
-public class RMResourceChange {
-  private final UUID clientResourceId;
+public class RMEvent {
+  private final UUID resourceId;
   private final Object rmResourceId;
   private final PlacedResource.Status status;
   private final int cpuVCores;
   private final int memoryMb;
   private final String location;
 
-  private RMResourceChange(UUID clientResourceId,
-      Object rmResourceId, int cpuVCores, int memoryMb, String location,
-      PlacedResource.Status status) {
-    this.clientResourceId = clientResourceId;
+  private RMEvent(UUID resourceId, Object rmResourceId, int cpuVCores,
+      int memoryMb, String location, PlacedResource.Status status) {
+    this.resourceId = resourceId;
     this.rmResourceId = rmResourceId;
     this.status = status;
     this.location = location;
@@ -41,19 +40,19 @@ public class RMResourceChange {
     this.memoryMb = memoryMb;
   }
 
-  public static RMResourceChange createResourceAllocation(UUID clientResourceId,
+  public static RMEvent createAllocationEvent(UUID resourceId,
       Object rmResourceId, int vCpuCores, int memoryMb, String location) {
-    return new RMResourceChange(clientResourceId, rmResourceId, vCpuCores,
+    return new RMEvent(resourceId, rmResourceId, vCpuCores,
         memoryMb, location, PlacedResource.Status.ALLOCATED);
   }
 
-  public static RMResourceChange createResourceChange(UUID clientResourceId,
+  public static RMEvent createStatusChangeEvent(UUID resourceId,
       PlacedResource.Status status) {
-    return new RMResourceChange(clientResourceId, null, -1, -1, null, status);
+    return new RMEvent(resourceId, null, -1, -1, null, status);
   }
 
-  public UUID getClientResourceId() {
-    return clientResourceId;
+  public UUID getResourceId() {
+    return resourceId;
   }
 
   public Object getRmResourceId() {
@@ -76,17 +75,16 @@ public class RMResourceChange {
     return location;
   }
 
-  private static final String TO_STRING_ALLOCATED_MSG = "resourceChange" +
-      "[resourceId: {} status: {} cpuVCores: {} memoryMb: {} " +
-      "location: {}]";
+  private static final String TO_STRING_ALLOCATED_MSG = "rmEvent[" +
+      "resourceId: {} status: {} cpuVCores: {} memoryMb: {} location: {}]";
 
-  private static final String TO_STRING_CHANGED_MSG = "resourceChange" +
-      "[resourceId: {} status: {}]";
+  private static final String TO_STRING_CHANGED_MSG = "rmEvent[" +
+      "resourceId: {} status: {}]";
 
   public String toString() {
     String msg = (getStatus() == PlacedResource.Status.ALLOCATED)
                  ? TO_STRING_ALLOCATED_MSG : TO_STRING_CHANGED_MSG;
-    return FastFormat.format(msg, getClientResourceId(), getStatus(),
+    return FastFormat.format(msg, getResourceId(), getStatus(),
         getCpuVCores(), getMemoryMb(), getLocation());
   }
 

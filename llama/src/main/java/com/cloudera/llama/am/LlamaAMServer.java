@@ -18,7 +18,7 @@
 package com.cloudera.llama.am;
 
 import com.cloudera.llama.am.api.LlamaAM;
-import com.cloudera.llama.am.yarn.YarnRMLlamaAMConnector;
+import com.cloudera.llama.am.yarn.YarnRMConnector;
 import com.cloudera.llama.server.ClientInfo;
 import com.cloudera.llama.server.ClientNotificationService;
 import com.cloudera.llama.server.NodeMapper;
@@ -138,11 +138,11 @@ public class LlamaAMServer extends
       clientNotificationService.start();
       clientNotificationService.addListener(restData);
 
-      getConf().set(YarnRMLlamaAMConnector.ADVERTISED_HOSTNAME_KEY,
+      getConf().set(YarnRMConnector.ADVERTISED_HOSTNAME_KEY,
           ThriftEndPoint.getServerAddress(getServerConf()));
-      getConf().setInt(YarnRMLlamaAMConnector.ADVERTISED_PORT_KEY,
+      getConf().setInt(YarnRMConnector.ADVERTISED_PORT_KEY,
           ThriftEndPoint.getServerPort(getServerConf()));
-      getConf().set(YarnRMLlamaAMConnector.ADVERTISED_TRACKING_URL_KEY,
+      getConf().set(YarnRMConnector.ADVERTISED_TRACKING_URL_KEY,
           getHttpLlamaUI());
       llamaAm = LlamaAM.create(getConf(), restData);
       llamaAm.setMetricRegistry(getMetricRegistry());

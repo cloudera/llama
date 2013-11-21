@@ -17,8 +17,8 @@
  */
 package com.cloudera.llama.am.api;
 
-import com.cloudera.llama.am.spi.RMLlamaAMCallback;
-import com.cloudera.llama.am.spi.RMLlamaAMConnector;
+import com.cloudera.llama.am.spi.RMConnector;
+import com.cloudera.llama.am.spi.RMListener;
 import com.cloudera.llama.util.UUID;
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Assert;
@@ -29,15 +29,15 @@ import java.util.List;
 
 public class TestLlamaAM {
 
-  public static class MyRMLlamaAMConnector implements RMLlamaAMConnector {
+  public static class MyRMConnector implements RMConnector {
     static boolean created;
 
-    public MyRMLlamaAMConnector() {
+    public MyRMConnector() {
       created = true;
     }
 
     @Override
-    public void setLlamaAMCallback(RMLlamaAMCallback callback) {
+    public void setLlamaAMCallback(RMListener callback) {
     }
 
     @Override
@@ -82,7 +82,7 @@ public class TestLlamaAM {
     try {
       am.start();
       am.reserve(TestUtils.createReservation(true));
-      Assert.assertTrue(MyRMLlamaAMConnector.created);
+      Assert.assertTrue(MyRMConnector.created);
     } finally {
       am.stop();
     }
@@ -91,8 +91,8 @@ public class TestLlamaAM {
   @Test
   public void testCreate() throws Exception {
     Configuration conf = new Configuration(false);
-    conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MyRMLlamaAMConnector.class,
-        RMLlamaAMConnector.class);
+    conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MyRMConnector.class,
+        RMConnector.class);
     testCreate(conf);
   }
 

@@ -212,7 +212,7 @@
   <!-- LlamaAM configuration -->
   <property>
     <name>llama.am.rm.connector.class</name>
-    <value>com.cloudera.llama.am.yarn.YarnRMLlamaAMConnector</value>
+    <value>com.cloudera.llama.am.yarn.YarnRMConnector</value>
     <description>
       Backing LlamaAM implementation to use.
       Available for functional testing:

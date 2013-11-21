@@ -21,10 +21,10 @@ import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.LlamaAMException;
 import com.cloudera.llama.am.api.PlacedResource;
 import com.cloudera.llama.am.api.RMResource;
-import com.cloudera.llama.am.impl.FastFormat;
-import com.cloudera.llama.am.spi.RMLlamaAMCallback;
-import com.cloudera.llama.am.spi.RMLlamaAMConnector;
-import com.cloudera.llama.am.spi.RMResourceChange;
+import com.cloudera.llama.am.spi.RMConnector;
+import com.cloudera.llama.am.spi.RMEvent;
+import com.cloudera.llama.util.FastFormat;
+import com.cloudera.llama.am.spi.RMListener;
 import com.cloudera.llama.util.NamedThreadFactory;
 import com.cloudera.llama.util.UUID;
 import org.apache.hadoop.conf.Configurable;
@@ -75,10 +75,10 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
+public class YarnRMConnector implements RMConnector, Configurable,
     AMRMClientAsync.CallbackHandler {
   private static final Logger LOG =
-      LoggerFactory.getLogger(YarnRMLlamaAMConnector.class);
+      LoggerFactory.getLogger(YarnRMConnector.class);
 
   public static final String PREFIX_KEY = LlamaAM.PREFIX_KEY + "yarn.";
 
@@ -122,7 +122,7 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
   private Configuration conf;
   private Configuration yarnConf;
   private boolean includePortInNodeName;
-  private RMLlamaAMCallback llamaCallback;
+  private RMListener llamaCallback;
   private UserGroupInformation ugi;
   private YarnClient yarnClient;
   private AMRMClientAsync<LlamaContainerRequest> amRmClientAsync;
@@ -134,7 +134,7 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
   private BlockingQueue<ContainerHandler> containerHandlerQueue;
   private ThreadPoolExecutor containerHandlerExecutor;
 
-  public YarnRMLlamaAMConnector() {
+  public YarnRMConnector() {
     nodes = Collections.synchronizedMap(new HashMap<String, Resource>());
   }
 
@@ -156,7 +156,7 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
   }
 
   @Override
-  public void setLlamaAMCallback(RMLlamaAMCallback callback) {
+  public void setLlamaAMCallback(RMListener callback) {
     llamaCallback = callback;
   }
 
@@ -256,7 +256,7 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
     AMRMClient<LlamaContainerRequest> amRmClient = AMRMClient.createAMRMClient();
     amRmClient.setNMTokenCache(nmTokenCache);
     amRmClientAsync = AMRMClientAsync.createAMRMClientAsync(amRmClient, 
-        heartbeatInterval, YarnRMLlamaAMConnector.this);
+        heartbeatInterval, YarnRMConnector.this);
     amRmClientAsync.init(yarnConf);
     amRmClientAsync.start();
     String urlWithoutScheme = getConf().get(ADVERTISED_TRACKING_URL_KEY,
@@ -594,7 +594,7 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
 
   @Override
   public void onContainersCompleted(List<ContainerStatus> containerStatuses) {
-    List<RMResourceChange> changes = new ArrayList<RMResourceChange>();
+    List<RMEvent> changes = new ArrayList<RMEvent>();
     for (ContainerStatus containerStatus : containerStatuses) {
       ContainerId containerId = containerStatus.getContainerId();
       UUID resourceId = containerToResourceMap.remove(containerId);
@@ -605,26 +605,26 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
             LOG.warn("It should never happen, container for resource '{}' " +
                 "exited on its own", resourceId);
             //reporting it as LOST for the client to take corrective measures.
-            changes.add(RMResourceChange.createResourceChange(resourceId,
+            changes.add(RMEvent.createStatusChangeEvent(resourceId,
                 PlacedResource.Status.LOST));
             break;
           case ContainerExitStatus.PREEMPTED:
             LOG.warn("Container for resource '{}' has been preempted",
                 resourceId);
-            changes.add(RMResourceChange.createResourceChange(resourceId,
+            changes.add(RMEvent.createStatusChangeEvent(resourceId,
                 PlacedResource.Status.PREEMPTED));
             break;
           case ContainerExitStatus.ABORTED:
           default:
             LOG.warn("Container for resource '{}' has been lost, exit status" +
                 " '{}'", resourceId, containerStatus.getExitStatus());
-            changes.add(RMResourceChange.createResourceChange(resourceId,
+            changes.add(RMEvent.createStatusChangeEvent(resourceId,
                 PlacedResource.Status.LOST));
             break;
         }
       }
     }
-    llamaCallback.changesFromRM(changes);
+    llamaCallback.onEvent(changes);
   }
 
   private enum Action {START, STOP}
@@ -673,10 +673,10 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
             action, container.getId(), clientResourceId,
             getNodeName(container.getNodeId()), ex.toString(), ex);
         if (action == Action.START) {
-          List<RMResourceChange> changes = new ArrayList<RMResourceChange>();
-          changes.add(RMResourceChange.createResourceChange(clientResourceId,
+          List<RMEvent> changes = new ArrayList<RMEvent>();
+          changes.add(RMEvent.createStatusChangeEvent(clientResourceId,
               PlacedResource.Status.LOST));
-          llamaCallback.changesFromRM(changes);
+          llamaCallback.onEvent(changes);
         }
       }
     }
@@ -691,16 +691,16 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
     }
   }
 
-  private RMResourceChange createResourceAllocation(RMResource resources,
+  private RMEvent createResourceAllocation(RMResource resources,
       Container container) {
-    return RMResourceChange.createResourceAllocation(resources.getResourceId(),
+    return RMEvent.createAllocationEvent(resources.getResourceId(),
         container.getId().toString(), container.getResource().getVirtualCores(),
         container.getResource().getMemory(), getNodeName(container.getNodeId()));
   }
 
   @Override
   public void onContainersAllocated(List<Container> containers) {
-    List<RMResourceChange> changes = new ArrayList<RMResourceChange>();
+    List<RMEvent> changes = new ArrayList<RMEvent>();
     // no need to use a ugi.doAs() as this is called from within Yarn client
     for (Container container : containers) {
       List<? extends Collection<LlamaContainerRequest>> matchingContainerReqs =
@@ -739,7 +739,7 @@ public class YarnRMLlamaAMConnector implements RMLlamaAMConnector, Configurable,
         }
       }
     }
-    llamaCallback.changesFromRM(changes);
+    llamaCallback.onEvent(changes);
   }
 
   @Override

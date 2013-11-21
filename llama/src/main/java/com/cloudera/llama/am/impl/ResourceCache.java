@@ -21,6 +21,8 @@ import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.RMResource;
 import com.cloudera.llama.am.api.Resource;
 import com.cloudera.llama.util.Clock;
+import com.cloudera.llama.util.FastFormat;
+import com.cloudera.llama.util.ParamChecker;
 import com.cloudera.llama.util.UUID;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;

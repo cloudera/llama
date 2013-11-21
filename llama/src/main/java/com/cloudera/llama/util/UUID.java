@@ -18,7 +18,7 @@
 package com.cloudera.llama.util;
 
 
-import com.cloudera.llama.am.impl.ParamChecker;
+import com.cloudera.llama.util.ParamChecker;
 
 import java.math.BigInteger;
 

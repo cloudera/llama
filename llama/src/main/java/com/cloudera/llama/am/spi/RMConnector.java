@@ -15,28 +15,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.cloudera.llama.server;
+package com.cloudera.llama.am.spi;
 
-import com.cloudera.llama.am.impl.ParamChecker;
+import com.cloudera.llama.am.api.LlamaAMException;
+import com.cloudera.llama.am.api.RMResource;
+import com.cloudera.llama.util.UUID;
 
-public class ExceptionUtils {
+import java.util.Collection;
+import java.util.List;
 
-  public static Throwable getRootCause(Throwable ex,
-      Class<? extends Throwable> rootCauseClassIfPresent) {
-    ParamChecker.notNull(ex, "ex");
-    ParamChecker.notNull(rootCauseClassIfPresent, "rootCauseClassIfPresent");
-    Throwable rootCause = null;
-    while (rootCause == null && ex != null) {
-      if (rootCauseClassIfPresent.isInstance(ex)) {
-        rootCause = ex;
-      }
-      if (ex.getCause() == null) {
-        rootCause = ex;
-      } else {
-        ex = ex.getCause();
-      }
-    }
-    return rootCause;
-  }
+public interface RMConnector {
+
+  public void setLlamaAMCallback(RMListener callback);
+
+  public void start() throws LlamaAMException;
+
+  public void stop();
+
+  public void register(String queue) throws LlamaAMException;
+
+  public void unregister();
+
+  public List<String> getNodes() throws LlamaAMException;
+
+  public void reserve(Collection<RMResource> resources) throws LlamaAMException;
+
+  public void release(Collection<RMResource> resources) throws LlamaAMException;
+
+  public boolean reassignResource(Object rmResourceId, UUID resourceId);
 
 }

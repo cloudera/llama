@@ -21,10 +21,10 @@ import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.LlamaAMException;
 import com.cloudera.llama.am.api.PlacedResource;
 import com.cloudera.llama.am.api.RMResource;
-import com.cloudera.llama.am.impl.FastFormat;
-import com.cloudera.llama.am.spi.RMLlamaAMCallback;
-import com.cloudera.llama.am.spi.RMLlamaAMConnector;
-import com.cloudera.llama.am.spi.RMResourceChange;
+import com.cloudera.llama.am.spi.RMEvent;
+import com.cloudera.llama.am.spi.RMListener;
+import com.cloudera.llama.util.FastFormat;
+import com.cloudera.llama.am.spi.RMConnector;
 import com.cloudera.llama.util.NamedThreadFactory;
 import com.cloudera.llama.util.UUID;
 import org.apache.hadoop.conf.Configurable;
@@ -47,19 +47,19 @@ import java.util.concurrent.atomic.AtomicLong;
 
 // if CPU value is greater than 10, that is the number of milliseconds for the
 // change status delay (instead being random)
-public class MockRMLlamaAMConnector
-    implements RMLlamaAMConnector, Configurable {
+public class MockRMConnector
+    implements RMConnector, Configurable {
   public static final String PREFIX_KEY = LlamaAM.PREFIX_KEY + "mock.";
 
   public static final String EVENTS_MIN_WAIT_KEY =
-      MockRMLlamaAMConnector.PREFIX_KEY + "events.min.wait.ms";
+      MockRMConnector.PREFIX_KEY + "events.min.wait.ms";
   public static final int EVENTS_MIN_WAIT_DEFAULT = 1000;
 
   public static final String EVENTS_MAX_WAIT_KEY =
-      MockRMLlamaAMConnector.PREFIX_KEY + "events.max.wait.ms";
+      MockRMConnector.PREFIX_KEY + "events.max.wait.ms";
   public static final int EVENTS_MAX_WAIT_DEFAULT = 10000;
 
-  public static final String QUEUES_KEY = MockRMLlamaAMConnector.PREFIX_KEY +
+  public static final String QUEUES_KEY = MockRMConnector.PREFIX_KEY +
       "queues";
   public static final Set<String> QUEUES_DEFAULT = new HashSet<String>();
 
@@ -68,7 +68,7 @@ public class MockRMLlamaAMConnector
     QUEUES_DEFAULT.add("queue2");
   }
 
-  public static final String NODES_KEY = MockRMLlamaAMConnector.PREFIX_KEY +
+  public static final String NODES_KEY = MockRMConnector.PREFIX_KEY +
       "nodes";
   public static final String NODES_DEFAULT = "node1,node2";
 
@@ -126,7 +126,7 @@ public class MockRMLlamaAMConnector
   private int minWait;
   private int maxWait;
   private List<String> nodes;
-  private RMLlamaAMCallback callback;
+  private RMListener callback;
 
   @Override
   public void setConf(Configuration conf) {
@@ -139,7 +139,7 @@ public class MockRMLlamaAMConnector
   }
 
   @Override
-  public void setLlamaAMCallback(RMLlamaAMCallback callback) {
+  public void setLlamaAMCallback(RMListener callback) {
     this.callback = callback;
   }
 
@@ -200,12 +200,12 @@ public class MockRMLlamaAMConnector
   }
 
   private class MockRMAllocator implements Callable<Void> {
-    private MockRMLlamaAMConnector llama;
+    private MockRMConnector llama;
     private RMResource resource;
     private PlacedResource.Status status;
     private boolean initial;
 
-    public MockRMAllocator(MockRMLlamaAMConnector llama,
+    public MockRMAllocator(MockRMConnector llama,
         RMResource resource,
         PlacedResource.Status status, boolean initial) {
       this.llama = llama;
@@ -215,17 +215,17 @@ public class MockRMLlamaAMConnector
     }
 
     private void toAllocate() {
-      RMResourceChange change = RMResourceChange.createResourceAllocation
+      RMEvent change = RMEvent.createAllocationEvent
           (resource.getResourceId(), "c" + counter.incrementAndGet
               (), resource.getCpuVCoresAsk(), resource.getMemoryMbsAsk(),
               getLocation(resource.getLocationAsk()));
-      callback.changesFromRM(Arrays.asList(change));
+      callback.onEvent(Arrays.asList(change));
     }
 
     private void toStatus(PlacedResource.Status status) {
-      RMResourceChange change = RMResourceChange.createResourceChange(
+      RMEvent change = RMEvent.createStatusChangeEvent(
           resource.getResourceId(), status);
-      callback.changesFromRM(Arrays.asList(change));
+      callback.onEvent(Arrays.asList(change));
 
     }
 
@@ -263,7 +263,7 @@ public class MockRMLlamaAMConnector
     }
   }
 
-  private void schedule(MockRMLlamaAMConnector allocator,
+  private void schedule(MockRMConnector allocator,
       Collection<RMResource> resources) {
     for (RMResource resource : resources) {
       PlacedResource.Status status = getMockResourceStatus(

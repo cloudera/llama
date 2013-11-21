@@ -30,6 +30,7 @@ public class TestUtils {
   public static Resource createResource(String location,
       Resource.Locality locality, int cpus, int memory) {
     Resource.Builder b = Builders.createResourceBuilder();
+    b.setResourceId(UUID.randomUUID());
     b.setLocationAsk(location);
     b.setLocalityAsk(locality);
     b.setCpuVCoresAsk(cpus);
@@ -62,6 +63,7 @@ public class TestUtils {
 
   public static Resource createResource(String location) {
     Resource.Builder b = Builders.createResourceBuilder();
+    b.setResourceId(UUID.randomUUID());
     b.setLocationAsk(location);
     b.setLocalityAsk(Resource.Locality.MUST);
     b.setCpuVCoresAsk(1);
@@ -128,6 +130,7 @@ public class TestUtils {
   }
 
   public static void assertResource(Resource r1, Resource r2) {
+    Assert.assertEquals(r1.getResourceId(), r2.getResourceId());
     Assert.assertEquals(r1.getLocationAsk(), r2.getLocationAsk());
     Assert.assertEquals(r1.getLocalityAsk(), r2.getLocalityAsk());
     Assert.assertEquals(r1.getCpuVCoresAsk(), r2.getCpuVCoresAsk());

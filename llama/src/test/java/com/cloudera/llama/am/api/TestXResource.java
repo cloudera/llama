@@ -17,6 +17,7 @@
  */
 package com.cloudera.llama.am.api;
 
+import com.cloudera.llama.util.UUID;
 import junit.framework.Assert;
 import org.junit.Test;
 
@@ -85,9 +86,27 @@ public class TestXResource {
     b.build();
   }
 
+  @Test(expected = IllegalArgumentException.class)
+  public void testBuilderFail10() {
+    Resource.Builder b = Builders.createResourceBuilder();
+    b.setResourceId(null);
+    b.build();
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testBuilderFail11() {
+    Resource.Builder b = Builders.createResourceBuilder();
+    b.setLocationAsk("l");
+    b.setLocalityAsk(Resource.Locality.MUST);
+    b.setCpuVCoresAsk(1);
+    b.setMemoryMbsAsk(1);
+    b.build();
+  }
+
   @Test
   public void testBuilderOk() {
     Resource.Builder b = Builders.createResourceBuilder();
+    b.setResourceId(UUID.randomUUID());
     b.setLocationAsk("l");
     b.setLocalityAsk(Resource.Locality.MUST);
     b.setCpuVCoresAsk(1);
@@ -98,12 +117,15 @@ public class TestXResource {
   @Test
   public void testGetters() {
     Resource.Builder b = Builders.createResourceBuilder();
+    UUID rId = UUID.randomUUID();
+    b.setResourceId(rId);
     b.setLocationAsk("l");
     b.setLocalityAsk(Resource.Locality.MUST);
     b.setCpuVCoresAsk(1);
     b.setMemoryMbsAsk(2);
     Resource r = b.build();
     Assert.assertNotNull(r.toString());
+    Assert.assertEquals(rId, r.getResourceId());
     Assert.assertEquals("l", r.getLocationAsk());
     Assert.assertEquals(Resource.Locality.MUST, r.getLocalityAsk());
     Assert.assertEquals(1, r.getCpuVCoresAsk());
@@ -114,15 +136,17 @@ public class TestXResource {
   @Test
   public void testEqualsHashcode() {
     Resource.Builder b = Builders.createResourceBuilder();
+    UUID rId = UUID.randomUUID();
+    b.setResourceId(rId);
     b.setLocationAsk("l");
     b.setLocalityAsk(Resource.Locality.MUST);
     b.setCpuVCoresAsk(1);
     b.setMemoryMbsAsk(2);
     Resource r1 = b.build();
     Assert.assertTrue(r1.equals(r1));
-    Assert.assertTrue(r1.hashCode() == r1.hashCode());
     Resource r2 = b.build();
-    Assert.assertFalse(r1.equals(r2));
+    Assert.assertTrue(r1.equals(r2));
+    Assert.assertEquals(r1.hashCode(), r2.hashCode());
   }
 
 }

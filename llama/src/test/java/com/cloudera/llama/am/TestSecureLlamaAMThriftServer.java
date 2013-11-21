@@ -17,7 +17,7 @@
  */
 package com.cloudera.llama.am;
 
-import com.cloudera.llama.am.impl.ParamChecker;
+import com.cloudera.llama.util.ParamChecker;
 import org.apache.hadoop.minikdc.MiniKdc;
 import com.cloudera.llama.server.Security;
 import com.cloudera.llama.server.ServerConfiguration;

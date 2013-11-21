@@ -23,11 +23,12 @@ import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.PlacedResource;
 import com.cloudera.llama.am.api.RMResource;
 import com.cloudera.llama.am.api.Reservation;
-import com.cloudera.llama.am.spi.RMLlamaAMCallback;
-import com.cloudera.llama.am.spi.RMLlamaAMConnector;
-import com.cloudera.llama.am.spi.RMResourceChange;
-import com.cloudera.llama.am.yarn.YarnRMLlamaAMConnector;
+import com.cloudera.llama.am.spi.RMEvent;
+import com.cloudera.llama.am.spi.RMListener;
+import com.cloudera.llama.am.spi.RMConnector;
+import com.cloudera.llama.am.yarn.YarnRMConnector;
 import com.cloudera.llama.server.MetricUtil;
+import com.cloudera.llama.util.FastFormat;
 import com.cloudera.llama.util.UUID;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
@@ -41,7 +42,7 @@ import java.util.List;
 import java.util.Map;
 
 public class SingleQueueLlamaAM extends LlamaAMImpl implements
-    RMLlamaAMCallback {
+    RMListener {
 
   private static final String METRIC_PREFIX_TEMPLATE = LlamaAM.METRIC_PREFIX +
       "queue({}).";
@@ -75,13 +76,13 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
   private String resourcesGaugeKey;
   private String reservationsAllocationTimerKey;
   private String resourcesAllocationTimerKey;
-  private RMLlamaAMConnector rmConnector;
+  private RMConnector rmConnector;
   private boolean running;
 
-  public static Class<? extends RMLlamaAMConnector> getRMConnectorClass(
+  public static Class<? extends RMConnector> getRMConnectorClass(
       Configuration conf) {
-    return conf.getClass(RM_CONNECTOR_CLASS_KEY, YarnRMLlamaAMConnector.class,
-        RMLlamaAMConnector.class);
+    return conf.getClass(RM_CONNECTOR_CLASS_KEY, YarnRMConnector.class,
+        RMConnector.class);
   }
 
   public SingleQueueLlamaAM(Configuration conf, String queue,
@@ -130,12 +131,12 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
 
   @Override
   public void start() throws LlamaAMException {
-    Class<? extends RMLlamaAMConnector> klass = getRMConnectorClass(getConf());
+    Class<? extends RMConnector> klass = getRMConnectorClass(getConf());
     rmConnector = ReflectionUtils.newInstance(klass, getConf());
     if (getConf().getBoolean(RESOURCES_CACHING_ENABLED_KEY,
         RESOURCES_CACHING_ENABLED_DEFAULT)) {
-      RMLlamaAMConnectorCache connectorCache =
-          new RMLlamaAMConnectorCache(getConf(), rmConnector);
+      RMConnectorCache connectorCache =
+          new RMConnectorCache(getConf(), rmConnector);
       connectorCache.setMetricRegistry(getMetricRegistry());
       rmConnector = connectorCache;
     }
@@ -147,7 +148,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
     running = true;
   }
 
-  public RMLlamaAMConnector getRMConnector() {
+  public RMConnector getRMConnector() {
     return rmConnector;
   }
 
@@ -349,7 +350,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
   }
 
   private void _resourceAllocated(PlacedResourceImpl resource,
-      RMResourceChange change, Map<UUID, LlamaAMEventImpl> eventsMap) {
+      RMEvent change, Map<UUID, LlamaAMEventImpl> eventsMap) {
     resource.setAllocationInfo(change.getLocation(), change.getCpuVCores(),
         change.getMemoryMb());
     UUID reservationId = resource.getReservationId();
@@ -474,24 +475,24 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
     return toRelease;
   }
 
-  // RMLlamaAMCallback API
+  // RMListener API
 
   @Override
   @SuppressWarnings("unchecked")
-  public void changesFromRM(final List<RMResourceChange> changes) {
-    if (changes == null) {
+  public void onEvent(final List<RMEvent> events) {
+    if (events == null) {
       throw new IllegalArgumentException("changes cannot be NULL");
     }
-    getLog().trace("changesFromRM({})", changes);
+    getLog().trace("onEvent({})", events);
     Map<UUID, LlamaAMEventImpl> eventsMap =
         new HashMap<UUID, LlamaAMEventImpl>();
     List<PlacedResourceImpl> toRelease = new ArrayList<PlacedResourceImpl>();
     synchronized (this) {
-      for (RMResourceChange change : changes) {
+      for (RMEvent change : events) {
         PlacedResourceImpl resource = resourcesMap.get(change
-            .getClientResourceId());
+            .getResourceId());
         if (resource == null) {
-          getLog().warn("Unknown resource '{}'", change.getClientResourceId());
+          getLog().warn("Unknown resource '{}'", change.getResourceId());
         } else {
           List<PlacedResourceImpl> release = null;
           switch (change.getStatus()) {
@@ -529,12 +530,12 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
     synchronized (this) {
       List<UUID> clientResourceIds =
           new ArrayList<UUID>(resourcesMap.keySet());
-      List<RMResourceChange> changes = new ArrayList<RMResourceChange>();
+      List<RMEvent> changes = new ArrayList<RMEvent>();
       for (UUID clientResourceId : clientResourceIds) {
-        changes.add(RMResourceChange.createResourceChange(clientResourceId,
+        changes.add(RMEvent.createStatusChangeEvent(clientResourceId,
             PlacedResource.Status.LOST));
       }
-      changesFromRM(changes);
+      onEvent(changes);
     }
   }
 

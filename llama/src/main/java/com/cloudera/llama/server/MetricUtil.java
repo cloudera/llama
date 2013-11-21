@@ -17,7 +17,7 @@
  */
 package com.cloudera.llama.server;
 
-import com.cloudera.llama.am.impl.FastFormat;
+import com.cloudera.llama.util.FastFormat;
 import com.cloudera.llama.thrift.TUniqueId;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Meter;

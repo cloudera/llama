@@ -17,7 +17,7 @@
  */
 package com.cloudera.llama.server;
 
-import com.cloudera.llama.am.impl.FastFormat;
+import com.cloudera.llama.util.FastFormat;
 import org.apache.hadoop.security.UserGroupInformation;
 
 import javax.security.auth.Subject;

@@ -27,7 +27,7 @@ import com.cloudera.llama.am.api.Reservation;
 import com.cloudera.llama.am.api.Resource;
 import com.cloudera.llama.am.api.TestUtils;
 import com.cloudera.llama.am.mock.MockLlamaAMFlags;
-import com.cloudera.llama.am.mock.MockRMLlamaAMConnector;
+import com.cloudera.llama.am.mock.MockRMConnector;
 import com.cloudera.llama.util.Clock;
 import com.cloudera.llama.util.ManualClock;
 import com.cloudera.llama.util.UUID;
@@ -208,7 +208,7 @@ public class TestObserverLlamaAM {
     conf.set("llama.am.mock.nodes", "h0");
     conf.set(LlamaAM.INITIAL_QUEUES_KEY, "q1");
     conf.set(LlamaAM.RM_CONNECTOR_CLASS_KEY,
-        MockRMLlamaAMConnector.class.getName());
+        MockRMConnector.class.getName());
     return conf;
   }
 

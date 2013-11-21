@@ -19,8 +19,8 @@ package com.cloudera.llama.server;
 
 import com.cloudera.llama.am.api.LlamaAMEvent;
 import com.cloudera.llama.am.api.LlamaAMListener;
-import com.cloudera.llama.am.impl.FastFormat;
-import com.cloudera.llama.am.impl.ParamChecker;
+import com.cloudera.llama.util.FastFormat;
+import com.cloudera.llama.util.ParamChecker;
 import com.cloudera.llama.util.UUID;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;

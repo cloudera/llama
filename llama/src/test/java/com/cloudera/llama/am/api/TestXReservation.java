@@ -220,18 +220,4 @@ public class TestXReservation {
     TestUtils.assertResource(resource2, reservation.getResources().get(0));
   }
 
-  @Test
-  public void testEqualsHashcode() {
-    Resource.Builder b = Builders.createResourceBuilder();
-    b.setLocationAsk("l");
-    b.setLocalityAsk(Resource.Locality.MUST);
-    b.setCpuVCoresAsk(1);
-    b.setMemoryMbsAsk(2);
-    Resource r1 = b.build();
-    Assert.assertTrue(r1.equals(r1));
-    Assert.assertTrue(r1.hashCode() == r1.hashCode());
-    Resource r2 = b.build();
-    Assert.assertFalse(r1.equals(r2));
-  }
-
 }

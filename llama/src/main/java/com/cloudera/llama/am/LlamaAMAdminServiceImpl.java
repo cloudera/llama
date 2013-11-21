@@ -19,7 +19,7 @@ package com.cloudera.llama.am;
 
 import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.LlamaAMException;
-import com.cloudera.llama.am.impl.FastFormat;
+import com.cloudera.llama.util.FastFormat;
 import com.cloudera.llama.server.ClientNotificationService;
 import com.cloudera.llama.server.ClientPrincipalTProcessor;
 import com.cloudera.llama.server.TypeUtils;

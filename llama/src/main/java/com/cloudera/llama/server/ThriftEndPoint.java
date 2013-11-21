@@ -17,7 +17,7 @@
  */
 package com.cloudera.llama.server;
 
-import com.cloudera.llama.am.impl.FastFormat;
+import com.cloudera.llama.util.FastFormat;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.thrift.TProcessor;
 import org.apache.thrift.transport.TSaslClientTransport;

@@ -17,7 +17,7 @@
  */
 package com.cloudera.llama.am;
 
-import com.cloudera.llama.am.impl.FastFormat;
+import com.cloudera.llama.util.FastFormat;
 import com.cloudera.llama.server.NodeMapper;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;

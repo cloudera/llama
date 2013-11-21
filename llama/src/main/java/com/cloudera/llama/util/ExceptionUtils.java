@@ -15,14 +15,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.cloudera.llama.am.spi;
+package com.cloudera.llama.util;
 
-import java.util.List;
+import com.cloudera.llama.util.ParamChecker;
 
-public interface RMLlamaAMCallback {
+public class ExceptionUtils {
 
-  public void stoppedByRM();
-
-  public void changesFromRM(final List<RMResourceChange> changes);
+  public static Throwable getRootCause(Throwable ex,
+      Class<? extends Throwable> rootCauseClassIfPresent) {
+    ParamChecker.notNull(ex, "ex");
+    ParamChecker.notNull(rootCauseClassIfPresent, "rootCauseClassIfPresent");
+    Throwable rootCause = null;
+    while (rootCause == null && ex != null) {
+      if (rootCauseClassIfPresent.isInstance(ex)) {
+        rootCause = ex;
+      }
+      if (ex.getCause() == null) {
+        rootCause = ex;
+      } else {
+        ex = ex.getCause();
+      }
+    }
+    return rootCause;
+  }
 
 }

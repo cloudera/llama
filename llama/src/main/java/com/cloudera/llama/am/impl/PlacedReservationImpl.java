@@ -23,6 +23,8 @@ import com.cloudera.llama.am.api.PlacedResource;
 import com.cloudera.llama.am.api.Reservation;
 import com.cloudera.llama.am.api.Resource;
 import com.cloudera.llama.util.Clock;
+import com.cloudera.llama.util.FastFormat;
+import com.cloudera.llama.util.ParamChecker;
 import com.cloudera.llama.util.UUID;
 
 import java.util.ArrayList;
