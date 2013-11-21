@@ -17,62 +17,40 @@
  */
 package com.cloudera.llama.am.api;
 
-import com.cloudera.llama.am.impl.FastFormat;
-import com.cloudera.llama.am.impl.ParamChecker;
-
-import java.util.ArrayList;
-import java.util.List;
 import com.cloudera.llama.util.UUID;
 
-public class Reservation<T extends Resource> {
-  private final UUID handle;
-  private final String queue;
-  private final List<T> resources;
-  private final boolean gang;
+import java.util.List;
 
-  public Reservation(UUID handle, String queue,
-      List<? extends Resource> resources, boolean gang) {
-    this.handle = ParamChecker.notNull(handle, "handle");
-    this.queue = ParamChecker.notEmpty(queue, "queue");
-    this.gang = gang;
-    ParamChecker.notNulls(resources, "resources");
-    ParamChecker.asserts(!resources.isEmpty(), "resources cannot be empty");
-    this.resources = copyResources(resources);
+public interface Reservation {
+
+  public interface Builder {
+
+    public Builder setHandle(UUID handle);
+
+    public Builder setUser(String user);
+
+    public Builder setQueue(String queue);
+
+    public Builder addResource(Resource resource);
+
+    public Builder addResources(List<Resource> resources);
+
+    public Builder setResources(List<Resource> resources);
+
+    public Builder setGang(boolean gang);
+
+    public Reservation build();
+
   }
 
-  @SuppressWarnings("unchecked")
-  protected Reservation(Reservation reservation) {
-    this(reservation.getHandle(), reservation.getQueue(),
-        reservation.getResources(), reservation.isGang());
-  }
+  public UUID getHandle();
 
-  @SuppressWarnings("unchecked")
-  protected List<T> copyResources(List<? extends Resource> resources) {
-    return new ArrayList(resources);
-  }
+  public String getUser();
 
-  public UUID getHandle() {
-    return handle;
-  }
+  public String getQueue();
 
-  public String getQueue() {
-    return queue;
-  }
+  public List<Resource> getResources();
 
-  public List<T> getResources() {
-    return resources;
-  }
-
-  public boolean isGang() {
-    return gang;
-  }
-
-  private static final String TO_STRING_MSG = "reservation[handle: {} " +
-      "queue: {} resources: {} gang: {}]";
-
-  public String toString() {
-    return FastFormat.format(TO_STRING_MSG, getHandle(), getQueue(),
-        getResources(), isGang());
-  }
+  public boolean isGang();
 
 }

@@ -17,60 +17,53 @@
  */
 package com.cloudera.llama.am.api;
 
-import com.cloudera.llama.am.impl.FastFormat;
-
 import com.cloudera.llama.util.UUID;
 
-public abstract class PlacedResource extends Resource {
+import java.util.List;
+
+public interface PlacedResource extends Resource {
 
   public enum Status {
-    PENDING, ALLOCATED, REJECTED, PREEMPTED, LOST
+    PENDING(false),
+    ALLOCATED(false),
+    REJECTED(true),
+    PREEMPTED(true),
+    LOST(true),
+    RELEASED(true);
+
+    private boolean finalStatus;
+
+    private Status(boolean finalStatus) {
+      this.finalStatus = finalStatus;
+    }
+
+    public boolean isFinal() {
+      return finalStatus;
+    }
   }
 
-  protected PlacedResource(Resource resource) {
-    super(resource);
-  }
+  public UUID getResourceId();
 
-  public abstract UUID getHandle();
+  public Status getStatus();
 
-  public abstract String getQueue();
+  public long getPlacedOn();
 
-  public abstract UUID getReservationId();
+  public UUID getReservationId();
 
-  public abstract String getRmResourceId();
+  public UUID getHandle();
 
-  public abstract int getActualCpuVCores();
+  public String getUser();
 
-  public abstract int getActualMemoryMb();
+  public String getQueue();
 
-  public abstract String getActualLocation();
+  public long getAllocatedOn();
 
-  public abstract Status getStatus();
+  public String getLocation();
 
-  private static final String TO_STRING_MSG = "placedResource[" +
-      "client_resource_id: {} cpuVCores: {} memoryMb: {} askedLocation: {} " +
-      "enforcement: {} handle: {} queue: {} reservationId: {} " +
-      "rmResourceId: {} actualCpuVCores: {} actualMemoryMb: {} " +
-      "actualLocation: {} status: {}]";
+  public int getCpuVCores();
 
-  @Override
-  public String toString() {
-    return FastFormat.format(TO_STRING_MSG, getClientResourceId(),
-        getCpuVCores(), getMemoryMb(), getLocation(), getEnforcement(), 
-        getHandle(), getQueue(), getReservationId(), getRmResourceId(),
-        getActualCpuVCores(), getActualMemoryMb(), getActualLocation(), 
-        getStatus());
-  }
+  public int getMemoryMbs();
 
-  @Override
-  public int hashCode() {
-    return getClientResourceId().hashCode();
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    return (obj != null) && (obj instanceof PlacedResource) &&
-        getClientResourceId().equals(((PlacedResource) obj).getClientResourceId());
-  }
+  public Object getRmResourceId();
 
 }

@@ -18,6 +18,7 @@
 package com.cloudera.llama.am.impl;
 
 import com.cloudera.llama.am.api.Resource;
+import com.cloudera.llama.am.api.TestUtils;
 import com.cloudera.llama.util.Clock;
 import com.cloudera.llama.util.ManualClock;
 import com.cloudera.llama.util.UUID;
@@ -56,8 +57,8 @@ public class TestResourceCache {
     Assert.assertEquals(expected, ep.getTimeout());
 
     manualClock.set(1000);
-    ResourceCache.CachedResource cr =
-        Mockito.mock(ResourceCache.CachedResource.class);
+    ResourceCache.CachedRMResource cr =
+        Mockito.mock(ResourceCache.CachedRMResource.class);
     Mockito.when(cr.getCachedOn()).thenReturn(1000l);
     Assert.assertFalse(ep.shouldEvict(cr));
     manualClock.increment(ep.getTimeout() - 1);
@@ -81,14 +82,14 @@ public class TestResourceCache {
   @Test
   public void testKey() {
     ResourceCache.Entry entry = Mockito.mock(ResourceCache.Entry.class);
-    Mockito.when(entry.getMemoryMb()).thenReturn(1024);
+    Mockito.when(entry.getMemoryMbs()).thenReturn(1024);
     Mockito.when(entry.getCpuVCores()).thenReturn(1);
     ResourceCache.Key k1 = new ResourceCache.Key(entry);
     ResourceCache.Key ka = new ResourceCache.Key(entry);
-    Mockito.when(entry.getMemoryMb()).thenReturn(1024);
+    Mockito.when(entry.getMemoryMbs()).thenReturn(1024);
     Mockito.when(entry.getCpuVCores()).thenReturn(2);
     ResourceCache.Key k2 = new ResourceCache.Key(entry);
-    Mockito.when(entry.getMemoryMb()).thenReturn(2048);
+    Mockito.when(entry.getMemoryMbs()).thenReturn(2048);
     Mockito.when(entry.getCpuVCores()).thenReturn(1);
     ResourceCache.Key k3 = new ResourceCache.Key(entry);
     Assert.assertTrue(k1.compareTo(k1) == 0);
@@ -113,24 +114,26 @@ public class TestResourceCache {
   @Test
   public void testEntry() throws Exception {
     UUID cacheId = UUID.randomUUID();
-    Resource resource = new Resource(UUID.randomUUID(), "l1",
-        Resource.LocationEnforcement.MUST, 1, 1024);
-    PlacedResourceImpl placedResource = new PlacedResourceImpl(resource);
-    placedResource.setAllocationInfo(2, 2048, "l11", "rm11");
+    Resource resource = TestUtils.createResource("l1",
+        Resource.Locality.MUST, 1, 1024);
+    PlacedResourceImpl placedResource = TestUtils.createPlacedResourceImpl(resource);
+    placedResource.setAllocationInfo("l11", 2, 2048);
+    placedResource.setRmResourceId("rm11");
     ResourceCache.Entry entry1 = new ResourceCache.Entry(cacheId,
         placedResource, 1000l);
     Assert.assertNotNull(entry1.toString());
     Assert.assertFalse(entry1.isValid());
     entry1.setValid(true);
     Assert.assertTrue(entry1.isValid());
-    Assert.assertEquals(cacheId, entry1.getCacheId());
+    Assert.assertEquals(cacheId, entry1.getResourceId());
     Assert.assertEquals(1000l, entry1.getCachedOn());
     Assert.assertEquals("l11", entry1.getLocation());
     Assert.assertEquals("rm11", entry1.getRmResourceId());
     Assert.assertEquals(2, entry1.getCpuVCores());
-    Assert.assertEquals(2048, entry1.getMemoryMb());
+    Assert.assertEquals(2048, entry1.getMemoryMbs());
 
-    placedResource.setAllocationInfo(2, 2048, "l22", "rm22");
+    placedResource.setAllocationInfo("l22", 2, 2048);
+    placedResource.setRmResourceId("rm22");
     ResourceCache.Entry entry2 = new ResourceCache.Entry(cacheId,
         placedResource, 1000l);
     Assert.assertTrue(entry1.compareTo(entry1) == 0);
@@ -140,11 +143,11 @@ public class TestResourceCache {
 
 
   private static class CacheListener implements ResourceCache.Listener {
-    String resourceEvicted;
+    Object resourceEvicted;
 
     @Override
-    public void onEviction(ResourceCache.CachedResource cachedResource) {
-      resourceEvicted = cachedResource.getRmResourceId();
+    public void onEviction(ResourceCache.CachedRMResource cachedRMResource) {
+      resourceEvicted = cachedRMResource.getRmResourceId();
     }
   }
 
@@ -168,10 +171,11 @@ public class TestResourceCache {
       cache.start();
       manualClock.increment(ResourceCache.EVICTION_IDLE_TIMEOUT_DEFAULT + 1);
       Thread.sleep(100); //to ensure eviction thread runs
-      Resource r1 = new Resource(UUID.randomUUID(), "l1",
-          Resource.LocationEnforcement.MUST, 1, 1024);
-      PlacedResourceImpl pr1 = new PlacedResourceImpl(r1);
-      pr1.setAllocationInfo(1, 1024, "l1", "rm1");
+      Resource r1 = TestUtils.createResource("l1",
+          Resource.Locality.MUST, 1, 1024);
+      PlacedResourceImpl pr1 = TestUtils.createPlacedResourceImpl(r1);
+      pr1.setAllocationInfo("l1", 1, 1024);
+      pr1.setRmResourceId("rm1");
       cache.cache(pr1);
       Assert.assertNull(listener.resourceEvicted);
       manualClock.increment(ResourceCache.EVICTION_IDLE_TIMEOUT_DEFAULT + 1);
@@ -191,44 +195,40 @@ public class TestResourceCache {
       cache.start();
 
       Assert.assertEquals(0, cache.getSize());
-      Assert.assertEquals(0, cache.getComputedSize());
 
-      Resource r1 = new Resource(UUID.randomUUID(), "l1",
-          Resource.LocationEnforcement.MUST, 1, 1024);
-      PlacedResourceImpl pr1 = new PlacedResourceImpl(r1);
-      pr1.setAllocationInfo(1, 1024, "l1", "rm1");
+      Resource r1 = TestUtils.createResource("l1",
+          Resource.Locality.MUST, 1, 1024);
+      PlacedResourceImpl pr1 = TestUtils.createPlacedResourceImpl(r1);
+      pr1.setAllocationInfo("l1", 1, 1024);
+      pr1.setRmResourceId("rm1");
       cache.cache(pr1);
 
       Assert.assertNull(listener.resourceEvicted);
       Assert.assertEquals(1, cache.getSize());
-      Assert.assertEquals(1, cache.getComputedSize());
 
       manualClock.increment(ResourceCache.EVICTION_IDLE_TIMEOUT_DEFAULT / 2 + 1);
 
       Assert.assertNull(listener.resourceEvicted);
       Assert.assertEquals(1, cache.getSize());
-      Assert.assertEquals(1, cache.getComputedSize());
 
-      pr1.setAllocationInfo(1, 1024, "l1", "rm2");
+      pr1.setAllocationInfo("l1", 1, 1024);
+      pr1.setRmResourceId("rm2");
       cache.cache(pr1);
 
       Assert.assertNull(listener.resourceEvicted);
       Assert.assertEquals(2, cache.getSize());
-      Assert.assertEquals(2, cache.getComputedSize());
 
       manualClock.increment(ResourceCache.EVICTION_IDLE_TIMEOUT_DEFAULT / 2 + 1);
       Thread.sleep(100); //to ensure eviction thread runs
 
       Assert.assertEquals("rm1", listener.resourceEvicted);
       Assert.assertEquals(1, cache.getSize());
-      Assert.assertEquals(1, cache.getComputedSize());
 
       manualClock.increment(ResourceCache.EVICTION_IDLE_TIMEOUT_DEFAULT / 2 + 1);
       Thread.sleep(100); //to ensure eviction thread runs
 
       Assert.assertEquals("rm2", listener.resourceEvicted);
       Assert.assertEquals(0, cache.getSize());
-      Assert.assertEquals(0, cache.getComputedSize());
 
     } finally {
       cache.stop();
@@ -243,33 +243,32 @@ public class TestResourceCache {
     try {
       cache.start();
 
-      Resource r1 = new Resource(UUID.randomUUID(), "l1",
-          Resource.LocationEnforcement.MUST, 1, 1024);
-      PlacedResourceImpl pr1 = new PlacedResourceImpl(r1);
-      pr1.setAllocationInfo(1, 1024, "l1", "rm1");
+      Resource r1 = TestUtils.createResource("l1",
+          Resource.Locality.MUST, 1, 1024);
+      PlacedResourceImpl pr1 = TestUtils.createPlacedResourceImpl(r1);
+      pr1.setAllocationInfo("l1", 1, 1024);
+      pr1.setRmResourceId("rm1");
       UUID id1 = cache.cache(pr1);
 
-      pr1.setAllocationInfo(1, 1024, "l1", "rm2");
+      pr1.setAllocationInfo("l1", 1, 1024);
+      pr1.setRmResourceId("rm2");
       UUID id2 = cache.cache(pr1);
 
       Assert.assertEquals(2, cache.getSize());
-      Assert.assertEquals(2, cache.getComputedSize());
 
-      ResourceCache.CachedResource cr1 = cache.findAndRemove(id1);
+      ResourceCache.CachedRMResource cr1 = cache.findAndRemove(id1);
       Assert.assertNotNull(cr1);
       Assert.assertEquals("rm1", cr1.getRmResourceId());
 
       Assert.assertEquals(1, cache.getSize());
-      Assert.assertEquals(1, cache.getComputedSize());
 
       Assert.assertNull(cache.findAndRemove(id1));
 
-      ResourceCache.CachedResource cr2 = cache.findAndRemove(id2);
+      ResourceCache.CachedRMResource cr2 = cache.findAndRemove(id2);
       Assert.assertNotNull(cr2);
       Assert.assertEquals("rm2", cr2.getRmResourceId());
 
       Assert.assertEquals(0, cache.getSize());
-      Assert.assertEquals(0, cache.getComputedSize());
 
       Assert.assertNull(cache.findAndRemove(id2));
 
@@ -288,23 +287,25 @@ public class TestResourceCache {
     try {
       cache.start();
 
-      Resource r1 = new Resource(UUID.randomUUID(), "l1",
-          Resource.LocationEnforcement.MUST, 1, 512);
-      PlacedResourceImpl pr1 = new PlacedResourceImpl(r1);
-      pr1.setAllocationInfo(1, 512, "l1", "rm1");
+      Resource r1 = TestUtils.createResource("l1",
+          Resource.Locality.MUST, 1, 512);
+      PlacedResourceImpl pr1 = TestUtils.createPlacedResourceImpl(r1);
+      pr1.setAllocationInfo("l1", 1, 512);
+      pr1.setRmResourceId("rm1");
       cache.cache(pr1);
 
-      r1 = new Resource(UUID.randomUUID(), "l1",
-          Resource.LocationEnforcement.MUST, 2, 1024);
-      pr1 = new PlacedResourceImpl(r1);
-      pr1.setAllocationInfo(2, 1024, "l1", "rm2");
+      r1 = TestUtils.createResource("l1",
+          Resource.Locality.MUST, 2, 1024);
+      pr1 = TestUtils.createPlacedResourceImpl(r1);
+      pr1.setAllocationInfo("l1", 2, 1024);
+      pr1.setRmResourceId("rm2");
       cache.cache(pr1);
 
-      Resource r2 = new Resource(UUID.randomUUID(), "l1",
-          Resource.LocationEnforcement.MUST, 1, 1024);
-      PlacedResourceImpl pr2 = new PlacedResourceImpl(r2);
+      Resource r2 = TestUtils.createResource("l1",
+          Resource.Locality.MUST, 1, 1024);
+      PlacedResourceImpl pr2 = TestUtils.createPlacedResourceImpl(r2);
 
-      ResourceCache.CachedResource cr = cache.findAndRemove(pr2);
+      ResourceCache.CachedRMResource cr = cache.findAndRemove(pr2);
       Assert.assertNotNull(cr);
 
       Assert.assertEquals("rm2", cr.getRmResourceId());
@@ -322,33 +323,35 @@ public class TestResourceCache {
     try {
       cache.start();
 
-      Resource r1 = new Resource(UUID.randomUUID(), "l1",
-          Resource.LocationEnforcement.MUST, 1, 512);
-      PlacedResourceImpl pr1 = new PlacedResourceImpl(r1);
-      pr1.setAllocationInfo(1, 512, "l1", "rm1");
+      Resource r1 = TestUtils.createResource("l1",
+          Resource.Locality.MUST, 1, 512);
+      PlacedResourceImpl pr1 = TestUtils.createPlacedResourceImpl(r1);
+      pr1.setAllocationInfo("l1", 1, 512);
+      pr1.setRmResourceId("rm1");
       cache.cache(pr1);
 
-      r1 = new Resource(UUID.randomUUID(), "l1",
-          Resource.LocationEnforcement.MUST, 2, 1024);
-      pr1 = new PlacedResourceImpl(r1);
-      pr1.setAllocationInfo(2, 1024, "l1", "rm2");
+      r1 = TestUtils.createResource("l1",
+          Resource.Locality.MUST, 2, 1024);
+      pr1 = TestUtils.createPlacedResourceImpl(r1);
+      pr1.setAllocationInfo("l1", 2, 1024);
+      pr1.setRmResourceId("rm2");
       cache.cache(pr1);
 
-      Resource r2 = new Resource(UUID.randomUUID(), "l2",
-          Resource.LocationEnforcement.PREFERRED, 1, 1024);
-      PlacedResourceImpl pr2 = new PlacedResourceImpl(r2);
+      Resource r2 = TestUtils.createResource("l2",
+          Resource.Locality.PREFERRED, 1, 1024);
+      PlacedResourceImpl pr2 = TestUtils.createPlacedResourceImpl(r2);
 
-      ResourceCache.CachedResource cr1 = cache.findAndRemove(pr2);
+      ResourceCache.CachedRMResource cr1 = cache.findAndRemove(pr2);
       Assert.assertNotNull(cr1);
       Assert.assertEquals("rm2", cr1.getRmResourceId());
 
       cache.cache(pr1);
 
-      Resource r3 = new Resource(UUID.randomUUID(), "l2",
-          Resource.LocationEnforcement.DONT_CARE, 1, 1024);
-      PlacedResourceImpl pr3 = new PlacedResourceImpl(r3);
+      Resource r3 = TestUtils.createResource("l2",
+          Resource.Locality.DONT_CARE, 1, 1024);
+      PlacedResourceImpl pr3 = TestUtils.createPlacedResourceImpl(r3);
 
-      ResourceCache.CachedResource cr2 = cache.findAndRemove(pr3);
+      ResourceCache.CachedRMResource cr2 = cache.findAndRemove(pr3);
       Assert.assertNotNull(cr2);
 
       Assert.assertEquals("rm2", cr2.getRmResourceId());
@@ -366,30 +369,30 @@ public class TestResourceCache {
     try {
       cache.start();
 
-      Resource r1 = new Resource(UUID.randomUUID(), "l1",
-          Resource.LocationEnforcement.MUST, 1, 1024);
-      PlacedResourceImpl pr1 = new PlacedResourceImpl(r1);
-      pr1.setAllocationInfo(1, 1024, "l1", "rm1");
+      Resource r1 = TestUtils.createResource("l1",
+          Resource.Locality.MUST, 1, 1024);
+      PlacedResourceImpl pr1 = TestUtils.createPlacedResourceImpl(r1);
+      pr1.setAllocationInfo("l1", 1, 1024);
+      pr1.setRmResourceId("rm1");
       cache.cache(pr1);
       cache.cache(pr1);
 
-      Resource r2 = new Resource(UUID.randomUUID(), "l2",
-          Resource.LocationEnforcement.PREFERRED, 1, 1024);
-      PlacedResourceImpl pr2 = new PlacedResourceImpl(r2);
-      ResourceCache.CachedResource cr = cache.findAndRemove(pr2);
+      Resource r2 = TestUtils.createResource("l2",
+          Resource.Locality.PREFERRED, 1, 1024);
+      PlacedResourceImpl pr2 = TestUtils.createPlacedResourceImpl(r2);
+      ResourceCache.CachedRMResource cr = cache.findAndRemove(pr2);
       Assert.assertNotNull(cr);
 
-      Resource r3 = new Resource(UUID.randomUUID(), "l2",
-          Resource.LocationEnforcement.DONT_CARE, 1, 1024);
-      PlacedResourceImpl pr3 = new PlacedResourceImpl(r3);
+      Resource r3 = TestUtils.createResource("l2",
+          Resource.Locality.DONT_CARE, 1, 1024);
+      PlacedResourceImpl pr3 = TestUtils.createPlacedResourceImpl(r3);
       cr = cache.findAndRemove(pr3);
       Assert.assertNotNull(cr);
 
       Assert.assertEquals("l1", cr.getLocation());
       Assert.assertTrue(cr.getCpuVCores() >= pr2.getCpuVCores());
-      Assert.assertTrue(cr.getMemoryMb() >= pr2.getMemoryMb());
+      Assert.assertTrue(cr.getMemoryMbs() >= pr2.getMemoryMbs());
       Assert.assertEquals(0, cache.getSize());
-      Assert.assertEquals(0, cache.getComputedSize());
     } finally {
       cache.stop();
     }
@@ -403,32 +406,32 @@ public class TestResourceCache {
     try {
       cache.start();
 
-      Resource r1 = new Resource(UUID.randomUUID(), "l1",
-          Resource.LocationEnforcement.MUST, 1, 1024);
-      PlacedResourceImpl pr1 = new PlacedResourceImpl(r1);
-      pr1.setAllocationInfo(1, 1024, "l1", "rm1");
+      Resource r1 = TestUtils.createResource("l1",
+          Resource.Locality.MUST, 1, 1024);
+      PlacedResourceImpl pr1 = TestUtils.createPlacedResourceImpl(r1);
+      pr1.setAllocationInfo("l1", 1, 1024);
+      pr1.setRmResourceId("rm1");
       cache.cache(pr1);
 
-      Resource r2 = new Resource(UUID.randomUUID(), "l1",
-          Resource.LocationEnforcement.MUST, 2, 1024);
-      PlacedResourceImpl pr2 = new PlacedResourceImpl(r2);
+      Resource r2 = TestUtils.createResource("l1",
+          Resource.Locality.MUST, 2, 1024);
+      PlacedResourceImpl pr2 = TestUtils.createPlacedResourceImpl(r2);
 
       Assert.assertNull(cache.findAndRemove(pr2));
 
-      Resource r3 = new Resource(UUID.randomUUID(), "l1",
-          Resource.LocationEnforcement.MUST, 1, 2048);
-      PlacedResourceImpl pr3 = new PlacedResourceImpl(r3);
+      Resource r3 = TestUtils.createResource("l1",
+          Resource.Locality.MUST, 1, 2048);
+      PlacedResourceImpl pr3 = TestUtils.createPlacedResourceImpl(r3);
 
       Assert.assertNull(cache.findAndRemove(pr3));
 
-      Resource r4 = new Resource(UUID.randomUUID(), "l2",
-          Resource.LocationEnforcement.MUST, 1, 1024);
-      PlacedResourceImpl pr4 = new PlacedResourceImpl(r4);
+      Resource r4 = TestUtils.createResource("l2",
+          Resource.Locality.MUST, 1, 1024);
+      PlacedResourceImpl pr4 = TestUtils.createPlacedResourceImpl(r4);
 
       Assert.assertNull(cache.findAndRemove(pr4));
 
       Assert.assertEquals(1, cache.getSize());
-      Assert.assertEquals(1, cache.getComputedSize());
 
     } finally {
       cache.stop();
@@ -443,25 +446,25 @@ public class TestResourceCache {
     try {
       cache.start();
 
-      Resource r1 = new Resource(UUID.randomUUID(), "l1",
-          Resource.LocationEnforcement.MUST, 1, 1024);
-      PlacedResourceImpl pr1 = new PlacedResourceImpl(r1);
-      pr1.setAllocationInfo(1, 1024, "l1", "rm1");
+      Resource r1 = TestUtils.createResource("l1",
+          Resource.Locality.MUST, 1, 1024);
+      PlacedResourceImpl pr1 = TestUtils.createPlacedResourceImpl(r1);
+      pr1.setAllocationInfo("l1", 1, 1024);
+      pr1.setRmResourceId("rm1");
       cache.cache(pr1);
 
-      Resource r2 = new Resource(UUID.randomUUID(), "l2",
-          Resource.LocationEnforcement.PREFERRED, 2, 1024);
-      PlacedResourceImpl pr2 = new PlacedResourceImpl(r2);
+      Resource r2 = TestUtils.createResource("l2",
+          Resource.Locality.PREFERRED, 2, 1024);
+      PlacedResourceImpl pr2 = TestUtils.createPlacedResourceImpl(r2);
       Assert.assertNull(cache.findAndRemove(pr2));
 
-      Resource r3 = new Resource(UUID.randomUUID(), "l1",
-          Resource.LocationEnforcement.MUST, 1, 2048);
-      PlacedResourceImpl pr3 = new PlacedResourceImpl(r3);
+      Resource r3 = TestUtils.createResource("l1",
+          Resource.Locality.MUST, 1, 2048);
+      PlacedResourceImpl pr3 = TestUtils.createPlacedResourceImpl(r3);
 
       Assert.assertNull(cache.findAndRemove(pr3));
 
       Assert.assertEquals(1, cache.getSize());
-      Assert.assertEquals(1, cache.getComputedSize());
 
     } finally {
       cache.stop();

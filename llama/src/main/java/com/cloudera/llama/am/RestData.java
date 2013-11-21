@@ -29,7 +29,6 @@ import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.Version;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.ObjectWriter;
 import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.module.SimpleModule;
 import org.codehaus.jackson.map.ser.SerializerBase;
@@ -169,30 +168,18 @@ public class RestData implements LlamaAMObserver,
       for (PlacedReservation reservation : reservations) {
         LOG.debug("observe({})", reservation);
         if (verifyHandle(reservation)) {
-          switch (reservation.getStatus()) {
-            case PENDING:
-              if (!reservationsMap.containsKey(reservation.getReservationId())) {
-                add(reservation);
-              } else {
-                update(reservation);
-              }
-              break;
-            case BACKED_OFF:
-              if (!reservationsMap.containsKey(reservation.getReservationId())) {
-                add(reservation);
-              } else {
-                update(reservation);
-              }
-              hasBeenBackedOff.add(reservation.getReservationId());
-              break;
-            case PARTIAL:
-            case ALLOCATED:
+          if (!reservation.getStatus().isFinal()) {
+            if (!reservationsMap.containsKey(reservation.getReservationId())) {
+              add(reservation);
+            } else {
               update(reservation);
-              break;
-            case ENDED:
-              delete(reservation);
-              hasBeenBackedOff.remove(reservation.getReservationId());
-              break;
+            }
+            if (reservation.getStatus() == PlacedReservation.Status.BACKED_OFF) {
+              hasBeenBackedOff.add(reservation.getReservationId());
+            }
+          } else {
+            delete(reservation);
+            hasBeenBackedOff.remove(reservation.getReservationId());
           }
         } else {
           LOG.debug("Handle not known anymore for reservation '{}'",
@@ -221,8 +208,8 @@ public class RestData implements LlamaAMObserver,
     reservationsMap.put(reservation.getReservationId(), reservation);
     addToMapList(handleReservationsMap, reservation.getHandle(), reservation);
     addToMapList(queueReservationsMap, reservation.getQueue(), reservation);
-    for (PlacedResource resource : reservation.getResources()) {
-      addToMapList(nodeReservationsMap, resource.getLocation(), reservation);
+    for (PlacedResource resource : reservation.getPlacedResources()) {
+      addToMapList(nodeReservationsMap, resource.getLocationAsk(), reservation);
     }
   }
 
@@ -247,9 +234,9 @@ public class RestData implements LlamaAMObserver,
       PlacedReservation reservation) {
     boolean actualLocation = false;
     List<PlacedReservation> list = 
-        nodeReservationsMap.get(resource.getLocation());
+        nodeReservationsMap.get(resource.getLocationAsk());
     if (list == null) {
-      list = nodeReservationsMap.get(resource.getActualLocation());
+      list = nodeReservationsMap.get(resource.getLocation());
       actualLocation = true;
     }
     if (list != null) {
@@ -257,10 +244,10 @@ public class RestData implements LlamaAMObserver,
       if (index >= 0) {
         PlacedReservation oldReservation = list.get(index);
         PlacedResource oldResource = null;
-        List<PlacedResource> oldResources = oldReservation.getResources();
+        List<PlacedResource> oldResources = oldReservation.getPlacedResources();
         for (int i = 0; oldResource == null && i < oldResources.size(); i++) {
-          if (oldResources.get(i).getClientResourceId().
-              equals(resource.getClientResourceId())) {
+          if (oldResources.get(i).getResourceId().
+              equals(resource.getResourceId())) {
             oldResource = oldResources.get(i);
           }
         }
@@ -269,18 +256,18 @@ public class RestData implements LlamaAMObserver,
               "in nodeReservations", resource);
         } else {
           if (actualLocation || 
-              resource.getActualLocation() == null ||
-              oldResource.getLocation().equals(resource.getActualLocation())) {
+              resource.getLocation() == null ||
+              oldResource.getLocationAsk().equals(resource.getLocation())) {
             list.set(index, reservation);
           } else {
             list.remove(index);
             if (list.isEmpty()) {
-              nodeReservationsMap.remove(resource.getLocation());
+              nodeReservationsMap.remove(resource.getLocationAsk());
             }
-            list = nodeReservationsMap.get(resource.getActualLocation());
+            list = nodeReservationsMap.get(resource.getLocation());
             if (list == null) {
               list = new ArrayList<PlacedReservation>();
-              nodeReservationsMap.put(resource.getActualLocation(), list);
+              nodeReservationsMap.put(resource.getLocation(), list);
             }
             list.add(reservation);
           }
@@ -301,7 +288,7 @@ public class RestData implements LlamaAMObserver,
         "handleReservationsMap");
     updateToMapList(queueReservationsMap, reservation.getQueue(), reservation,
         "queueReservationsMap");
-    for (PlacedResource resource : reservation.getResources()) {
+    for (PlacedResource resource : reservation.getPlacedResources()) {
       updateResource(resource, reservation);
     }
   }
@@ -339,12 +326,12 @@ public class RestData implements LlamaAMObserver,
           "RestData delete inconsistency, reservation '{}' not found in queue",
           reservation);
     }
-    for (PlacedResource resource : reservation.getResources()) {
+    for (PlacedResource resource : reservation.getPlacedResources()) {
       boolean deleted = deleteFromMapList(nodeReservationsMap,
-          resource.getLocation(), reservation);
-      if (resource.getActualLocation() != null) {
+          resource.getLocationAsk(), reservation);
+      if (resource.getLocation() != null) {
         deleted = deleteFromMapList(nodeReservationsMap,
-            resource.getActualLocation(), reservation) || deleted;
+            resource.getLocation(), reservation) || deleted;
       }
       if (!deleted) {
         LOG.error(
@@ -433,6 +420,16 @@ public class RestData implements LlamaAMObserver,
     }
   }
 
+  private static String flattenToString(List<Object> list) {
+    StringBuilder sb = new StringBuilder();
+    String separator = "";
+    for (Object o : list) {
+      sb.append(separator).append(o);
+      separator = ", ";
+    }
+    return sb.toString();
+  }
+
   public static class PlacedResourceSerializer extends
       SerializerBase<PlacedResource> {
 
@@ -445,18 +442,18 @@ public class RestData implements LlamaAMObserver,
         SerializerProvider provider)
         throws IOException {
       jgen.writeStartObject();
-      jgen.writeObjectField("clientResourceId", value.getClientResourceId());
-      jgen.writeStringField("location", value.getLocation());
-      jgen.writeStringField("enforcement", value.getEnforcement().toString());
-      jgen.writeNumberField("cpuVCores", value.getCpuVCores());
-      jgen.writeNumberField("memoryMb", value.getMemoryMb());
+      jgen.writeObjectField("resourceId", value.getResourceId());
+      jgen.writeStringField("locationAsk", value.getLocationAsk());
+      jgen.writeStringField("locality", value.getLocalityAsk().toString());
+      jgen.writeNumberField("cpuVCoresAsk", value.getCpuVCoresAsk());
+      jgen.writeNumberField("memoryMbsAsk", value.getMemoryMbsAsk());
       jgen.writeObjectField("handle", value.getHandle());
       jgen.writeStringField("queue", value.getQueue());
       jgen.writeObjectField("reservationId", value.getReservationId());
-      jgen.writeStringField("rmResourceId", value.getRmResourceId());
-      jgen.writeStringField("actualLocation", value.getActualLocation());
-      jgen.writeNumberField("actualCpuVCores", value.getActualCpuVCores());
-      jgen.writeNumberField("actualMemoryMb", value.getActualMemoryMb());
+      jgen.writeObjectField("rmResourceId", value.getRmResourceId());
+      jgen.writeStringField("actualLocation", value.getLocation());
+      jgen.writeNumberField("actualCpuVCores", value.getCpuVCores());
+      jgen.writeNumberField("actualMemoryMb", value.getMemoryMbs());
       jgen.writeStringField("status", value.getStatus().toString());
       jgen.writeEndObject();
     }

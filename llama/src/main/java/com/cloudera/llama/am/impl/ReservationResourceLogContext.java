@@ -36,6 +36,6 @@ class ReservationResourceLogContext extends MetricUtil.LogContext {
   public ReservationResourceLogContext(PlacedResourceImpl resource) {
     super(RESOURCE_PATTERN, resource.getHandle(),
         resource.getQueue(), resource.getReservationId(),
-        resource.getClientResourceId(), resource.getActualLocation());
+        resource.getResourceId(), resource.getLocation());
   }
 }

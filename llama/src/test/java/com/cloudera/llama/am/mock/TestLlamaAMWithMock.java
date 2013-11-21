@@ -20,15 +20,15 @@ package com.cloudera.llama.am.mock;
 import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.LlamaAMEvent;
 import com.cloudera.llama.am.api.LlamaAMListener;
-import com.cloudera.llama.am.api.Reservation;
+import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.Resource;
+import com.cloudera.llama.am.api.TestUtils;
 import com.cloudera.llama.util.UUID;
 import junit.framework.Assert;
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -64,42 +64,38 @@ public class TestLlamaAMWithMock {
     try {
       llama.start();
       llama.addListener(listener);
-      UUID c1 = UUID.randomUUID();
-      UUID c2 = UUID.randomUUID();
-      UUID c3 = UUID.randomUUID();
-      UUID c4 = UUID.randomUUID();
-      Resource a1 = new Resource(c1, MockLlamaAMFlags.ALLOCATE + "h0",
-          Resource.LocationEnforcement.DONT_CARE, 1, 1);
-      Resource a2 = new Resource(c2, MockLlamaAMFlags.REJECT + "h1",
-          Resource.LocationEnforcement.DONT_CARE, 1, 1);
-      Resource a3 = new Resource(c3, MockLlamaAMFlags.PREEMPT + "h2",
-          Resource.LocationEnforcement.DONT_CARE, 1, 1);
-      Resource a4 = new Resource(c4, MockLlamaAMFlags.LOSE + "h3",
-          Resource.LocationEnforcement.DONT_CARE, 1, 1);
-      llama.reserve(new Reservation(UUID.randomUUID(), "q1", Arrays.asList(a1),
-          false));
-      llama.reserve(new Reservation(UUID.randomUUID(), "q1", Arrays.asList(a2),
-          false));
-      llama.reserve(new Reservation(UUID.randomUUID(), "q1", Arrays.asList(a3),
-          false));
-      llama.reserve(new Reservation(UUID.randomUUID(), "q1", Arrays.asList(a4),
-          false));
+      Resource a1 = TestUtils.createResource(MockLlamaAMFlags.ALLOCATE + "h0",
+          Resource.Locality.DONT_CARE, 1, 1);
+      Resource a2 = TestUtils.createResource(MockLlamaAMFlags.REJECT + "h1",
+          Resource.Locality.DONT_CARE, 1, 1);
+      Resource a3 = TestUtils.createResource(MockLlamaAMFlags.PREEMPT + "h2",
+          Resource.Locality.DONT_CARE, 1, 1);
+      Resource a4 = TestUtils.createResource(MockLlamaAMFlags.LOSE + "h3",
+          Resource.Locality.DONT_CARE, 1, 1);
+      PlacedReservation pr1 = llama.reserve(TestUtils.createReservation(
+          UUID.randomUUID(), "u", "q1", a1, false));
+      PlacedReservation pr2 = llama.reserve(TestUtils.createReservation(
+          UUID.randomUUID(), "u", "q1", a2, false));
+      PlacedReservation pr3 = llama.reserve(TestUtils.createReservation(
+          UUID.randomUUID(), "u", "q1", a3, false));
+      PlacedReservation pr4 = llama.reserve(TestUtils.createReservation(
+          UUID.randomUUID(), "u", "q1", a4, false));
       Thread.sleep(100);
       Assert.assertEquals(6, listener.events.size());
       Set<UUID> allocated = new HashSet<UUID>();
-      allocated.add(c1);
-      allocated.add(c3);
-      allocated.add(c4);
+      allocated.add(pr1.getPlacedResources().get(0).getResourceId());
+      allocated.add(pr3.getPlacedResources().get(0).getResourceId());
+      allocated.add(pr4.getPlacedResources().get(0).getResourceId());
       Set<UUID> rejected = new HashSet<UUID>();
-      rejected.add(c2);
+      rejected.add(pr2.getPlacedResources().get(0).getResourceId());
       Set<UUID> lost = new HashSet<UUID>();
-      lost.add(c4);
+      lost.add(pr4.getPlacedResources().get(0).getResourceId());
       Set<UUID> preempted = new HashSet<UUID>();
-      preempted.add(c3);
+      preempted.add(pr3.getPlacedResources().get(0).getResourceId());
       for (LlamaAMEvent event : listener.events) {
         if (!event.getAllocatedResources().isEmpty()) {
           allocated.remove(event.getAllocatedResources().get(0)
-              .getClientResourceId());
+              .getResourceId());
         }
         if (!event.getRejectedClientResourcesIds().isEmpty()) {
           rejected.remove(event.getRejectedClientResourcesIds().get(0));
@@ -120,9 +116,9 @@ public class TestLlamaAMWithMock {
 
       listener.events.clear();
       UUID c5 = UUID.randomUUID();
-      Resource a5 = new Resource(c5, MockLlamaAMFlags.ALLOCATE + "XX",
-          Resource.LocationEnforcement.DONT_CARE, 1, 1);
-      llama.reserve(new Reservation(UUID.randomUUID(), "q1", Arrays.asList(a5),
+      Resource a5 = TestUtils.createResource(MockLlamaAMFlags.ALLOCATE + "XX",
+          Resource.Locality.DONT_CARE, 1, 1);
+      llama.reserve(TestUtils.createReservation(UUID.randomUUID(), "u", "q1", a5,
           true));
       Thread.sleep(100);
       Assert.assertEquals(1, listener.events.size());
@@ -141,10 +137,10 @@ public class TestLlamaAMWithMock {
     try {
       llama.start();
       UUID c1 = UUID.randomUUID();
-      Resource a1 = new Resource(c1, MockLlamaAMFlags.ALLOCATE + "h0",
-          Resource.LocationEnforcement.DONT_CARE, 1, 1);
-      llama.reserve(new Reservation(UUID.randomUUID(), "invalid-q",
-          Arrays.asList(a1), false));
+      Resource a1 = TestUtils.createResource(MockLlamaAMFlags.ALLOCATE + "h0",
+          Resource.Locality.DONT_CARE, 1, 1);
+      llama.reserve(TestUtils.createReservation(UUID.randomUUID(), "u",
+          "invalid-q", a1, false));
     } finally {
       llama.stop();
     }
@@ -181,10 +177,10 @@ public class TestLlamaAMWithMock {
       llama.start();
       llama.addListener(listener);
       while (!hasAllStatus(listener.events)) {
-        Resource a1 = new Resource(UUID.randomUUID(), "h0",
-            Resource.LocationEnforcement.DONT_CARE, 1, 1);
-        llama.reserve(new Reservation(UUID.randomUUID(), "q1",
-            Arrays.asList(a1), false));
+        Resource a1 = TestUtils.createResource("h0",
+            Resource.Locality.DONT_CARE, 1, 1);
+        llama.reserve(TestUtils.createReservation(UUID.randomUUID(), "u", "q1",
+            a1, false));
       }
     } finally {
       llama.stop();

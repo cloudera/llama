@@ -18,10 +18,11 @@
 package com.cloudera.llama.am.impl;
 
 import com.cloudera.llama.am.api.LlamaAMException;
+import com.cloudera.llama.am.api.RMResource;
 import com.cloudera.llama.am.api.Resource;
+import com.cloudera.llama.am.api.TestUtils;
 import com.cloudera.llama.am.spi.RMLlamaAMCallback;
 import com.cloudera.llama.am.spi.RMLlamaAMConnector;
-import com.cloudera.llama.am.spi.RMPlacedResource;
 import com.cloudera.llama.am.spi.RMResourceChange;
 import com.cloudera.llama.util.Clock;
 import com.cloudera.llama.util.ManualClock;
@@ -86,19 +87,19 @@ public class TestRMLlamaAMConnectorCache {
     }
 
     @Override
-    public void reserve(Collection<RMPlacedResource> resources)
+    public void reserve(Collection<RMResource> resources)
         throws LlamaAMException {
       invoked.add("reserve");
     }
 
     @Override
-    public void release(Collection<RMPlacedResource> resources)
+    public void release(Collection<RMResource> resources)
         throws LlamaAMException {
       invoked.add("release");
     }
 
     @Override
-    public boolean reassignResource(String rmResourceId, UUID resourceId) {
+    public boolean reassignResource(Object rmResourceId, UUID resourceId) {
       invoked.add("reassignResource");
       return true;
     }
@@ -136,18 +137,18 @@ public class TestRMLlamaAMConnectorCache {
 
     Assert.assertEquals(expected, connector.invoked);
 
-    Resource r1 = new Resource(UUID.randomUUID(), "l1",
-        Resource.LocationEnforcement.MUST, 1, 1024);
-    RMPlacedResource pr1 = new PlacedResourceImpl(r1);
+    PlacedResourceImpl pr1 = TestUtils.createPlacedResourceImpl("l1",
+        Resource.Locality.MUST, 1, 1024);
 
 
-    cache.reserve(Arrays.asList(pr1));
-    ((PlacedResourceImpl)pr1).setAllocationInfo(1, 1024, "l1", "rm1");
+    cache.reserve(Arrays.asList((RMResource)pr1));
+    pr1.setAllocationInfo("'l1", 1, 1024);
+    pr1.setRmResourceId("rm1");
 
     expected.add("reserve");
     Assert.assertEquals(expected, connector.invoked);
 
-    cache.release(Arrays.asList(pr1));
+    cache.release(Arrays.asList((RMResource)pr1));
 
     expected.add("reassignResource");
     Assert.assertEquals(expected, connector.invoked);

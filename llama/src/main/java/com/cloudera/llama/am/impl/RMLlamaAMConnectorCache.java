@@ -19,11 +19,9 @@ package com.cloudera.llama.am.impl;
 
 import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.LlamaAMException;
-import com.cloudera.llama.am.api.PlacedResource;
-import com.cloudera.llama.am.api.Resource;
+import com.cloudera.llama.am.api.RMResource;
 import com.cloudera.llama.am.spi.RMLlamaAMCallback;
 import com.cloudera.llama.am.spi.RMLlamaAMConnector;
-import com.cloudera.llama.am.spi.RMPlacedResource;
 import com.cloudera.llama.am.spi.RMResourceChange;
 import com.cloudera.llama.util.UUID;
 import com.codahale.metrics.Meter;
@@ -38,6 +36,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 public class RMLlamaAMConnectorCache implements RMLlamaAMConnector,
     RMLlamaAMCallback, ResourceCache.Listener {
@@ -136,14 +135,14 @@ public class RMLlamaAMConnectorCache implements RMLlamaAMConnector,
   }
 
   @Override
-  public void reserve(Collection<RMPlacedResource> resources)
+  public void reserve(Collection<RMResource> resources)
       throws LlamaAMException {
-    List<RMPlacedResource> list = new ArrayList<RMPlacedResource>(resources);
+    List<RMResource> list = new ArrayList<RMResource>(resources);
     List<RMResourceChange> changes = new ArrayList<RMResourceChange>();
-    Iterator<RMPlacedResource> it = list.iterator();
+    Iterator<RMResource> it = list.iterator();
     while (it.hasNext()) {
-      RMPlacedResource resource = it.next();
-      ResourceCache.CachedResource cached = cache.findAndRemove(resource);
+      RMResource resource = it.next();
+      ResourceCache.CachedRMResource cached = cache.findAndRemove(resource);
       resourcesAsked.mark();
       if (cached != null) {
         cacheHits.mark();
@@ -151,10 +150,10 @@ public class RMLlamaAMConnectorCache implements RMLlamaAMConnector,
             cached, resource);
         it.remove();
         connector.reassignResource(cached.getRmResourceId(),
-            resource.getClientResourceId());
+            resource.getResourceId());
         RMResourceChange change = RMResourceChange.createResourceAllocation(
-            resource.getClientResourceId(), cached.getRmResourceId(),
-            cached.getCpuVCores(), cached.getMemoryMb(), cached.getLocation());
+            resource.getResourceId(), cached.getRmResourceId(),
+            cached.getCpuVCores(), cached.getMemoryMbs(), cached.getLocation());
         changes.add(change);
       }
     }
@@ -163,13 +162,13 @@ public class RMLlamaAMConnectorCache implements RMLlamaAMConnector,
   }
 
   @Override
-  public void release(Collection<RMPlacedResource> resources)
+  public void release(Collection<RMResource> resources)
       throws LlamaAMException {
-    List<RMPlacedResource> list = new ArrayList<RMPlacedResource>(resources);
-    Iterator<RMPlacedResource> it = list.iterator();
+    List<RMResource> list = new ArrayList<RMResource>(resources);
+    Iterator<RMResource> it = list.iterator();
     while (it.hasNext()) {
-      RMPlacedResource resource = it.next();
-      if (resource.getStatus() == PlacedResource.Status.ALLOCATED) {
+      RMResource resource = it.next();
+      if (resource.getRmResourceId() != null) {
         UUID cacheId = cache.cache(resource);
         if (connector.reassignResource(resource.getRmResourceId(), cacheId)) {
           LOG.debug("Caching released resource '{}'", resource);
@@ -178,17 +177,17 @@ public class RMLlamaAMConnectorCache implements RMLlamaAMConnector,
           cache.findAndRemove(cacheId);
           LOG.warn(
               "RMConnector did not reassign '{}', releasing and discarding it",
-              resource.getRmResourceId());
-          connector.release(resources);
+              resource.getResourceId());
         }
-      } else {
-        connector.release(resources);
       }
+    }
+    if (!list.isEmpty()) {
+      connector.release(list);
     }
   }
 
   @Override
-  public boolean reassignResource(String rmResourceId, UUID resourceId) {
+  public boolean reassignResource(Object rmResourceId, UUID resourceId) {
     return false;
   }
 
@@ -211,19 +210,17 @@ public class RMLlamaAMConnectorCache implements RMLlamaAMConnector,
     callback.changesFromRM(changes);
   }
 
-  private final Resource DUMMY_RESOURCE = new Resource(UUID.randomUUID(),
-      "l", Resource.LocationEnforcement.DONT_CARE, 1, 1);
-
   @Override
-  public void onEviction(ResourceCache.CachedResource cachedResource) {
-    RMPlacedResource pr = new PlacedResourceImpl(DUMMY_RESOURCE);
-    pr.setRmPayload(cachedResource.getRmPayload());
+  @SuppressWarnings("unchecked")
+  public void onEviction(ResourceCache.CachedRMResource cachedRMResource) {
+    RMResource dummyPlacedResource = new PlacedResourceImpl();
+    dummyPlacedResource.getRmData().putAll((Map) cachedRMResource.getRmData());
     try {
-      connector.release(Arrays.asList(pr));
+      connector.release(Arrays.asList(dummyPlacedResource));
     } catch (Throwable ex) {
       LOG.error(
           "Failed to release resource '{}' from RMConnector on eviction, {}",
-          cachedResource.getRmResourceId(), ex.toString(), ex);
+          cachedRMResource.getRmResourceId(), ex.toString(), ex);
     }
   }
 }

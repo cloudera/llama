@@ -19,14 +19,11 @@ package com.cloudera.llama.am.api;
 
 import com.cloudera.llama.am.spi.RMLlamaAMCallback;
 import com.cloudera.llama.am.spi.RMLlamaAMConnector;
-import com.cloudera.llama.am.spi.RMPlacedReservation;
-import com.cloudera.llama.am.spi.RMPlacedResource;
 import com.cloudera.llama.util.UUID;
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -65,17 +62,17 @@ public class TestLlamaAM {
     }
 
     @Override
-    public void reserve(Collection<RMPlacedResource> resources)
+    public void reserve(Collection<RMResource> resources)
         throws LlamaAMException {
     }
 
     @Override
-    public void release(Collection<RMPlacedResource> resources)
+    public void release(Collection<RMResource> resources)
         throws LlamaAMException {
     }
 
     @Override
-    public boolean reassignResource(String rmResourceId, UUID resourceId) {
+    public boolean reassignResource(Object rmResourceId, UUID resourceId) {
       return false;
     }
   }
@@ -84,9 +81,7 @@ public class TestLlamaAM {
     LlamaAM am = LlamaAM.create(conf);
     try {
       am.start();
-      am.reserve(new Reservation(UUID.randomUUID(), "q",
-          Arrays.asList(new Resource(UUID.randomUUID(), "l",
-              Resource.LocationEnforcement.MUST, 1, 1)), false));
+      am.reserve(TestUtils.createReservation(true));
       Assert.assertTrue(MyRMLlamaAMConnector.created);
     } finally {
       am.stop();

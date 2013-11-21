@@ -24,7 +24,7 @@ import com.cloudera.llama.am.api.LlamaAMListener;
 import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.Reservation;
 import com.cloudera.llama.am.api.Resource;
-import com.cloudera.llama.am.api.TestReservation;
+import com.cloudera.llama.am.api.TestUtils;
 import com.cloudera.llama.util.UUID;
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Assert;
@@ -80,7 +80,8 @@ public class TestAPIContractLlamaAM {
     public PlacedReservation reserve(UUID reservationId,
         Reservation reservation)
         throws LlamaAMException {
-      return new PlacedReservationImpl(UUID.randomUUID(), createReservation());
+      return new PlacedReservationImpl(UUID.randomUUID(),
+          TestUtils.createReservation(false));
     }
 
     @Override
@@ -106,12 +107,6 @@ public class TestAPIContractLlamaAM {
         throws LlamaAMException {
       return Collections.EMPTY_LIST;
     }
-  }
-
-  public static Reservation createReservation() {
-    List<Resource> resources = new ArrayList<Resource>();
-    resources.add(TestReservation.createResource());
-    return new Reservation(UUID.randomUUID(), "q", resources, false);
   }
 
   private LlamaAM createLlamaAM() throws Exception {
@@ -147,7 +142,7 @@ public class TestAPIContractLlamaAM {
     LlamaAM am = createLlamaAM();
     try {
       am.start();
-      Assert.assertNotNull(am.reserve(createReservation()));
+      Assert.assertNotNull(am.reserve(TestUtils.createReservation(false)));
     } finally {
       am.stop();
     }
@@ -225,7 +220,7 @@ public class TestAPIContractLlamaAM {
     MyRMLlamaAMConnector.nullOnReserve = true;
     try {
       am.start();
-      am.reserve(null, createReservation());
+      am.reserve(null, TestUtils.createReservation(false));
     } finally {
       am.stop();
     }

@@ -225,7 +225,7 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
   private synchronized PlacedReservation gReleaseReservation(UUID reservationId) {
     PlacedReservationImpl pr = localReservations.remove(reservationId);
     if (pr != null) {
-      pr.setStatus(PlacedReservation.Status.ENDED);
+      pr.setStatus(PlacedReservation.Status.RELEASED);
     }
     submittedReservations.remove(reservationId);
     return pr;
@@ -252,7 +252,7 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
         it.remove();
         submittedReservations.remove(pr.getReservationId());
         reservations.add(pr);
-        pr.setStatus(PlacedReservation.Status.ENDED);
+        pr.setStatus(PlacedReservation.Status.RELEASED);
         getLog().debug(
             "Releasing all reservations for handle '{}', reservationId '{}'",
             handle, pr.getReservationId());
@@ -280,7 +280,7 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
       if (pr.getQueue().equals(queue)) {
         it.remove();
         submittedReservations.remove(pr.getReservationId());
-        pr.setStatus(PlacedReservation.Status.ENDED);
+        pr.setStatus(PlacedReservation.Status.RELEASED);
         reservations.add(pr);
         getLog().debug(
             "Releasing all reservations for queue '{}', reservationId '{}'",

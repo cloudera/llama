@@ -15,23 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.cloudera.llama.am.spi;
+package com.cloudera.llama.am.api;
 
-import com.cloudera.llama.am.api.PlacedReservation;
-import com.cloudera.llama.am.api.Reservation;
-import com.cloudera.llama.am.api.Resource;
+import com.cloudera.llama.am.impl.PlacedReservationImpl;
+import com.cloudera.llama.am.impl.PlacedResourceImpl;
 
-import java.util.List;
+public class Builders {
 
-public abstract class RMPlacedReservation extends PlacedReservation {
-
-  protected RMPlacedReservation(Reservation<? extends Resource> reservation) {
-    super(reservation);
+  public static Resource.Builder createResourceBuilder() {
+    return new PlacedResourceImpl.XResourceBuilder();
   }
 
-  @SuppressWarnings("unchecked")
-  public List<RMPlacedResource> getRMResources() {
-    return (List<RMPlacedResource>) (List) getResources();
+  public static Reservation.Builder createReservationBuilder() {
+    return new PlacedReservationImpl.XReservationBuilder();
+  }
+
+  public static Expansion.Builder createExpansionBuild() {
+    return new PlacedReservationImpl.XExpansionBuilder();
   }
 
 }

@@ -19,41 +19,20 @@ package com.cloudera.llama.am.api;
 
 import com.cloudera.llama.util.UUID;
 
-import java.util.List;
+public interface Expansion {
 
-public interface PlacedReservation extends Reservation {
+  public interface Builder {
 
-  public enum Status {
-    PENDING(false),
-    BACKED_OFF(false),
-    PARTIAL(false),
-    ALLOCATED(false),
-    REJECTED(true),
-    PREEMPTED(true),
-    LOST(true),
-    RELEASED(true);
+    public Builder setExpansionOf(UUID expansionOf);
 
-    private boolean finalStatus;
+    public Builder setResource(Resource resource);
 
-    private Status(boolean finalStatus) {
-      this.finalStatus = finalStatus;
-    }
+    public Expansion build();
 
-    public boolean isFinal() {
-      return finalStatus;
-    }
-    }
-
-  public long getPlacedOn();
-
-  public UUID getReservationId();
+  }
 
   public UUID getExpansionOf();
 
-  public Status getStatus();
-
-  public List<PlacedResource> getPlacedResources();
-
-  public long getAllocatedOn();
+  public Resource getResource();
 
 }

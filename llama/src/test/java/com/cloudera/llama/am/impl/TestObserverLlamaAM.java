@@ -25,7 +25,7 @@ import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.PlacedResource;
 import com.cloudera.llama.am.api.Reservation;
 import com.cloudera.llama.am.api.Resource;
-import com.cloudera.llama.am.api.TestReservation;
+import com.cloudera.llama.am.api.TestUtils;
 import com.cloudera.llama.am.mock.MockLlamaAMFlags;
 import com.cloudera.llama.am.mock.MockRMLlamaAMConnector;
 import com.cloudera.llama.util.Clock;
@@ -172,12 +172,6 @@ public class TestObserverLlamaAM {
     }
   }
 
-  public static Reservation createReservation() {
-    List<Resource> resources = new ArrayList<Resource>();
-    resources.add(TestReservation.createResource());
-    return new Reservation(UUID.randomUUID(), "q", resources, false);
-  }
-
   @Test
   @SuppressWarnings("unchecked")
   public void testDelegate() throws Exception {
@@ -191,7 +185,7 @@ public class TestObserverLlamaAM {
     oAm.getNodes();
     oAm.addListener(null);
     oAm.removeListener(null);
-    Reservation<Resource> reservation = createReservation();
+    Reservation reservation = TestUtils.createReservation(true);
     Assert.assertTrue(am.reservations.isEmpty());
     UUID id = oAm.reserve(reservation).getReservationId();
     Assert.assertFalse(am.reservations.isEmpty());
@@ -213,18 +207,20 @@ public class TestObserverLlamaAM {
     conf.set("llama.am.mock.events.max.wait.ms", "5");
     conf.set("llama.am.mock.nodes", "h0");
     conf.set(LlamaAM.INITIAL_QUEUES_KEY, "q1");
-    conf.set(LlamaAM.RM_CONNECTOR_CLASS_KEY, MockRMLlamaAMConnector.class.getName());
+    conf.set(LlamaAM.RM_CONNECTOR_CLASS_KEY,
+        MockRMLlamaAMConnector.class.getName());
     return conf;
   }
 
-  public static Reservation createReservation(UUID handle, String endStatus, int resourcesCount) {
+  public static Reservation createReservation(UUID handle, String endStatus,
+      int resourcesCount) {
     List<Resource> resources = new ArrayList<Resource>();
     for (int i = 0; i < resourcesCount; i++) {
-      Resource resource = new Resource(UUID.randomUUID(), endStatus + "h0",
-          Resource.LocationEnforcement.MUST, i * 10, 2);
+      Resource resource = TestUtils.createResource(endStatus + "h0",
+          Resource.Locality.MUST, i * 10, 2);
       resources.add(resource);
     }
-    return new Reservation(handle, "q1", resources, true);
+    return TestUtils.createReservation(handle, "u", "q1", resources, true);
   }
 
   private void waitFor(boolean predicate, long timeout) throws Exception {
@@ -254,7 +250,7 @@ public class TestObserverLlamaAM {
     Assert.assertEquals(PlacedReservation.Status.PENDING, observer.reservations.get(0).getStatus());
     Assert.assertEquals(PlacedReservation.Status.PARTIAL, observer.reservations.get(1).getStatus());
     Assert.assertEquals(PlacedReservation.Status.ALLOCATED, observer.reservations.get(2).getStatus());
-    Assert.assertEquals(PlacedReservation.Status.ENDED, observer.reservations.get(3).getStatus());
+    Assert.assertEquals(PlacedReservation.Status.RELEASED, observer.reservations.get(3).getStatus());
     llama.stop();
   }
 
@@ -274,7 +270,7 @@ public class TestObserverLlamaAM {
     Thread.sleep(100);
     Assert.assertEquals(2, observer.reservations.size());
     Assert.assertEquals(PlacedReservation.Status.PENDING, observer.reservations.get(0).getStatus());
-    Assert.assertEquals(PlacedReservation.Status.ENDED, observer.reservations.get(1).getStatus());
+    Assert.assertEquals(PlacedReservation.Status.REJECTED, observer.reservations.get(1).getStatus());
     llama.stop();
   }
 
@@ -298,8 +294,8 @@ public class TestObserverLlamaAM {
     Assert.assertEquals(PlacedReservation.Status.PENDING, observer.reservations.get(0).getStatus());
     Assert.assertEquals(PlacedReservation.Status.ALLOCATED, observer.reservations.get(1).getStatus());
     Assert.assertEquals(PlacedReservation.Status.ALLOCATED, observer.reservations.get(2).getStatus());
-    Assert.assertEquals(PlacedResource.Status.LOST, observer.reservations.get(2).getResources().get(0).getStatus());
-    Assert.assertEquals(PlacedReservation.Status.ENDED, observer.reservations.get(3).getStatus());
+    Assert.assertEquals(PlacedResource.Status.LOST, observer.reservations.get(2).getPlacedResources().get(0).getStatus());
+    Assert.assertEquals(PlacedReservation.Status.RELEASED, observer.reservations.get(3).getStatus());
     llama.stop();
   }
 
@@ -323,8 +319,8 @@ public class TestObserverLlamaAM {
     Assert.assertEquals(PlacedReservation.Status.PENDING, observer.reservations.get(0).getStatus());
     Assert.assertEquals(PlacedReservation.Status.ALLOCATED, observer.reservations.get(1).getStatus());
     Assert.assertEquals(PlacedReservation.Status.ALLOCATED, observer.reservations.get(2).getStatus());
-    Assert.assertEquals(PlacedResource.Status.PREEMPTED, observer.reservations.get(2).getResources().get(0).getStatus());
-    Assert.assertEquals(PlacedReservation.Status.ENDED, observer.reservations.get(3).getStatus());
+    Assert.assertEquals(PlacedResource.Status.PREEMPTED, observer.reservations.get(2).getPlacedResources().get(0).getStatus());
+    Assert.assertEquals(PlacedReservation.Status.RELEASED, observer.reservations.get(3).getStatus());
     llama.stop();
   }
 
@@ -349,8 +345,8 @@ public class TestObserverLlamaAM {
     Assert.assertEquals(PlacedReservation.Status.PENDING, observer.reservations.get(0).getStatus());
     Assert.assertEquals(PlacedReservation.Status.PENDING, observer.reservations.get(1).getStatus());
     Assert.assertEquals(PlacedReservation.Status.ALLOCATED, observer.reservations.get(2).getStatus());
-    Assert.assertEquals(PlacedReservation.Status.ENDED, observer.reservations.get(3).getStatus());
-    Assert.assertEquals(PlacedReservation.Status.ENDED, observer.reservations.get(4).getStatus());
+    Assert.assertEquals(PlacedReservation.Status.RELEASED, observer.reservations.get(3).getStatus());
+    Assert.assertEquals(PlacedReservation.Status.RELEASED, observer.reservations.get(4).getStatus());
     llama.stop();
   }
 

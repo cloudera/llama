@@ -18,9 +18,8 @@
 package com.cloudera.llama.am.impl;
 
 import com.cloudera.llama.am.api.LlamaAM;
-import com.cloudera.llama.am.api.PlacedResource;
+import com.cloudera.llama.am.api.RMResource;
 import com.cloudera.llama.am.api.Resource;
-import com.cloudera.llama.am.spi.RMPlacedResource;
 import com.cloudera.llama.util.Clock;
 import com.cloudera.llama.util.UUID;
 import org.apache.hadoop.conf.Configurable;
@@ -40,30 +39,18 @@ import java.util.TreeMap;
 public class ResourceCache {
   private static final Logger LOG = LoggerFactory.getLogger(ResourceCache.class);
 
-  public interface CachedResource {
-
-    public UUID getCacheId();
+  public interface CachedRMResource extends RMResource {
 
     public long getCachedOn();
-
-    public String getRmResourceId();
-
-    public String getLocation();
-
-    public int getCpuVCores();
-
-    public int getMemoryMb();
-
-    public Object getRmPayload();
 
   }
 
   public interface EvictionPolicy {
-    public boolean shouldEvict(CachedResource resource);
+    public boolean shouldEvict(CachedRMResource resource);
   }
 
   public interface Listener {
-    public void onEviction(CachedResource cachedResource);
+    public void onEviction(CachedRMResource cachedRMResource);
   }
 
   public static final String PREFIX = LlamaAM.PREFIX_KEY + "resources.caching.";
@@ -104,7 +91,7 @@ public class ResourceCache {
     }
 
     @Override
-    public boolean shouldEvict(CachedResource resource) {
+    public boolean shouldEvict(CachedRMResource resource) {
       return ((Clock.currentTimeMillis() - resource.getCachedOn()) - timeout)
           >= 0;
     }
@@ -116,7 +103,7 @@ public class ResourceCache {
 
     public Key(Entry entry) {
       this.cpuVCores = entry.getCpuVCores();
-      this.memoryMb = entry.getMemoryMb();
+      this.memoryMb = entry.getMemoryMbs();
     }
 
     @Override
@@ -139,14 +126,14 @@ public class ResourceCache {
     }
   }
 
-  static class Entry implements Comparable<Entry>, CachedResource {
+  static class Entry implements Comparable<Entry>, CachedRMResource {
     private final UUID cacheId;
     private final long cachedOn;
-    private final String rmResourceId;
+    private final Object rmResourceId;
     private final String location;
     private final int cpuVCores;
     private final int memoryMb;
-    private final Object rmPayload;
+    private final Map<String, Object> rmData;
     private volatile boolean valid;
 
     Entry(String location, int cpuVCores, int memoryMb) {
@@ -156,17 +143,17 @@ public class ResourceCache {
       this.location = location;
       this.cpuVCores = cpuVCores;
       this.memoryMb = memoryMb;
-      rmPayload = null;
+      rmData = null;
     }
 
-    Entry(UUID cacheId, RMPlacedResource resource, long cachedOn) {
+    Entry(UUID cacheId, RMResource resource, long cachedOn) {
       this.cacheId = cacheId;
       this.cachedOn = cachedOn;
       rmResourceId = resource.getRmResourceId();
-      location = resource.getActualLocation();
-      cpuVCores = resource.getActualCpuVCores();
-      memoryMb = resource.getActualMemoryMb();
-      rmPayload = resource.getRmPayload();
+      location = resource.getLocation();
+      cpuVCores = resource.getCpuVCores();
+      memoryMb = resource.getMemoryMbs();
+      rmData = resource.getRmData();
     }
 
     void setValid(boolean valid) {
@@ -179,7 +166,7 @@ public class ResourceCache {
     }
 
     @Override
-    public UUID getCacheId() {
+    public UUID getResourceId() {
       return cacheId;
     }
 
@@ -189,8 +176,28 @@ public class ResourceCache {
     }
 
     @Override
-    public String getRmResourceId() {
+    public Object getRmResourceId() {
       return rmResourceId;
+    }
+
+    @Override
+    public Locality getLocalityAsk() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String getLocationAsk() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int getCpuVCoresAsk() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int getMemoryMbsAsk() {
+      throw new UnsupportedOperationException();
     }
 
     @Override
@@ -204,13 +211,18 @@ public class ResourceCache {
     }
 
     @Override
-    public int getMemoryMb() {
+    public int getMemoryMbs() {
       return memoryMb;
     }
 
     @Override
-    public Object getRmPayload() {
-      return rmPayload;
+    public Map<String, Object> getRmData() {
+      return rmData;
+    }
+
+    @Override
+    public void setRmResourceId(Object rmResourceId) {
+      throw new UnsupportedOperationException();
     }
 
     public boolean isValid() {
@@ -222,8 +234,8 @@ public class ResourceCache {
 
     @Override
     public String toString() {
-      return FastFormat.format(TO_STRING, getCacheId(), getCachedOn(),
-          getRmResourceId(), getLocation(), getCpuVCores(), getMemoryMb());
+      return FastFormat.format(TO_STRING, getResourceId(), getCachedOn(),
+          getRmResourceId(), getLocation(), getCpuVCores(), getMemoryMbs());
     }
 
   }
@@ -276,7 +288,7 @@ public class ResourceCache {
             int counter = 0;
             for (Entry entry : entries) {
               if (entry.isValid() && evictionPolicy.shouldEvict(entry)) {
-                if (findAndRemove(entry.getCacheId()) != null) {
+                if (findAndRemove(entry.getResourceId()) != null) {
                   try {
                     listener.onEviction(entry);
                   } catch (Throwable ex) {
@@ -308,7 +320,7 @@ public class ResourceCache {
     }
   }
 
-  public synchronized UUID cache(RMPlacedResource resource) {
+  public synchronized UUID cache(RMResource resource) {
     UUID id = UUID.randomUUID();
     Entry entry = new Entry(id, resource, Clock.currentTimeMillis());
     entry.setValid(true);
@@ -328,9 +340,9 @@ public class ResourceCache {
     return id;
   }
 
-  private enum Mode {SAME_REF, STRICT_LOCATION, ANY_LOCATION};
+  private enum Mode {SAME_REF, STRICT_LOCATION, ANY_LOCATION}
 
-  private CachedResource findAndRemove(Entry entry, Mode mode) {
+  private CachedRMResource findAndRemove(Entry entry, Mode mode) {
     ParamChecker.notNull(entry, "entry");
     ParamChecker.notNull(mode, "mode");
     Entry found = null;
@@ -369,7 +381,7 @@ public class ResourceCache {
         }
       }
       if (found != null) {
-        idToCacheEntryMap.remove(found.getCacheId());
+        idToCacheEntryMap.remove(found.getResourceId());
         if (list.isEmpty()) {
           cache.remove(key);
         }
@@ -379,14 +391,14 @@ public class ResourceCache {
     return found;
   }
 
-  public synchronized CachedResource findAndRemove(PlacedResource resource) {
-    Mode mode = (resource.getEnforcement() == Resource.LocationEnforcement.MUST)
+  public synchronized CachedRMResource findAndRemove(RMResource resource) {
+    Mode mode = (resource.getLocalityAsk() == Resource.Locality.MUST)
                 ? Mode.STRICT_LOCATION : Mode.ANY_LOCATION;
-    return findAndRemove(new Entry(resource.getLocation(),
-        resource.getCpuVCores(), resource.getMemoryMb()), mode);
+    return findAndRemove(new Entry(resource.getLocationAsk(),
+        resource.getCpuVCoresAsk(), resource.getMemoryMbsAsk()), mode);
   }
 
-  public synchronized CachedResource findAndRemove(UUID cacheId) {
+  public synchronized CachedRMResource findAndRemove(UUID cacheId) {
     Entry found = idToCacheEntryMap.remove(cacheId);
     if (found != null && findAndRemove(found, Mode.SAME_REF) == null) {
       LOG.error("Inconsistency in cache for cacheId '{}' rmResourceId '{}'",
@@ -399,12 +411,4 @@ public class ResourceCache {
     return idToCacheEntryMap.size();
   }
 
-  //for testing
-  synchronized int getComputedSize() {
-    int size = 0;
-    for (Map.Entry<Key, List<Entry>> entry : cache.entrySet()) {
-      size += entry.getValue().size();
-    }
-    return size;
-  }
 }

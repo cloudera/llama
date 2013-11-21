@@ -24,14 +24,14 @@ import com.cloudera.llama.util.UUID;
 
 public class RMResourceChange {
   private final UUID clientResourceId;
-  private final String rmResourceId;
+  private final Object rmResourceId;
   private final PlacedResource.Status status;
   private final int cpuVCores;
   private final int memoryMb;
   private final String location;
 
   private RMResourceChange(UUID clientResourceId,
-      String rmResourceId, int cpuVCores, int memoryMb, String location,
+      Object rmResourceId, int cpuVCores, int memoryMb, String location,
       PlacedResource.Status status) {
     this.clientResourceId = clientResourceId;
     this.rmResourceId = rmResourceId;
@@ -42,7 +42,7 @@ public class RMResourceChange {
   }
 
   public static RMResourceChange createResourceAllocation(UUID clientResourceId,
-      String rmResourceId, int vCpuCores, int memoryMb, String location) {
+      Object rmResourceId, int vCpuCores, int memoryMb, String location) {
     return new RMResourceChange(clientResourceId, rmResourceId, vCpuCores,
         memoryMb, location, PlacedResource.Status.ALLOCATED);
   }
@@ -56,7 +56,7 @@ public class RMResourceChange {
     return clientResourceId;
   }
 
-  public String getRmResourceId() {
+  public Object getRmResourceId() {
     return rmResourceId;
   }
 
@@ -77,11 +77,11 @@ public class RMResourceChange {
   }
 
   private static final String TO_STRING_ALLOCATED_MSG = "resourceChange" +
-      "[clientResourceId: {} status: {} cpuVCores: {} memoryMb: {} " +
+      "[resourceId: {} status: {} cpuVCores: {} memoryMb: {} " +
       "location: {}]";
 
   private static final String TO_STRING_CHANGED_MSG = "resourceChange" +
-      "[clientResourceId: {} status: {}]";
+      "[resourceId: {} status: {}]";
 
   public String toString() {
     String msg = (getStatus() == PlacedResource.Status.ALLOCATED)

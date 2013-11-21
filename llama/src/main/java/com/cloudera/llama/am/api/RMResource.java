@@ -15,24 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.cloudera.llama.am.spi;
+package com.cloudera.llama.am.api;
 
-import com.cloudera.llama.am.api.PlacedResource;
-import com.cloudera.llama.am.api.Resource;
+import com.cloudera.llama.util.UUID;
 
-public abstract class RMPlacedResource extends PlacedResource {
-  private Object rmPayload;
+import java.util.Map;
 
-  protected RMPlacedResource(Resource reservation) {
-    super(reservation);
-  }
+public interface RMResource extends Resource {
 
-  public void setRmPayload(Object rmPayload) {
-    this.rmPayload = rmPayload;
-  }
+  public String getLocation();
 
-  public Object getRmPayload() {
-    return rmPayload;
-  }
+  public int getCpuVCores();
+
+  public int getMemoryMbs();
+
+  public UUID getResourceId();
+
+  public Object getRmResourceId();
+
+  public void setRmResourceId(Object rmResourceId);
+
+  public Map<String, Object> getRmData();
 
 }

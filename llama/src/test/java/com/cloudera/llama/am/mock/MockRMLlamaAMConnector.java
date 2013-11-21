@@ -20,10 +20,10 @@ package com.cloudera.llama.am.mock;
 import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.LlamaAMException;
 import com.cloudera.llama.am.api.PlacedResource;
+import com.cloudera.llama.am.api.RMResource;
 import com.cloudera.llama.am.impl.FastFormat;
 import com.cloudera.llama.am.spi.RMLlamaAMCallback;
 import com.cloudera.llama.am.spi.RMLlamaAMConnector;
-import com.cloudera.llama.am.spi.RMPlacedResource;
 import com.cloudera.llama.am.spi.RMResourceChange;
 import com.cloudera.llama.util.NamedThreadFactory;
 import com.cloudera.llama.util.UUID;
@@ -184,29 +184,29 @@ public class MockRMLlamaAMConnector
   }
 
   @Override
-  public void reserve(Collection<RMPlacedResource> resources)
+  public void reserve(Collection<RMResource> resources)
       throws LlamaAMException {
     schedule(this, resources);
   }
 
   @Override
-  public void release(Collection<RMPlacedResource> resources)
+  public void release(Collection<RMResource> resources)
       throws LlamaAMException {
   }
 
   @Override
-  public boolean reassignResource(String rmResourceId, UUID resourceId) {
+  public boolean reassignResource(Object rmResourceId, UUID resourceId) {
     return false;
   }
 
   private class MockRMAllocator implements Callable<Void> {
     private MockRMLlamaAMConnector llama;
-    private PlacedResource resource;
+    private RMResource resource;
     private PlacedResource.Status status;
     private boolean initial;
 
     public MockRMAllocator(MockRMLlamaAMConnector llama,
-        PlacedResource resource,
+        RMResource resource,
         PlacedResource.Status status, boolean initial) {
       this.llama = llama;
       this.resource = resource;
@@ -216,15 +216,15 @@ public class MockRMLlamaAMConnector
 
     private void toAllocate() {
       RMResourceChange change = RMResourceChange.createResourceAllocation
-          (resource.getClientResourceId(), "c" + counter.incrementAndGet
-              (), resource.getCpuVCores(), resource.getMemoryMb(),
-              getLocation(resource.getLocation()));
+          (resource.getResourceId(), "c" + counter.incrementAndGet
+              (), resource.getCpuVCoresAsk(), resource.getMemoryMbsAsk(),
+              getLocation(resource.getLocationAsk()));
       callback.changesFromRM(Arrays.asList(change));
     }
 
     private void toStatus(PlacedResource.Status status) {
       RMResourceChange change = RMResourceChange.createResourceChange(
-          resource.getClientResourceId(), status);
+          resource.getResourceId(), status);
       callback.changesFromRM(Arrays.asList(change));
 
     }
@@ -264,10 +264,10 @@ public class MockRMLlamaAMConnector
   }
 
   private void schedule(MockRMLlamaAMConnector allocator,
-      Collection<RMPlacedResource> resources) {
-    for (PlacedResource resource : resources) {
+      Collection<RMResource> resources) {
+    for (RMResource resource : resources) {
       PlacedResource.Status status = getMockResourceStatus(
-          resource.getLocation());
+          resource.getLocationAsk());
       MockRMAllocator mocker = new MockRMAllocator(allocator, resource, status,
           true);
       int delay = minWait + RANDOM.nextInt(maxWait);

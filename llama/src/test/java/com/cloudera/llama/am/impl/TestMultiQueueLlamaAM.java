@@ -21,13 +21,12 @@ import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.LlamaAMEvent;
 import com.cloudera.llama.am.api.LlamaAMException;
 import com.cloudera.llama.am.api.LlamaAMListener;
+import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.PlacedResource;
-import com.cloudera.llama.am.api.Reservation;
-import com.cloudera.llama.am.api.Resource;
-import com.cloudera.llama.am.api.TestReservation;
+import com.cloudera.llama.am.api.RMResource;
+import com.cloudera.llama.am.api.TestUtils;
 import com.cloudera.llama.am.spi.RMLlamaAMCallback;
 import com.cloudera.llama.am.spi.RMLlamaAMConnector;
-import com.cloudera.llama.am.spi.RMPlacedResource;
 import com.cloudera.llama.am.spi.RMResourceChange;
 import com.cloudera.llama.util.UUID;
 import org.apache.hadoop.conf.Configurable;
@@ -120,13 +119,13 @@ public class TestMultiQueueLlamaAM {
     }
 
     @Override
-    public void reserve(Collection<RMPlacedResource> resources)
+    public void reserve(Collection<RMResource> resources)
         throws LlamaAMException {
       methods.add("reserve");
     }
 
     @Override
-    public void release(Collection<RMPlacedResource> resources)
+    public void release(Collection<RMResource> resources)
         throws LlamaAMException {
       methods.add("release");
       if (conf.getBoolean("release.fail", false)) {
@@ -135,7 +134,7 @@ public class TestMultiQueueLlamaAM {
     }
 
     @Override
-    public boolean reassignResource(String rmResourceId, UUID resourceId) {
+    public boolean reassignResource(Object rmResourceId, UUID resourceId) {
       return false;
     }
 
@@ -155,8 +154,7 @@ public class TestMultiQueueLlamaAM {
         }
       };
       UUID handle = UUID.randomUUID();
-      UUID id = am.reserve(new Reservation(handle, "q",
-          Arrays.asList(TestReservation.createResource()), true)).
+      UUID id = am.reserve(TestUtils.createReservation(handle, "q", 1, true)).
           getReservationId();
       am.getNodes();
       am.addListener(listener);
@@ -182,8 +180,7 @@ public class TestMultiQueueLlamaAM {
     try {
       am.start();
       UUID cId = UUID.randomUUID();
-      am.reserve(new Reservation(cId, "q",
-          Arrays.asList(TestReservation.createResource()), true));
+      am.reserve(TestUtils.createReservation(cId, "q", 1, true));
       am.releaseReservationsForHandle(cId);
     } finally {
       am.stop();
@@ -201,10 +198,8 @@ public class TestMultiQueueLlamaAM {
     try {
       am.start();
       UUID cId = UUID.randomUUID();
-      am.reserve(new Reservation(cId, "q",
-          Arrays.asList(TestReservation.createResource()), true));
-      am.reserve(new Reservation(cId, "q2",
-          Arrays.asList(TestReservation.createResource()), true));
+      am.reserve(TestUtils.createReservation(cId, "q1", 1, true));
+      am.reserve(TestUtils.createReservation(cId, "q2", 1, true));
       am.releaseReservationsForHandle(cId);
     } finally {
       am.stop();
@@ -270,15 +265,15 @@ public class TestMultiQueueLlamaAM {
         }
       };
       UUID handle = UUID.randomUUID();
-      Resource resource = TestReservation.createResource();
-      UUID id = am.reserve(new Reservation(handle, "q",
-          Arrays.asList(resource), true)).getReservationId();
+      PlacedReservation rr = am.reserve(TestUtils.createReservation(handle,
+          "q", 1, true));
+      UUID id = rr.getReservationId();
       am.getNodes();
       am.addListener(listener);
       am.getReservation(id);
       Assert.assertFalse(listenerCalled);
       MyRMLlamaAMConnector.callback.changesFromRM(Arrays.asList(RMResourceChange
-          .createResourceChange(resource.getClientResourceId(),
+          .createResourceChange(rr.getPlacedResources().get(0).getResourceId(),
               PlacedResource.Status.REJECTED)));
       Assert.assertTrue(listenerCalled);
       am.releaseReservation(handle, id);

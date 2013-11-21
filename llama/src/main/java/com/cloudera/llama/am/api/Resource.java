@@ -17,80 +17,32 @@
  */
 package com.cloudera.llama.am.api;
 
-import com.cloudera.llama.am.impl.FastFormat;
-import com.cloudera.llama.am.impl.ParamChecker;
+public interface Resource {
 
-import com.cloudera.llama.util.UUID;
+  public interface Builder {
 
-public class Resource {
+    public Builder setLocationAsk(String locationAsk);
 
-  public enum LocationEnforcement {
+    public Builder setLocalityAsk(Locality localityAsk);
+
+    public Builder setCpuVCoresAsk(int cpuVCoresAsk);
+
+    public Builder setMemoryMbsAsk(int memoryMbsAsk);
+
+    public Resource build();
+
+  }
+
+  public enum Locality {
     MUST, PREFERRED, DONT_CARE
   }
 
-  private final UUID clientResourceId;
-  private final String location;
-  private final LocationEnforcement enforcement;
-  private final int cpuVCores;
-  private final int memoryMb;
+  public String getLocationAsk();
 
-  public Resource(UUID clientResourceId, String location,
-      LocationEnforcement enforcement,
-      int cpuVCores, int memoryMb) {
-    this.clientResourceId = ParamChecker.notNull(clientResourceId,
-        "clientResourceId");
-    this.location = ParamChecker.notEmpty(location, "location");
-    this.enforcement = ParamChecker.notNull(enforcement, "enforcement");
-    this.cpuVCores = ParamChecker.greaterEqualZero(cpuVCores, "cpuVCores");
-    this.memoryMb = ParamChecker.greaterEqualZero(memoryMb, "memoryMb");
-    ParamChecker.asserts((cpuVCores != 0 || memoryMb != 0),
-        "cpuVCores and memoryMb cannot be both zero");
-  }
+  public Locality getLocalityAsk();
 
-  protected Resource(Resource resource) {
-    this(resource.getClientResourceId(), resource.getLocation(),
-        resource.getEnforcement(),
-        resource.getCpuVCores(), resource.getMemoryMb());
-  }
+  public int getCpuVCoresAsk();
 
-  public UUID getClientResourceId() {
-    return clientResourceId;
-  }
-
-  public String getLocation() {
-    return location;
-  }
-
-  public LocationEnforcement getEnforcement() {
-    return enforcement;
-  }
-
-  public int getCpuVCores() {
-    return cpuVCores;
-  }
-
-  public int getMemoryMb() {
-    return memoryMb;
-  }
-
-  @Override
-  public int hashCode() {
-    return clientResourceId.hashCode();
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    return (obj != null) && (obj instanceof Resource) &&
-        clientResourceId.equals(((Resource) obj).clientResourceId);
-  }
-
-  private static final String TO_STRING_MSG = "resource[" +
-      "client_resource_id: {} cpuVCores: {} memoryMb: {} location: {} " +
-      "enforcement: {}]";
-
-  public String toString() {
-    return FastFormat.format(TO_STRING_MSG, getClientResourceId(),
-        getCpuVCores(), getMemoryMb(), getLocation(), getEnforcement());
-  }
+  public int getMemoryMbsAsk();
 
 }

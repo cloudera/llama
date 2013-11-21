@@ -17,6 +17,7 @@
  */
 package com.cloudera.llama.server;
 
+import com.cloudera.llama.am.api.Builders;
 import com.cloudera.llama.am.api.LlamaAMEvent;
 import com.cloudera.llama.am.api.LlamaAMException;
 import com.cloudera.llama.am.api.PlacedResource;
@@ -87,14 +88,15 @@ public class TypeUtils {
   }
 
   public static Resource toResource(TResource resource, NodeMapper nodeMapper) {
-    UUID clientId = toUUID(resource.getClient_resource_id());
+    UUID clientId = toUUID(resource.getClient_resource_id());//TODO get rid off
     int vCpuCores = resource.getV_cpu_cores();
     int memoryMb = resource.getMemory_mb();
     String location = nodeMapper.getNodeManager(resource.getAskedLocation());
-    Resource.LocationEnforcement enforcement =
-        Resource.LocationEnforcement.valueOf(resource.getEnforcement().
-            toString());
-    return new Resource(clientId, location, enforcement, vCpuCores, memoryMb);
+    Resource.Locality locality = Resource.Locality.valueOf(
+        resource.getEnforcement().toString());
+    Resource.Builder builder = Builders.createResourceBuilder();
+    return builder.setLocationAsk(location).setLocalityAsk(locality).
+        setCpuVCoresAsk(vCpuCores).setMemoryMbsAsk(memoryMb).build();
   }
 
   public static List<Resource> toResourceList(List<TResource> tResources,
@@ -116,18 +118,20 @@ public class TypeUtils {
     boolean isGang = request.isGang();
     List<Resource> resources = toResourceList(request.getResources(),
         nodeMapper);
-    return new Reservation(handle, queue, resources, isGang);
+    Reservation.Builder builder = Builders.createReservationBuilder();
+    return builder.setHandle(handle).setUser("foo").setQueue(queue).
+        setResources(resources).setGang(isGang).build();
   }
 
   public static TAllocatedResource toTAllocatedResource(PlacedResource
       resource, NodeMapper nodeMapper) {
     TAllocatedResource tResource = new TAllocatedResource();
     tResource.setReservation_id(toTUniqueId(resource.getReservationId()));
-    tResource.setClient_resource_id(toTUniqueId(resource.getClientResourceId()));
-    tResource.setRm_resource_id(resource.getRmResourceId());
-    tResource.setV_cpu_cores((short) resource.getActualCpuVCores());
-    tResource.setMemory_mb(resource.getActualMemoryMb());
-    tResource.setLocation(nodeMapper.getDataNode(resource.getActualLocation()));
+    tResource.setClient_resource_id(toTUniqueId(resource.getResourceId()));
+    tResource.setRm_resource_id("TODO"); //flatten container ids resource.getRmResourceIds());
+    tResource.setV_cpu_cores((short) resource.getCpuVCores());
+    tResource.setMemory_mb(resource.getMemoryMbs());
+    tResource.setLocation(nodeMapper.getDataNode(resource.getLocation()));
     return tResource;
   }
 

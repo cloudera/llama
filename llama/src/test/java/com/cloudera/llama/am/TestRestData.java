@@ -21,6 +21,7 @@ import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.PlacedResource;
 import com.cloudera.llama.am.api.Reservation;
 import com.cloudera.llama.am.api.Resource;
+import com.cloudera.llama.am.api.TestUtils;
 import com.cloudera.llama.am.impl.PlacedReservationImpl;
 import com.cloudera.llama.am.impl.PlacedResourceImpl;
 import com.cloudera.llama.server.ClientInfo;
@@ -46,11 +47,11 @@ public class TestRestData {
   private PlacedReservationImpl createReservation(UUID id, UUID handle,
       String queue, PlacedReservation.Status status) {
     List<Resource> rs = new ArrayList<Resource>();
-    rs.add(new Resource(UUID.randomUUID(), "h1",
-        Resource.LocationEnforcement.PREFERRED, 1, 1024));
-    rs.add(new Resource(UUID.randomUUID(), "h2",
-        Resource.LocationEnforcement.PREFERRED, 1, 1024));
-    Reservation r = new Reservation(handle, queue, rs, true);
+    rs.add(TestUtils.createResource("h1",
+        Resource.Locality.PREFERRED, 1, 1024));
+    rs.add(TestUtils.createResource("h2",
+        Resource.Locality.PREFERRED, 1, 1024));
+    Reservation r = TestUtils.createReservation(handle, "u", queue, rs, true);
     PlacedReservationImpl pr = new PlacedReservationImpl(id, r);
     pr.setStatus(status);
     return pr;
@@ -262,8 +263,8 @@ public class TestRestData {
 
     // partial
     pr1.setStatus(PlacedReservation.Status.PARTIAL);
-    ((PlacedResourceImpl) pr1.getResources().get(0)).setAllocationInfo(2, 2024,
-        "h1", "c1");
+    ((PlacedResourceImpl) pr1.getResources().get(0)).setAllocationInfo("h1", 2,
+        2024);
     restData.observe(Arrays.asList(pr1));
     assertReservationStatus(restData, id1, PlacedReservation.Status.PARTIAL,
         true);
@@ -277,10 +278,10 @@ public class TestRestData {
 
     // allocated
     pr1.setStatus(PlacedReservation.Status.ALLOCATED);
-    ((PlacedResourceImpl) pr1.getResources().get(0)).setAllocationInfo(2, 2024,
-        "h1", "c1");
-    ((PlacedResourceImpl) pr1.getResources().get(1)).setAllocationInfo(3, 3036,
-        "h3", "c2"); 
+    ((PlacedResourceImpl) pr1.getResources().get(0)).setAllocationInfo("h1", 2,
+        2024);
+    ((PlacedResourceImpl) pr1.getResources().get(1)).setAllocationInfo("h3", 3,
+        3036);
     restData.observe(Arrays.asList(pr1));
     assertReservationStatus(restData, id1, PlacedReservation.Status.ALLOCATED,
         true);
@@ -293,7 +294,7 @@ public class TestRestData {
     assertReservationNode(restData, id1, "h3", true);
 
     // ended
-    pr1.setStatus(PlacedReservation.Status.ENDED);
+    pr1.setStatus(PlacedReservation.Status.RELEASED);
     restData.observe(Arrays.asList(pr1));
     assertReservationStatus(restData, id1, null, false);
     assertReservationQueue(restData, id1, "q1", false);
@@ -377,7 +378,7 @@ public class TestRestData {
     Assert.assertTrue(map1.containsKey("h2"));
     Assert.assertEquals(id1.toString(), ((List) map1.get("h2")).get(0));
 
-    pr1.setStatus(PlacedReservation.Status.ENDED);
+    pr1.setStatus(PlacedReservation.Status.RELEASED);
     restData.observe(Arrays.asList(pr1));
     restData.onUnregister(clientInfo);
   }
@@ -452,7 +453,7 @@ public class TestRestData {
     Assert.assertEquals("h2", ((Map) 
         ((List) map.get(RestData.NODES_SUMMARY_KEY)).get(1)).get("node"));
 
-    pr1.setStatus(PlacedReservation.Status.ENDED);
+    pr1.setStatus(PlacedReservation.Status.RELEASED);
     restData.observe(Arrays.asList(pr1));
     restData.onUnregister(clientInfo);
 

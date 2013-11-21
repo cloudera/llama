@@ -17,36 +17,183 @@
  */
 package com.cloudera.llama.am.impl;
 
+import com.cloudera.llama.am.api.PlacedReservation;
+import com.cloudera.llama.am.api.PlacedResource;
+import com.cloudera.llama.am.api.RMResource;
 import com.cloudera.llama.am.api.Resource;
-import com.cloudera.llama.am.spi.RMPlacedResource;
-
+import com.cloudera.llama.util.Clock;
 import com.cloudera.llama.util.UUID;
 
-public class PlacedResourceImpl extends RMPlacedResource {
-  private UUID handle;
-  private UUID reservationId;
-  private String queue;
-  private Status status;
-  private String rmResourceId;
-  private int actualCpuVCores = -1;
-  private int actualMemoryMb = -1;
-  private String actualLocation;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-  public PlacedResourceImpl(Resource resource) {
-    super(resource);
-    status = Status.PENDING;
+public class PlacedResourceImpl
+    implements PlacedResource, RMResource {
+  protected UUID resourceId;
+  protected Status status;
+  protected String locationAsk;
+  protected Locality localityAsk;
+  protected int cpuVCoresAsk;
+  protected int memoryMbsAsk;
+  protected long placedOn;
+  protected UUID reservationId;
+  protected UUID handle;
+  protected String user;
+  protected String queue;
+  protected long allocatedOn;
+  protected String location;
+  protected int cpuVCores;
+  protected int memoryMbs;
+  protected Object rmResourceId;
+  private Map<String, Object> rmData;
+
+  public PlacedResourceImpl() {
   }
 
-  public void setReservationInfo(UUID handle, String queue,
-      UUID reservationId) {
-    this.handle = handle;
+  PlacedResourceImpl(
+      UUID resourceId,
+      Status status,
+      String locationAsk,
+      Locality localityAsk,
+      int cpuVCoresAsk,
+      int memoryMbsAsk,
+      long placedOn,
+      UUID reservationId,
+      UUID handle,
+      String user,
+      String queue,
+      long allocatedOn,
+      String location,
+      int cpuVCores,
+      int memoryMbs,
+      Object rmResourceId) {
+    this();
+    this.resourceId = resourceId;
+    this.status = status;
+    this.locationAsk = locationAsk;
+    this.localityAsk = localityAsk;
+    this.cpuVCoresAsk = cpuVCoresAsk;
+    this.memoryMbsAsk = memoryMbsAsk;
+    this.placedOn = placedOn;
     this.reservationId = reservationId;
+    this.handle = handle;
+    this.user = user;
     this.queue = queue;
+    this.allocatedOn = allocatedOn;
+    this.location = location;
+    this.cpuVCores = cpuVCores;
+    this.memoryMbs = memoryMbs;
+    this.rmResourceId = rmResourceId;
+  }
+
+  @SuppressWarnings("unchecked")
+  protected PlacedResourceImpl(PlacedResource r) {
+    this(r.getResourceId(),
+        r.getStatus(),
+        r.getLocationAsk(),
+        r.getLocalityAsk(),
+        r.getCpuVCoresAsk(),
+        r.getMemoryMbsAsk(),
+        r.getPlacedOn(),
+        r.getReservationId(),
+        r.getHandle(),
+        r.getUser(),
+        r.getQueue(),
+        r.getAllocatedOn(),
+        r.getLocation(),
+        r.getCpuVCores(),
+        r.getMemoryMbs(),
+        r.getRmResourceId());
+  }
+
+  @SuppressWarnings("unchecked")
+  public static PlacedResourceImpl createPlaced(PlacedReservation reservation,
+      Resource resource) {
+    return new PlacedResourceImpl(UUID.randomUUID(), Status.PENDING,
+        resource.getLocationAsk(), resource.getLocalityAsk(),
+        resource.getCpuVCoresAsk(), resource.getMemoryMbsAsk(),
+        reservation.getPlacedOn(), reservation.getReservationId(),
+        reservation.getHandle(), reservation.getUser(), reservation.getQueue(),
+        -1, null, -1, -1, null);
+  }
+
+  private static final String RESOURCE_TO_STRING = "Resource[locationAsk:{} " +
+      "localityAsk:{} cpuVCoresAsk:{} memoryMbsAsk:{}]";
+
+  private static final String PLACED_RESOURCE_TO_STRING = "PlacedResource[" +
+      "resourceId:{} status:{} locationAsk:{} localityAsk:{} cpuVCoresAsk:{} " +
+      "memoryMbsAsk:{}] placedOn:{} reservationId:{} handle:{} user:{} " +
+      "queue:{} allocatedOn:{} location:{} cpuVCores:{} memoryMbs:{} " +
+      "rmResourceId:{} rmResourceIds:{}]";
+
+  @Override
+  public String toString() {
+    String str;
+    if (getResourceId() == null) {
+      str = FastFormat.format(RESOURCE_TO_STRING, getLocationAsk(),
+          getLocalityAsk(), getCpuVCoresAsk(), getMemoryMbsAsk());
+    } else {
+      str= FastFormat.format(PLACED_RESOURCE_TO_STRING, getResourceId(),
+          getStatus(), getLocationAsk(), getLocalityAsk(), getCpuVCoresAsk(),
+          getMemoryMbsAsk(), getPlacedOn(), getReservationId(), getHandle(),
+          getUser(), getQueue(), getAllocatedOn(), getLocation(),
+          getCpuVCores(), getMemoryMbs(), getRmResourceId());
+    }
+    return str;
   }
 
   @Override
-  public UUID getHandle() {
-    return handle;
+  public boolean equals(Object obj) {
+    boolean eq = false;
+    if (obj instanceof PlacedResourceImpl) {
+      eq = (this == obj) || (getResourceId() != null &&
+          getResourceId().equals(((PlacedResource) obj).getResourceId()));
+    }
+    return eq;
+  }
+
+  @Override
+  public int hashCode() {
+    return (getResourceId() != null) ? getResourceId().hashCode()
+                                     : super.hashCode();
+  }
+
+  @Override
+  public UUID getResourceId() {
+    return resourceId;
+  }
+
+  @Override
+  public Status getStatus() {
+    return status;
+  }
+
+  @Override
+  public String getLocationAsk() {
+    return locationAsk;
+  }
+
+  @Override
+  public Locality getLocalityAsk() {
+    return localityAsk;
+  }
+
+  @Override
+  public int getCpuVCoresAsk() {
+    return cpuVCoresAsk;
+  }
+
+  @Override
+  public int getMemoryMbsAsk() {
+    return memoryMbsAsk;
+  }
+
+  @Override
+  public long getPlacedOn() {
+    return placedOn;
   }
 
   @Override
@@ -55,32 +202,13 @@ public class PlacedResourceImpl extends RMPlacedResource {
   }
 
   @Override
-  public String getRmResourceId() {
-    return rmResourceId;
+  public UUID getHandle() {
+    return handle;
   }
 
   @Override
-  public int getActualCpuVCores() {
-    return actualCpuVCores;
-  }
-
-  @Override
-  public int getActualMemoryMb() {
-    return actualMemoryMb;
-  }
-
-  @Override
-  public String getActualLocation() {
-    return actualLocation;
-  }
-
-  public void setAllocationInfo(int vCpuCores, int memoryMb, String location,
-      String rmResourceId) {
-    actualCpuVCores = vCpuCores;
-    actualMemoryMb = memoryMb;
-    this.actualLocation = location;
-    this.rmResourceId = rmResourceId;
-    status = Status.ALLOCATED;
+  public String getUser() {
+    return user;
   }
 
   @Override
@@ -89,12 +217,100 @@ public class PlacedResourceImpl extends RMPlacedResource {
   }
 
   @Override
-  public Status getStatus() {
-    return status;
+  public long getAllocatedOn() {
+    return allocatedOn;
+  }
+
+  @Override
+  public String getLocation() {
+    return location;
+  }
+
+  @Override
+  public int getCpuVCores() {
+    return cpuVCores;
+  }
+
+  @Override
+  public int getMemoryMbs() {
+    return memoryMbs;
+  }
+
+  @Override
+  public Object getRmResourceId() {
+    return rmResourceId;
+  }
+
+  @Override
+  public void setRmResourceId(Object rmResourceId) {
+    this.rmResourceId = rmResourceId;
+  }
+
+  @Override
+  public synchronized Map<String, Object> getRmData() {
+    if (rmData == null) {
+      rmData = new HashMap<String, Object>();
+    }
+    return rmData;
   }
 
   public void setStatus(Status status) {
     this.status = status;
+  }
+
+  public void setAllocationInfo(String location, int cpuVCores, int memoryMbs) {
+    status = Status.ALLOCATED;
+    this.allocatedOn = Clock.currentTimeMillis();
+    this.location = location;
+    this.cpuVCores = cpuVCores;
+    this.memoryMbs = memoryMbs;
+  }
+
+  public static class XResourceBuilder extends PlacedResourceImpl
+      implements Builder {
+
+    public XResourceBuilder() {
+    }
+
+    @Override
+    public Builder setLocationAsk(String locationAsk) {
+      ParamChecker.notEmpty(locationAsk, "locationAsk");
+      this.locationAsk = locationAsk;
+      return this;
+    }
+
+    @Override
+    public Builder setLocalityAsk(Locality localityAsk) {
+      ParamChecker.notNull(localityAsk, "localityAsk");
+      this.localityAsk = localityAsk;
+      return this;
+    }
+
+    @Override
+    public Builder setCpuVCoresAsk(int cpuVCoresAsk) {
+      ParamChecker.greaterEqualZero(cpuVCoresAsk, "cpuVCoresAsk");
+      this.cpuVCoresAsk = cpuVCoresAsk;
+      return this;
+    }
+
+    @Override
+    public Builder setMemoryMbsAsk(int memoryMbsAsk) {
+      ParamChecker.greaterEqualZero(memoryMbsAsk, "memoryMbsAsk");
+      this.memoryMbsAsk = memoryMbsAsk;
+      return this;
+    }
+
+    @Override
+    public Resource build() {
+      ParamChecker.notEmpty(locationAsk, "locationAsk");
+      ParamChecker.notNull(localityAsk, "localityAsk");
+      ParamChecker.greaterEqualZero(cpuVCoresAsk, "cpuVCoresAsk");
+      ParamChecker.greaterEqualZero(memoryMbsAsk, "memoryMbsAsk");
+      ParamChecker.asserts((cpuVCoresAsk != 0 || memoryMbsAsk != 0),
+          "cpuVCores or memoryMbs must be greater than zero");
+      return new PlacedResourceImpl(this);
+    }
+
   }
 
 }
