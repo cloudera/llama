@@ -96,7 +96,7 @@ install-pom:
 	[ -f "$(BASE_DIR)/pom.xml" ] && mvn -N install $(DO_MAVEN_DEPLOY)
 
 components:
-	@echo $(shell echo $(TARGETS) | sed -e 's/ spark//g' | sed -e 's/ /,/g')
+	@echo $(shell echo $(TARGETS) | sed -e 's/ /,/g')
 
 src-parcel:
 	rm -rf $(CDH_PARCEL_OUTPUT_DIR)
