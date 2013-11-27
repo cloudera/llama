@@ -183,6 +183,7 @@ public class RestData implements LlamaAMListener,
             hasBeenBackedOff.remove(reservation.getReservationId());
           }
         } else {
+          delete(reservation);
           LOG.debug("Handle not known anymore for reservation '{}'",
               reservation);
         }
