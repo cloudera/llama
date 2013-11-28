@@ -34,6 +34,7 @@
     <menu name="Llama">
       <item name="Overview" href="index.html"/>
       <item name="Thrift Definition" href="Llama.thrift"/>
+      <item name="Thrift Interface Behavior" href="ThriftInterfaceBehavior.html"/>
       <item name="Testing with Llama" href="TestingWithLlama.html"/>
       <item name="Running Llama" href="RunningLlama.html"/>
       <item name="LlamaAM Configuration" href="llama-site.html"/>
