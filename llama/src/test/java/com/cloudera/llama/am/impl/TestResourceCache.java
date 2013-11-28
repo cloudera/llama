@@ -179,7 +179,7 @@ public class TestResourceCache {
       cache.cache(pr1);
       Assert.assertNull(listener.resourceEvicted);
       manualClock.increment(ResourceCache.EVICTION_IDLE_TIMEOUT_DEFAULT + 1);
-      Thread.sleep(100); //to ensure eviction thread runs
+      cache.runEviction();
       Assert.assertEquals("rm1", listener.resourceEvicted);
     } finally {
       cache.stop();
@@ -219,13 +219,13 @@ public class TestResourceCache {
       Assert.assertEquals(2, cache.getSize());
 
       manualClock.increment(ResourceCache.EVICTION_IDLE_TIMEOUT_DEFAULT / 2 + 1);
-      Thread.sleep(100); //to ensure eviction thread runs
+      cache.runEviction();
 
       Assert.assertEquals("rm1", listener.resourceEvicted);
       Assert.assertEquals(1, cache.getSize());
 
       manualClock.increment(ResourceCache.EVICTION_IDLE_TIMEOUT_DEFAULT / 2 + 1);
-      Thread.sleep(100); //to ensure eviction thread runs
+      cache.runEviction();
 
       Assert.assertEquals("rm2", listener.resourceEvicted);
       Assert.assertEquals(0, cache.getSize());

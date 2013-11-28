@@ -282,34 +282,38 @@ public class ResourceCache {
             //NOP
           }
           if (running) {
-            List<Entry> entries;
-            synchronized (ResourceCache.this) {
-              entries = new ArrayList<Entry>(idToCacheEntryMap.values());
-            }
-            LOG.debug("Eviction run, processing '{}' entries", entries.size());
-            int counter = 0;
-            for (Entry entry : entries) {
-              if (entry.isValid() && evictionPolicy.shouldEvict(entry)) {
-                if (findAndRemove(entry.getResourceId()) != null) {
-                  try {
-                    listener.onEviction(entry);
-                  } catch (Throwable ex) {
-                    LOG.error("Listener error processing eviction for '{}', {}",
-                        entry.getRmResourceId(), ex.toString(), ex);
-                  }
-                  LOG.debug("Evicted '{}' from queue '{}'",
-                      entry.getRmResourceId(), queue);
-                  counter++;
-                }
-              }
-            }
-            LOG.debug("Eviction run, evicted '{}' entries", counter);
+            runEviction();
           }
         }
       }
     };
     evictionThread.setDaemon(true);
     evictionThread.start();
+  }
+
+  void runEviction() {
+    List<Entry> entries;
+    synchronized (ResourceCache.this) {
+      entries = new ArrayList<Entry>(idToCacheEntryMap.values());
+    }
+    LOG.debug("Eviction run, processing '{}' entries", entries.size());
+    int counter = 0;
+    for (Entry entry : entries) {
+      if (entry.isValid() && evictionPolicy.shouldEvict(entry)) {
+        if (findAndRemove(entry.getResourceId()) != null) {
+          try {
+            listener.onEviction(entry);
+          } catch (Throwable ex) {
+            LOG.error("Listener error processing eviction for '{}', {}",
+                entry.getRmResourceId(), ex.toString(), ex);
+          }
+          LOG.debug("Evicted '{}' from queue '{}'",
+              entry.getRmResourceId(), queue);
+          counter++;
+        }
+      }
+    }
+    LOG.debug("Eviction run, evicted '{}' entries", counter);
   }
 
   public synchronized void stop() {
