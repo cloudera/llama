@@ -70,6 +70,7 @@ TODO: need license header
     <cdh.parquet.version>1.2.5-cdh5.0.0-SNAPSHOT</cdh.parquet.version>
     <cdh.parquet-format.version>1.0.0-cdh5.0.0-SNAPSHOT</cdh.parquet-format.version>
     <cdh.spark.version>0.8.0-cdh5.0.0-SNAPSHOT</cdh.spark.version>
+    <cdh.crunch.version>0.8.0-cdh5.0.0-SNAPSHOT</cdh.crunch.version>
     
     <!-- Versions of the dependencies we manage -->
     <!-- <cdh.avro.version>1.7.4-cdh5.0.0-SNAPSHOT</cdh.avro.version> -->
@@ -814,6 +815,13 @@ TODO: need license header
         <groupId>com.linkedin.datafu</groupId>
         <artifactId>datafu</artifactId>
         <version>${cdh.datafu.version}</version>
+      </dependency>
+
+      <!-- Crunch -->
+      <dependency>
+        <groupId>org.apache.crunch</groupId>
+        <artifactId>crunch-core</artifactId>
+        <version>${cdh.crunch.version}</version>
       </dependency>
 
       <!-- Parquet (MR and Format)-->
