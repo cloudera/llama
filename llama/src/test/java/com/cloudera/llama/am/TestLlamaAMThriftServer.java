@@ -20,6 +20,7 @@ package com.cloudera.llama.am;
 
 import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.mock.MockRMConnector;
+import com.cloudera.llama.util.ErrorCode;
 import com.cloudera.llama.util.FastFormat;
 import com.cloudera.llama.am.impl.GangAntiDeadlockLlamaAM;
 import com.cloudera.llama.am.impl.SingleQueueLlamaAM;
@@ -211,6 +212,8 @@ public class TestLlamaAMThriftServer {
           trRes = client.Register(trReq);
           Assert.assertEquals(TStatusCode.REQUEST_ERROR, trRes.getStatus().
               getStatus_code());
+          Assert.assertEquals(ErrorCode.CLIENT_REGISTERED_WITH_OTHER_CALLBACK.getCode(),
+              trRes.getStatus().getError_code());
           return null;
         }
       });
@@ -274,6 +277,8 @@ public class TestLlamaAMThriftServer {
           TLlamaAMGetNodesResponse tgnRes = client.GetNodes(tgnReq);
           Assert.assertEquals(TStatusCode.REQUEST_ERROR, tgnRes.getStatus().
               getStatus_code());
+          Assert.assertEquals(ErrorCode.CLIENT_UNKNOWN_HANDLE.getCode(),
+              tgnRes.getStatus().getError_code());
 
           //valid re-unRegister
           turRes = client.Unregister(turReq);
@@ -440,8 +445,9 @@ public class TestLlamaAMThriftServer {
           tresRes = client.Reserve(tresReq);
           Assert.assertEquals(TStatusCode.REQUEST_ERROR, tresRes.getStatus()
               .getStatus_code());
-          Assert.assertTrue(tresRes.getStatus().getError_msgs().get(0).
-              contains("IllegalArgumentException"));
+          Assert.assertEquals(ErrorCode.ILLEGAL_ARGUMENT.getCode(),
+              tresRes.getStatus().getError_code());
+
           //check notification delivery
           Thread.sleep(300);
           Assert.assertEquals(1, callbackServer.notifications.size());
@@ -609,6 +615,8 @@ public class TestLlamaAMThriftServer {
           TLlamaAMReleaseResponse trelRes = client.Release(trelReq);
           Assert.assertEquals(TStatusCode.REQUEST_ERROR, trelRes.getStatus()
               .getStatus_code());
+          Assert.assertEquals(ErrorCode.CLIENT_UNKNOWN_HANDLE.getCode(),
+              trelRes.getStatus().getError_code());
           return null;
         }
       });

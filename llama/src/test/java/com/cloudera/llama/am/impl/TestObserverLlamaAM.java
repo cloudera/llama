@@ -19,7 +19,7 @@ package com.cloudera.llama.am.impl;
 
 import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.LlamaAMEvent;
-import com.cloudera.llama.am.api.LlamaAMException;
+import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.api.LlamaAMListener;
 import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.PlacedResource;
@@ -87,7 +87,7 @@ public class TestObserverLlamaAM {
     }
 
     @Override
-    public void start() throws LlamaAMException {
+    public void start() throws LlamaException {
       running = true;
       invoked.add("start");
     }
@@ -105,7 +105,7 @@ public class TestObserverLlamaAM {
     }
 
     @Override
-    public List<String> getNodes() throws LlamaAMException {
+    public List<String> getNodes() throws LlamaException {
       invoked.add("getNodes");
       return null;
     }
@@ -113,7 +113,7 @@ public class TestObserverLlamaAM {
     @Override
     public PlacedReservation reserve(UUID reservationId,
         Reservation reservation)
-        throws LlamaAMException {
+        throws LlamaException {
       invoked.add("reserve");
       PlacedReservation pr = new PlacedReservationImpl(reservationId,
           reservation);
@@ -123,21 +123,21 @@ public class TestObserverLlamaAM {
 
     @Override
     public PlacedReservation getReservation(UUID reservationId)
-        throws LlamaAMException {
+        throws LlamaException {
       invoked.add("getReservation");
       return reservations.get(reservationId);
     }
 
     @Override
     public PlacedReservation releaseReservation(UUID handle, UUID reservationId)
-        throws LlamaAMException {
+        throws LlamaException {
       invoked.add("releaseReservation");
       return reservations.remove(reservationId);
     }
 
     @Override
     public List<PlacedReservation> releaseReservationsForHandle(UUID handle)
-        throws LlamaAMException {
+        throws LlamaException {
       invoked.add("releaseReservationsForClientId");
       return new ArrayList<PlacedReservation>(reservations.values());
     }
@@ -157,7 +157,7 @@ public class TestObserverLlamaAM {
     @Override
     @SuppressWarnings("unchecked")
     public List<PlacedReservation> releaseReservationsForQueue(String queue)
-        throws LlamaAMException {
+        throws LlamaException {
       invoked.add("releaseReservationsForQueue");
       return Collections.EMPTY_LIST;
     }

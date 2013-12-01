@@ -18,12 +18,12 @@
 package com.cloudera.llama.am.yarn;
 
 import com.cloudera.llama.am.api.LlamaAM;
-import com.cloudera.llama.am.api.LlamaAMException;
+import com.cloudera.llama.util.ErrorCode;
+import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.api.PlacedResource;
 import com.cloudera.llama.am.api.RMResource;
 import com.cloudera.llama.am.spi.RMConnector;
 import com.cloudera.llama.am.spi.RMEvent;
-import com.cloudera.llama.util.FastFormat;
 import com.cloudera.llama.am.spi.RMListener;
 import com.cloudera.llama.util.NamedThreadFactory;
 import com.cloudera.llama.util.UUID;
@@ -168,7 +168,7 @@ public class YarnRMConnector implements RMConnector, Configurable,
   }
 
   @Override
-  public void start() throws LlamaAMException {
+  public void start() throws LlamaException {
     try {
       ugi = createUGIForApp();
       ugi.doAs(new PrivilegedExceptionAction<Void>() {
@@ -179,7 +179,7 @@ public class YarnRMConnector implements RMConnector, Configurable,
         }
       });
     } catch (Throwable ex) {
-      throw new LlamaAMException(ex);
+      throw new LlamaException(ex, ErrorCode.AM_CANNOT_START);
     }
   }
 
@@ -198,7 +198,7 @@ public class YarnRMConnector implements RMConnector, Configurable,
 
   @Override
   @SuppressWarnings("unchecked")
-  public void register(final String queue) throws LlamaAMException {
+  public void register(final String queue) throws LlamaException {
     try {
       ugi.doAs(new PrivilegedExceptionAction<Void>() {
         @Override
@@ -220,7 +220,7 @@ public class YarnRMConnector implements RMConnector, Configurable,
           new NamedThreadFactory("llama-container-handler"));
       containerHandlerExecutor.prestartAllCoreThreads();
     } catch (Exception ex) {
-      throw new LlamaAMException(ex);
+      throw new LlamaException(ex, ErrorCode.AM_CANNOT_REGISTER, appId, queue);
     }
   }
 
@@ -279,7 +279,7 @@ public class YarnRMConnector implements RMConnector, Configurable,
   }
 
   private ApplicationId _createApp(YarnClient rmClient, String queue)
-      throws LlamaAMException {
+      throws LlamaException {
     try {
       // Create application
       YarnClientApplication newApp = rmClient.createApplication();
@@ -322,7 +322,7 @@ public class YarnRMConnector implements RMConnector, Configurable,
       // Submit the application to the applications manager
       return rmClient.submitApplication(appContext);
     } catch (Exception ex) {
-      throw new LlamaAMException(ex);
+      throw new LlamaException(ex, ErrorCode.AM_CANNOT_CREATE, queue);
     }
   }
 
@@ -336,7 +336,8 @@ public class YarnRMConnector implements RMConnector, Configurable,
   private ApplicationReport _monitorAppState(YarnClient rmClient,
       ApplicationId appId, Set<YarnApplicationState> states,
       boolean calledFromStopped)
-      throws LlamaAMException {
+      throws LlamaException {
+    String action = calledFromStopped ? "stopping" : "starting";
     try {
       long timeout = getConf().getLong(APP_MONITOR_TIMEOUT_KEY,
           APP_MONITOR_TIMEOUT_DEFAULT);
@@ -348,8 +349,9 @@ public class YarnRMConnector implements RMConnector, Configurable,
       ApplicationReport report = rmClient.getApplicationReport(appId);
       while (!states.contains(report.getYarnApplicationState())) {
         if (System.currentTimeMillis() - start > timeout) {
-          throw new LlamaAMException(FastFormat.format(
-              "App '{}' time out ({}ms), failed to reach states '{}'", appId, timeout, states));
+          throw new LlamaException(ErrorCode.AM_TIMED_OUT_STARTING_STOPPING,
+              appId, timeout, report.getYarnApplicationState(), states,
+              action);
         }
         Thread.sleep(polling);
         report = rmClient.getApplicationReport(appId);
@@ -360,7 +362,8 @@ public class YarnRMConnector implements RMConnector, Configurable,
         _stop(FinalApplicationStatus.FAILED, "Could not start, error: " + ex, 
             true);
       }
-      throw new LlamaAMException(ex);
+      throw new LlamaException(ex, ErrorCode.AM_FAILED_WHILE_STARTING_STOPPING,
+          appId, action);
     }
   }
 
@@ -415,7 +418,7 @@ public class YarnRMConnector implements RMConnector, Configurable,
   }
 
   @Override
-  public List<String> getNodes() throws LlamaAMException {
+  public List<String> getNodes() throws LlamaException {
     List<String> nodes = new ArrayList<String>();
     try {
       List<NodeReport> nodeReports = 
@@ -425,7 +428,7 @@ public class YarnRMConnector implements RMConnector, Configurable,
       }
       return nodes;
     } catch (Throwable ex) {
-      throw new LlamaAMException(ex);
+      throw new LlamaException(ex, ErrorCode.AM_CANNOT_GET_NODES, appId);
     }
   }
 
@@ -453,7 +456,7 @@ public class YarnRMConnector implements RMConnector, Configurable,
     private RMResource placedResource;
 
     public LlamaContainerRequest(RMResource resource)
-        throws LlamaAMException {
+        throws LlamaException {
       super(Resource.newInstance(resource.getMemoryMbsAsk(),
                 resource.getCpuVCoresAsk()),
             new String[]{ resource.getLocationAsk()},
@@ -471,44 +474,34 @@ public class YarnRMConnector implements RMConnector, Configurable,
   }
 
   private void verifyResources(Collection<RMResource> resources)
-      throws LlamaAMException {
+      throws LlamaException {
     for (RMResource r : resources) {
       Resource nodeCapabilites = nodes.get(r.getLocationAsk());
       if (nodeCapabilites == null) {
-        throw new LlamaAMException(FastFormat.format(
-            "Resource request for node '{}', node is not available",
-            r.getLocationAsk()));
+        throw new LlamaException(ErrorCode.AM_NODE_NOT_AVAILABLE, appId,
+            r.getLocationAsk(), r);
       }
       if (r.getCpuVCoresAsk() > maxResource.getVirtualCores()) {
-        throw new LlamaAMException(FastFormat.format("Resource request for " +
-            "node '{}', requested CPUs '{}' exceeds maximum allowed CPUs '{}'",
-            r.getLocationAsk(), r.getCpuVCoresAsk(),
-            nodeCapabilites.getVirtualCores()));
+        throw new LlamaException(ErrorCode.AM_RESOURCE_OVER_MAX_CPUS,
+            appId, r, maxResource.getVirtualCores());
       }
       if (r.getMemoryMbsAsk() > maxResource.getMemory()) {
-        throw new LlamaAMException(FastFormat.format("Resource request for " +
-            "node '{}', requested memory '{}' exceeds maximum allowed memory " +
-            "'{}'",
-            r.getLocationAsk(), r.getMemoryMbsAsk(),
-            nodeCapabilites.getMemory()));
+        throw new LlamaException(ErrorCode.AM_RESOURCE_OVER_MAX_MEMORY,
+            appId, r, maxResource.getMemory());
       }
       if (r.getCpuVCoresAsk() > nodeCapabilites.getVirtualCores()) {
-        throw new LlamaAMException(FastFormat.format("Resource request for " +
-            "node '{}', requested CPUs '{}' exceeds node's CPUs '{}'",
-            r.getLocationAsk(), r.getCpuVCoresAsk(),
-            nodeCapabilites.getVirtualCores()));
+        throw new LlamaException(ErrorCode.AM_RESOURCE_OVER_NODE_CPUS,
+            appId, r, nodeCapabilites.getVirtualCores());
       }
       if (r.getMemoryMbsAsk() > nodeCapabilites.getMemory()) {
-        throw new LlamaAMException(FastFormat.format("Resource request for " +
-            "node '{}', requested memory '{}' exceeds node's memory '{}'",
-            r.getLocationAsk(), r.getMemoryMbsAsk(),
-            nodeCapabilites.getMemory()));
+        throw new LlamaException(ErrorCode.AM_RESOURCE_OVER_NODE_MEMORY,
+            appId, r, nodeCapabilites.getMemory());
       }
     }
   }
 
   private void _reserve(Collection<RMResource> resources)
-      throws LlamaAMException {
+      throws LlamaException {
     verifyResources(resources);
     for (RMResource resource : resources) {
       LOG.debug("Adding container request for '{}'", resource);
@@ -520,7 +513,7 @@ public class YarnRMConnector implements RMConnector, Configurable,
 
   @Override
   public void reserve(final Collection<RMResource> resources)
-      throws LlamaAMException {
+      throws LlamaException {
     try {
       ugi.doAs(new PrivilegedExceptionAction<Void>() {
         @Override
@@ -530,8 +523,8 @@ public class YarnRMConnector implements RMConnector, Configurable,
         }
       });
     } catch (Throwable ex) {
-      if (ex.getCause() instanceof LlamaAMException) {
-        throw (LlamaAMException) ex.getCause();
+      if (ex.getCause() instanceof LlamaException) {
+        throw (LlamaException) ex.getCause();
       } else {
         throw new RuntimeException(ex);
       }
@@ -539,7 +532,7 @@ public class YarnRMConnector implements RMConnector, Configurable,
   }
 
   private void _release(Collection<RMResource> resources)
-      throws LlamaAMException {
+      throws LlamaException {
     for (RMResource resource : resources) {
       boolean released = false;
       LlamaContainerRequest request = (LlamaContainerRequest)
@@ -565,7 +558,7 @@ public class YarnRMConnector implements RMConnector, Configurable,
 
   @Override
   public void release(final Collection<RMResource> resources)
-      throws LlamaAMException {
+      throws LlamaException {
     try {
       ugi.doAs(new PrivilegedExceptionAction<Void>() {
         @Override
@@ -575,11 +568,7 @@ public class YarnRMConnector implements RMConnector, Configurable,
         }
       });
     } catch (Throwable ex) {
-      if (ex.getCause() instanceof LlamaAMException) {
-        throw (LlamaAMException) ex.getCause();
-      } else {
-        throw new RuntimeException(ex);
-      }
+      throw new LlamaException(ex, ErrorCode.AM_RELEASE_ERROR, resources);
     }
   }
 

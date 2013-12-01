@@ -18,7 +18,7 @@
 package com.cloudera.llama.am.mock;
 
 import com.cloudera.llama.am.api.LlamaAM;
-import com.cloudera.llama.am.api.LlamaAMException;
+import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.api.PlacedResource;
 import com.cloudera.llama.am.api.RMResource;
 import com.cloudera.llama.am.spi.RMEvent;
@@ -144,7 +144,7 @@ public class MockRMConnector
   }
 
   @Override
-  public void start() throws LlamaAMException {
+  public void start() throws LlamaException {
   }
 
   @Override
@@ -152,7 +152,7 @@ public class MockRMConnector
   }
 
   @Override
-  public void register(String queue) throws LlamaAMException {
+  public void register(String queue) throws LlamaException {
     minWait = getConf().getInt(EVENTS_MIN_WAIT_KEY, EVENTS_MIN_WAIT_DEFAULT);
     maxWait = getConf().getInt(EVENTS_MAX_WAIT_KEY, EVENTS_MAX_WAIT_DEFAULT);
     nodes = Collections.unmodifiableList(Arrays.asList(getConf().
@@ -178,20 +178,20 @@ public class MockRMConnector
   }
 
   @Override
-  public List<String> getNodes() throws LlamaAMException {
+  public List<String> getNodes() throws LlamaException {
     return Collections.unmodifiableList(Arrays.asList(getConf().
         getStrings(NODES_KEY, NODES_DEFAULT)));
   }
 
   @Override
   public void reserve(Collection<RMResource> resources)
-      throws LlamaAMException {
+      throws LlamaException {
     schedule(this, resources);
   }
 
   @Override
   public void release(Collection<RMResource> resources)
-      throws LlamaAMException {
+      throws LlamaException {
   }
 
   @Override

@@ -18,6 +18,7 @@
 package com.cloudera.llama.server;
 
 import com.cloudera.llama.am.AMServerConfiguration;
+import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.util.UUID;
 import junit.framework.Assert;
 import org.junit.Test;
@@ -109,7 +110,7 @@ public class TestClientNotificationService {
     }
   }
 
-  @Test(expected = ClientRegistryException.class)
+  @Test(expected = LlamaException.class)
   public void testRegisterExistingClientIdExistingCallbackDifferentHandle()
       throws Exception {
     MyListener ul = new MyListener();
@@ -132,7 +133,7 @@ public class TestClientNotificationService {
     }
   }
 
-  @Test(expected = ClientRegistryException.class)
+  @Test(expected = LlamaException.class)
   public void testRegisterExistingClientIdNonExistingCallback()
       throws Exception {
     MyListener ul = new MyListener();

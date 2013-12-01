@@ -21,6 +21,7 @@ import com.cloudera.llama.am.impl.APIContractLlamaAM;
 import com.cloudera.llama.am.impl.GangAntiDeadlockLlamaAM;
 import com.cloudera.llama.am.impl.MultiQueueLlamaAM;
 import com.cloudera.llama.am.impl.ObserverLlamaAM;
+import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.util.ParamChecker;
 import com.cloudera.llama.util.UUID;
 import com.codahale.metrics.MetricRegistry;
@@ -75,7 +76,7 @@ public abstract class LlamaAM {
   }
 
   public static LlamaAM create(Configuration conf)
-      throws LlamaAMException {
+      throws LlamaException {
     conf = cloneConfiguration(conf);
     LlamaAM am = new MultiQueueLlamaAM(conf);
     if (conf.getBoolean(GANG_ANTI_DEADLOCK_ENABLED_KEY,
@@ -105,39 +106,39 @@ public abstract class LlamaAM {
     return conf;
   }
 
-  public abstract void start() throws LlamaAMException;
+  public abstract void start() throws LlamaException;
 
   public abstract void stop();
 
   public abstract boolean isRunning();
 
-  public abstract List<String> getNodes() throws LlamaAMException;
+  public abstract List<String> getNodes() throws LlamaException;
 
   public abstract PlacedReservation reserve(UUID reservationId,
       Reservation reservation)
-      throws LlamaAMException;
+      throws LlamaException;
 
   public PlacedReservation reserve(Reservation reservation)
-      throws LlamaAMException {
+      throws LlamaException {
     UUID reservationId = UUID.randomUUID();
     return reserve(reservationId, reservation);
   }
 
   public abstract PlacedReservation getReservation(UUID reservationId)
-      throws LlamaAMException;
+      throws LlamaException;
 
   public static final UUID ADMIN_HANDLE = UUID.randomUUID();
 
   public abstract PlacedReservation releaseReservation(UUID handle,
       UUID reservationId)
-      throws LlamaAMException;
+      throws LlamaException;
 
   public abstract List<PlacedReservation> releaseReservationsForHandle(
       UUID handle)
-      throws LlamaAMException;
+      throws LlamaException;
 
   public abstract List<PlacedReservation> releaseReservationsForQueue(
-      String queue) throws LlamaAMException;
+      String queue) throws LlamaException;
 
   public abstract void addListener(LlamaAMListener listener);
 

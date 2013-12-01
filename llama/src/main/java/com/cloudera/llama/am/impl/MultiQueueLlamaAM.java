@@ -19,10 +19,9 @@ package com.cloudera.llama.am.impl;
 
 import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.LlamaAMEvent;
-import com.cloudera.llama.am.api.LlamaAMException;
+import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.api.LlamaAMListener;
 import com.cloudera.llama.am.api.PlacedReservation;
-import com.cloudera.llama.am.api.PlacedResource;
 import com.cloudera.llama.am.api.Reservation;
 import com.cloudera.llama.server.MetricUtil;
 import com.cloudera.llama.util.FastFormat;
@@ -101,7 +100,7 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
 
   // LlamaAM API
 
-  private LlamaAM getLlamaAM(String queue) throws LlamaAMException {
+  private LlamaAM getLlamaAM(String queue) throws LlamaException {
     SingleQueueLlamaAM am;
     synchronized (ams) {
       am = ams.get(queue);
@@ -116,7 +115,7 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
     return am;
   }
 
-  private Set<LlamaAM> getLlamaAMs() throws LlamaAMException {
+  private Set<LlamaAM> getLlamaAMs() throws LlamaException {
     synchronized (ams) {
       return new HashSet<LlamaAM>(ams.values());
     }
@@ -124,12 +123,12 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
 
 
   @Override
-  public void start() throws LlamaAMException {
+  public void start() throws LlamaException {
     for (String queue :
         getConf().getTrimmedStringCollection(INITIAL_QUEUES_KEY)) {
       try {
         getLlamaAM(queue);
-      } catch (LlamaAMException ex) {
+      } catch (LlamaException ex) {
         stop();
         throw ex;
       }
@@ -158,14 +157,14 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
   }
 
   @Override
-  public List<String> getNodes() throws LlamaAMException {
+  public List<String> getNodes() throws LlamaException {
     return llamaAMForGetNodes.getNodes();
   }
 
   @SuppressWarnings("deprecation")
   @Override
   public PlacedReservation reserve(UUID reservationId, Reservation reservation)
-      throws LlamaAMException {
+      throws LlamaException {
     LlamaAM am = getLlamaAM(reservation.getQueue());
     PlacedReservation pr = am.reserve(reservationId, reservation);
     reservationToQueue.put(reservationId, reservation.getQueue());
@@ -175,7 +174,7 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
   @SuppressWarnings("deprecation")
   @Override
   public PlacedReservation getReservation(UUID reservationId)
-      throws LlamaAMException {
+      throws LlamaException {
     PlacedReservation reservation = null;
     String queue = reservationToQueue.get(reservationId);
     if (queue != null) {
@@ -190,7 +189,8 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
 
   @SuppressWarnings("deprecation")
   @Override
-  public PlacedReservation releaseReservation(UUID handle, UUID reservationId) throws LlamaAMException {
+  public PlacedReservation releaseReservation(UUID handle, UUID reservationId) throws
+                                                                               LlamaException {
     PlacedReservation pr = null;
     String queue = reservationToQueue.remove(reservationId);
     if (queue != null) {
@@ -205,13 +205,13 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
 
   @Override
   public List<PlacedReservation> releaseReservationsForHandle(UUID handle)
-      throws LlamaAMException {
+      throws LlamaException {
     List<PlacedReservation> reservations = new ArrayList<PlacedReservation>();
-    LlamaAMException thrown = null;
+    LlamaException thrown = null;
     for (LlamaAM am : getLlamaAMs()) {
       try {
         reservations.addAll(am.releaseReservationsForHandle(handle));
-      } catch (LlamaAMException ex) {
+      } catch (LlamaException ex) {
         if (thrown != null) {
           getLog().error("releaseReservationsForHandle({}), error: {}",
               handle, ex.toString(), ex);
@@ -227,7 +227,7 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
 
   @Override
   public List<PlacedReservation> releaseReservationsForQueue(String queue)
-      throws LlamaAMException {
+      throws LlamaException {
     List<PlacedReservation> list;
     SingleQueueLlamaAM am;
     synchronized (ams) {

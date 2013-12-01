@@ -15,20 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.cloudera.llama.am.api;
+package com.cloudera.llama.util;
 
-public class LlamaAMException extends Exception {
+public class LlamaException extends Exception {
 
-  public LlamaAMException(String message) {
-    super(message);
+  private ErrorCode errorCode;
+
+  public LlamaException(ErrorCode errorCode, Object... args) {
+    super(errorCode.getMessage(null, args));
+    this.errorCode = errorCode;
   }
 
-  public LlamaAMException(String message, Throwable cause) {
-    super(message, cause);
+  public LlamaException(Throwable ex, ErrorCode errorCode, Object... args) {
+    super((ex instanceof LlamaException)
+          ? ex.getMessage() : errorCode.getMessage(ex, args),
+        (ex instanceof LlamaException) ? ex.getCause() : ex);
+    this.errorCode = (ex instanceof LlamaException)
+                     ? ((LlamaException)ex).errorCode : errorCode;
   }
 
-  public LlamaAMException(Throwable cause) {
-    super(cause);
+  public int getErrorCode() {
+    return errorCode.getCode();
   }
 
 }

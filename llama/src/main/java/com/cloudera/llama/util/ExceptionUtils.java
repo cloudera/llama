@@ -17,8 +17,6 @@
  */
 package com.cloudera.llama.util;
 
-import com.cloudera.llama.util.ParamChecker;
-
 public class ExceptionUtils {
 
   public static Throwable getRootCause(Throwable ex,
@@ -26,14 +24,13 @@ public class ExceptionUtils {
     ParamChecker.notNull(ex, "ex");
     ParamChecker.notNull(rootCauseClassIfPresent, "rootCauseClassIfPresent");
     Throwable rootCause = null;
-    while (rootCause == null && ex != null) {
+    while (rootCause == null) {
       if (rootCauseClassIfPresent.isInstance(ex)) {
         rootCause = ex;
-      }
-      if (ex.getCause() == null) {
-        rootCause = ex;
-      } else {
+      } else if (ex.getCause() != null) {
         ex = ex.getCause();
+      } else {
+        rootCause = ex;
       }
     }
     return rootCause;

@@ -18,7 +18,7 @@
 package com.cloudera.llama.am;
 
 import com.cloudera.llama.am.api.LlamaAM;
-import com.cloudera.llama.am.api.LlamaAMException;
+import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.util.FastFormat;
 import com.cloudera.llama.server.ClientNotificationService;
 import com.cloudera.llama.server.ClientPrincipalTProcessor;
@@ -57,7 +57,7 @@ public class LlamaAMAdminServiceImpl implements LlamaAMAdminService.Iface {
             ClientPrincipalTProcessor.getPrincipal(), queue);
         try {
           llamaAM.releaseReservationsForQueue(queue);
-        } catch (LlamaAMException ex) {
+        } catch (LlamaException ex) {
           String msg = FastFormat.format(
               "Could not release queue '{}', error: {}", queue, ex.toString());
           msgs.add(msg);
@@ -71,7 +71,7 @@ public class LlamaAMAdminServiceImpl implements LlamaAMAdminService.Iface {
           LOG.warn("Admin '{}' release reservation '{}'",
               ClientPrincipalTProcessor.getPrincipal(), reservation);
           llamaAM.releaseReservation(LlamaAM.ADMIN_HANDLE, reservation);
-        } catch (LlamaAMException ex) {
+        } catch (LlamaException ex) {
           String msg = FastFormat.format(
               "Could not release reservation '{}', error: {}", reservation,
               ex.toString());
@@ -87,7 +87,7 @@ public class LlamaAMAdminServiceImpl implements LlamaAMAdminService.Iface {
               ClientPrincipalTProcessor.getPrincipal(), handle);
           llamaAM.releaseReservationsForHandle(handle);
           clientNotificationService.unregister(handle);
-        } catch (LlamaAMException ex) {
+        } catch (LlamaException ex) {
           String msg = FastFormat.format(
               "Could not release handle '{}', error: {}", handle, ex.toString());
           msgs.add(msg);

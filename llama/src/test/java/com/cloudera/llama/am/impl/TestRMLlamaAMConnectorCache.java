@@ -17,14 +17,13 @@
  */
 package com.cloudera.llama.am.impl;
 
-import com.cloudera.llama.am.api.LlamaAMException;
+import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.api.RMResource;
 import com.cloudera.llama.am.api.Resource;
 import com.cloudera.llama.am.api.TestUtils;
 import com.cloudera.llama.am.spi.RMConnector;
 import com.cloudera.llama.am.spi.RMEvent;
 import com.cloudera.llama.am.spi.RMListener;
-import com.cloudera.llama.am.spi.RMEvent;
 import com.cloudera.llama.util.Clock;
 import com.cloudera.llama.util.ManualClock;
 import com.cloudera.llama.util.UUID;
@@ -62,7 +61,7 @@ public class TestRMLlamaAMConnectorCache {
     }
 
     @Override
-    public void start() throws LlamaAMException {
+    public void start() throws LlamaException {
       invoked.add("start");
     }
 
@@ -72,7 +71,7 @@ public class TestRMLlamaAMConnectorCache {
     }
 
     @Override
-    public void register(String queue) throws LlamaAMException {
+    public void register(String queue) throws LlamaException {
       invoked.add("register");
     }
 
@@ -82,20 +81,20 @@ public class TestRMLlamaAMConnectorCache {
     }
 
     @Override
-    public List<String> getNodes() throws LlamaAMException {
+    public List<String> getNodes() throws LlamaException {
       invoked.add("getNodes");
       return null;
     }
 
     @Override
     public void reserve(Collection<RMResource> resources)
-        throws LlamaAMException {
+        throws LlamaException {
       invoked.add("reserve");
     }
 
     @Override
     public void release(Collection<RMResource> resources)
-        throws LlamaAMException {
+        throws LlamaException {
       invoked.add("release");
     }
 

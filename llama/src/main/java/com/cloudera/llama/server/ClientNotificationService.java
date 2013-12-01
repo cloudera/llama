@@ -19,7 +19,8 @@ package com.cloudera.llama.server;
 
 import com.cloudera.llama.am.api.LlamaAMEvent;
 import com.cloudera.llama.am.api.LlamaAMListener;
-import com.cloudera.llama.util.FastFormat;
+import com.cloudera.llama.util.ErrorCode;
+import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.util.ParamChecker;
 import com.cloudera.llama.util.UUID;
 import com.codahale.metrics.Gauge;
@@ -48,12 +49,6 @@ public class ClientNotificationService implements ClientNotifier.ClientRegistry,
     public void onRegister(ClientInfo clientInfo);
 
     public void onUnregister(ClientInfo clientInfo);
-
-  }
-
-  public interface UnregisterListener {
-
-    public void onUnregister(UUID handle);
 
   }
 
@@ -152,7 +147,7 @@ public class ClientNotificationService implements ClientNotifier.ClientRegistry,
 
 
   public synchronized UUID register(UUID clientId, String host, int port)
-      throws ClientRegistryException {
+      throws LlamaException {
     lock.writeLock().lock();
     try {
       UUID handle;
@@ -161,24 +156,21 @@ public class ClientNotificationService implements ClientNotifier.ClientRegistry,
       if (clientIdHandle == null && callbackHandle == null) {
         //NEW HANDLE
         handle = registerNewClient(clientId, host, port);
-      } else if (clientIdHandle == null && callbackHandle != null) {
+      } else if (clientIdHandle == null) {
         //NEW HANDLE, delete reservations from old handle
         unregister(callbackHandle);
         handle = registerNewClient(clientId, host, port);
-      } else if (clientIdHandle != null && callbackHandle == null) {
+      } else if (callbackHandle == null) {
         //ERROR
         Entry entry = clients.get(clientIdHandle);
-        throw new ClientRegistryException(FastFormat.format("ClientId '{}' " +
-            "already registered with a different notification address {}",
-            clientId, getAddress(entry.host, entry.port)));
+        throw new LlamaException(ErrorCode.CLIENT_REGISTERED_WITH_OTHER_CALLBACK,
+            clientId, getAddress(entry.host, entry.port));
       } else if (clientIdHandle == callbackHandle) {
         handle = clientIdHandle;
       } else {
         //ERROR
-        throw new ClientRegistryException(FastFormat.format("ClientId '{}' " +
-            "and notification address '{}' already used in two different " +
-            "active registrations '{}' and '{}'", clientId,
-            getAddress(host, port), clientIdHandle, callbackHandle));
+        throw new LlamaException(ErrorCode.CLIENT_INVALID_REGISTRATION, clientId,
+            getAddress(host, port), clientIdHandle, callbackHandle);
       }
       Entry entry = clients.get(handle);
       for (Listener listener : listeners) {
@@ -218,12 +210,11 @@ public class ClientNotificationService implements ClientNotifier.ClientRegistry,
     return ret;
   }
 
-  public void validateHandle(UUID handle) throws ClientRegistryException {
+  public void validateHandle(UUID handle) throws LlamaException {
     lock.readLock().lock();
     try {
       if (!clients.containsKey(handle)) {
-        throw new ClientRegistryException(FastFormat.format(
-            "Unknown handle '{}' ", handle));
+        throw new LlamaException(ErrorCode.CLIENT_UNKNOWN_HANDLE, handle);
       }
     } finally {
       lock.readLock().unlock();

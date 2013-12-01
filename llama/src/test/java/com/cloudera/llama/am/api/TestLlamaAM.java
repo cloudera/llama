@@ -19,6 +19,7 @@ package com.cloudera.llama.am.api;
 
 import com.cloudera.llama.am.spi.RMConnector;
 import com.cloudera.llama.am.spi.RMListener;
+import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.util.UUID;
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Assert;
@@ -41,7 +42,7 @@ public class TestLlamaAM {
     }
 
     @Override
-    public void start() throws LlamaAMException {
+    public void start() throws LlamaException {
     }
 
     @Override
@@ -49,7 +50,7 @@ public class TestLlamaAM {
     }
 
     @Override
-    public void register(String queue) throws LlamaAMException {
+    public void register(String queue) throws LlamaException {
     }
 
     @Override
@@ -57,18 +58,18 @@ public class TestLlamaAM {
     }
 
     @Override
-    public List<String> getNodes() throws LlamaAMException {
+    public List<String> getNodes() throws LlamaException {
       return null;
     }
 
     @Override
     public void reserve(Collection<RMResource> resources)
-        throws LlamaAMException {
+        throws LlamaException {
     }
 
     @Override
     public void release(Collection<RMResource> resources)
-        throws LlamaAMException {
+        throws LlamaException {
     }
 
     @Override

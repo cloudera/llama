@@ -18,7 +18,8 @@
 package com.cloudera.llama.am.impl;
 
 import com.cloudera.llama.am.api.LlamaAM;
-import com.cloudera.llama.am.api.LlamaAMException;
+import com.cloudera.llama.util.ErrorCode;
+import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.PlacedResource;
 import com.cloudera.llama.am.api.RMResource;
@@ -130,7 +131,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
   // LlamaAM API
 
   @Override
-  public void start() throws LlamaAMException {
+  public void start() throws LlamaException {
     Class<? extends RMConnector> klass = getRMConnectorClass(getConf());
     rmConnector = ReflectionUtils.newInstance(klass, getConf());
     if (getConf().getBoolean(RESOURCES_CACHING_ENABLED_KEY,
@@ -175,7 +176,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
   }
 
   @Override
-  public List<String> getNodes() throws LlamaAMException {
+  public List<String> getNodes() throws LlamaException {
     return rmConnector.getNodes();
   }
 
@@ -211,7 +212,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
   @SuppressWarnings("unchecked")
   public PlacedReservation reserve(UUID reservationId,
       final Reservation reservation)
-      throws LlamaAMException {
+      throws LlamaException {
     final PlacedReservationImpl impl = new PlacedReservationImpl(reservationId,
         reservation);
     synchronized (this) {
@@ -219,7 +220,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
     }
     try {
       rmConnector.reserve((List)impl.getPlacedResourceImpls());
-    } catch (LlamaAMException ex) {
+    } catch (LlamaException ex) {
       synchronized (this) {
         _deleteReservation(impl.getReservationId(),
             PlacedReservation.Status.REJECTED);
@@ -231,7 +232,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
 
   @Override
   public PlacedReservation getReservation(final UUID reservationId)
-      throws LlamaAMException {
+      throws LlamaException {
     synchronized (this) {
       return _getReservation(reservationId);
     }
@@ -241,16 +242,15 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
   @SuppressWarnings("unchecked")
   public PlacedReservation releaseReservation(UUID handle,
       final UUID reservationId)
-      throws LlamaAMException {
+      throws LlamaException {
     PlacedReservationImpl reservation;
     synchronized (this) {
       reservation = _getReservation(reservationId);
       if (reservation != null) {
         if (!reservation.getHandle().equals(handle)
             && !handle.equals(ADMIN_HANDLE)) {
-          throw new LlamaAMException(FastFormat.format(
-              "handle '{}' does not own reservation '{}'", handle,
-              reservation.getReservationId()));
+          throw new LlamaException(ErrorCode.CLIENT_DOES_NOT_OWN_RESERVATION,
+              handle, reservation.getReservationId());
         }
         _deleteReservation(reservationId, PlacedReservation.Status.RELEASED);
       }
@@ -267,7 +267,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
   @Override
   @SuppressWarnings("unchecked")
   public List<PlacedReservation> releaseReservationsForHandle(UUID handle)
-      throws LlamaAMException {
+      throws LlamaException {
     List<PlacedReservation> reservations = new ArrayList<PlacedReservation>();
     synchronized (this) {
       for (PlacedReservation reservation :
@@ -294,7 +294,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
 
   @Override
   public List<PlacedReservation> releaseReservationsForQueue(String queue)
-      throws LlamaAMException {
+      throws LlamaException {
     List<PlacedReservation> list;
     synchronized (this) {
       list = new ArrayList<PlacedReservation>(reservationsMap.values());
@@ -496,7 +496,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
     if (!toRelease.isEmpty()) {
       try {
         rmConnector.release((List<RMResource>) (List) toRelease);
-      } catch (LlamaAMException ex) {
+      } catch (LlamaException ex) {
         getLog().warn("release() error: {}", ex.toString(), ex);
       }
     }

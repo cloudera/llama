@@ -18,7 +18,7 @@
 package com.cloudera.llama.am.impl;
 
 import com.cloudera.llama.am.api.LlamaAMEvent;
-import com.cloudera.llama.am.api.LlamaAMException;
+import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.api.LlamaAMListener;
 import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.Reservation;
@@ -39,7 +39,7 @@ public class TestLlamaAMImpl {
     }
 
     @Override
-    public void start() throws LlamaAMException {
+    public void start() throws LlamaException {
     }
 
     @Override
@@ -52,38 +52,38 @@ public class TestLlamaAMImpl {
     }
 
     @Override
-    public List<String> getNodes() throws LlamaAMException {
+    public List<String> getNodes() throws LlamaException {
       return null;
     }
 
     @Override
     public PlacedReservation reserve(UUID reservationId,
         Reservation reservation)
-        throws LlamaAMException {
+        throws LlamaException {
       return null;
     }
 
     @Override
     public PlacedReservation getReservation(UUID reservationId)
-        throws LlamaAMException {
+        throws LlamaException {
       return null;
     }
 
     @Override
     public PlacedReservation releaseReservation(UUID handle, UUID reservationId)
-        throws LlamaAMException {
+        throws LlamaException {
       return null;
     }
 
     @Override
     public List<PlacedReservation> releaseReservationsForHandle(UUID handle)
-        throws LlamaAMException {
+        throws LlamaException {
       return null;
     }
 
     @Override
     public List<PlacedReservation> releaseReservationsForQueue(String queue)
-        throws LlamaAMException {
+        throws LlamaException {
       return null;
     }
 

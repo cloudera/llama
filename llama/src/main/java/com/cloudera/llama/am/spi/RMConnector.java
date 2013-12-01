@@ -17,7 +17,7 @@
  */
 package com.cloudera.llama.am.spi;
 
-import com.cloudera.llama.am.api.LlamaAMException;
+import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.api.RMResource;
 import com.cloudera.llama.util.UUID;
 
@@ -28,19 +28,19 @@ public interface RMConnector {
 
   public void setLlamaAMCallback(RMListener callback);
 
-  public void start() throws LlamaAMException;
+  public void start() throws LlamaException;
 
   public void stop();
 
-  public void register(String queue) throws LlamaAMException;
+  public void register(String queue) throws LlamaException;
 
   public void unregister();
 
-  public List<String> getNodes() throws LlamaAMException;
+  public List<String> getNodes() throws LlamaException;
 
-  public void reserve(Collection<RMResource> resources) throws LlamaAMException;
+  public void reserve(Collection<RMResource> resources) throws LlamaException;
 
-  public void release(Collection<RMResource> resources) throws LlamaAMException;
+  public void release(Collection<RMResource> resources) throws LlamaException;
 
   public boolean reassignResource(Object rmResourceId, UUID resourceId);
 

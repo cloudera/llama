@@ -19,10 +19,9 @@ package com.cloudera.llama.am.yarn;
 
 import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.LlamaAMEvent;
-import com.cloudera.llama.am.api.LlamaAMException;
+import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.api.LlamaAMListener;
 import com.cloudera.llama.am.api.PlacedReservation;
-import com.cloudera.llama.am.api.PlacedResource;
 import com.cloudera.llama.am.api.Resource;
 import com.cloudera.llama.am.api.TestUtils;
 import com.cloudera.llama.util.UUID;
@@ -308,7 +307,7 @@ public class TestLlamaAMWithYarn {
           llama.reserve(TestUtils.createReservation(UUID.randomUUID(), "u", "queue1",
               Arrays.asList(r), true));
           Assert.fail();
-        } catch (LlamaAMException ex) {
+        } catch (LlamaException ex) {
           //NOP
         }
 
@@ -319,7 +318,7 @@ public class TestLlamaAMWithYarn {
           llama.reserve(TestUtils.createReservation(UUID.randomUUID(), "u", "queue1",
               Arrays.asList(r), true));
            Assert.fail();
-        } catch (LlamaAMException ex) {
+        } catch (LlamaException ex) {
           //NOP
         }
 
@@ -330,7 +329,7 @@ public class TestLlamaAMWithYarn {
           llama.reserve(TestUtils.createReservation(UUID.randomUUID(), "u", "queue1",
               Arrays.asList(r), true));
           Assert.fail();
-        } catch (LlamaAMException ex) {
+        } catch (LlamaException ex) {
           //NOP
         }
 
@@ -341,7 +340,7 @@ public class TestLlamaAMWithYarn {
           llama.reserve(TestUtils.createReservation(UUID.randomUUID(), "u", "queue1",
               Arrays.asList(r), true));
           Assert.fail();
-        } catch (LlamaAMException ex) {
+        } catch (LlamaException ex) {
           //NOP
         }
 
@@ -352,7 +351,7 @@ public class TestLlamaAMWithYarn {
           llama.reserve(TestUtils.createReservation(UUID.randomUUID(), "u", "queue1",
               Arrays.asList(r), true));
           Assert.fail();
-        } catch (LlamaAMException ex) {
+        } catch (LlamaException ex) {
           //NOP
         }
 

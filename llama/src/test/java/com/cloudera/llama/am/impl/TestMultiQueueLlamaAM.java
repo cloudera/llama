@@ -19,7 +19,8 @@ package com.cloudera.llama.am.impl;
 
 import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.LlamaAMEvent;
-import com.cloudera.llama.am.api.LlamaAMException;
+import com.cloudera.llama.util.ErrorCode;
+import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.api.LlamaAMListener;
 import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.PlacedResource;
@@ -86,10 +87,10 @@ public class TestMultiQueueLlamaAM {
     }
 
     @Override
-    public void start() throws LlamaAMException {
+    public void start() throws LlamaException {
       methods.add("start");
       if (conf.getBoolean("fail.start", false)) {
-        throw new LlamaAMException("");
+        throw new LlamaException(ErrorCode.TEST);
       }
     }
 
@@ -99,10 +100,10 @@ public class TestMultiQueueLlamaAM {
     }
 
     @Override
-    public void register(String queue) throws LlamaAMException {
+    public void register(String queue) throws LlamaException {
       methods.add("register");
       if (conf.getBoolean("fail.register", false)) {
-        throw new LlamaAMException("");
+        throw new LlamaException(ErrorCode.TEST);
       }
     }
 
@@ -113,23 +114,23 @@ public class TestMultiQueueLlamaAM {
 
     @Override
     @SuppressWarnings("unchecked")
-    public List<String> getNodes() throws LlamaAMException {
+    public List<String> getNodes() throws LlamaException {
       methods.add("getNodes");
       return Collections.EMPTY_LIST;
     }
 
     @Override
     public void reserve(Collection<RMResource> resources)
-        throws LlamaAMException {
+        throws LlamaException {
       methods.add("reserve");
     }
 
     @Override
     public void release(Collection<RMResource> resources)
-        throws LlamaAMException {
+        throws LlamaException {
       methods.add("release");
       if (conf.getBoolean("release.fail", false)) {
-        throw new LlamaAMException("");
+        throw new LlamaException(ErrorCode.TEST);
       }
     }
 
@@ -170,7 +171,7 @@ public class TestMultiQueueLlamaAM {
     }
   }
 
-  @Test(expected = LlamaAMException.class)
+  @Test(expected = LlamaException.class)
   public void testReleaseReservationForClientException() throws Exception {
     Configuration conf = new Configuration(false);
     conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MyRMConnector.class,
@@ -187,7 +188,7 @@ public class TestMultiQueueLlamaAM {
     }
   }
 
-  @Test(expected = LlamaAMException.class)
+  @Test(expected = LlamaException.class)
   public void testReleaseReservationForClientDiffQueuesException()
       throws Exception {
     Configuration conf = new Configuration(false);
@@ -206,7 +207,7 @@ public class TestMultiQueueLlamaAM {
     }
   }
 
-  @Test(expected = LlamaAMException.class)
+  @Test(expected = LlamaException.class)
   public void testStartOfDelegatedLlamaAmFail() throws Exception {
     Configuration conf = new Configuration(false);
     conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MyRMConnector.class,
@@ -217,7 +218,7 @@ public class TestMultiQueueLlamaAM {
     am.start();
   }
 
-  @Test(expected = LlamaAMException.class)
+  @Test(expected = LlamaException.class)
   public void testRegisterOfDelegatedLlamaAmFail() throws Exception {
     Configuration conf = new Configuration(false);
     conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MyRMConnector.class,

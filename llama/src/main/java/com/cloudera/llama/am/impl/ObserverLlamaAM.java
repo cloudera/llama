@@ -19,7 +19,7 @@ package com.cloudera.llama.am.impl;
 
 import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.LlamaAMEvent;
-import com.cloudera.llama.am.api.LlamaAMException;
+import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.api.LlamaAMListener;
 import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.Reservation;
@@ -45,7 +45,7 @@ public class ObserverLlamaAM extends LlamaAMImpl implements LlamaAMListener {
   }
 
   @Override
-  public synchronized void start() throws LlamaAMException {
+  public synchronized void start() throws LlamaException {
     llamaAM.start();
   }
 
@@ -60,13 +60,13 @@ public class ObserverLlamaAM extends LlamaAMImpl implements LlamaAMListener {
   }
 
   @Override
-  public List<String> getNodes() throws LlamaAMException {
+  public List<String> getNodes() throws LlamaException {
     return llamaAM.getNodes();
   }
 
   @Override
   public PlacedReservation reserve(UUID reservationId, Reservation reservation)
-      throws LlamaAMException {
+      throws LlamaException {
     PlacedReservation pr = llamaAM.reserve(reservationId, reservation);
     LlamaAMEventImpl event = new LlamaAMEventImpl(true);
     event.addReservation(pr);
@@ -76,13 +76,13 @@ public class ObserverLlamaAM extends LlamaAMImpl implements LlamaAMListener {
 
   @Override
   public PlacedReservation getReservation(UUID reservationId)
-      throws LlamaAMException {
+      throws LlamaException {
     return llamaAM.getReservation(reservationId);
   }
 
   @Override
   public PlacedReservation releaseReservation(UUID handle, UUID reservationId)
-      throws LlamaAMException {
+      throws LlamaException {
     PlacedReservation pr = llamaAM.releaseReservation(handle, reservationId);
     if (pr != null) {
       LlamaAMEventImpl event = new LlamaAMEventImpl(!handle.equals(ADMIN_HANDLE));
@@ -94,7 +94,7 @@ public class ObserverLlamaAM extends LlamaAMImpl implements LlamaAMListener {
 
   @Override
   public List<PlacedReservation> releaseReservationsForHandle(UUID handle)
-      throws LlamaAMException {
+      throws LlamaException {
     List<PlacedReservation> prs = llamaAM.releaseReservationsForHandle(handle);
     LlamaAMEventImpl event = new LlamaAMEventImpl(false);
     for (PlacedReservation pr : prs) {
@@ -106,7 +106,7 @@ public class ObserverLlamaAM extends LlamaAMImpl implements LlamaAMListener {
 
   @Override
   public List<PlacedReservation> releaseReservationsForQueue(String queue)
-      throws LlamaAMException {
+      throws LlamaException {
     List<PlacedReservation> prs = llamaAM.releaseReservationsForQueue(queue);
     LlamaAMEventImpl event = new LlamaAMEventImpl(false);
     for (PlacedReservation pr : prs) {

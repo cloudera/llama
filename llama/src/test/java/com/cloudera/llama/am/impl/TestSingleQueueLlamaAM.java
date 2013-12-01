@@ -19,7 +19,7 @@ package com.cloudera.llama.am.impl;
 
 import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.LlamaAMEvent;
-import com.cloudera.llama.am.api.LlamaAMException;
+import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.api.LlamaAMListener;
 import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.PlacedResource;
@@ -59,7 +59,7 @@ public class TestSingleQueueLlamaAM {
     }
 
     @Override
-    public void start() throws LlamaAMException {
+    public void start() throws LlamaException {
     }
 
     @Override
@@ -67,7 +67,7 @@ public class TestSingleQueueLlamaAM {
     }
 
     @Override
-    public void register(String queue) throws LlamaAMException {
+    public void register(String queue) throws LlamaException {
       start = true;
     }
 
@@ -77,19 +77,19 @@ public class TestSingleQueueLlamaAM {
     }
 
     @Override
-    public List<String> getNodes() throws LlamaAMException {
+    public List<String> getNodes() throws LlamaException {
       return Arrays.asList("node");
     }
 
     @Override
     public void reserve(Collection<RMResource> resources)
-        throws LlamaAMException {
+        throws LlamaException {
       reserve = true;
     }
 
     @Override
     public void release(Collection<RMResource> resources)
-        throws LlamaAMException {
+        throws LlamaException {
       release = true;
     }
 
@@ -240,7 +240,7 @@ public class TestSingleQueueLlamaAM {
     }
   }
 
-  @Test(expected = LlamaAMException.class)
+  @Test(expected = LlamaException.class)
   public void testReleaseUsingWrongHandle() throws Exception {
     SingleQueueLlamaAM llama = createLlamaAM();
     try {

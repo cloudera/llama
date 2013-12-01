@@ -25,7 +25,9 @@ import com.cloudera.llama.thrift.TLlamaAMAdminReleaseResponse;
 import com.cloudera.llama.thrift.TLlamaServiceVersion;
 import com.cloudera.llama.thrift.TStatusCode;
 import com.cloudera.llama.util.CLIParser;
+import com.cloudera.llama.util.ErrorCode;
 import com.cloudera.llama.util.UUID;
+import com.cloudera.llama.util.VersionInfo;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -60,6 +62,7 @@ public class LlamaAdminClient {
 
   private static final String HELP_CMD = "help";
   private static final String RELEASE_CMD = "release";
+  private static final String ERROR_CODES_CMD = "errorcodes";
 
   private static final String LLAMA = "llama";
   private static final String SECURE = "secure";
@@ -88,6 +91,7 @@ public class LlamaAdminClient {
     parser.addCommand(HELP_CMD, "",
         "display usage for all commands or specified command", options, false);
 
+    //release
     options = new Options();
     options.addOption(llama);
     options.addOption(secure);
@@ -96,6 +100,11 @@ public class LlamaAdminClient {
     options.addOption(reservation);
     parser.addCommand(RELEASE_CMD, "",
         "release queues, handles or reservations", options, false);
+
+    //errorcodes
+    options = new Options();
+    parser.addCommand(ERROR_CODES_CMD, "", "list Llama error codes", options,
+        false);
 
     return parser;
   }
@@ -142,6 +151,19 @@ public class LlamaAdminClient {
               reservations, queues);
           exitCode = 0;
         }
+      } else if (command.getName().equals(ERROR_CODES_CMD)) {
+        System.out.println();
+        System.out.println("Error codes for Llama version: " + VersionInfo.getVersion());
+        System.out.println();
+        for (String description : ErrorCode.ERROR_CODE_DESCRIPTIONS) {
+          System.out.println("  " + description);
+        }
+        System.out.println();
+      } else {
+        System.err.println("Sub-command missing");
+        System.err.println();
+        System.err.println(parser.shortHelp());
+        exitCode = 1;
       }
     } catch (ParseException ex) {
       System.err.println("Invalid sub-command: " + ex.getMessage());

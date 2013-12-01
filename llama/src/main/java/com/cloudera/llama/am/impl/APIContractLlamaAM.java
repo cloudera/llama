@@ -18,7 +18,7 @@
 package com.cloudera.llama.am.impl;
 
 import com.cloudera.llama.am.api.LlamaAM;
-import com.cloudera.llama.am.api.LlamaAMException;
+import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.api.LlamaAMListener;
 import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.Reservation;
@@ -64,7 +64,7 @@ public class APIContractLlamaAM extends LlamaAM {
   }
 
   @Override
-  public synchronized void start() throws LlamaAMException {
+  public synchronized void start() throws LlamaException {
     if (llamaAM.isRunning()) {
       throw new IllegalStateException("LlamaAM already running");
     }
@@ -90,7 +90,7 @@ public class APIContractLlamaAM extends LlamaAM {
   }
 
   @Override
-  public List<String> getNodes() throws LlamaAMException {
+  public List<String> getNodes() throws LlamaException {
     checkIsRunning();
     getLog().trace("getNodes()");
     return llamaAM.getNodes();
@@ -118,7 +118,7 @@ public class APIContractLlamaAM extends LlamaAM {
 
   @Override
   public PlacedReservation reserve(UUID reservationId, Reservation reservation)
-      throws LlamaAMException {
+      throws LlamaException {
     checkIsRunning();
     ParamChecker.notNull(reservationId, "reservationId");
     ParamChecker.notNull(reservation, "reservation");
@@ -129,7 +129,7 @@ public class APIContractLlamaAM extends LlamaAM {
 
   @Override
   public PlacedReservation getReservation(UUID reservationId)
-      throws LlamaAMException {
+      throws LlamaException {
     checkIsRunning();
     ParamChecker.notNull(reservationId, "reservationId");
     PlacedReservation reservation = llamaAM.getReservation(reservationId);
@@ -139,7 +139,7 @@ public class APIContractLlamaAM extends LlamaAM {
 
   @Override
   public PlacedReservation releaseReservation(UUID handle, UUID reservationId)
-      throws LlamaAMException {
+      throws LlamaException {
     checkIsRunning();
     ParamChecker.notNull(reservationId, "reservationId");
     ParamChecker.notNull(handle, "handle");
@@ -150,7 +150,7 @@ public class APIContractLlamaAM extends LlamaAM {
 
   @Override
   public List<PlacedReservation> releaseReservationsForHandle(UUID handle)
-      throws LlamaAMException {
+      throws LlamaException {
     checkIsRunning();
     ParamChecker.notNull(handle, "handle");
     List<PlacedReservation> ids = llamaAM.releaseReservationsForHandle(handle);
@@ -160,7 +160,7 @@ public class APIContractLlamaAM extends LlamaAM {
 
   @Override
   public List<PlacedReservation> releaseReservationsForQueue(
-      String queue) throws LlamaAMException {
+      String queue) throws LlamaException {
     checkIsRunning();
     ParamChecker.notNull(queue, "queue");
     List<PlacedReservation> ids = llamaAM.releaseReservationsForQueue(queue);

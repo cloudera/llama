@@ -54,7 +54,7 @@ public class LlamaNMServiceImpl implements LlamaNMService.Iface {
       response.setNm_handle(TypeUtils.toTUniqueId(handle));
     } catch (Throwable ex) {
       LOG.warn("Register() error: {}", ex.toString(), ex);
-      response.setStatus(TypeUtils.createRuntimeError(ex));
+      response.setStatus(TypeUtils.createError(ex));
     }
     return response;
   }
@@ -71,7 +71,7 @@ public class LlamaNMServiceImpl implements LlamaNMService.Iface {
       response.setStatus(TypeUtils.OK);
     } catch (Exception ex) {
       LOG.warn("Unregister() internal error: {}", ex.toString(), ex);
-      response.setStatus(TypeUtils.createRuntimeError(ex));
+      response.setStatus(TypeUtils.createError(ex));
     }
     return response;
   }

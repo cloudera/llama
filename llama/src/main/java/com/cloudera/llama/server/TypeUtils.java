@@ -18,7 +18,8 @@
 package com.cloudera.llama.server;
 
 import com.cloudera.llama.am.api.Builders;
-import com.cloudera.llama.am.api.LlamaAMException;
+import com.cloudera.llama.util.ErrorCode;
+import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.PlacedResource;
 import com.cloudera.llama.am.api.Reservation;
@@ -32,6 +33,11 @@ import com.cloudera.llama.thrift.TStatus;
 import com.cloudera.llama.thrift.TStatusCode;
 import com.cloudera.llama.thrift.TUniqueId;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -49,18 +55,41 @@ public class TypeUtils {
     return ok;
   }
 
-  public static TStatus createRuntimeError(Throwable ex) {
-    TStatus error = new TStatus().setStatus_code(TStatusCode.REQUEST_ERROR);
-    error.setError_code((short)1);
-    error.setError_msgs(Arrays.asList(ExceptionUtils.getRootCause(ex,
-        LlamaAMException.class).toString()));
-    return error;
-  }
+  public static TStatus createError(Throwable ex) {
+    ex = ExceptionUtils.getRootCause(ex, LlamaException.class);
+    LlamaException llamaEx;
+    boolean internalError = false;
+    if (ex instanceof LlamaException) {
+      llamaEx = (LlamaException) ex;
+    } else if (ex instanceof IllegalArgumentException) {
+      llamaEx =new LlamaException(ex, ErrorCode.ILLEGAL_ARGUMENT);
+    } else {
+      llamaEx = new LlamaException(ex, ErrorCode.INTERNAL_ERROR);
+      internalError = true;
+    }
+    TStatus error = new TStatus().setStatus_code((internalError)
+                                                 ? TStatusCode.INTERNAL_ERROR
+                                                 : TStatusCode.REQUEST_ERROR);
+    error.setError_code((short)llamaEx.getErrorCode());
+    List<String> msgs = new ArrayList<String>();
+    msgs.add(llamaEx.toString());
 
-  public static TStatus createInternalError(Throwable ex) {
-    TStatus error = new TStatus().setStatus_code(TStatusCode.INTERNAL_ERROR);
-    error.setError_msgs(Arrays.asList(ExceptionUtils.getRootCause(ex,
-        LlamaAMException.class).toString()));
+    try {
+      StringWriter writer = new StringWriter();
+      PrintWriter pWriter = new PrintWriter(writer);
+      llamaEx.printStackTrace(pWriter);
+      pWriter.close();
+      BufferedReader br= new BufferedReader(new StringReader(writer.toString()));
+      String line = br.readLine();
+      while (line != null) {
+        msgs.add(line);
+        line = br.readLine();
+      }
+      br.close();
+    } catch (IOException ioEx) {
+      //Cannot happen
+    }
+    error.setError_msgs(msgs);
     return error;
   }
 

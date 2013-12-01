@@ -19,7 +19,7 @@ package com.cloudera.llama.am.impl;
 
 import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.LlamaAMEvent;
-import com.cloudera.llama.am.api.LlamaAMException;
+import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.api.LlamaAMListener;
 import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.PlacedResource;
@@ -112,7 +112,7 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
   }
 
   @Override
-  public void start() throws LlamaAMException {
+  public void start() throws LlamaException {
     am.start();
     localReservations = new HashMap<UUID, PlacedReservationImpl>();
     submittedReservations = new HashSet<UUID>();
@@ -157,13 +157,13 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
   }
 
   @Override
-  public List<String> getNodes() throws LlamaAMException {
+  public List<String> getNodes() throws LlamaException {
     return am.getNodes();
   }
 
   @Override
   public PlacedReservation reserve(UUID reservationId, Reservation reservation)
-      throws LlamaAMException {
+      throws LlamaException {
     PlacedReservation placedReservation = null;
     boolean doActualReservation = true;
     if (reservation.isGang()) {
@@ -202,7 +202,7 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
 
   @Override
   public PlacedReservation getReservation(UUID reservationId)
-      throws LlamaAMException {
+      throws LlamaException {
     PlacedReservation pr = am.getReservation(reservationId);
     if (pr == null) {
       pr = gGetReservation(reservationId);
@@ -216,7 +216,7 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
 
   @Override
   public PlacedReservation releaseReservation(UUID handle, UUID reservationId)
-      throws LlamaAMException {
+      throws LlamaException {
     PlacedReservation gPlacedReservation = gReleaseReservation(reservationId);
     PlacedReservation placedReservation = am.releaseReservation(handle, reservationId);
     return (placedReservation != null) ? placedReservation : gPlacedReservation;
@@ -233,7 +233,7 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
 
   @Override
   public List<PlacedReservation> releaseReservationsForHandle(UUID handle)
-      throws LlamaAMException {
+      throws LlamaException {
     List<PlacedReservation> reservations =
         am.releaseReservationsForHandle(handle);
     reservations.addAll(gReleaseReservationsForHandle(handle));
@@ -262,7 +262,7 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
   }
 
   public List<PlacedReservation> releaseReservationsForQueue(
-      String queue) throws LlamaAMException {
+      String queue) throws LlamaException {
     List<PlacedReservation> reservations =
         am.releaseReservationsForQueue(queue);
     reservations.addAll(gReleaseReservationsForQueue(queue));
@@ -412,7 +412,7 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
             MetricUtil.meter(getMetricRegistry(), BACKED_OFF_RESOURCES_METER,
                 reservation.getResources().size());
 
-          } catch (LlamaAMException ex) {
+          } catch (LlamaException ex) {
             getLog().warn("Error while backing off gang reservation '{}': {}",
                 reservation.getReservationId(), ex.toString(), ex);
           }
@@ -445,7 +445,7 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
           event.addReservation(pr);
 
           submittedReservations.add(reservationId);
-        } catch (LlamaAMException ex) {
+        } catch (LlamaException ex) {
           localReservations.remove(reservationId);
           PlacedReservationImpl pr = br.getReservation();
           pr.setStatus(PlacedReservation.Status.REJECTED);

@@ -18,7 +18,7 @@
 package com.cloudera.llama.am.impl;
 
 import com.cloudera.llama.am.api.LlamaAM;
-import com.cloudera.llama.am.api.LlamaAMException;
+import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.api.RMResource;
 import com.cloudera.llama.am.spi.RMEvent;
 import com.cloudera.llama.am.spi.RMListener;
@@ -81,7 +81,7 @@ public class RMConnectorCache implements RMConnector,
   }
 
   @Override
-  public void start() throws LlamaAMException {
+  public void start() throws LlamaException {
     connector.start();
   }
 
@@ -91,7 +91,7 @@ public class RMConnectorCache implements RMConnector,
   }
 
   @Override
-  public void register(String queue) throws LlamaAMException {
+  public void register(String queue) throws LlamaException {
     this.queue = queue;
     cache = new ResourceCache(queue, conf, this);
     cache.start();
@@ -131,13 +131,13 @@ public class RMConnectorCache implements RMConnector,
   }
 
   @Override
-  public List<String> getNodes() throws LlamaAMException {
+  public List<String> getNodes() throws LlamaException {
     return connector.getNodes();
   }
 
   @Override
   public void reserve(Collection<RMResource> resources)
-      throws LlamaAMException {
+      throws LlamaException {
     List<RMResource> list = new ArrayList<RMResource>(resources);
     List<RMEvent> changes = new ArrayList<RMEvent>();
     Iterator<RMResource> it = list.iterator();
@@ -164,7 +164,7 @@ public class RMConnectorCache implements RMConnector,
 
   @Override
   public void release(Collection<RMResource> resources)
-      throws LlamaAMException {
+      throws LlamaException {
     List<RMResource> list = new ArrayList<RMResource>(resources);
     Iterator<RMResource> it = list.iterator();
     while (it.hasNext()) {
