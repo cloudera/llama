@@ -24,6 +24,7 @@ import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.PlacedResource;
 import com.cloudera.llama.am.api.Resource;
 import com.cloudera.llama.am.api.TestUtils;
+import com.cloudera.llama.am.impl.ThrottleLlamaAM;
 import com.cloudera.llama.util.UUID;
 import junit.framework.Assert;
 import org.apache.hadoop.conf.Configuration;
@@ -55,6 +56,8 @@ public class TestLlamaAMWithMock {
     conf.set("llama.am.mock.nodes", "h0,h1,h2,h3");
     conf.set(LlamaAM.INITIAL_QUEUES_KEY, "q1");
     conf.set(LlamaAM.RM_CONNECTOR_CLASS_KEY, MockRMConnector.class.getName());
+    conf.setInt(ThrottleLlamaAM.MAX_PLACED_RESERVATIONS_KEY, 1000000);
+    conf.setInt(ThrottleLlamaAM.MAX_QUEUED_RESERVATIONS_KEY, 1000000);
     return conf;
   }
 

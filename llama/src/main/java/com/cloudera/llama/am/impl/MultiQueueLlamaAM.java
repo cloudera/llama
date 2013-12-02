@@ -43,20 +43,20 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
-    SingleQueueLlamaAM.Callback  {
+    IntraLlamaAMsCallback {
 
   private static final String QUEUES_GAUGE = METRIC_PREFIX + "queues.gauge";
   private static final String RESERVATIONS_GAUGE = METRIC_PREFIX +
       "reservations.gauge";
 
-  private final Map<String, SingleQueueLlamaAM> ams;
+  private final Map<String, LlamaAM> ams;
   private SingleQueueLlamaAM llamaAMForGetNodes;
   private final ConcurrentHashMap<UUID, String> reservationToQueue;
   private boolean running;
 
   public MultiQueueLlamaAM(Configuration conf) {
     super(conf);
-    ams = new HashMap<String, SingleQueueLlamaAM>();
+    ams = new HashMap<String, LlamaAM>();
     reservationToQueue = new ConcurrentHashMap<UUID, String>();
     if (SingleQueueLlamaAM.getRMConnectorClass(conf) == null) {
       throw new IllegalArgumentException(FastFormat.format(
@@ -102,11 +102,14 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
 
   private LlamaAM getLlamaAM(String queue, boolean create)
       throws LlamaException {
-    SingleQueueLlamaAM am;
+    LlamaAM am;
     synchronized (ams) {
       am = ams.get(queue);
       if (am == null && create) {
-        am = new SingleQueueLlamaAM(getConf(), queue, this);
+        SingleQueueLlamaAM qAm = new SingleQueueLlamaAM(getConf(), queue);
+        ThrottleLlamaAM tAm = new ThrottleLlamaAM(getConf(), queue, qAm);
+        tAm.setCallback(this);
+        am = tAm;
         am.setMetricRegistry(getMetricRegistry());
         am.start();
         am.addListener(this);
@@ -134,7 +137,8 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
         throw ex;
       }
     }
-    llamaAMForGetNodes = new SingleQueueLlamaAM(getConf(), null, this);
+    llamaAMForGetNodes = new SingleQueueLlamaAM(getConf(), null);
+    llamaAMForGetNodes.setCallback(this);
     llamaAMForGetNodes.start();
     running = true;
   }
@@ -241,7 +245,7 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
       boolean doNotCache)
       throws LlamaException {
     List<PlacedReservation> list;
-    SingleQueueLlamaAM am;
+    LlamaAM am;
     synchronized (ams) {
       am = (doNotCache) ? ams.remove(queue) : ams.get(queue);
     }

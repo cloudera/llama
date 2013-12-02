@@ -61,17 +61,10 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
       RESERVATIONS_ALLOCATION_TIMER_TEMPLATE,
       RESOURCES_ALLOCATION_TIMER_TEMPLATE);
 
-  public interface Callback {
-
-    public void discardReservation(UUID reservationId);
-
-    public void discardAM(String queue);
-  }
-
   private final String queue;
   private final Map<UUID, PlacedReservationImpl> reservationsMap;
   private final Map<UUID, PlacedResourceImpl> resourcesMap;
-  private final Callback callback;
+  private IntraLlamaAMsCallback callback;
   private String reservationsAllocationTimerKey;
   private String resourcesAllocationTimerKey;
   private RMConnector rmConnector;
@@ -83,12 +76,14 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
         RMConnector.class);
   }
 
-  public SingleQueueLlamaAM(Configuration conf, String queue,
-      Callback callback) {
+  public SingleQueueLlamaAM(Configuration conf, String queue) {
     super(conf);
     this.queue = queue;
     reservationsMap = new HashMap<UUID, PlacedReservationImpl>();
     resourcesMap = new HashMap<UUID, PlacedResourceImpl>();
+  }
+
+  public void setCallback(IntraLlamaAMsCallback callback) {
     this.callback = callback;
   }
 

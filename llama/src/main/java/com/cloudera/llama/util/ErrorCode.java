@@ -24,15 +24,17 @@ import java.util.List;
 public enum ErrorCode {
   TEST(0, "test error {}:{}"),
 
-  INTERNAL_ERROR(1, "Internal error"),
+  INTERNAL_ERROR(1, "internal error"),
 
-  ILLEGAL_ARGUMENT(10, "Illegal argument"),
+  ILLEGAL_ARGUMENT(10, "illegal argument"),
 
-  CLIENT_REGISTERED_WITH_OTHER_CALLBACK(100, "ClientId '{}' already registered with a different notification address {}"),
-  CLIENT_INVALID_REGISTRATION(101, "ClientId '{}' and notification address '{}' already used in two different active registrations '{}' and '{}'"),
-  CLIENT_UNKNOWN_HANDLE(102, "Unknown handle '{}' "),
+  CLIENT_REGISTERED_WITH_OTHER_CALLBACK(100, "clientId '{}' already registered with a different notification address {}"),
+  CLIENT_INVALID_REGISTRATION(101, "clientId '{}' and notification address '{}' already used in two different active registrations '{}' and '{}'"),
+  CLIENT_UNKNOWN_HANDLE(102, "unknown handle '{}' "),
 
-  CLIENT_DOES_NOT_OWN_RESERVATION(153, "handle '{}' does not own reservation '{}'"),
+  CLIENT_DOES_NOT_OWN_RESERVATION(150, "handle '{}' does not own reservation '{}'"),
+
+  LLAMA_MAX_RESERVATIONS_FOR_QUEUE(160, "Queue '{}' reached its limit of '{}' queued reservations"),
 
   AM_CANNOT_START(300, "cannot start AM"),
   AM_CANNOT_REGISTER(301, "cannot register AM '{}' for queue '{}'"),

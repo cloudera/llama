@@ -290,6 +290,50 @@
     </description>
   </property>
 
+  <!-- ThrottleLlamaAM configuration -->
+
+  <property>
+    <name>llama.am.throttling.maximum.placed.reservations</name>
+    <value>20</value>
+    <description>
+      Global maximum number of reservations per queue. Once this number of
+      reservations is reached for a queue, reservations are queued up.
+    </description>
+  </property>
+
+  <property>
+    <name>llama.am.throttling.maximum.queued.reservations</name>
+    <value>50</value>
+    <description>
+      Global maximum number of queued reservations per queue. Once this number
+      of reservations is reached for a queue, new reservations are rejected.
+    </description>
+  </property>
+
+  <property>
+    <name>llama.am.throttling.maximum.placed.reservations.#QUEUE#</name>
+    <value>20</value>
+    <description>
+      Maximum number of reservations for #QUEUE# queue. Once this number of
+      reservations is reached for the #QUEUE# queue, reservations are queued up.
+      If this property is not set for the #QUEUE#, the global configuration
+      property is used 'llama.am.throttling.maximum.placed.reservations'.
+    </description>
+  </property>
+
+  <property>
+    <name>llama.am.throttling.maximum.queued.reservations.#QUEUE#</name>
+    <value>50</value>
+    <description>
+      Maximum number of queued reservations for #QUEUE# queue. Once this number
+      of reservations is reached for the #QUEUE# queue, new reservations are
+      rejected.
+      If this property is not set for the #QUEUE#, the global configuration
+      property is used 'llama.am.throttling.maximum.queued.reservations'.
+    </description>
+  </property>
+
+
   <!-- MockLlamaAM configuration -->
   <property>
     <name>llama.am.mock.nodes</name>
