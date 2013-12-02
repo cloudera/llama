@@ -32,7 +32,6 @@ import com.cloudera.llama.server.MetricUtil;
 import com.cloudera.llama.util.FastFormat;
 import com.cloudera.llama.util.UUID;
 import com.codahale.metrics.Gauge;
-import com.codahale.metrics.MetricRegistry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ReflectionUtils;
 
@@ -53,9 +52,9 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
   private static final String RESOURCES_GAUGE_TEMPLATE =
       METRIC_PREFIX_TEMPLATE + "resources.gauge";
   private static final String RESERVATIONS_ALLOCATION_TIMER_TEMPLATE =
-      METRIC_PREFIX_TEMPLATE + "reservations-allocation-delay.timer";
+      METRIC_PREFIX_TEMPLATE + "reservations-allocation-time.timer";
   private static final String RESOURCES_ALLOCATION_TIMER_TEMPLATE =
-      METRIC_PREFIX_TEMPLATE + "resources-allocation-delay.timer";
+      METRIC_PREFIX_TEMPLATE + "resources-allocation-time.timer";
 
   public static final List<String> METRIC_TEMPLATE_KEYS = Arrays.asList(
       RESERVATIONS_GAUGE_TEMPLATE, RESOURCES_GAUGE_TEMPLATE,
@@ -73,8 +72,6 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
   private final Map<UUID, PlacedReservationImpl> reservationsMap;
   private final Map<UUID, PlacedResourceImpl> resourcesMap;
   private final Callback callback;
-  private String reservationsGaugeKey;
-  private String resourcesGaugeKey;
   private String reservationsAllocationTimerKey;
   private String resourcesAllocationTimerKey;
   private RMConnector rmConnector;
@@ -93,39 +90,6 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
     reservationsMap = new HashMap<UUID, PlacedReservationImpl>();
     resourcesMap = new HashMap<UUID, PlacedResourceImpl>();
     this.callback = callback;
-  }
-
-  @Override
-  public void setMetricRegistry(MetricRegistry metricRegistry) {
-    super.setMetricRegistry(metricRegistry);
-    reservationsGaugeKey = FastFormat.format(RESERVATIONS_GAUGE_TEMPLATE, queue);
-    resourcesGaugeKey = FastFormat.format(RESOURCES_GAUGE_TEMPLATE,  queue);
-    reservationsAllocationTimerKey = FastFormat.format(
-        RESERVATIONS_ALLOCATION_TIMER_TEMPLATE, queue);
-    resourcesAllocationTimerKey = FastFormat.format(
-        RESOURCES_ALLOCATION_TIMER_TEMPLATE, queue);
-    if (metricRegistry != null) {
-      MetricUtil.registerGauge(metricRegistry, reservationsGaugeKey,
-          new Gauge<Integer>() {
-            @Override
-            public Integer getValue() {
-              synchronized (this) {
-                return reservationsMap.size();
-              }
-            }
-          });
-      MetricUtil.registerGauge(metricRegistry, resourcesGaugeKey,
-          new Gauge<Integer>() {
-            @Override
-            public Integer getValue() {
-              synchronized (this) {
-                return resourcesMap.size();
-              }
-            }
-          });
-      MetricUtil.registerTimer(metricRegistry, reservationsAllocationTimerKey);
-      MetricUtil.registerTimer(metricRegistry, resourcesAllocationTimerKey);
-    }
   }
 
   // LlamaAM API
@@ -147,6 +111,37 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
       rmConnector.register(queue);
     }
     running = true;
+
+    if (getMetricRegistry() != null) {
+      String key = FastFormat.format(RESERVATIONS_GAUGE_TEMPLATE, queue);
+      MetricUtil.registerGauge(getMetricRegistry(), key, new Gauge<Integer>() {
+            @Override
+            public Integer getValue() {
+              synchronized (this) {
+                return reservationsMap.size();
+              }
+            }
+          });
+
+      key = FastFormat.format(RESOURCES_GAUGE_TEMPLATE, queue);
+      MetricUtil.registerGauge(getMetricRegistry(), key, new Gauge<Integer>() {
+            @Override
+            public Integer getValue() {
+              synchronized (this) {
+                return resourcesMap.size();
+              }
+            }
+          });
+
+
+      key = FastFormat.format(RESERVATIONS_ALLOCATION_TIMER_TEMPLATE, queue);
+      MetricUtil.registerTimer(getMetricRegistry(), key);
+      reservationsAllocationTimerKey = key;
+
+      key = FastFormat.format(RESOURCES_ALLOCATION_TIMER_TEMPLATE, queue);
+      MetricUtil.registerTimer(getMetricRegistry(), key);
+      resourcesAllocationTimerKey = key;
+    }
   }
 
   public RMConnector getRMConnector() {
@@ -162,10 +157,16 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
   public synchronized void stop() {
     running = false;
     if (getMetricRegistry() != null) {
-      getMetricRegistry().remove(reservationsGaugeKey);
-      getMetricRegistry().remove(reservationsGaugeKey);
-      getMetricRegistry().remove(reservationsAllocationTimerKey);
-      getMetricRegistry().remove(resourcesAllocationTimerKey);
+      if (getMetricRegistry() != null) {
+        String key = FastFormat.format(RESERVATIONS_GAUGE_TEMPLATE, queue);
+        getMetricRegistry().remove(key);
+        key = FastFormat.format(RESOURCES_GAUGE_TEMPLATE, queue);
+        getMetricRegistry().remove(key);
+        key = FastFormat.format(RESERVATIONS_ALLOCATION_TIMER_TEMPLATE, queue);
+        getMetricRegistry().remove(key);
+        key = FastFormat.format(RESOURCES_ALLOCATION_TIMER_TEMPLATE, queue);
+        getMetricRegistry().remove(key);
+      }
     }
     if (rmConnector != null) {
       if (queue != null) {
