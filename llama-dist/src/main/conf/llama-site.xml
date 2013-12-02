@@ -160,6 +160,17 @@
     </description>
   </property>
   <property>
+    <name>llama.am.server.thrift.security.QOP</name>
+    <value>auth</value>
+    <description>
+      Indicates the quality of protection if security is enabled.
+      Valid values are:
+        'auth'      : authentication
+        'auth-int'  : authentication and integrity
+        'auth-conf' : authentication, integrity and confidentiality
+    </description>
+  </property>
+  <property>
     <name>llama.am.server.thrift.kerberos.keytab.file</name>
     <value>llama.keytab</value>
     <description>

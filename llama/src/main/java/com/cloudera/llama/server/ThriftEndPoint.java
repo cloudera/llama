@@ -42,7 +42,7 @@ public class ThriftEndPoint {
     if (Security.isSecure(conf)) {
       String serviceName = conf.getNotificationPrincipalName();
       Map<String, String> saslProperties = new HashMap<String, String>();
-      saslProperties.put(Sasl.QOP, "auth-conf");
+      saslProperties.put(Sasl.QOP, "auth-conf,auth-int,auth");
       tTransport = new TSaslClientTransport("GSSAPI", null, serviceName, host,
           saslProperties, null, tTransport);
     }
@@ -115,7 +115,7 @@ public class ThriftEndPoint {
     TTransportFactory factory;
     if (Security.isSecure(conf)) {
       Map<String, String> saslProperties = new HashMap<String, String>();
-      saslProperties.put(Sasl.QOP, "auth-conf");
+      saslProperties.put(Sasl.QOP, conf.getThriftQOP());
       String principal = conf.getServerPrincipalName();
       String name = extractPrincipalName(principal);
       String host = extractPrincipalHost(principal);

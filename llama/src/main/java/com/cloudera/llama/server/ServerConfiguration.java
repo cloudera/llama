@@ -88,6 +88,20 @@ public abstract class ServerConfiguration implements Configurable {
         SECURITY_ENABLED_DEFAULT);
   }
 
+  public static String THRIFT_QOP_KEY = KEY_PREFIX + "security.QOP";
+  private static String THRIFT_QOP_DEFAULT = "auth";
+
+  public String getThriftQOP() {
+    String qop = conf.get(getPropertyName(THRIFT_QOP_KEY), THRIFT_QOP_DEFAULT);
+    if (!qop.equals("auth")
+        && !qop.equals("auth-int")
+        && !qop.equals("auth-conf")) {
+      throw new RuntimeException(FastFormat.format("Invalid Thrift QOP '{}', " +
+          "it must be 'auth', 'auth-int' or 'auth-conf'"));
+    }
+    return qop;
+  }
+
   public static String SERVER_ADDRESS_KEY = KEY_PREFIX + "address";
   private static String SERVER_ADDRESS_DEFAULT = "0.0.0.0";
 

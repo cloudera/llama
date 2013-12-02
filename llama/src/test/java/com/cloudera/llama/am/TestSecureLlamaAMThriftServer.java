@@ -17,6 +17,7 @@
  */
 package com.cloudera.llama.am;
 
+import com.cloudera.llama.util.ErrorCode;
 import com.cloudera.llama.util.ParamChecker;
 import org.apache.hadoop.minikdc.MiniKdc;
 import com.cloudera.llama.server.Security;
@@ -47,6 +48,8 @@ import javax.security.auth.kerberos.KerberosPrincipal;
 import javax.security.auth.login.LoginContext;
 import javax.security.sasl.Sasl;
 import java.io.File;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.security.Principal;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
@@ -115,12 +118,16 @@ public class TestSecureLlamaAMThriftServer extends TestLlamaAMThriftServer {
   }
 
   protected com.cloudera.llama.thrift.LlamaAMService.Client createClient(
-      LlamaAMServer server)
+      LlamaAMServer server) throws Exception {
+    return createClient(server, "auth-conf,auth-int,auth");
+  }
+  protected com.cloudera.llama.thrift.LlamaAMService.Client createClient(
+      LlamaAMServer server, String qop)
       throws Exception {
     TTransport transport = new TSocket(server.getAddressHost(),
         server.getAddressPort());
     Map<String, String> saslProperties = new HashMap<String, String>();
-    saslProperties.put(Sasl.QOP, "auth-conf");
+    saslProperties.put(Sasl.QOP, qop);
     transport = new TSaslClientTransport("GSSAPI", null, "llama",
         server.getAddressHost(), saslProperties, null, transport);
     transport.open();
@@ -288,7 +295,7 @@ public class TestSecureLlamaAMThriftServer extends TestLlamaAMThriftServer {
     TTransport transport = new TSocket(server.getAdminAddressHost(),
         server.getAdminAddressPort());
     Map<String, String> saslProperties = new HashMap<String, String>();
-    saslProperties.put(Sasl.QOP, "auth-conf");
+    saslProperties.put(Sasl.QOP, "auth-conf,auth-int,auth");
     transport = new TSaslClientTransport("GSSAPI", null, "llama",
         server.getAddressHost(), saslProperties, null, transport);
     transport.open();
@@ -365,4 +372,63 @@ public class TestSecureLlamaAMThriftServer extends TestLlamaAMThriftServer {
       server.stop();
     }
   }
+
+  @Test(expected = TTransportException.class)
+  public void testClientWithWrongQOP() throws Throwable {
+    final LlamaAMServer server = new LlamaAMServer();
+    try {
+      Configuration conf = createLlamaConfiguration();
+      conf.set(amConf.getPropertyName(ServerConfiguration.THRIFT_QOP_KEY),
+          "auth-conf");
+      server.setConf(conf);
+      server.start();
+
+      Subject.doAs(getClientSubject(), new PrivilegedExceptionAction<Object>() {
+        @Override
+        public Object run() throws Exception {
+          com.cloudera.llama.thrift.LlamaAMService.Client client =
+              createClient(server, "auth");
+
+
+          TLlamaAMRegisterRequest trReq = new TLlamaAMRegisterRequest();
+          trReq.setVersion(TLlamaServiceVersion.V1);
+          trReq.setClient_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
+          TNetworkAddress tAddress = new TNetworkAddress();
+          tAddress.setHostname("localhost");
+          tAddress.setPort(0);
+          trReq.setNotification_callback_service(tAddress);
+
+          //register
+          TLlamaAMRegisterResponse trRes = client.Register(trReq);
+          Assert.assertEquals(TStatusCode.OK, trRes.getStatus().getStatus_code());
+          Assert.assertNotNull(trRes.getAm_handle());
+          Assert.assertNotNull(TypeUtils.toUUID(trRes.getAm_handle()));
+
+          //valid re-register
+          trRes = client.Register(trReq);
+          Assert.assertEquals(TStatusCode.OK, trRes.getStatus().getStatus_code());
+          Assert.assertNotNull(trRes.getAm_handle());
+          Assert.assertNotNull(TypeUtils.toUUID(trRes.getAm_handle()));
+
+          HttpURLConnection conn = (HttpURLConnection) new URL(server.getHttpLlamaUI() +
+              "json/v1/handle/" + TypeUtils.toUUID(trRes.getAm_handle()).toString()).openConnection();
+          Assert.assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+
+          //invalid re-register different address
+          tAddress.setPort(1);
+          trRes = client.Register(trReq);
+          Assert.assertEquals(TStatusCode.REQUEST_ERROR, trRes.getStatus().
+              getStatus_code());
+          Assert.assertEquals(ErrorCode.CLIENT_REGISTERED_WITH_OTHER_CALLBACK.getCode(),
+              trRes.getStatus().getError_code());
+          return null;
+        }
+      });
+    } catch (PrivilegedActionException ex) {
+      throw ex.getCause();
+    } finally {
+      server.stop();
+    }
+  }
+
 }

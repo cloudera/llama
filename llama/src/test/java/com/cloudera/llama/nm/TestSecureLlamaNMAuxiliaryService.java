@@ -85,7 +85,7 @@ public class TestSecureLlamaNMAuxiliaryService
     TTransport transport = new TSocket(MyLlamaNMAuxiliaryService.host,
         MyLlamaNMAuxiliaryService.port);
     Map<String, String> saslProperties = new HashMap<String, String>();
-    saslProperties.put(Sasl.QOP, "auth-conf");
+    saslProperties.put(Sasl.QOP, "auth-conf,auth-int,auth");
     transport = new TSaslClientTransport("GSSAPI", null, "llama",
         MyLlamaNMAuxiliaryService.host, saslProperties, null, transport);
     transport.open();

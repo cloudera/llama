@@ -136,7 +136,9 @@ $
   default values):
   
     * llama.am.server.thrift.security=false
-  
+
+    * llama.am.server.thrift.security.QOP=auth
+
     * llama.am.server.thrift.kerberos.keytab.file=llama.keytab
   
     * llama.am.server.thrift.kerberos.server.principal.name=llama/localhost
@@ -153,6 +155,15 @@ $
   When specifying the principal names use the short name only, do not include 
   the service hostname. The Thrift SASL implementation composes the complete 
   service principal name (<<<shortName>>>/<<<hostname>>>).
+
+  The <<<llama.am.server.thrift.security.QOP>>> property indicates the quality
+  of protection if security is enabled. Valid values are:
+
+    * <<<auth>>>: authentication
+
+    * <<<auth-int>>> : authentication and integrity
+
+    * <<<auth-conf>>>: authentication, integrity and confidentiality
 
 ** Authorization Configuration for Llama AM
 
@@ -312,11 +323,22 @@ usage:
 
     * llama.nm.server.thrift.security=false
 
+    * llama.nm.server.thrift.security.QOP=auth
+
     * llama.nm.server.thrift.kerberos.keytab.file=llama.keytab
 
     * llama.nm.server.thrift.kerberos.server.principal.name=llama/localhost
 
     * llama.nm.server.thrift.kerberos.notification.principal.name=impala
+
+  The <<<llama.nm.server.thrift.security.QOP>>> property indicates the quality
+  of protection if security is enabled. Valid values are:
+
+    * <<<auth>>>: authentication
+
+    * <<<auth-int>>> : authentication and integrity
+
+    * <<<auth-conf>>>: authentication, integrity and confidentiality
 
 ** Authorization Configuration for Llama NM Auxiliary Service
 
