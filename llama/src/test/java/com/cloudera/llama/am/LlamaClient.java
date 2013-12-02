@@ -473,7 +473,12 @@ public class LlamaClient {
     req.setResources(resources);
     TLlamaAMReservationResponse res = client.Reserve(req);
     if (res.getStatus().getStatus_code() != TStatusCode.OK) {
-      throw new RuntimeException(res.toString());
+      String status = res.getStatus().getStatus_code().toString();
+      int code = (res.getStatus().isSetError_code())
+                 ? res.getStatus().getError_code() : 0;
+      String msg = (res.getStatus().isSetError_msgs())
+          ? res.getStatus().getError_msgs().get(0) : "";
+      throw new RuntimeException(status + " - " + code + " - " + msg);
     }
     return TypeUtils.toUUID(res.getReservation_id());
   }
@@ -572,6 +577,7 @@ public class LlamaClient {
     CountDownLatch registerLatch = new CountDownLatch(clients);
     CountDownLatch startLatch = new CountDownLatch(1);
     CountDownLatch endLatch = new CountDownLatch(clients);
+    AtomicInteger reservationErrorCount = new AtomicInteger();
     Timer[] timers = new Timer[TIMERS_COUNT];
     for (int i = 0; i < TIMERS_COUNT; i++) {
       timers[i] = new Timer();
@@ -581,12 +587,14 @@ public class LlamaClient {
       runClientLoad(secure, llamaHost, llamaPort, callbackHost,
           callbackStartPort + i, rounds, holdTime, sleepTime, queue, locations,
           relaxLocality, cpus, memory, gang, registerLatch, startLatch,
-          endLatch, allocationTimeout, timers, allocationTimeouts);
+          endLatch, allocationTimeout, timers, allocationTimeouts,
+          reservationErrorCount);
     }
     registerLatch.await();
     startLatch.countDown();
     endLatch.await();
     long end = System.currentTimeMillis();
+    System.out.println();
     System.out.println("Llama load run: ");
     System.out.println();
     System.out.println("  Number of clients         : " + clients);
@@ -597,6 +605,8 @@ public class LlamaClient {
         " ms");
     System.out.println();
     System.out.println("  Wall time                 : " + (end - start) + " ms");
+    System.out.println();
+    System.out.println("  Reservation errors        : " + reservationErrorCount);
     System.out.println();
     System.out.println("  Timed out allocations     : " + allocationTimeouts);
     System.out.println();
@@ -616,6 +626,15 @@ public class LlamaClient {
     System.out.println();
   }
 
+  private static final AtomicInteger CLIENT_CALLS_COUNT = new AtomicInteger();
+
+  private static void tickClientCall() {
+    int ticks = CLIENT_CALLS_COUNT.incrementAndGet();
+    if (ticks % 100 == 0) {
+      System.out.println("  Client calls: " + ticks);
+    }
+  }
+
   private static final int TIMERS_COUNT = 5;
   private static final int REGISTER = 0;
   private static final int RESERVE = 1;
@@ -630,7 +649,8 @@ public class LlamaClient {
       final int cpus, final int memory, final boolean gang,
       final CountDownLatch registerLatch, final CountDownLatch startLatch,
       final CountDownLatch endLatch, final int allocationTimeout,
-      final Timer[] timers, final AtomicInteger allocationTimeouts) {
+      final Timer[] timers, final AtomicInteger allocationTimeouts,
+      final AtomicInteger reservationErrorCount) {
     Thread t = new Thread("client@" + callbackPort) {
       @Override
       public void run() {
@@ -645,6 +665,8 @@ public class LlamaClient {
                         llamaHost, llamaPort);
 
                     //register
+                    tickClientCall();
+
                     long start = System.currentTimeMillis();
                     UUID handle = register(client, UUID.randomUUID(),
                         callbackHost, callbackPort);
@@ -656,19 +678,32 @@ public class LlamaClient {
                     for (int i = 0; i < rounds; i++) {
 
                       //reserve
-                      start = System.currentTimeMillis();
-                      UUID reservation = reserve(client, handle, "user",
-                          queue, locations, relaxLocality, cpus, memory, gang);
-                      end = System.currentTimeMillis();
-                      CountDownLatch reservationLatch =
-                          LlamaClientCallback.getReservationLatch(reservation);
-                      timers[RESERVE].update(end - start, TimeUnit.MILLISECONDS);
+                      tickClientCall();
+
+                      UUID reservation = null;
+                      try {
+                        start = System.currentTimeMillis();
+                        reservation = reserve(client, handle, "user",
+                            queue, locations, relaxLocality, cpus, memory, gang);
+                        end = System.currentTimeMillis();
+                        timers[RESERVE].update(end - start, TimeUnit.MILLISECONDS);
+                      } catch (RuntimeException ex) {
+                        reservationErrorCount.incrementAndGet();
+                        System.out.println("ERROR while reserve(): " + ex);
+                      }
+
+                      CountDownLatch reservationLatch = null;
+                      if (reservation != null) {
+                        reservationLatch =
+                            LlamaClientCallback.getReservationLatch(reservation);
+                      }
 
                       if (holdTime >=0 ) {
                         //wait allocation
                         start = System.currentTimeMillis();
-                        if (reservationLatch.await(allocationTimeout,
-                            TimeUnit.MILLISECONDS)) {
+                        if (reservationLatch != null &&
+                            reservationLatch.await(allocationTimeout,
+                                TimeUnit.MILLISECONDS)) {
                           end = System.currentTimeMillis();
                           timers[ALLOCATE].update(end - start,
                               TimeUnit.MILLISECONDS);
@@ -681,16 +716,22 @@ public class LlamaClient {
                       }
 
                       //release
-                      start = System.currentTimeMillis();
-                      release(client, handle, reservation);
-                      end = System.currentTimeMillis();
-                      timers[RELEASE].update(end - start, TimeUnit.MILLISECONDS);
+                      tickClientCall();
+
+                      if (reservation != null) {
+                        start = System.currentTimeMillis();
+                        release(client, handle, reservation);
+                        end = System.currentTimeMillis();
+                        timers[RELEASE].update(end - start, TimeUnit.MILLISECONDS);
+                      }
 
                       //sleep
                       Thread.sleep(sleepTime);
                     }
 
                     //unregister
+                    tickClientCall();
+
                     start = System.currentTimeMillis();
                     unregister(client, handle);
                     end = System.currentTimeMillis();
@@ -706,6 +747,7 @@ public class LlamaClient {
               });
         } catch (Throwable ex) {
           System.out.println(ex.toString());
+          ex.printStackTrace(System.out);
           System.exit(2);
         }
       }
