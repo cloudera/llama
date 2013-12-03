@@ -349,7 +349,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
   private void _resourceAllocated(PlacedResourceImpl resource,
       RMEvent change, LlamaAMEventImpl event) {
     resource.setAllocationInfo(change.getLocation(), change.getCpuVCores(),
-        change.getMemoryMb());
+        change.getMemoryMbs());
     UUID reservationId = resource.getReservationId();
     PlacedReservationImpl reservation = reservationsMap.get(reservationId);
     if (reservation == null) {

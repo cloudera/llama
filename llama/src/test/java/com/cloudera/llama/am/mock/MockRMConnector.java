@@ -220,9 +220,9 @@ public class MockRMConnector
 
     private void toAllocate() {
       RMEvent change = RMEvent.createAllocationEvent
-          (resource.getResourceId(), "c" + counter.incrementAndGet
-              (), resource.getCpuVCoresAsk(), resource.getMemoryMbsAsk(),
-              getLocation(resource.getLocationAsk()));
+          (resource.getResourceId(), getLocation(resource.getLocationAsk()), resource.getCpuVCoresAsk(), resource.getMemoryMbsAsk(), "c" + counter.incrementAndGet
+              ()
+          );
       callback.onEvent(Arrays.asList(change));
     }
 

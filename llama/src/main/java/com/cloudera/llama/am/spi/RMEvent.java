@@ -27,28 +27,28 @@ public class RMEvent {
   private final Object rmResourceId;
   private final PlacedResource.Status status;
   private final int cpuVCores;
-  private final int memoryMb;
+  private final int memoryMbs;
   private final String location;
 
-  private RMEvent(UUID resourceId, Object rmResourceId, int cpuVCores,
-      int memoryMb, String location, PlacedResource.Status status) {
+  private RMEvent(UUID resourceId, Object rmResourceId, String location,
+      int cpuVCores, int memoryMbs, PlacedResource.Status status) {
     this.resourceId = resourceId;
     this.rmResourceId = rmResourceId;
     this.status = status;
     this.location = location;
     this.cpuVCores = cpuVCores;
-    this.memoryMb = memoryMb;
+    this.memoryMbs = memoryMbs;
   }
 
   public static RMEvent createAllocationEvent(UUID resourceId,
-      Object rmResourceId, int vCpuCores, int memoryMb, String location) {
-    return new RMEvent(resourceId, rmResourceId, vCpuCores,
-        memoryMb, location, PlacedResource.Status.ALLOCATED);
+      String location, int vCpuCores, int memoryMb, Object rmResourceId) {
+    return new RMEvent(resourceId, rmResourceId, location, vCpuCores,
+        memoryMb, PlacedResource.Status.ALLOCATED);
   }
 
   public static RMEvent createStatusChangeEvent(UUID resourceId,
       PlacedResource.Status status) {
-    return new RMEvent(resourceId, null, -1, -1, null, status);
+    return new RMEvent(resourceId, null, null, -1, -1, status);
   }
 
   public UUID getResourceId() {
@@ -67,8 +67,8 @@ public class RMEvent {
     return cpuVCores;
   }
 
-  public int getMemoryMb() {
-    return memoryMb;
+  public int getMemoryMbs() {
+    return memoryMbs;
   }
 
   public String getLocation() {
@@ -76,7 +76,7 @@ public class RMEvent {
   }
 
   private static final String TO_STRING_ALLOCATED_MSG = "rmEvent[" +
-      "resourceId: {} status: {} cpuVCores: {} memoryMb: {} location: {}]";
+      "resourceId: {} status: {} cpuVCores: {} memoryMbs: {} location: {}]";
 
   private static final String TO_STRING_CHANGED_MSG = "rmEvent[" +
       "resourceId: {} status: {}]";
@@ -85,7 +85,7 @@ public class RMEvent {
     String msg = (getStatus() == PlacedResource.Status.ALLOCATED)
                  ? TO_STRING_ALLOCATED_MSG : TO_STRING_CHANGED_MSG;
     return FastFormat.format(msg, getResourceId(), getStatus(),
-        getCpuVCores(), getMemoryMb(), getLocation());
+        getCpuVCores(), getMemoryMbs(), getLocation());
   }
 
 }

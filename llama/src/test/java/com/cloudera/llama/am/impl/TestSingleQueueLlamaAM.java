@@ -285,7 +285,7 @@ public class TestSingleQueueLlamaAM {
       PlacedReservation pr = llama.getReservation(reservationId);
       UUID resource1Id = pr.getPlacedResources().get(0).getResourceId();
       RMEvent change = RMEvent.createAllocationEvent
-          (resource1Id, "cid1", 3, 4096, "a1");
+          (resource1Id, "a1", 3, 4096, "cid1");
       llama.onEvent(Arrays.asList(change));
 
       List<PlacedResource> resources = TestUtils.getResources(listener.events.get(0),
@@ -320,7 +320,7 @@ public class TestSingleQueueLlamaAM {
       PlacedReservation pr = llama.getReservation(reservationId);
       UUID resource1Id = pr.getPlacedResources().get(0).getResourceId();
       RMEvent change = RMEvent.createAllocationEvent
-          (resource1Id, new Object(), 3, 4096, "a1");
+          (resource1Id, "a1", 3, 4096, new Object());
       llama.onEvent(Arrays.asList(change));
       List<PlacedResource> resources = TestUtils.getResources(listener.events.get(0),
           PlacedResource.Status.ALLOCATED);
@@ -356,9 +356,9 @@ public class TestSingleQueueLlamaAM {
       UUID resource1Id = pr.getPlacedResources().get(0).getResourceId();
       UUID resource2Id = pr.getPlacedResources().get(1).getResourceId();
       RMEvent change1 = RMEvent.createAllocationEvent
-          (resource1Id, new Object(), 3, 4096, "a1");
+          (resource1Id, "a1", 3, 4096, new Object());
       RMEvent change2 = RMEvent.createAllocationEvent
-          (resource2Id, new Object(), 4, 5112, "a2");
+          (resource2Id, "a2", 4, 5112, new Object());
       llama.onEvent(Arrays.asList(change1, change2));
       List<PlacedResource> resources = TestUtils.getResources(listener.events.get(0),
           PlacedResource.Status.ALLOCATED);
@@ -393,9 +393,9 @@ public class TestSingleQueueLlamaAM {
       UUID resource1Id = pr.getPlacedResources().get(0).getResourceId();
       UUID resource2Id = pr.getPlacedResources().get(1).getResourceId();
       RMEvent change1 = RMEvent.createAllocationEvent
-          (resource1Id, new Object(), 3, 4096, "a1");
+          (resource1Id, "a1", 3, 4096, new Object());
       RMEvent change2 = RMEvent.createAllocationEvent
-          (resource2Id, new Object(), 4, 5112, "a2");
+          (resource2Id, "a2", 4, 5112, new Object());
       llama.onEvent(Arrays.asList(change1, change2));
       List<PlacedResource> resources = TestUtils.getResources(listener.events.get(0),
           PlacedResource.Status.ALLOCATED);
@@ -432,7 +432,7 @@ public class TestSingleQueueLlamaAM {
       UUID resource1Id = pr.getPlacedResources().get(0).getResourceId();
       UUID resource2Id = pr.getPlacedResources().get(1).getResourceId();
       RMEvent change1 = RMEvent.createAllocationEvent
-          (resource1Id, new Object(), 3, 4096, "a1");
+          (resource1Id, "a1", 3, 4096, new Object());
       llama.onEvent(Arrays.asList(change1));
       List<PlacedResource> resources = TestUtils.getResources(listener.events.get(0),
           PlacedResource.Status.ALLOCATED);
@@ -448,7 +448,7 @@ public class TestSingleQueueLlamaAM {
       Assert.assertEquals(PlacedReservation.Status.PARTIAL,
           reservation.getStatus());
       RMEvent change2 = RMEvent.createAllocationEvent
-          (resource2Id, new Object(), 4, 5112, "a2");
+          (resource2Id, "a2", 4, 5112, new Object());
       listener.events.clear();
       llama.onEvent(Arrays.asList(change2));
       resources = TestUtils.getResources(listener.events.get(0),
@@ -483,7 +483,7 @@ public class TestSingleQueueLlamaAM {
       UUID resource1Id = pr.getPlacedResources().get(0).getResourceId();
       UUID resource2Id = pr.getPlacedResources().get(1).getResourceId();
       RMEvent change1 = RMEvent.createAllocationEvent
-          (resource1Id, new Object(), 3, 4096, "a1");
+          (resource1Id, "a1", 3, 4096, new Object());
       llama.onEvent(Arrays.asList(change1));
       Assert.assertEquals(1, TestUtils.getResources(listener.events, PlacedResource.Status.ALLOCATED, false).size());
       Assert.assertEquals(1, TestUtils.getReservations(listener.events, PlacedReservation.Status.PARTIAL, false).size());
@@ -493,7 +493,7 @@ public class TestSingleQueueLlamaAM {
       Assert.assertEquals(PlacedReservation.Status.PARTIAL,
           reservation.getStatus());
       RMEvent change2 = RMEvent.createAllocationEvent
-          (resource2Id, new Object(), 4, 5112, "a2");
+          (resource2Id, "a2", 4, 5112, new Object());
       llama.onEvent(Arrays.asList(change2));
       Assert.assertEquals(1, TestUtils.getResources(listener.events, PlacedResource.Status.ALLOCATED, false).size());
       Assert.assertEquals(1, TestUtils.getReservations(listener.events, PlacedReservation.Status.ALLOCATED, false).size());
@@ -552,7 +552,7 @@ public class TestSingleQueueLlamaAM {
       UUID resource1Id = pr.getPlacedResources().get(0).getResourceId();
       UUID resource2Id = pr.getPlacedResources().get(1).getResourceId();
       RMEvent change1 = RMEvent.createAllocationEvent
-          (resource1Id, new Object(), 3, 4096, "a1");
+          (resource1Id, "a1", 3, 4096, new Object());
       llama.onEvent(Arrays.asList(change1));
       RMEvent change2 = RMEvent.createStatusChangeEvent
           (resource2Id, PlacedResource.Status.REJECTED);
@@ -582,7 +582,7 @@ public class TestSingleQueueLlamaAM {
       UUID resource1Id = pr.getPlacedResources().get(0).getResourceId();
       UUID resource2Id = pr.getPlacedResources().get(1).getResourceId();
       RMEvent change1 = RMEvent.createAllocationEvent
-          (resource1Id, new Object(), 3, 4096, "a1");
+          (resource1Id, "a1", 3, 4096, new Object());
       llama.onEvent(Arrays.asList(change1));
       RMEvent change2 = RMEvent.createStatusChangeEvent
           (resource2Id, PlacedResource.Status.REJECTED);
@@ -614,7 +614,7 @@ public class TestSingleQueueLlamaAM {
       PlacedReservation pr = llama.getReservation(reservationId);
       UUID resource1Id = pr.getPlacedResources().get(0).getResourceId();
       RMEvent change1 = RMEvent.createAllocationEvent
-          (resource1Id, new Object(), 3, 4096, "a1");
+          (resource1Id, "a1", 3, 4096, new Object());
       llama.onEvent(Arrays.asList(change1));
       RMEvent change2 = RMEvent.createStatusChangeEvent
           (resource1Id, PlacedResource.Status.PREEMPTED);
@@ -643,7 +643,7 @@ public class TestSingleQueueLlamaAM {
       PlacedReservation pr = llama.getReservation(reservationId);
       UUID resource1Id = pr.getPlacedResources().get(0).getResourceId();
       RMEvent change1 = RMEvent.createAllocationEvent
-          (resource1Id, new Object(), 3, 4096, "a1");
+          (resource1Id, "a1", 3, 4096, new Object());
       llama.onEvent(Arrays.asList(change1));
       RMEvent change2 = RMEvent.createStatusChangeEvent
           (resource1Id, PlacedResource.Status.PREEMPTED);
@@ -675,7 +675,7 @@ public class TestSingleQueueLlamaAM {
       PlacedReservation pr = llama.getReservation(reservationId);
       UUID resource1Id = pr.getPlacedResources().get(0).getResourceId();
       RMEvent change1 = RMEvent.createAllocationEvent
-          (resource1Id, new Object(), 3, 4096, "a1");
+          (resource1Id, "a1", 3, 4096, new Object());
       llama.onEvent(Arrays.asList(change1));
       RMEvent change2 = RMEvent.createStatusChangeEvent
           (resource1Id, PlacedResource.Status.PREEMPTED);
@@ -710,7 +710,7 @@ public class TestSingleQueueLlamaAM {
       PlacedReservation pr = llama.getReservation(reservationId);
       UUID resource1Id = pr.getPlacedResources().get(0).getResourceId();
       RMEvent change1 = RMEvent.createAllocationEvent
-          (resource1Id, new Object(), 3, 4096, "a1");
+          (resource1Id, "a1", 3, 4096, new Object());
       llama.onEvent(Arrays.asList(change1));
       RMEvent change2 = RMEvent.createStatusChangeEvent
           (resource1Id, PlacedResource.Status.PREEMPTED);
@@ -746,7 +746,7 @@ public class TestSingleQueueLlamaAM {
       PlacedReservation pr = llama.getReservation(reservationId);
       UUID resource1Id = pr.getPlacedResources().get(0).getResourceId();
       RMEvent change1 = RMEvent.createAllocationEvent
-          (resource1Id, new Object(), 3, 4096, "a1");
+          (resource1Id, "a1", 3, 4096, new Object());
       llama.onEvent(Arrays.asList(change1));
       RMEvent change2 = RMEvent.createStatusChangeEvent
           (resource1Id, PlacedResource.Status.LOST);
@@ -775,7 +775,7 @@ public class TestSingleQueueLlamaAM {
       PlacedReservation pr = llama.getReservation(reservationId);
       UUID resource1Id = pr.getPlacedResources().get(0).getResourceId();
       RMEvent change1 = RMEvent.createAllocationEvent
-          (resource1Id, new Object(), 3, 4096, "a1");
+          (resource1Id, "a1", 3, 4096, new Object());
       llama.onEvent(Arrays.asList(change1));
       RMEvent change2 = RMEvent.createStatusChangeEvent
           (resource1Id, PlacedResource.Status.LOST);
@@ -812,7 +812,7 @@ public class TestSingleQueueLlamaAM {
       PlacedReservation pr = llama.getReservation(reservationId);
       UUID resource1Id = pr.getPlacedResources().get(0).getResourceId();
       RMEvent change1 = RMEvent.createAllocationEvent
-          (resource1Id, new Object(), 3, 4096, "a1");
+          (resource1Id, "a1", 3, 4096, new Object());
       llama.onEvent(Arrays.asList(change1));
       RMEvent change2 = RMEvent.createStatusChangeEvent
           (resource1Id, PlacedResource.Status.LOST);
@@ -849,7 +849,7 @@ public class TestSingleQueueLlamaAM {
       PlacedReservation pr = llama.getReservation(reservationId);
       UUID resource1Id = pr.getPlacedResources().get(0).getResourceId();
       RMEvent change1 = RMEvent.createAllocationEvent
-          (resource1Id, new Object(), 3, 4096, "a1");
+          (resource1Id, "a1", 3, 4096, new Object());
       llama.onEvent(Arrays.asList(change1));
       RMEvent change2 = RMEvent.createStatusChangeEvent
           (resource1Id, PlacedResource.Status.LOST);
@@ -881,7 +881,7 @@ public class TestSingleQueueLlamaAM {
       llama.start();
       llama.addListener(listener);
       RMEvent change1 = RMEvent.createAllocationEvent(
-          UUID.randomUUID(), new Object(), 3, 4096, "a1");
+          UUID.randomUUID(), "a1", 3, 4096, new Object());
       llama.onEvent(Arrays.asList(change1));
       Assert.assertTrue(listener.events.isEmpty());
     } finally {

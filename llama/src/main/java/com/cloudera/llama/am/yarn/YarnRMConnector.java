@@ -686,8 +686,8 @@ public class YarnRMConnector implements RMConnector, Configurable,
   private RMEvent createResourceAllocation(RMResource resources,
       Container container) {
     return RMEvent.createAllocationEvent(resources.getResourceId(),
-        container.getId().toString(), container.getResource().getVirtualCores(),
-        container.getResource().getMemory(), getNodeName(container.getNodeId()));
+        getNodeName(container.getNodeId()), container.getResource().getVirtualCores(), container.getResource().getMemory(), container.getId().toString()
+    );
   }
 
   @Override
