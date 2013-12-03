@@ -39,7 +39,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class TestRMLlamaAMConnectorCache {
+public class TestCacheRMConnector {
   private ManualClock manualClock = new ManualClock();
 
   @Before
@@ -116,7 +116,7 @@ public class TestRMLlamaAMConnectorCache {
 
     MyRMLlamaConnector connector = new MyRMLlamaConnector();
 
-    RMConnectorCache cache = new RMConnectorCache(
+    CacheRMConnector cache = new CacheRMConnector(
         new Configuration(false), connector);
 
     Assert.assertEquals(expected, connector.invoked);
@@ -174,7 +174,7 @@ public class TestRMLlamaAMConnectorCache {
   public void testDoNotCache() throws Exception {
     MyRMLlamaConnector connector = new MyRMLlamaConnector();
 
-    RMConnectorCache cache = new RMConnectorCache(
+    CacheRMConnector cache = new CacheRMConnector(
         new Configuration(false), connector);
 
     cache.setLlamaAMCallback(new RMListener() {
@@ -215,7 +215,7 @@ public class TestRMLlamaAMConnectorCache {
   public void testEviction() throws Exception {
     MyRMLlamaConnector connector = new MyRMLlamaConnector();
 
-    RMConnectorCache cache = new RMConnectorCache(
+    CacheRMConnector cache = new CacheRMConnector(
         new Configuration(false), connector);
 
     cache.setLlamaAMCallback(new RMListener() {
@@ -256,7 +256,7 @@ public class TestRMLlamaAMConnectorCache {
   public void testEmptyCache() throws Exception {
     MyRMLlamaConnector connector = new MyRMLlamaConnector();
 
-    RMConnectorCache cache = new RMConnectorCache(
+    CacheRMConnector cache = new CacheRMConnector(
         new Configuration(false), connector);
 
     cache.setLlamaAMCallback(new RMListener() {

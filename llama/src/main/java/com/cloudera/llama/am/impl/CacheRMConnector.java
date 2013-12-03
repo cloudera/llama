@@ -39,10 +39,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-public class RMConnectorCache implements RMConnector,
+public class CacheRMConnector implements RMConnector,
     RMListener, ResourceCache.Listener {
   private static final Logger LOG =
-      LoggerFactory.getLogger(RMConnectorCache.class);
+      LoggerFactory.getLogger(CacheRMConnector.class);
 
   private static final String METRIC_PREFIX_TEMPLATE = LlamaAM.METRIC_PREFIX +
       "queue({}).cache.";
@@ -62,7 +62,7 @@ public class RMConnectorCache implements RMConnector,
   private final Meter resourcesAsked;
   private final Meter cacheHits;
 
-  public RMConnectorCache(Configuration conf,
+  public CacheRMConnector(Configuration conf,
       RMConnector connector) {
     this.conf = conf;
     this.connector = connector;
