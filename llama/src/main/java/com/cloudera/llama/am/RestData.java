@@ -150,7 +150,7 @@ public class RestData implements LlamaAMListener,
         int count = 0;
         for (PlacedReservation reservation : list) {
           if (reservation.getHandle().equals(clientInfo.getHandle())) {
-            delete(reservation);
+            delete(reservation, true);
             count++;
           }
         }
@@ -167,7 +167,7 @@ public class RestData implements LlamaAMListener,
     lock.writeLock().lock();
     try {
       for (PlacedReservation reservation : event.getReservationChanges()) {
-        LOG.debug("onEvents({})", reservation);
+        LOG.debug("onEvent({})", reservation);
         if (verifyHandle(reservation)) {
           if (!reservation.getStatus().isFinal()) {
             if (!reservationsMap.containsKey(reservation.getReservationId())) {
@@ -179,17 +179,17 @@ public class RestData implements LlamaAMListener,
               hasBeenBackedOff.add(reservation.getReservationId());
             }
           } else {
-            delete(reservation);
+            delete(reservation, true);
             hasBeenBackedOff.remove(reservation.getReservationId());
           }
         } else {
-          delete(reservation);
+          delete(reservation, false);
           LOG.debug("Handle not known anymore for reservation '{}'",
               reservation);
         }
       }
       for (PlacedResource resource : event.getResourceChanges()) {
-        LOG.debug("onEvents({})", resource);
+        LOG.debug("onEvent({})", resource);
         update(resource);
       }
     } finally {
@@ -332,19 +332,23 @@ public class RestData implements LlamaAMListener,
     return deleted;
   }
 
-  private void delete(PlacedReservation reservation) {
+  private void delete(PlacedReservation reservation, boolean log) {
     reservationsMap.remove(reservation.getReservationId());
     if (!deleteFromMapList(handleReservationsMap, reservation.getHandle(),
         reservation)) {
-      LOG.error(
-          "RestData delete inconsistency, reservation '{}' not found in handle",
-          reservation);
+      if (log) {
+        LOG.warn(
+            "RestData delete inconsistency, reservation '{}' not found in handle",
+            reservation);
+      }
     }
     if (!deleteFromMapList(queueReservationsMap, reservation.getQueue(),
         reservation)) {
-      LOG.error(
-          "RestData delete inconsistency, reservation '{}' not found in queue",
-          reservation);
+      if (log) {
+        LOG.warn(
+            "RestData delete inconsistency, reservation '{}' not found in queue",
+            reservation);
+      }
     }
     for (PlacedResource resource : reservation.getPlacedResources()) {
       boolean deleted = deleteFromMapList(nodeReservationsMap,
@@ -354,11 +358,12 @@ public class RestData implements LlamaAMListener,
             resource.getLocation(), reservation) || deleted;
       }
       if (!deleted) {
-        LOG.error(
-            "RestData delete inconsistency, reservation '{}' not found in " +
-                "location nor actualLocation",
-            reservation);
-
+        if (log) {
+          LOG.warn(
+              "RestData delete inconsistency, reservation '{}' not found in " +
+                  "location nor actualLocation",
+              reservation);
+        }
       }
     }
   }
