@@ -124,7 +124,7 @@ public class PlacedResourceImpl
 
   private static final String PLACED_RESOURCE_TO_STRING = "PlacedResource[" +
       "resourceId:{} status:{} locationAsk:{} localityAsk:{} cpuVCoresAsk:{} " +
-      "memoryMbsAsk:{}] placedOn:{} reservationId:{} handle:{} user:{} " +
+      "memoryMbsAsk:{} placedOn:{} reservationId:{} handle:{} user:{} " +
       "queue:{} allocatedOn:{} location:{} cpuVCores:{} memoryMbs:{} " +
       "rmResourceId:{} rmResourceIds:{}]";
 
