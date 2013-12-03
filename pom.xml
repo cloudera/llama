@@ -72,6 +72,9 @@ TODO: need license header
     <cdh.spark.version>0.8.0-cdh5.0.0-SNAPSHOT</cdh.spark.version>
     <cdh.crunch.version>0.8.0-cdh5.0.0-SNAPSHOT</cdh.crunch.version>
     
+    <cdh.hadoop-lzo.version>0.4.15-cdh5.0.0-SNAPSHOT</cdh.hadoop-lzo.version>
+    <cdh.impala-lzo.version>1.2.0-cdh5.0.0-SNAPSHOT</cdh.impala-lzo.version>
+
     <!-- Versions of the dependencies we manage -->
     <!-- <cdh.avro.version>1.7.4-cdh5.0.0-SNAPSHOT</cdh.avro.version> -->
     <!-- This is wrong but we'll need to change how it is used in individual projects -->
@@ -693,32 +696,32 @@ TODO: need license header
       </dependency>
       <dependency>
         <groupId>org.apache.hive.hcatalog</groupId>
-        <artifactId>hcatalog-core</artifactId>
+        <artifactId>hive-hcatalog-core</artifactId>
         <version>${cdh.hive.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.hive.hcatalog</groupId>
-        <artifactId>hcatalog-pig-adapter</artifactId>
+        <artifactId>hive-hcatalog-pig-adapter</artifactId>
         <version>${cdh.hive.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.hive.hcatalog</groupId>
-        <artifactId>hcatalog-server-extensions</artifactId>
+        <artifactId>hive-hcatalog-server-extensions</artifactId>
         <version>${cdh.hive.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.hive.hcatalog</groupId>
-        <artifactId>webhcat</artifactId>
+        <artifactId>hive-webhcat</artifactId>
         <version>${cdh.hive.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.hive.hcatalog</groupId>
-        <artifactId>webhcat-java-client</artifactId>
+        <artifactId>hive-webhcat-java-client</artifactId>
         <version>${cdh.hive.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.hive.hcatalog</groupId>
-        <artifactId>hbase-storage-handler</artifactId>
+        <artifactId>hive-hbase-storage-handler</artifactId>
         <version>${cdh.hive.version}</version>
       </dependency>
  
