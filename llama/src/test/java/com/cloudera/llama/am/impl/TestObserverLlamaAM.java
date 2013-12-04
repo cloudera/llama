@@ -171,7 +171,8 @@ public class TestObserverLlamaAM {
   }
 
   public class ObserverListener implements LlamaAMListener {
-    private List<LlamaAMEvent> events = new ArrayList<LlamaAMEvent>();
+    private List<LlamaAMEvent> events =
+        Collections.synchronizedList(new ArrayList<LlamaAMEvent>());
 
     @Override
     public void onEvent(LlamaAMEvent events) {
@@ -245,7 +246,8 @@ public class TestObserverLlamaAM {
   }
 
   private List<PlacedReservation> getAllReservations(List<LlamaAMEvent> events) {
-    return TestUtils.getReservations(events, null, true);
+    return TestUtils.getReservations(new ArrayList<LlamaAMEvent>(events), null,
+        true);
   }
 
   @Test
