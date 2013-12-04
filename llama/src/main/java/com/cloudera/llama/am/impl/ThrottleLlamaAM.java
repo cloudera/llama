@@ -202,6 +202,7 @@ public class ThrottleLlamaAM extends LlamaAMImpl
             queue, maxQueuedReservations);
       }
       pr = new PlacedReservationImpl(reservationId, reservation);
+      pr.setQueued(true);
       queuedReservations.put(reservationId, pr);
       LOG.debug("Queuing '{}'", pr);
     } else {
@@ -362,7 +363,7 @@ public class ThrottleLlamaAM extends LlamaAMImpl
   }
 
   synchronized void placeThrottledReservations() {
-    LlamaAMEventImpl eventForFailedReservations = new LlamaAMEventImpl();
+    LlamaAMEventImpl events = new LlamaAMEventImpl();
     Iterator<PlacedReservationImpl> it = queuedReservations.values().iterator();
     int placed = 0;
     int failed = 0;
@@ -370,18 +371,19 @@ public class ThrottleLlamaAM extends LlamaAMImpl
       PlacedReservationImpl pr = it.next();
       it.remove();
       try {
-        am.reserve(pr.getReservationId(), pr);
+        pr.setQueued(false);
+        events.addReservation(am.reserve(pr.getReservationId(), pr));
         placed++;
       } catch (Throwable ex) {
-        eventForFailedReservations.addReservation(pr);
+        events.addReservation(pr);
         failed++;
       }
       placedReservations++;
     }
     LOG.debug("Placed '{}' reservations successfully and '{}' failed", placed,
         failed);
-    if (eventForFailedReservations.getReservationChanges().size() > 0) {
-      dispatch(eventForFailedReservations);
+    if (events.getReservationChanges().size() > 0) {
+      dispatch(events);
     }
   }
 

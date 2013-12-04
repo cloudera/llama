@@ -48,6 +48,7 @@ public class PlacedReservationImpl implements PlacedReservation, Expansion {
   protected List<PlacedResourceImpl> resources;
   protected UUID expansionOf;
   protected long allocatedOn;
+  protected boolean queued;
 
   private PlacedReservationImpl(byte type) {
     this.type = type;
@@ -65,7 +66,8 @@ public class PlacedReservationImpl implements PlacedReservation, Expansion {
       boolean gang,
       List<PlacedResourceImpl> resources,
       UUID expansionOf,
-      long allocatedOn
+      long allocatedOn,
+      boolean queued
   ) {
     this(type);
     this.reservationId = reservationId;
@@ -78,6 +80,8 @@ public class PlacedReservationImpl implements PlacedReservation, Expansion {
     this.resources = (resources != null) ? resources : Collections.EMPTY_LIST;
     this.expansionOf = expansionOf;
     this.allocatedOn = allocatedOn;
+    this.queued = queued;
+
   }
 
   @SuppressWarnings("unchecked")
@@ -91,7 +95,7 @@ public class PlacedReservationImpl implements PlacedReservation, Expansion {
         r.isGang(),
         copyResources(r.getPlacedResources()),
         r.getExpansionOf(),
-        r.getAllocatedOn());
+        r.getAllocatedOn(), r.isQueued());
   }
 
   @SuppressWarnings("unchecked")
@@ -107,7 +111,7 @@ public class PlacedReservationImpl implements PlacedReservation, Expansion {
         reservation.isGang(),
         new ArrayList<PlacedResourceImpl>(),
         null,
-        -1);
+        -1, false);
     for (Resource resource : reservation.getResources()) {
       resources.add(PlacedResourceImpl.createPlaced(this, resource));
     }
@@ -134,7 +138,7 @@ public class PlacedReservationImpl implements PlacedReservation, Expansion {
   private static final String PLACED_RESERVATION_TO_STRING =
       "PlacedReservation[reservationId:{} status:{} placedOn:{} " +
           "allocatedOn:{} expansionOf:{} handle:{} user:{} queue:{} gang:{} " +
-          "resources:{}]";
+          "queued:{} resources:{}]";
 
   @Override
   public String toString() {
@@ -152,7 +156,7 @@ public class PlacedReservationImpl implements PlacedReservation, Expansion {
         str = FastFormat.format(PLACED_RESERVATION_TO_STRING,
             getReservationId(), getStatus(), getPlacedOn(), getAllocatedOn(),
             getExpansionOf(), getHandle(), getUser(), getQueue(), isGang(),
-            getResources());
+            isQueued(), getResources());
         break;
       default:
         throw new IllegalStateException("Invalid type: " + type);
@@ -249,6 +253,15 @@ public class PlacedReservationImpl implements PlacedReservation, Expansion {
     if (status == Status.ALLOCATED) {
       allocatedOn = Clock.currentTimeMillis();
     }
+  }
+
+  @Override
+  public boolean isQueued() {
+    return queued;
+  }
+
+  public void setQueued(boolean queued) {
+    this.queued = queued;
   }
 
   public static class XReservationBuilder extends PlacedReservationImpl

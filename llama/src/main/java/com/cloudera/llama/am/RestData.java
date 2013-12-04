@@ -431,6 +431,7 @@ public class RestData implements LlamaAMListener,
       jgen.writeObjectField("handle", value.getHandle());
       jgen.writeStringField("queue", value.getQueue());
       jgen.writeBooleanField("gang", value.isGang());
+      jgen.writeBooleanField("queued", value.isQueued());
       jgen.writeStringField("status", value.getStatus().toString());
       jgen.writeBooleanField("hasBeenBackedOff",
           hasBeenBackedOff.contains(value.getReservationId()));

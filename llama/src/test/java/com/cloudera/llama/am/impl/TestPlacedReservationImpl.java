@@ -28,7 +28,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class TestXPlacedReservationImpl {
+public class TestPlacedReservationImpl {
   private ManualClock clock;
 
   @Before
@@ -56,6 +56,7 @@ public class TestXPlacedReservationImpl {
     Assert.assertNull(i.getExpansionOf());
     Assert.assertEquals(-1, i.getAllocatedOn());
     Assert.assertTrue(i.isGang());
+    Assert.assertFalse(i.isQueued());
     Assert.assertEquals(1, i.getResources().size());
     Assert.assertEquals(1, i.getPlacedResources().size());
     TestUtils.assertResource(r.getResources().get(0), i.getResources().get(0));
@@ -69,5 +70,7 @@ public class TestXPlacedReservationImpl {
     Assert.assertEquals(-1, i.getAllocatedOn());
     i.setStatus(PlacedReservation.Status.ALLOCATED);
     Assert.assertEquals(clock.currentTimeMillis(), i.getAllocatedOn());
+    i.setQueued(true);
+    Assert.assertTrue(i.isQueued());
   }
 }

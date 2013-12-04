@@ -56,4 +56,6 @@ public interface PlacedReservation extends Reservation {
 
   public long getAllocatedOn();
 
+  public boolean isQueued();
+
 }

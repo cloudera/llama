@@ -25,34 +25,34 @@ public class TestExpansion {
 
   @Test(expected = IllegalArgumentException.class)
   public void testBuilderFail1() {
-    Expansion.Builder b = Builders.createExpansionBuild();
+    Expansion.Builder b = Builders.createExpansionBuilder();
     b.build();
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testBuilderFail2() {
-    Expansion.Builder b = Builders.createExpansionBuild();
+    Expansion.Builder b = Builders.createExpansionBuilder();
     b.setExpansionOf(null);
     b.build();
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testBuilderFail3() {
-    Expansion.Builder b = Builders.createExpansionBuild();
+    Expansion.Builder b = Builders.createExpansionBuilder();
     b.setExpansionOf(UUID.randomUUID());
     b.build();
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testBuilderFail4() {
-    Expansion.Builder b = Builders.createExpansionBuild();
+    Expansion.Builder b = Builders.createExpansionBuilder();
     b.setExpansionOf(UUID.randomUUID());
     b.setResource(null);
   }
 
   @Test
   public void testBuilderOk() {
-    Expansion.Builder b = Builders.createExpansionBuild();
+    Expansion.Builder b = Builders.createExpansionBuilder();
     b.setExpansionOf(UUID.randomUUID());
     b.setResource(TestUtils.createResource("n"));
     Assert.assertNotNull(b.build());
@@ -60,7 +60,7 @@ public class TestExpansion {
 
   @Test
   public void testGetters1() {
-    Expansion.Builder b = Builders.createExpansionBuild();
+    Expansion.Builder b = Builders.createExpansionBuilder();
     UUID reservationId = UUID.randomUUID();
     b.setExpansionOf(reservationId);
     Resource resource = TestUtils.createResource("n");

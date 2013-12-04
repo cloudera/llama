@@ -23,7 +23,7 @@ import org.junit.Test;
 
 import java.util.Arrays;
 
-public class TestXReservation {
+public class TestReservation {
 
   @Test(expected = IllegalArgumentException.class)
   public void testBuilderFail1() {

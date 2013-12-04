@@ -21,7 +21,7 @@ import com.cloudera.llama.util.UUID;
 import junit.framework.Assert;
 import org.junit.Test;
 
-public class TestXResource {
+public class TestResource {
 
   @Test(expected = IllegalArgumentException.class)
   public void testBuilderFail1() {
