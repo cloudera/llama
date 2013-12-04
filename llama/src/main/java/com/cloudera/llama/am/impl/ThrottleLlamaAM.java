@@ -374,11 +374,12 @@ public class ThrottleLlamaAM extends LlamaAMImpl
         pr.setQueued(false);
         events.addReservation(am.reserve(pr.getReservationId(), pr));
         placed++;
+        placedReservations++;
       } catch (Throwable ex) {
+        pr.setStatus(PlacedReservation.Status.REJECTED);
         events.addReservation(pr);
         failed++;
       }
-      placedReservations++;
     }
     LOG.debug("Placed '{}' reservations successfully and '{}' failed", placed,
         failed);
@@ -386,5 +387,4 @@ public class ThrottleLlamaAM extends LlamaAMImpl
       dispatch(events);
     }
   }
-
 }

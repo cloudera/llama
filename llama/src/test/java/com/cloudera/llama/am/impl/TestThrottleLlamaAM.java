@@ -277,11 +277,11 @@ public class TestThrottleLlamaAM {
     PlacedReservation pr2 = TestUtils.createPlacedReservation(r2,
         PlacedReservation.Status.PENDING);
 
-        SingleQueueLlamaAM am = Mockito.mock(SingleQueueLlamaAM.class);
+    SingleQueueLlamaAM am = Mockito.mock(SingleQueueLlamaAM.class);
     Mockito.when(am.reserve(Mockito.eq(pr1.getReservationId()),
-        Mockito.eq(r1))).thenReturn(pr1);
+        Mockito.any(Reservation.class))).thenReturn(pr1);
     Mockito.when(am.reserve(Mockito.eq(pr2.getReservationId()),
-        Mockito.eq(r2))).thenReturn(pr2);
+        Mockito.any(Reservation.class))).thenReturn(pr2);
 
     Mockito.when(am.releaseReservation(Mockito.eq(pr1.getHandle()),
         Mockito.eq(pr1.getReservationId()), Mockito.eq(false))).thenReturn(pr1);
@@ -318,11 +318,11 @@ public class TestThrottleLlamaAM {
     PlacedReservation pr2 = TestUtils.createPlacedReservation(r2,
         PlacedReservation.Status.PENDING);
 
-        SingleQueueLlamaAM am = Mockito.mock(SingleQueueLlamaAM.class);
+    SingleQueueLlamaAM am = Mockito.mock(SingleQueueLlamaAM.class);
     Mockito.when(am.reserve(Mockito.eq(pr1.getReservationId()),
-        Mockito.eq(r1))).thenReturn(pr1);
+        Mockito.any(Reservation.class))).thenReturn(pr1);
     Mockito.when(am.reserve(Mockito.eq(pr2.getReservationId()),
-        Mockito.eq(r2))).thenReturn(pr2);
+        Mockito.any(Reservation.class))).thenReturn(pr2);
 
     Mockito.when(am.releaseReservation(Mockito.eq(pr1.getHandle()),
         Mockito.eq(pr1.getReservationId()), Mockito.eq(false))).thenReturn(pr1);
@@ -381,16 +381,16 @@ public class TestThrottleLlamaAM {
     PlacedReservation pr4 = TestUtils.createPlacedReservation(r4,
         PlacedReservation.Status.PENDING);
 
-        SingleQueueLlamaAM am = Mockito.mock(SingleQueueLlamaAM.class);
+    SingleQueueLlamaAM am = Mockito.mock(SingleQueueLlamaAM.class);
     Mockito.when(am.reserve(Mockito.eq(pr1.getReservationId()),
-        Mockito.eq(r1))).thenReturn(pr1);
+        Mockito.any(Reservation.class))).thenReturn(pr1);
     Mockito.when(am.reserve(Mockito.eq(pr2.getReservationId()),
-        Mockito.eq(r2))).thenReturn(pr2);
+        Mockito.any(Reservation.class))).thenReturn(pr2);
 
     Mockito.when(am.reserve(Mockito.eq(pr3.getReservationId()),
-        Mockito.eq(r3))).thenReturn(pr3);
+        Mockito.any(Reservation.class))).thenReturn(pr3);
     Mockito.when(am.reserve(Mockito.eq(pr4.getReservationId()),
-        Mockito.eq(r4))).thenReturn(pr4);
+        Mockito.any(Reservation.class))).thenReturn(pr4);
 
     Mockito.when(am.releaseReservation(Mockito.eq(pr1.getHandle()),
         Mockito.eq(pr1.getReservationId()), Mockito.eq(false))).thenReturn(pr1);
