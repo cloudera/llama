@@ -107,9 +107,21 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
       am = ams.get(queue);
       if (am == null && create) {
         SingleQueueLlamaAM qAm = new SingleQueueLlamaAM(getConf(), queue);
-        ThrottleLlamaAM tAm = new ThrottleLlamaAM(getConf(), queue, qAm);
-        tAm.setCallback(this);
-        am = tAm;
+
+        boolean throttling = getConf().getBoolean(
+            THROTTLING_ENABLED_KEY,
+            THROTTLING_ENABLED_DEFAULT);
+        throttling = getConf().getBoolean(
+            THROTTLING_ENABLED_KEY + "." + queue, throttling);
+        getLog().info("Throttling for queue '{}' enabled '{}'", queue,
+            throttling);
+        if (throttling) {
+          ThrottleLlamaAM tAm = new ThrottleLlamaAM(getConf(), queue, qAm);
+          tAm.setCallback(this);
+          am = tAm;
+        } else {
+          am = qAm;
+        }
         am.setMetricRegistry(getMetricRegistry());
         am.start();
         am.addListener(this);

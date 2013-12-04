@@ -93,8 +93,15 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
   public void start() throws LlamaException {
     Class<? extends RMConnector> klass = getRMConnectorClass(getConf());
     rmConnector = ReflectionUtils.newInstance(klass, getConf());
-    if (getConf().getBoolean(RESOURCES_CACHING_ENABLED_KEY,
-        RESOURCES_CACHING_ENABLED_DEFAULT)) {
+
+    boolean caching = getConf().getBoolean(
+        CACHING_ENABLED_KEY,
+        CACHING_ENABLED_DEFAULT);
+    caching = getConf().getBoolean(
+        CACHING_ENABLED_KEY + "." + queue, caching);
+    getLog().info("Caching for queue '{}' enabled '{}'", queue,
+        caching);
+    if (caching) {
       CacheRMConnector connectorCache =
           new CacheRMConnector(getConf(), rmConnector);
       connectorCache.setMetricRegistry(getMetricRegistry());

@@ -130,7 +130,7 @@ public class TestSingleQueueLlamaAM {
     Configuration conf = new Configuration(false);
     conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MyRMConnector.class,
         RMConnector.class);
-    conf.setBoolean(LlamaAM.RESOURCES_CACHING_ENABLED_KEY, false);
+    conf.setBoolean(LlamaAM.CACHING_ENABLED_KEY, false);
     SingleQueueLlamaAM am = new SingleQueueLlamaAM(conf, "queue");
     am.setCallback(new DummySingleQueueLlamaAMCallback());
     return am;

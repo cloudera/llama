@@ -63,9 +63,13 @@ public abstract class LlamaAM {
       PREFIX_KEY + "gang.anti.deadlock.backoff.max.delay.ms";
   public static final long GANG_ANTI_DEADLOCK_BACKOFF_MAX_DELAY_DEFAULT = 30000;
 
-  public static final String RESOURCES_CACHING_ENABLED_KEY =
-      PREFIX_KEY + "resources.caching.enabled";
-  public static final boolean RESOURCES_CACHING_ENABLED_DEFAULT = true;
+  public static final String CACHING_ENABLED_KEY =
+      PREFIX_KEY + "caching.enabled";
+  public static final boolean CACHING_ENABLED_DEFAULT = true;
+
+  public static final String THROTTLING_ENABLED_KEY =
+      PREFIX_KEY + "throttling.enabled";
+  public static final boolean THROTTLING_ENABLED_DEFAULT = true;
 
   private static Configuration cloneConfiguration(Configuration conf) {
     Configuration clone = new Configuration(false);

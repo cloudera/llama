@@ -55,7 +55,7 @@ public class ResourceCache {
     public void onEviction(CachedRMResource cachedRMResource);
   }
 
-  public static final String PREFIX = LlamaAM.PREFIX_KEY + "resources.caching.";
+  public static final String PREFIX = LlamaAM.PREFIX_KEY + "caching.";
 
   public static final String EVICTION_POLICY_CLASS_KEY =
       PREFIX + "eviction.policy.class";
