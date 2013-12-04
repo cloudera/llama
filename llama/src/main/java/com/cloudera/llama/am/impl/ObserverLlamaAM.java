@@ -35,7 +35,7 @@ public class ObserverLlamaAM extends LlamaAMImpl implements LlamaAMListener {
 
   public ObserverLlamaAM(LlamaAM llamaAM) {
     super(llamaAM.getConf());
-    this.llamaAM = ParamChecker.notNull(llamaAM, "llamaAM");
+    this.llamaAM = llamaAM;
     llamaAM.addListener(this);
   }
 

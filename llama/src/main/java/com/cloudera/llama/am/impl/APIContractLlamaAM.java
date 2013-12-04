@@ -38,7 +38,7 @@ public class APIContractLlamaAM extends LlamaAM {
 
   public APIContractLlamaAM(LlamaAM llamaAM) {
     super(llamaAM.getConf());
-    this.llamaAM = ParamChecker.notNull(llamaAM, "llamaAM");
+    this.llamaAM = llamaAM;
     logger = LoggerFactory.getLogger(this.llamaAM.getClass());
   }
 

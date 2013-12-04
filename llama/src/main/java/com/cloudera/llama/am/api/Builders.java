@@ -30,7 +30,7 @@ public class Builders {
     return new PlacedReservationImpl.XReservationBuilder();
   }
 
-  public static Expansion.Builder createExpansionBuild() {
+  public static Expansion.Builder createExpansionBuilder() {
     return new PlacedReservationImpl.XExpansionBuilder();
   }
 
