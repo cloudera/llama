@@ -27,7 +27,9 @@ import javax.security.auth.Subject;
 import java.util.concurrent.CountDownLatch;
 
 public abstract class AbstractServer implements Configurable {
-  private final Logger log;
+  private static final Logger LOG = 
+      LoggerFactory.getLogger(AbstractServer.class);
+
   private final String serverName;
   private Configuration llamaConf;
   private Subject serverSubject;
@@ -35,16 +37,7 @@ public abstract class AbstractServer implements Configurable {
   private int exitCode = 0;
 
   protected AbstractServer(String serverName) {
-    log = LoggerFactory.getLogger(getClass());
     this.serverName = serverName;
-  }
-
-  public String getServerName() {
-    return serverName;
-  }
-
-  protected Logger getLog() {
-    return log;
   }
 
   @Override
@@ -72,16 +65,16 @@ public abstract class AbstractServer implements Configurable {
     }
     serverSubject = loginServerSubject();
     runLevel = 0;
-    getLog().trace("Starting metrics");
+    LOG.trace("Starting metrics");
     startMetrics();
     runLevel = 1;
-    getLog().trace("Starting JMX");
+    LOG.trace("Starting JMX");
     startJMX();
     runLevel = 2;
-    getLog().trace("Starting service '{}'", serverName);
+    LOG.trace("Starting service '{}'", serverName);
     startService();
     runLevel = 3;
-    getLog().trace("Starting transport");
+    LOG.trace("Starting transport");
 
     final CountDownLatch transportLatch = new CountDownLatch(1);
     Thread transportThread = new Thread("llama-transport-server") {
@@ -91,7 +84,7 @@ public abstract class AbstractServer implements Configurable {
           startTransport(transportLatch);
         } catch (Exception ex) {
           transportException = ex;
-          getLog().error(ex.toString(), ex);
+          LOG.error(ex.toString(), ex);
         }
       }
     };
@@ -110,7 +103,7 @@ public abstract class AbstractServer implements Configurable {
           startAdminTransport(adminLatch);
         } catch (Exception ex) {
           transportException = ex;
-          getLog().error(ex.toString(), ex);
+          LOG.error(ex.toString(), ex);
         }
       }
     };
@@ -133,14 +126,14 @@ public abstract class AbstractServer implements Configurable {
       }
     }
     runLevel = 4;
-    getLog().info("Server listening at '{}:{}'", getAddressHost(),
+    LOG.info("Server listening at '{}:{}'", getAddressHost(),
         getAddressPort());
-    getLog().info("Llama started!");
+    LOG.info("Llama started!");
   }
 
   public void shutdown(int exitCode) {
     this.exitCode = exitCode;
-    getLog().debug("Initiating shutdown");
+    LOG.debug("Initiating shutdown");
     stop();
   }
 
@@ -151,41 +144,41 @@ public abstract class AbstractServer implements Configurable {
   public void stop() {
     if (runLevel >= 4) {
       try {
-        getLog().trace("Stopping transport");
+        LOG.trace("Stopping transport");
         stopTransport();
       } catch (Throwable ex) {
-        getLog().warn("Failed to stop transport server: {}", ex.toString(), ex);
+        LOG.warn("Failed to stop transport server: {}", ex.toString(), ex);
       }
     }
     if (runLevel >= 3) {
       try {
-        getLog().trace("Stopping service '{}'", serverName);
+        LOG.trace("Stopping service '{}'", serverName);
         stopService();
       } catch (Throwable ex) {
-        getLog().warn("Failed to stop service '{}': {}", serverName,
+        LOG.warn("Failed to stop service '{}': {}", serverName,
             ex.toString(), ex);
       }
     }
     if (runLevel >= 2) {
       try {
-        getLog().trace("Stopping JMX");
+        LOG.trace("Stopping JMX");
         stopJMX();
       } catch (Throwable ex) {
-        getLog().warn("Failed to stop JMX: {}", ex.toString(), ex);
+        LOG.warn("Failed to stop JMX: {}", ex.toString(), ex);
       }
     }
     if (runLevel >= 1) {
       try {
-        getLog().trace("Stopping metrics");
+        LOG.trace("Stopping metrics");
         stopMetrics();
       } catch (Throwable ex) {
-        getLog().warn("Failed to stop Metrics: {}", ex.toString(), ex);
+        LOG.warn("Failed to stop Metrics: {}", ex.toString(), ex);
       }
     }
     if (serverSubject != null) {
       Security.logout(serverSubject);
     }
-    getLog().info("Llama shutdown!");
+    LOG.info("Llama shutdown!");
     runLevel = -1;
   }
 

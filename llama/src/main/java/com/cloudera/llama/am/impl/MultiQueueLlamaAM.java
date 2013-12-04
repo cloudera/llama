@@ -30,6 +30,8 @@ import com.codahale.metrics.CachedGauge;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
 import org.apache.hadoop.conf.Configuration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -44,6 +46,8 @@ import java.util.concurrent.TimeUnit;
 
 public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
     IntraLlamaAMsCallback {
+  private static final Logger LOG = 
+      LoggerFactory.getLogger(MultiQueueLlamaAM.class);
 
   private static final String QUEUES_GAUGE = METRIC_PREFIX + "queues.gauge";
   private static final String RESERVATIONS_GAUGE = METRIC_PREFIX +
@@ -113,7 +117,7 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
             THROTTLING_ENABLED_DEFAULT);
         throttling = getConf().getBoolean(
             THROTTLING_ENABLED_KEY + "." + queue, throttling);
-        getLog().info("Throttling for queue '{}' enabled '{}'", queue,
+        LOG.info("Throttling for queue '{}' enabled '{}'", queue,
             throttling);
         if (throttling) {
           ThrottleLlamaAM tAm = new ThrottleLlamaAM(getConf(), queue, qAm);
@@ -199,10 +203,10 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
       if (am != null) {
         reservation = am.getReservation(reservationId);
       } else {
-        getLog().warn("Queue '{}' not available anymore", queue);
+        LOG.warn("Queue '{}' not available anymore", queue);
       }
     } else {
-      getLog().warn("getReservation({}), reservationId not found",
+      LOG.warn("getReservation({}), reservationId not found",
           reservationId);
     }
     return reservation;
@@ -219,10 +223,10 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
       if (am != null) {
         pr = am.releaseReservation(handle, reservationId, doNotCache);
       } else {
-        getLog().warn("Queue '{}' not available anymore", queue);
+        LOG.warn("Queue '{}' not available anymore", queue);
       }
     } else {
-      getLog().warn("releaseReservation({}), reservationId not found",
+      LOG.warn("releaseReservation({}), reservationId not found",
           reservationId);
     }
     return pr;
@@ -239,7 +243,7 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
         reservations.addAll(am.releaseReservationsForHandle(handle, doNotCache));
       } catch (LlamaException ex) {
         if (thrown != null) {
-          getLog().error("releaseReservationsForHandle({}), error: {}",
+          LOG.error("releaseReservationsForHandle({}), error: {}",
               handle, ex.toString(), ex);
         }
         thrown = ex;
@@ -288,7 +292,7 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
 
   @Override
   public void discardAM(String queue) {
-    getLog().warn("discarding queue '{}' and all its reservations", queue);
+    LOG.warn("discarding queue '{}' and all its reservations", queue);
     synchronized (ams) {
       ams.remove(queue);
       Iterator<Map.Entry<UUID, String>> i =

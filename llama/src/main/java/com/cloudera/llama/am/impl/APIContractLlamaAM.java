@@ -32,24 +32,19 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 
 public class APIContractLlamaAM extends LlamaAM {
-  private final Logger logger;
+  private static final Logger LOG = LoggerFactory.getLogger(APIContractLlamaAM.class);
   private final LlamaAM llamaAM;
   private volatile boolean stopped;
 
   public APIContractLlamaAM(LlamaAM llamaAM) {
     super(llamaAM.getConf());
     this.llamaAM = llamaAM;
-    logger = LoggerFactory.getLogger(this.llamaAM.getClass());
   }
 
   @Override
   public void setMetricRegistry(MetricRegistry metricRegistry) {
     super.setMetricRegistry(metricRegistry);
     llamaAM.setMetricRegistry(metricRegistry);
-  }
-
-  private Logger getLog() {
-    return logger;
   }
 
   private void checkIsRunning() {
@@ -72,14 +67,14 @@ public class APIContractLlamaAM extends LlamaAM {
       throw new IllegalStateException("LlamaAM stopped, cannot be restarted");
     }
     llamaAM.start();
-    getLog().trace("start()");
+    LOG.trace("start()");
   }
 
   @Override
   public synchronized void stop() {
     if (llamaAM.isRunning()) {
       llamaAM.stop();
-      getLog().trace("stop()");
+      LOG.trace("stop()");
       stopped = true;
     }
   }
@@ -92,7 +87,7 @@ public class APIContractLlamaAM extends LlamaAM {
   @Override
   public List<String> getNodes() throws LlamaException {
     checkIsRunning();
-    getLog().trace("getNodes()");
+    LOG.trace("getNodes()");
     return llamaAM.getNodes();
   }
 
@@ -101,7 +96,7 @@ public class APIContractLlamaAM extends LlamaAM {
     checkIsRunning();
     ParamChecker.notNull(queue, "queue");
     llamaAM.emptyCacheForQueue(queue);
-    getLog().trace("emptyCacheForQueue({})", queue);
+    LOG.trace("emptyCacheForQueue({})", queue);
   }
 
   @Override
@@ -111,7 +106,7 @@ public class APIContractLlamaAM extends LlamaAM {
     }
     ParamChecker.notNull(listener, "listener");
     llamaAM.addListener(listener);
-    getLog().trace("addListener({})", listener);
+    LOG.trace("addListener({})", listener);
   }
 
   @Override
@@ -121,7 +116,7 @@ public class APIContractLlamaAM extends LlamaAM {
     }
     ParamChecker.notNull(listener, "listener");
     llamaAM.removeListener(listener);
-    getLog().trace("removeListener({})", listener);
+    LOG.trace("removeListener({})", listener);
   }
 
   @Override
@@ -131,7 +126,7 @@ public class APIContractLlamaAM extends LlamaAM {
     ParamChecker.notNull(reservationId, "reservationId");
     ParamChecker.notNull(reservation, "reservation");
     PlacedReservation pr = llamaAM.reserve(reservationId, reservation);
-    getLog().trace("reserve({}): {}", reservation, reservationId);
+    LOG.trace("reserve({}): {}", reservation, reservationId);
     return pr;
   }
 
@@ -141,7 +136,7 @@ public class APIContractLlamaAM extends LlamaAM {
     checkIsRunning();
     ParamChecker.notNull(reservationId, "reservationId");
     PlacedReservation reservation = llamaAM.getReservation(reservationId);
-    getLog().trace("getReservation({}): {}", reservationId, reservation);
+    LOG.trace("getReservation({}): {}", reservationId, reservation);
     return reservation;
   }
 
@@ -154,7 +149,7 @@ public class APIContractLlamaAM extends LlamaAM {
     ParamChecker.notNull(handle, "handle");
     PlacedReservation pr = llamaAM.releaseReservation(handle, reservationId,
         doNotCache);
-    getLog().trace("releaseReservation({}, {})", reservationId, doNotCache);
+    LOG.trace("releaseReservation({}, {})", reservationId, doNotCache);
     return pr;
   }
 
@@ -166,7 +161,7 @@ public class APIContractLlamaAM extends LlamaAM {
     ParamChecker.notNull(handle, "handle");
     List<PlacedReservation> ids = llamaAM.releaseReservationsForHandle(handle,
         doNotCache);
-    getLog().trace("releaseReservationsForHandle({})", handle);
+    LOG.trace("releaseReservationsForHandle({})", handle);
     return ids;
   }
 
@@ -177,7 +172,7 @@ public class APIContractLlamaAM extends LlamaAM {
     ParamChecker.notNull(queue, "queue");
     List<PlacedReservation> ids = llamaAM.releaseReservationsForQueue(queue,
         doNotCache);
-    getLog().trace("releaseReservationsForQueue({})", queue);
+    LOG.trace("releaseReservationsForQueue({})", queue);
     return ids;
   }
 

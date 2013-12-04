@@ -23,7 +23,6 @@ import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.api.LlamaAMListener;
 import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.Reservation;
-import com.cloudera.llama.util.ParamChecker;
 import com.cloudera.llama.util.UUID;
 import com.codahale.metrics.MetricRegistry;
 

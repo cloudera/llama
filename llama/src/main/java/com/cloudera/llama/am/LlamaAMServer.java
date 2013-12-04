@@ -38,12 +38,17 @@ import org.mortbay.jetty.Server;
 import org.mortbay.jetty.bio.SocketConnector;
 import org.mortbay.jetty.servlet.Context;
 import org.mortbay.thread.QueuedThreadPool;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 
 public class LlamaAMServer extends
     ThriftServer<LlamaAMService.Processor, LlamaAMAdminService.Processor>
     implements ClientNotificationService.Listener {
+  private static final Logger LOG =
+      LoggerFactory.getLogger(LlamaAMServer.class);
+
   private static final int JETTY_MAX_THREADS = 20;
   private LlamaAM llamaAm;
   private ClientNotificationService clientNotificationService;
@@ -112,8 +117,8 @@ public class LlamaAMServer extends
       httpLlama = "http://" + getHostname(connector.getHost()) + ":" +
           connector.getLocalPort() + "/";
 
-      getLog().info("HTTP JSON JMX     : {}", httpJmx);
-      getLog().info("HTTP Llama Web UI : {}", httpLlama);
+      LOG.info("HTTP JSON JMX     : {}", httpJmx);
+      LOG.info("HTTP Llama Web UI : {}", httpLlama);
     } catch (Throwable ex) {
       throw new RuntimeException(ex);
     }
@@ -123,7 +128,7 @@ public class LlamaAMServer extends
     try {
       httpServer.stop();
     } catch (Throwable ex) {
-      getLog().warn("Error shutting down HTTP server, {}", ex.toString(), ex);
+      LOG.warn("Error shutting down HTTP server, {}", ex.toString(), ex);
     }
   }
 
@@ -191,7 +196,7 @@ public class LlamaAMServer extends
     try {
       llamaAm.releaseReservationsForHandle(clientInfo.getHandle(), false);
     } catch (Throwable ex) {
-      getLog().warn("Error releasing reservations for handle '{}', {}",
+      LOG.warn("Error releasing reservations for handle '{}', {}",
           clientInfo.getHandle(), ex.toString(), ex);
     }
   }

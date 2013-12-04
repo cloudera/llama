@@ -28,17 +28,12 @@ import java.util.HashSet;
 import java.util.Set;
 
 public abstract class LlamaAMImpl extends LlamaAM {
-  private final Logger log;
+  private static final Logger LOG = LoggerFactory.getLogger(LlamaAMImpl.class);
   private final Set<LlamaAMListener> listeners;
 
   protected LlamaAMImpl(Configuration conf) {
     super(conf);
-    log = LoggerFactory.getLogger(getClass());
     listeners = new HashSet<LlamaAMListener>();
-  }
-
-  protected Logger getLog() {
-    return log;
   }
 
   public void addListener(LlamaAMListener listener) {
@@ -60,7 +55,7 @@ public abstract class LlamaAMImpl extends LlamaAM {
           try {
             listener.onEvent(event);
           } catch (Throwable ex) {
-            getLog().warn("listener.handle() error: {}", ex.toString(), ex);
+            LOG.warn("listener.handle() error: {}", ex.toString(), ex);
           }
         }
       }
