@@ -212,6 +212,9 @@ public class TestThrottleLlamaAM {
       Mockito.verify(am, VerificationModeFactory.times(1)).
           releaseReservation(Mockito.any(UUID.class), Mockito.any(UUID.class),
               Mockito.anyBoolean());
+      //simulation underlying AM release event
+      ((PlacedReservationImpl)pr).setStatus(PlacedReservation.Status.RELEASED);
+      tAm.onEvent(LlamaAMEventImpl.createEvent(true, pr));
       Assert.assertEquals(0, tAm.getPlacedReservations());
       Assert.assertEquals(0, tAm.getQueuedReservations());
 
@@ -287,6 +290,9 @@ public class TestThrottleLlamaAM {
       Assert.assertEquals(1, tAm.getPlacedReservations());
       Assert.assertEquals(1, tAm.getQueuedReservations());
       tAm.releaseReservation(pr1.getHandle(), pr1.getReservationId(), false);
+      //simulation underlying AM release event
+      ((PlacedReservationImpl) pr1).setStatus(PlacedReservation.Status.RELEASED);
+      tAm.onEvent(LlamaAMEventImpl.createEvent(true, pr1));
       manualClock.increment(1001);
       Thread.sleep(100);
 
@@ -391,6 +397,10 @@ public class TestThrottleLlamaAM {
       Assert.assertEquals(2, tAm.getQueuedReservations());
       List<PlacedReservation> released =
           tAm.releaseReservationsForHandle(handle, false);
+      //simulation underlying AM release event
+      ((PlacedReservationImpl) pr3).setStatus(PlacedReservation.Status.RELEASED);
+      tAm.onEvent(LlamaAMEventImpl.createEvent(true, pr3));
+
       Assert.assertTrue(released.contains(pr3));
       Assert.assertTrue(released.contains(pr4));
       manualClock.increment(1001);
@@ -430,6 +440,9 @@ public class TestThrottleLlamaAM {
       Assert.assertEquals(1, tAm.getQueuedReservations());
       List<PlacedReservation> released =
           tAm.releaseReservationsForQueue("q", false);
+      //simulation underlying AM release event
+      ((PlacedReservationImpl) pr1).setStatus(PlacedReservation.Status.RELEASED);
+      tAm.onEvent(LlamaAMEventImpl.createEvent(true, pr1));
       Assert.assertEquals(2, released.size());
       Assert.assertTrue(released.contains(pr1));
       Assert.assertTrue(released.contains(pr2));

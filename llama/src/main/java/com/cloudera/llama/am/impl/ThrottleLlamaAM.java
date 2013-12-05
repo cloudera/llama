@@ -304,9 +304,6 @@ public class ThrottleLlamaAM extends LlamaAMImpl
     PlacedReservation reservation = releaseThrottled(handle, reservationId);
     if (reservation == null) {
       reservation = am.releaseReservation(handle, reservationId, doNotCache);
-      if (reservation != null) {
-        decreasePlaced(1);
-      }
     } else {
       dispatch(LlamaAMEventImpl.createEvent(!isAdminCall(), reservation));
     }
@@ -323,9 +320,6 @@ public class ThrottleLlamaAM extends LlamaAMImpl
     reservations.addAll(localReservations);
     List<PlacedReservation> pReservations =
         am.releaseReservationsForHandle(handle, doNotCache);
-    if (!pReservations.isEmpty()) {
-      decreasePlaced(pReservations.size());
-    }
     reservations.addAll(pReservations);
     if (!localReservations.isEmpty()) {
       dispatch(LlamaAMEventImpl.createEvent(!isAdminCall(), localReservations));
@@ -342,9 +336,6 @@ public class ThrottleLlamaAM extends LlamaAMImpl
     reservations.addAll(localReservations);
     List<PlacedReservation> pReservations =
         am.releaseReservationsForQueue(queue, doNotCache);
-    if (!pReservations.isEmpty()) {
-      decreasePlaced(pReservations.size());
-    }
     reservations.addAll(pReservations);
     if (!localReservations.isEmpty()) {
       dispatch(LlamaAMEventImpl.createEvent(!isAdminCall(), localReservations));
