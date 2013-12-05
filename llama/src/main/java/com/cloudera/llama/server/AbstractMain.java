@@ -136,6 +136,7 @@ public abstract class AbstractMain {
 
   private void initLogging(String confDir) {
     if (System.getProperty("log4j.configuration") == null) {
+      System.setProperty("log4j.defaultInitOverride", "true");
       boolean fromClasspath = true;
       File log4jConf = new File(confDir, LOG4J_PROPERTIES).getAbsoluteFile();
       if (log4jConf.exists()) {
