@@ -29,7 +29,7 @@ import java.util.Set;
 
 public abstract class LlamaAMImpl extends LlamaAM {
   private static final Logger LOG = LoggerFactory.getLogger(LlamaAMImpl.class);
-  private final Set<LlamaAMListener> listeners;
+  private volatile Set<LlamaAMListener> listeners;
 
   protected LlamaAMImpl(Configuration conf) {
     super(conf);
@@ -37,26 +37,24 @@ public abstract class LlamaAMImpl extends LlamaAM {
   }
 
   public void addListener(LlamaAMListener listener) {
-    synchronized (listeners) {
-      listeners.add(listener);
-    }
+    Set<LlamaAMListener> newSet = new HashSet<LlamaAMListener>(listeners);
+    newSet.add(listener);
+    listeners = newSet;
   }
 
   public void removeListener(LlamaAMListener listener) {
-    synchronized (listeners) {
-      listeners.remove(listener);
-    }
+    Set<LlamaAMListener> newSet = new HashSet<LlamaAMListener>(listeners);
+    newSet.remove(listener);
+    listeners = newSet;
   }
 
   protected void dispatch(LlamaAMEvent event) {
     if (!event.isEmpty()) {
-      synchronized (listeners) {
-        for (LlamaAMListener listener : listeners) {
-          try {
-            listener.onEvent(event);
-          } catch (Throwable ex) {
-            LOG.warn("listener.handle() error: {}", ex.toString(), ex);
-          }
+      for (LlamaAMListener listener : listeners) {
+        try {
+          listener.onEvent(event);
+        } catch (Throwable ex) {
+          LOG.warn("listener.handle() error: {}", ex.toString(), ex);
         }
       }
     }
