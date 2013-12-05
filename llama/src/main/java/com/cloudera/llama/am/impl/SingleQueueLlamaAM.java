@@ -99,18 +99,22 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
     Class<? extends RMConnector> klass = getRMConnectorClass(getConf());
     rmConnector = ReflectionUtils.newInstance(klass, getConf());
 
-    boolean caching = getConf().getBoolean(
-        CACHING_ENABLED_KEY,
-        CACHING_ENABLED_DEFAULT);
-    caching = getConf().getBoolean(
-        CACHING_ENABLED_KEY + "." + queue, caching);
-    LOG.info("Caching for queue '{}' enabled '{}'", queue,
-        caching);
-    if (caching) {
-      CacheRMConnector connectorCache =
-          new CacheRMConnector(getConf(), rmConnector);
-      connectorCache.setMetricRegistry(getMetricRegistry());
-      rmConnector = connectorCache;
+    // queue is null only for the AM used to report getNodes(),
+    // we don't need caching for it TODO and no normalization either when done
+    if (queue != null) {
+      boolean caching = getConf().getBoolean(
+          CACHING_ENABLED_KEY,
+          CACHING_ENABLED_DEFAULT);
+      caching = getConf().getBoolean(
+          CACHING_ENABLED_KEY + "." + queue, caching);
+      LOG.info("Caching for queue '{}' enabled '{}'", queue,
+          caching);
+      if (caching) {
+        CacheRMConnector connectorCache =
+            new CacheRMConnector(getConf(), rmConnector);
+        connectorCache.setMetricRegistry(getMetricRegistry());
+        rmConnector = connectorCache;
+      }
     }
     rmConnector.setLlamaAMCallback(this);
     rmConnector.start();
