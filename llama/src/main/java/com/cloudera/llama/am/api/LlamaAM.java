@@ -20,7 +20,6 @@ package com.cloudera.llama.am.api;
 import com.cloudera.llama.am.impl.APIContractLlamaAM;
 import com.cloudera.llama.am.impl.GangAntiDeadlockLlamaAM;
 import com.cloudera.llama.am.impl.MultiQueueLlamaAM;
-import com.cloudera.llama.am.impl.ObserverLlamaAM;
 import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.util.ParamChecker;
 import com.cloudera.llama.util.UUID;
@@ -29,6 +28,7 @@ import org.apache.hadoop.conf.Configuration;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 public abstract class LlamaAM {
   public static final String PREFIX_KEY = "llama.am.";
@@ -87,7 +87,6 @@ public abstract class LlamaAM {
         GANG_ANTI_DEADLOCK_ENABLED_DEFAULT)) {
       am = new GangAntiDeadlockLlamaAM(conf, am);
     }
-    am = new ObserverLlamaAM(am);
     return new APIContractLlamaAM(am);
   }
 
@@ -118,14 +117,14 @@ public abstract class LlamaAM {
 
   public abstract List<String> getNodes() throws LlamaException;
 
-  public abstract PlacedReservation reserve(UUID reservationId,
-      Reservation reservation)
+  public abstract void reserve(UUID reservationId, Reservation reservation)
       throws LlamaException;
 
-  public PlacedReservation reserve(Reservation reservation)
+  public UUID reserve(Reservation reservation)
       throws LlamaException {
-    UUID reservationId = UUID.randomUUID();
-    return reserve(reservationId, reservation);
+    UUID id = UUID.randomUUID();
+    reserve(id, reservation);
+    return id;
   }
 
   public abstract PlacedReservation getReservation(UUID reservationId)
@@ -151,5 +150,21 @@ public abstract class LlamaAM {
   public abstract void addListener(LlamaAMListener listener);
 
   public abstract void removeListener(LlamaAMListener listener);
+
+  private static final ThreadLocal<Boolean> AS_ADMIN =
+      new ThreadLocal<Boolean>();
+
+  protected boolean isAdminCall() {
+    return (AS_ADMIN.get() != null) ? AS_ADMIN.get() : false;
+  }
+
+  public static <T> T doAsAdmin(Callable<T> callable) throws Exception {
+    AS_ADMIN.set(Boolean.TRUE);
+    try{
+      return callable.call();
+    } finally {
+      AS_ADMIN.remove();
+    }
+  }
 
 }

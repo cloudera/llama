@@ -18,6 +18,7 @@
 package com.cloudera.llama.am.impl;
 
 import com.cloudera.llama.am.api.LlamaAM;
+import com.cloudera.llama.am.api.LlamaAMEvent;
 import com.cloudera.llama.util.ErrorCode;
 import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.api.PlacedReservation;
@@ -217,13 +218,14 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
 
   @Override
   @SuppressWarnings("unchecked")
-  public PlacedReservation reserve(UUID reservationId,
+  public void reserve(UUID reservationId,
       final Reservation reservation)
       throws LlamaException {
     final PlacedReservationImpl impl = new PlacedReservationImpl(reservationId,
         reservation);
+    LlamaAMEvent event = LlamaAMEventImpl.createEvent(true, impl);
     synchronized (this) {
-      _addReservation(new PlacedReservationImpl(impl));
+      _addReservation(impl);
     }
     try {
       rmConnector.reserve((List)impl.getPlacedResourceImpls());
@@ -234,7 +236,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
       }
       throw ex;
     }
-    return impl;
+    dispatch(event);
   }
 
   @Override
@@ -246,25 +248,36 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   public PlacedReservation releaseReservation(UUID handle,
       final UUID reservationId, boolean doNotCache)
       throws LlamaException {
+    return releaseReservation(handle, reservationId, doNotCache, false);
+  }
+
+  @SuppressWarnings("unchecked")
+  public PlacedReservation releaseReservation(UUID handle,
+      final UUID reservationId, boolean doNotCache, boolean doNotDispatch)
+      throws LlamaException {
     PlacedReservationImpl reservation;
+    LlamaAMEvent event = null;
     synchronized (this) {
       reservation = _getReservation(reservationId);
       if (reservation != null) {
-        if (!reservation.getHandle().equals(handle)
-            && !handle.equals(ADMIN_HANDLE)) {
+        if (!reservation.getHandle().equals(handle) && !isAdminCall()) {
           throw new LlamaException(ErrorCode.CLIENT_DOES_NOT_OWN_RESERVATION,
               handle, reservation.getReservationId());
         }
-        _deleteReservation(reservationId, PlacedReservation.Status.RELEASED);
+        reservation = _deleteReservation(reservationId,
+            PlacedReservation.Status.RELEASED);
+        event = LlamaAMEventImpl.createEvent(!isAdminCall(), reservation);
       }
     }
     if (reservation != null) {
       rmConnector.release((List<RMResource>) (List) reservation.getResources(),
           doNotCache);
+      if (!doNotDispatch) {
+        dispatch(event);
+      }
     } else {
       LOG.warn("Unknown reservationId '{}'", reservationId);
     }
@@ -281,7 +294,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
       for (PlacedReservation reservation :
           new ArrayList<PlacedReservation>(reservationsMap.values())) {
         if (reservation.getHandle().equals(handle)) {
-          _deleteReservation(reservation.getReservationId(),
+          reservation = _deleteReservation(reservation.getReservationId(),
               PlacedReservation.Status.RELEASED);
           reservations.add(reservation);
           LOG.debug(
@@ -290,31 +303,35 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
         }
       }
     }
-    List<PlacedReservation> ids =
-        new ArrayList<PlacedReservation>(reservations.size());
     for (PlacedReservation reservation : reservations) {
       rmConnector.release((List<RMResource>) (List) reservation.getResources(),
           doNotCache);
-      ids.add(reservation);
     }
-    return ids;
+    if (!reservations.isEmpty()) {
+      dispatch(LlamaAMEventImpl.createEvent(!isAdminCall(), reservations));
+    }
+    return reservations;
   }
 
   @Override
   public List<PlacedReservation> releaseReservationsForQueue(String queue,
       boolean doNotCache)
       throws LlamaException {
-    List<PlacedReservation> list;
+    List<PlacedReservation> reservations;
     synchronized (this) {
-      list = new ArrayList<PlacedReservation>(reservationsMap.values());
-      for (PlacedReservation res : list) {
-        releaseReservation(res.getHandle(), res.getReservationId(), doNotCache);
+      reservations = new ArrayList<PlacedReservation>(reservationsMap.values());
+      for (PlacedReservation res : reservations) {
+        releaseReservation(res.getHandle(), res.getReservationId(), doNotCache,
+            true);
         LOG.debug(
             "Releasing all reservations for queue '{}', reservationId '{}'",
             queue, res.getReservationId());
       }
     }
-    return list;
+    if (!reservations.isEmpty()) {
+      dispatch(LlamaAMEventImpl.createEvent(!isAdminCall(), reservations));
+    }
+    return reservations;
   }
 
   @Override
@@ -520,8 +537,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
   //visible for testing only
   void loseAllReservations() {
     synchronized (this) {
-      List<UUID> clientResourceIds =
-          new ArrayList<UUID>(resourcesMap.keySet());
+      List<UUID> clientResourceIds = new ArrayList<UUID>(resourcesMap.keySet());
       List<RMEvent> changes = new ArrayList<RMEvent>();
       for (UUID clientResourceId : clientResourceIds) {
         changes.add(RMEvent.createStatusChangeEvent(clientResourceId,

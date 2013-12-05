@@ -44,6 +44,12 @@ public class LlamaAMEventImpl implements LlamaAMEvent {
     reservations.add(new PlacedReservationImpl(reservation));
   }
 
+  public void addReservations(List<PlacedReservation> reservations) {
+    for (PlacedReservation reservation : reservations) {
+      addReservation(reservation);
+    }
+  }
+
   public void addResource(PlacedResource resource) {
     resources.add(new PlacedResourceImpl(resource));
   }
@@ -75,6 +81,21 @@ public class LlamaAMEventImpl implements LlamaAMEvent {
       merged.resources.addAll(event.getResourceChanges());
     }
     return merged;
+  }
+
+  public static LlamaAMEvent createEvent(boolean echo, PlacedReservation pr) {
+    LlamaAMEventImpl e = new LlamaAMEventImpl(echo);
+    e.addReservation(pr);
+    return e;
+  }
+
+  public static LlamaAMEvent createEvent(boolean echo,
+      List<PlacedReservation> prs) {
+    LlamaAMEventImpl e = new LlamaAMEventImpl(echo);
+    for (PlacedReservation pr : prs) {
+      e.addReservation(pr);
+    }
+    return e;
   }
 
 }

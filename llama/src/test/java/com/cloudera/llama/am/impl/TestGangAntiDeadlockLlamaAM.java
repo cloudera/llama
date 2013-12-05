@@ -120,14 +120,13 @@ public class TestGangAntiDeadlockLlamaAM {
     }
 
     @Override
-    public PlacedReservation reserve(UUID reservationId,
+    public void reserve(UUID reservationId,
         Reservation reservation)
         throws LlamaException {
       invoked.add("reserve");
       PlacedReservationImpl pr = new PlacedReservationImpl(reservationId,
           reservation);
       reservations.put(reservationId, pr);
-      return pr;
     }
 
     @Override
@@ -244,7 +243,7 @@ public class TestGangAntiDeadlockLlamaAM {
     Assert.assertTrue(gAm.localReservations.isEmpty());
     Assert.assertTrue(gAm.backedOffReservations.isEmpty());
     Assert.assertTrue(am.reservations.isEmpty());
-    UUID id = gAm.reserve(reservation).getReservationId();
+    UUID id = gAm.reserve(reservation);
     Assert.assertEquals(gang, !gAm.localReservations.isEmpty());
     Assert.assertTrue(gAm.backedOffReservations.isEmpty());
     gAm.getReservation(id);
@@ -283,7 +282,7 @@ public class TestGangAntiDeadlockLlamaAM {
 
       Reservation reservation = TestUtils.createReservation(UUID.randomUUID(),
           1, true);
-      PlacedReservation pr = gAm.reserve(reservation);
+      PlacedReservation pr = gAm.getReservation(gAm.reserve(reservation));
       Assert.assertFalse(gAm.localReservations.isEmpty());
       LlamaAMEventImpl event = new LlamaAMEventImpl();
       PlacedReservationImpl pri = (PlacedReservationImpl) pr;
@@ -316,7 +315,7 @@ public class TestGangAntiDeadlockLlamaAM {
 
       Reservation reservation = TestUtils.createReservation(UUID.randomUUID(),
           1, true);
-      PlacedReservation pr = gAm.reserve(reservation);
+      PlacedReservation pr = gAm.getReservation(gAm.reserve(reservation));
       Assert.assertFalse(gAm.localReservations.isEmpty());
       LlamaAMEventImpl event = new LlamaAMEventImpl();
       ((PlacedReservationImpl)pr).setStatus(PlacedReservation.Status.REJECTED);
@@ -345,19 +344,19 @@ public class TestGangAntiDeadlockLlamaAM {
       //reserve
       UUID handle = UUID.randomUUID();
       Reservation reservation1 = TestUtils.createReservation(handle, 1, true);
-      UUID id1 = gAm.reserve(reservation1).getReservationId();
+      UUID id1 = gAm.reserve(reservation1);
       long placedOn1 = gAm.getReservation(id1).getPlacedOn();
       Thread.sleep(1);
       Reservation reservation2 = TestUtils.createReservation(handle, 1, true);
-      UUID id2 = gAm.reserve(reservation2).getReservationId();
+      UUID id2 = gAm.reserve(reservation2);
       long placedOn2 = gAm.getReservation(id2).getPlacedOn();
       Thread.sleep(1);
       Reservation reservation3 = TestUtils.createReservation(handle, 1, true);
-      UUID id3 = gAm.reserve(reservation3).getReservationId();
+      UUID id3 = gAm.reserve(reservation3);
       long placedOn3 = gAm.getReservation(id3).getPlacedOn();
       Thread.sleep(1);
       Reservation reservation4 = TestUtils.createReservation(handle, 1, true);
-      UUID id4 = gAm.reserve(reservation4).getReservationId();
+      UUID id4 = gAm.reserve(reservation4);
       long placedOn4 = gAm.getReservation(id4).getPlacedOn();
 
       Assert.assertNotNull(gAm.getReservation(id1));
@@ -445,13 +444,13 @@ public class TestGangAntiDeadlockLlamaAM {
       //reserve
       UUID handle = UUID.randomUUID();
       Reservation reservation1 = TestUtils.createReservation(handle, 1, true);
-      UUID id1 = gAm.reserve(reservation1).getReservationId();
+      UUID id1 = gAm.reserve(reservation1);
       Reservation reservation2 = TestUtils.createReservation(handle, 1, true);
-      UUID id2 = gAm.reserve(reservation2).getReservationId();
+      UUID id2 = gAm.reserve(reservation2);
       Reservation reservation3 = TestUtils.createReservation(handle, 1, true);
-      UUID id3 = gAm.reserve(reservation3).getReservationId();
+      UUID id3 = gAm.reserve(reservation3);
       Reservation reservation4 = TestUtils.createReservation(handle, 1, true);
-      UUID id4 = gAm.reserve(reservation4).getReservationId();
+      UUID id4 = gAm.reserve(reservation4);
 
       LlamaAMEventImpl event1 = new LlamaAMEventImpl();
 
@@ -488,13 +487,13 @@ public class TestGangAntiDeadlockLlamaAM {
       //reserve
       UUID handle = UUID.randomUUID();
       Reservation reservation1 = TestUtils.createReservation(handle, 1, true);
-      gAm.reserve(reservation1).getReservationId();
+      gAm.reserve(reservation1);
       Reservation reservation2 = TestUtils.createReservation(handle, 1, true);
-      gAm.reserve(reservation2).getReservationId();
+      gAm.reserve(reservation2);
       Reservation reservation3 = TestUtils.createReservation(handle, 1, true);
-      gAm.reserve(reservation3).getReservationId();
+      gAm.reserve(reservation3);
       Reservation reservation4 = TestUtils.createReservation(handle, 1, true);
-      gAm.reserve(reservation4).getReservationId();
+      gAm.reserve(reservation4);
 
       LlamaAMEventImpl event1 = new LlamaAMEventImpl();
 
@@ -530,13 +529,13 @@ public class TestGangAntiDeadlockLlamaAM {
       //reserve
       UUID handle = UUID.randomUUID();
       Reservation reservation1 = TestUtils.createReservation(handle, 1, true);
-      gAm.reserve(reservation1).getReservationId();
+      gAm.reserve(reservation1);
       Reservation reservation2 = TestUtils.createReservation(handle, 1, true);
-      gAm.reserve(reservation2).getReservationId();
+      gAm.reserve(reservation2);
       Reservation reservation3 = TestUtils.createReservation(handle, 1, true);
-      gAm.reserve(reservation3).getReservationId();
+      gAm.reserve(reservation3);
       Reservation reservation4 = TestUtils.createReservation(handle, 1, true);
-      gAm.reserve(reservation4).getReservationId();
+      gAm.reserve(reservation4);
 
       LlamaAMEventImpl event1 = new LlamaAMEventImpl();
 

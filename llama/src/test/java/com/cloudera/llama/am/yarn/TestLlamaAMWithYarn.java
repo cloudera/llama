@@ -221,15 +221,15 @@ public class TestLlamaAMWithYarn {
         Resource r = TestUtils.createResource(nodes.get(0),
             Resource.Locality.MUST, 1, 1024);
         UUID pr1 = llama.reserve(TestUtils.createReservation(UUID.randomUUID(), "u", "queue1",
-            Arrays.asList(r), true)).getReservationId();
+            Arrays.asList(r), true));
         r = TestUtils.createResource(nodes.get(0),
             Resource.Locality.PREFERRED, 1, 1024);
         UUID pr2 = llama.reserve(TestUtils.createReservation(UUID.randomUUID(), "u", "queue1",
-            Arrays.asList(r), true)).getReservationId();
+            Arrays.asList(r), true));
         r = TestUtils.createResource(nodes.get(0),
             Resource.Locality.DONT_CARE, 1, 1024);
         UUID pr3 = llama.reserve(TestUtils.createReservation(UUID.randomUUID(), "u", "queue1",
-            Arrays.asList(r), true)).getReservationId();
+            Arrays.asList(r), true));
         while (listener.events.size() < 6) {
           Thread.sleep(100);
         }

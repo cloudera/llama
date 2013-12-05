@@ -216,12 +216,17 @@ public class ThrottleLlamaAM extends LlamaAMImpl
   }
 
   synchronized PlacedReservation releaseThrottled(UUID handle,
-      UUID reservationId) {
-    PlacedReservation pr = queuedReservations.get(reservationId);
-    if (pr != null && (handle.equals(pr.getHandle())
-                       || handle.equals(ADMIN_HANDLE))) {
-      queuedReservations.remove(reservationId);
-      LOG.debug("Release queued '{}'", pr);
+      UUID reservationId) throws LlamaException {
+    PlacedReservationImpl pr = queuedReservations.get(reservationId);
+    if (pr != null) {
+      if (handle.equals(pr.getHandle()) || isAdminCall()) {
+        queuedReservations.remove(reservationId);
+        pr.setStatus(PlacedReservation.Status.RELEASED);
+        LOG.debug("Release queued '{}'", pr);
+      } else {
+        throw new LlamaException(ErrorCode.CLIENT_DOES_NOT_OWN_RESERVATION,
+            handle, reservationId);
+      }
     } else {
       pr = null;
     }
@@ -234,9 +239,10 @@ public class ThrottleLlamaAM extends LlamaAMImpl
         queuedReservations.entrySet().iterator();
     int count = 0;
     while (it.hasNext()) {
-      PlacedReservation pr = it.next().getValue();
+      PlacedReservationImpl pr = it.next().getValue();
       if (pr.getHandle().equals(handle)) {
         it.remove();
+        pr.setStatus(PlacedReservation.Status.RELEASED);
         list.add(pr);
         count++;
         LOG.debug("Release queued '{}'", pr);
@@ -250,7 +256,8 @@ public class ThrottleLlamaAM extends LlamaAMImpl
     List<PlacedReservation> list = new ArrayList<PlacedReservation>();
     for (Map.Entry<UUID, PlacedReservationImpl> uuidPlacedReservationEntry :
         queuedReservations.entrySet()) {
-      PlacedReservation pr = uuidPlacedReservationEntry.getValue();
+      PlacedReservationImpl pr = uuidPlacedReservationEntry.getValue();
+      pr.setStatus(PlacedReservation.Status.RELEASED);
       list.add(pr);
       LOG.debug("Release queued '{}'", pr);
     }
@@ -269,13 +276,15 @@ public class ThrottleLlamaAM extends LlamaAMImpl
   }
 
   @Override
-  public PlacedReservation reserve(UUID reservationId, Reservation reservation)
+  public void reserve(UUID reservationId, Reservation reservation)
       throws LlamaException {
+    //TODO introduce QUEUED status
     PlacedReservation placedReservation = throttle(reservationId, reservation);
     if (placedReservation == null) {
-      placedReservation = am.reserve(reservationId, reservation);
+      am.reserve(reservationId, reservation);
+    } else {
+      dispatch(LlamaAMEventImpl.createEvent(true, placedReservation));
     }
-    return placedReservation;
   }
 
   @Override
@@ -298,6 +307,8 @@ public class ThrottleLlamaAM extends LlamaAMImpl
       if (reservation != null) {
         decreasePlaced(1);
       }
+    } else {
+      dispatch(LlamaAMEventImpl.createEvent(!isAdminCall(), reservation));
     }
     return reservation;
   }
@@ -306,28 +317,38 @@ public class ThrottleLlamaAM extends LlamaAMImpl
   public List<PlacedReservation> releaseReservationsForHandle(UUID handle,
       boolean doNotCache)
       throws LlamaException {
+    List<PlacedReservation> localReservations =
+        releaseThrottledForHandle(handle);
     List<PlacedReservation> reservations = new ArrayList<PlacedReservation>();
-    reservations.addAll(releaseThrottledForHandle(handle));
+    reservations.addAll(localReservations);
     List<PlacedReservation> pReservations =
         am.releaseReservationsForHandle(handle, doNotCache);
     if (!pReservations.isEmpty()) {
       decreasePlaced(pReservations.size());
     }
     reservations.addAll(pReservations);
+    if (!localReservations.isEmpty()) {
+      dispatch(LlamaAMEventImpl.createEvent(!isAdminCall(), localReservations));
+    }
     return reservations;
   }
 
   @Override
   public List<PlacedReservation> releaseReservationsForQueue(
       String queue, boolean doNotCache) throws LlamaException {
+    List<PlacedReservation> localReservations =
+        releaseThrottledForQueue();
     List<PlacedReservation> reservations = new ArrayList<PlacedReservation>();
-    reservations.addAll(releaseThrottledForQueue());
+    reservations.addAll(localReservations);
     List<PlacedReservation> pReservations =
         am.releaseReservationsForQueue(queue, doNotCache);
     if (!pReservations.isEmpty()) {
       decreasePlaced(pReservations.size());
     }
     reservations.addAll(pReservations);
+    if (!localReservations.isEmpty()) {
+      dispatch(LlamaAMEventImpl.createEvent(!isAdminCall(), localReservations));
+    }
     return reservations;
   }
 
@@ -372,7 +393,9 @@ public class ThrottleLlamaAM extends LlamaAMImpl
       it.remove();
       try {
         pr.setQueued(false);
-        events.addReservation(am.reserve(pr.getReservationId(), pr));
+        pr.setStatus(PlacedReservation.Status.PENDING);
+        am.reserve(pr.getReservationId(), pr);
+        events.addReservation(pr);
         placed++;
         placedReservations++;
       } catch (Throwable ex) {
@@ -383,7 +406,7 @@ public class ThrottleLlamaAM extends LlamaAMImpl
     }
     LOG.debug("Placed '{}' reservations successfully and '{}' failed", placed,
         failed);
-    if (events.getReservationChanges().size() > 0) {
+    if (!events.getReservationChanges().isEmpty()) {
       dispatch(events);
     }
   }

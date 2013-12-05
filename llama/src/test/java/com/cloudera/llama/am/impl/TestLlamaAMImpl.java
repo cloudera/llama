@@ -57,10 +57,9 @@ public class TestLlamaAMImpl {
     }
 
     @Override
-    public PlacedReservation reserve(UUID reservationId,
+    public void reserve(UUID reservationId,
         Reservation reservation)
         throws LlamaException {
-      return null;
     }
 
     @Override

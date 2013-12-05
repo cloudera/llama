@@ -144,21 +144,21 @@ public class TestThrottleLlamaAM {
       PlacedReservation pr = TestUtils.createPlacedReservation(r,
           PlacedReservation.Status.PENDING);
 
-      Mockito.when(am.reserve(Mockito.any(UUID.class),
-          Mockito.any(Reservation.class))).thenReturn(pr);
       Mockito.when(am.getReservation(Mockito.any(UUID.class))).thenReturn(pr);
 
-      PlacedReservation pr1 = tAm.reserve(r);
+      UUID id1 = tAm.reserve(r);
       Mockito.verify(am, VerificationModeFactory.times(1)).
           reserve(Mockito.any(UUID.class), Mockito.any(Reservation.class));
       Assert.assertEquals(1, tAm.getPlacedReservations());
       Assert.assertEquals(0, tAm.getQueuedReservations());
 
-      PlacedReservation pr2 = tAm.reserve(r);
+      UUID id2 = tAm.reserve(r);
       Mockito.verify(am, VerificationModeFactory.times(1)).
           reserve(Mockito.any(UUID.class), Mockito.any(Reservation.class));
       Assert.assertEquals(1, tAm.getPlacedReservations());
       Assert.assertEquals(1, tAm.getQueuedReservations());
+
+      PlacedReservation pr2 = tAm.getReservation(id2);
 
       tAm.reserve(r);
       Mockito.verify(am, VerificationModeFactory.times(1)).
@@ -166,9 +166,9 @@ public class TestThrottleLlamaAM {
       Assert.assertEquals(1, tAm.getPlacedReservations());
       Assert.assertEquals(2, tAm.getQueuedReservations());
 
-      Assert.assertEquals(pr1, tAm.getReservation(pr1.getReservationId()));
-      Mockito.verify(am).getReservation(Mockito.eq(pr1.getReservationId()));
-      Assert.assertEquals(pr2, tAm.getReservation(pr2.getReservationId()));
+      Assert.assertEquals(pr, tAm.getReservation(id1));
+      Mockito.verify(am).getReservation(Mockito.eq(id1));
+      Assert.assertEquals(pr2, tAm.getReservation(id2));
 
       try {
         tAm.reserve(r);
@@ -195,9 +195,6 @@ public class TestThrottleLlamaAM {
         PlacedReservation.Status.PENDING);
         SingleQueueLlamaAM am = Mockito.mock(SingleQueueLlamaAM.class);
 
-    Mockito.when(am.reserve(Mockito.any(UUID.class),
-        Mockito.eq(r))).thenReturn(pr);
-
     Mockito.when(am.releaseReservation(Mockito.eq(pr.getHandle()),
         Mockito.eq(pr.getReservationId()), Mockito.eq(false))).thenReturn(pr);
 
@@ -206,11 +203,12 @@ public class TestThrottleLlamaAM {
     conf.setInt(ThrottleLlamaAM.MAX_QUEUED_RESERVATIONS_KEY, 2);
     ThrottleLlamaAM tAm = new ThrottleLlamaAM(conf, "q", am);
     try {
+      UUID id = pr.getReservationId();
       tAm.start();
-      pr = tAm.reserve(r);
+      tAm.reserve(id, r);
       Assert.assertEquals(1, tAm.getPlacedReservations());
       Assert.assertEquals(0, tAm.getQueuedReservations());
-      tAm.releaseReservation(pr.getHandle(), pr.getReservationId(), false);
+      tAm.releaseReservation(pr.getHandle(), id, false);
       Mockito.verify(am, VerificationModeFactory.times(1)).
           releaseReservation(Mockito.any(UUID.class), Mockito.any(UUID.class),
               Mockito.anyBoolean());
@@ -218,7 +216,7 @@ public class TestThrottleLlamaAM {
       Assert.assertEquals(0, tAm.getQueuedReservations());
 
       //forcing the no reservation path
-      tAm.releaseReservation(pr.getHandle(), pr.getReservationId(), false);
+      tAm.releaseReservation(pr.getHandle(), id, false);
 
     } finally {
       tAm.stop();
@@ -234,11 +232,7 @@ public class TestThrottleLlamaAM {
     PlacedReservation pr2 = TestUtils.createPlacedReservation(r2,
         PlacedReservation.Status.PENDING);
 
-        SingleQueueLlamaAM am = Mockito.mock(SingleQueueLlamaAM.class);
-    Mockito.when(am.reserve(Mockito.eq(pr1.getReservationId()),
-        Mockito.eq(r1))).thenReturn(pr1);
-    Mockito.when(am.reserve(Mockito.eq(pr2.getReservationId()),
-        Mockito.eq(r2))).thenReturn(pr2);
+    SingleQueueLlamaAM am = Mockito.mock(SingleQueueLlamaAM.class);
 
     Mockito.when(am.releaseReservation(Mockito.eq(pr1.getHandle()),
         Mockito.eq(pr1.getReservationId()), Mockito.eq(false))).thenReturn(pr1);
@@ -278,10 +272,6 @@ public class TestThrottleLlamaAM {
         PlacedReservation.Status.PENDING);
 
     SingleQueueLlamaAM am = Mockito.mock(SingleQueueLlamaAM.class);
-    Mockito.when(am.reserve(Mockito.eq(pr1.getReservationId()),
-        Mockito.any(Reservation.class))).thenReturn(pr1);
-    Mockito.when(am.reserve(Mockito.eq(pr2.getReservationId()),
-        Mockito.any(Reservation.class))).thenReturn(pr2);
 
     Mockito.when(am.releaseReservation(Mockito.eq(pr1.getHandle()),
         Mockito.eq(pr1.getReservationId()), Mockito.eq(false))).thenReturn(pr1);
@@ -319,10 +309,6 @@ public class TestThrottleLlamaAM {
         PlacedReservation.Status.PENDING);
 
     SingleQueueLlamaAM am = Mockito.mock(SingleQueueLlamaAM.class);
-    Mockito.when(am.reserve(Mockito.eq(pr1.getReservationId()),
-        Mockito.any(Reservation.class))).thenReturn(pr1);
-    Mockito.when(am.reserve(Mockito.eq(pr2.getReservationId()),
-        Mockito.any(Reservation.class))).thenReturn(pr2);
 
     Mockito.when(am.releaseReservation(Mockito.eq(pr1.getHandle()),
         Mockito.eq(pr1.getReservationId()), Mockito.eq(false))).thenReturn(pr1);
@@ -382,15 +368,6 @@ public class TestThrottleLlamaAM {
         PlacedReservation.Status.PENDING);
 
     SingleQueueLlamaAM am = Mockito.mock(SingleQueueLlamaAM.class);
-    Mockito.when(am.reserve(Mockito.eq(pr1.getReservationId()),
-        Mockito.any(Reservation.class))).thenReturn(pr1);
-    Mockito.when(am.reserve(Mockito.eq(pr2.getReservationId()),
-        Mockito.any(Reservation.class))).thenReturn(pr2);
-
-    Mockito.when(am.reserve(Mockito.eq(pr3.getReservationId()),
-        Mockito.any(Reservation.class))).thenReturn(pr3);
-    Mockito.when(am.reserve(Mockito.eq(pr4.getReservationId()),
-        Mockito.any(Reservation.class))).thenReturn(pr4);
 
     Mockito.when(am.releaseReservation(Mockito.eq(pr1.getHandle()),
         Mockito.eq(pr1.getReservationId()), Mockito.eq(false))).thenReturn(pr1);
@@ -437,10 +414,6 @@ public class TestThrottleLlamaAM {
         PlacedReservation.Status.PENDING);
 
         SingleQueueLlamaAM am = Mockito.mock(SingleQueueLlamaAM.class);
-    Mockito.when(am.reserve(Mockito.eq(pr1.getReservationId()),
-        Mockito.eq(r1))).thenReturn(pr1);
-    Mockito.when(am.reserve(Mockito.eq(pr2.getReservationId()),
-        Mockito.eq(r2))).thenReturn(pr2);
 
     Mockito.when(am.releaseReservationsForQueue(Mockito.anyString(),
         Mockito.eq(false))).thenReturn(Arrays.asList(pr1));

@@ -160,8 +160,7 @@ public class TestMultiQueueLlamaAM {
         }
       };
       UUID handle = UUID.randomUUID();
-      UUID id = am.reserve(TestUtils.createReservation(handle, "q", 1, true)).
-          getReservationId();
+      UUID id = am.reserve(TestUtils.createReservation(handle, "q", 1, true));
       am.getNodes();
       am.addListener(listener);
       am.removeListener(listener);
@@ -271,8 +270,9 @@ public class TestMultiQueueLlamaAM {
         }
       };
       UUID handle = UUID.randomUUID();
-      PlacedReservation rr = am.reserve(TestUtils.createReservation(handle,
-          "q", 1, true));
+      PlacedReservation rr = am.getReservation(
+          am.reserve(TestUtils.createReservation(handle,
+          "q", 1, true)));
       UUID id = rr.getReservationId();
       am.getNodes();
       am.addListener(listener);

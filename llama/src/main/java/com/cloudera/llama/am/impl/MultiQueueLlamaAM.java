@@ -184,12 +184,11 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
 
   @SuppressWarnings("deprecation")
   @Override
-  public PlacedReservation reserve(UUID reservationId, Reservation reservation)
+  public void reserve(UUID reservationId, Reservation reservation)
       throws LlamaException {
     LlamaAM am = getLlamaAM(reservation.getQueue(), true);
-    PlacedReservation pr = am.reserve(reservationId, reservation);
+    am.reserve(reservationId, reservation);
     reservationToQueue.put(reservationId, reservation.getQueue());
-    return pr;
   }
 
   @SuppressWarnings("deprecation")

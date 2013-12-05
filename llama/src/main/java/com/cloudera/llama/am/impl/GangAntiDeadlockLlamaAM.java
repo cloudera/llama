@@ -166,23 +166,20 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
   }
 
   @Override
-  public PlacedReservation reserve(UUID reservationId, Reservation reservation)
+  public void reserve(UUID reservationId, Reservation reservation)
       throws LlamaException {
-    PlacedReservation placedReservation = null;
     boolean doActualReservation = true;
     if (reservation.isGang()) {
-      placedReservation = new PlacedReservationImpl(reservationId, reservation);
-      doActualReservation = gReserve(reservationId,
-          (PlacedReservationImpl) placedReservation);
-      reservation = placedReservation;
+      PlacedReservationImpl placedReservation =
+          new PlacedReservationImpl(reservationId, reservation);
+      doActualReservation = gReserve(reservationId, placedReservation);
+      if (!doActualReservation) {
+        dispatch(LlamaAMEventImpl.createEvent(true, placedReservation));
+      }
     }
     if (doActualReservation) {
-      placedReservation = am.reserve(reservationId, reservation);
-    } else {
-      ((PlacedReservationImpl)placedReservation).
-          setStatus(PlacedReservation.Status.BACKED_OFF);
+      am.reserve(reservationId, reservation);
     }
-    return placedReservation;
   }
 
   private synchronized boolean gReserve(UUID reservationId,
@@ -193,6 +190,7 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
       submittedReservations.add(reservationId);
       doActualReservation = true;
     } else {
+      placedReservation.setStatus(PlacedReservation.Status.BACKED_OFF);
       long delay = getBackOffDelay();
       backedOffReservations.add(new BackedOffReservation(placedReservation,
           delay));
@@ -224,6 +222,10 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
     PlacedReservation gPlacedReservation = gReleaseReservation(reservationId);
     PlacedReservation placedReservation = am.releaseReservation(handle,
         reservationId, doNotCache);
+    if (gPlacedReservation != null && placedReservation == null) {
+      //reservation was local only
+      dispatch(LlamaAMEventImpl.createEvent(!isAdminCall(), gPlacedReservation));
+    }
     return (placedReservation != null) ? placedReservation : gPlacedReservation;
   }
 
@@ -242,9 +244,15 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
       throws LlamaException {
     List<PlacedReservation> reservations =
         am.releaseReservationsForHandle(handle, doNotCache);
-    reservations.addAll(gReleaseReservationsForHandle(handle));
-    return new ArrayList<PlacedReservation>(
-        new HashSet<PlacedReservation>(reservations));
+    List<PlacedReservation> localReservations =
+        gReleaseReservationsForHandle(handle);
+    localReservations.removeAll(reservations);
+    if (!localReservations.isEmpty()) {
+      dispatch(LlamaAMEventImpl.createEvent(!isAdminCall(), localReservations));
+    }
+    reservations = new ArrayList<PlacedReservation>(reservations);
+    reservations.addAll(localReservations);
+    return reservations;
   }
 
   private synchronized List<PlacedReservation> gReleaseReservationsForHandle(
@@ -271,9 +279,16 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
       String queue, boolean doNotCache) throws LlamaException {
     List<PlacedReservation> reservations =
         am.releaseReservationsForQueue(queue, doNotCache);
-    reservations.addAll(gReleaseReservationsForQueue(queue));
-    return new ArrayList<PlacedReservation>(
-        new HashSet<PlacedReservation>(reservations));
+
+    List<PlacedReservation> localReservations =
+        gReleaseReservationsForQueue(queue);
+    localReservations.removeAll(reservations);
+    if (!localReservations.isEmpty()) {
+      dispatch(LlamaAMEventImpl.createEvent(!isAdminCall(), localReservations));
+    }
+    reservations = new ArrayList<PlacedReservation>(reservations);
+    reservations.addAll(localReservations);
+    return reservations;
   }
 
   @Override
@@ -451,10 +466,7 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
         try {
           LOG.info("Re-reserving gang reservation '{}'",
               br.getReservation().getReservationId());
-          PlacedReservation pr = am.reserve(reservationId, br.getReservation());
-
-          event.addReservation(pr);
-
+          am.reserve(reservationId, br.getReservation());
           submittedReservations.add(reservationId);
         } catch (LlamaException ex) {
           localReservations.remove(reservationId);

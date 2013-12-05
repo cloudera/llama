@@ -76,14 +76,18 @@ public class TestLlamaAMWithMock {
           Resource.Locality.DONT_CARE, 1, 1);
       Resource a4 = TestUtils.createResource(MockLlamaAMFlags.LOSE + "h3",
           Resource.Locality.DONT_CARE, 1, 1);
-      PlacedReservation pr1 = llama.reserve(TestUtils.createReservation(
-          UUID.randomUUID(), "u", "q1", a1, true));
-      PlacedReservation pr2 = llama.reserve(TestUtils.createReservation(
-          UUID.randomUUID(), "u", "q1", a2, true));
-      PlacedReservation pr3 = llama.reserve(TestUtils.createReservation(
-          UUID.randomUUID(), "u", "q1", a3, true));
-      PlacedReservation pr4 = llama.reserve(TestUtils.createReservation(
-          UUID.randomUUID(), "u", "q1", a4, true));
+      PlacedReservation pr1 = llama.getReservation(
+          llama.reserve(TestUtils.createReservation(
+          UUID.randomUUID(), "u", "q1", a1, true)));
+      PlacedReservation pr2 = llama.getReservation(
+          llama.reserve(TestUtils.createReservation(
+          UUID.randomUUID(), "u", "q1", a2, true)));
+      PlacedReservation pr3 = llama.getReservation(
+          llama.reserve(TestUtils.createReservation(
+          UUID.randomUUID(), "u", "q1", a3, true)));
+      PlacedReservation pr4 = llama.getReservation(
+          llama.reserve(TestUtils.createReservation(
+          UUID.randomUUID(), "u", "q1", a4, true)));
       Thread.sleep(100);
       //for gang reservations, ALLOCATED to PREEMPTED/LOST don't finish reservation
       Assert.assertEquals(8,

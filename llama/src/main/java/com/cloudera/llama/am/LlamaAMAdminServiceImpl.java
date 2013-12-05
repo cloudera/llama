@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 public class LlamaAMAdminServiceImpl implements LlamaAMAdminService.Iface {
   private static final Logger LOG = LoggerFactory.getLogger(
@@ -52,15 +53,21 @@ public class LlamaAMAdminServiceImpl implements LlamaAMAdminService.Iface {
   @Override
   public TLlamaAMAdminReleaseResponse Release(
       TLlamaAMAdminReleaseRequest request) throws TException {
-    boolean doNotCache = request.isDo_not_cache();
+    final boolean doNotCache = request.isDo_not_cache();
     List<String> msgs = new ArrayList<String>();
     if (request.isSetQueues()) {
-      for (String queue : request.getQueues()) {
+      for (final String queue : request.getQueues()) {
         LOG.warn("Admin '{}' release queue '{}'",
             ClientPrincipalTProcessor.getPrincipal(), queue);
         try {
-          llamaAM.releaseReservationsForQueue(queue, doNotCache);
-        } catch (LlamaException ex) {
+          LlamaAM.doAsAdmin(new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+              llamaAM.releaseReservationsForQueue(queue, doNotCache);
+              return null;
+            }
+          });
+        } catch (Throwable ex) {
           String msg = FastFormat.format(
               "Could not release queue '{}', error: {}", queue, ex.toString());
           msgs.add(msg);
@@ -69,13 +76,19 @@ public class LlamaAMAdminServiceImpl implements LlamaAMAdminService.Iface {
       }
     }
     if (request.isSetReservations()) {
-      for (UUID reservation : TypeUtils.toUUIDs(request.getReservations())) {
+      for (final UUID reservation : TypeUtils.toUUIDs(request.getReservations())) {
         try {
           LOG.warn("Admin '{}' release reservation '{}'",
               ClientPrincipalTProcessor.getPrincipal(), reservation);
-          llamaAM.releaseReservation(LlamaAM.ADMIN_HANDLE, reservation,
-              doNotCache);
-        } catch (LlamaException ex) {
+          LlamaAM.doAsAdmin(new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+              llamaAM.releaseReservation(LlamaAM.ADMIN_HANDLE, reservation,
+                  doNotCache);
+              return null;
+            }
+          });
+        } catch (Throwable ex) {
           String msg = FastFormat.format(
               "Could not release reservation '{}', error: {}", reservation,
               ex.toString());
@@ -85,13 +98,19 @@ public class LlamaAMAdminServiceImpl implements LlamaAMAdminService.Iface {
       }
     }
     if (request.isSetHandles()) {
-      for (UUID handle : TypeUtils.toUUIDs(request.getHandles())) {
+      for (final UUID handle : TypeUtils.toUUIDs(request.getHandles())) {
         try {
           LOG.warn("Admin '{}' release handle '{}'",
               ClientPrincipalTProcessor.getPrincipal(), handle);
-          llamaAM.releaseReservationsForHandle(handle, doNotCache);
+          LlamaAM.doAsAdmin(new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+              llamaAM.releaseReservationsForHandle(handle, doNotCache);
+              return null;
+            }
+          });
           clientNotificationService.unregister(handle);
-        } catch (LlamaException ex) {
+        } catch (Throwable ex) {
           String msg = FastFormat.format(
               "Could not release handle '{}', error: {}", handle, ex.toString());
           msgs.add(msg);
@@ -107,24 +126,36 @@ public class LlamaAMAdminServiceImpl implements LlamaAMAdminService.Iface {
   @Override
   public TLlamaAMAdminEmptyCacheResponse EmptyCache(
       TLlamaAMAdminEmptyCacheRequest request) throws TException {
-    boolean allQueues = request.isAllQueues();
+    final boolean allQueues = request.isAllQueues();
     List<String> msgs = new ArrayList<String>();
     if (allQueues) {
       try {
-        llamaAM.emptyCacheForQueue(LlamaAM.ALL_QUEUES);
-      } catch (LlamaException ex) {
+        LlamaAM.doAsAdmin(new Callable<Void>() {
+          @Override
+          public Void call() throws Exception {
+            llamaAM.emptyCacheForQueue(LlamaAM.ALL_QUEUES);
+            return null;
+          }
+        });
+      } catch (Throwable ex) {
         String msg = FastFormat.format("Could not empty cache for all queues: {}",
             ex.toString());
         msgs.add(msg);
         LOG.warn(msg, ex);
       }
     } else if (request.isSetQueues()) {
-      for (String queue : request.getQueues()) {
+      for (final String queue : request.getQueues()) {
         LOG.warn("Admin '{}' empty cache for queue '{}'",
             ClientPrincipalTProcessor.getPrincipal(), queue);
         try {
-          llamaAM.emptyCacheForQueue(queue);
-        } catch (LlamaException ex) {
+          LlamaAM.doAsAdmin(new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+              llamaAM.emptyCacheForQueue(queue);
+              return null;
+            }
+          });
+        } catch (Throwable ex) {
           String msg = FastFormat.format(
               "Could not empty cache for queue '{}': {}", queue, ex.toString());
           msgs.add(msg);

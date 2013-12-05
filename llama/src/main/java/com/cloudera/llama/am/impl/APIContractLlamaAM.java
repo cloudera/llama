@@ -120,14 +120,13 @@ public class APIContractLlamaAM extends LlamaAM {
   }
 
   @Override
-  public PlacedReservation reserve(UUID reservationId, Reservation reservation)
+  public void reserve(UUID reservationId, Reservation reservation)
       throws LlamaException {
     checkIsRunning();
     ParamChecker.notNull(reservationId, "reservationId");
     ParamChecker.notNull(reservation, "reservation");
-    PlacedReservation pr = llamaAM.reserve(reservationId, reservation);
+    llamaAM.reserve(reservationId, reservation);
     LOG.trace("reserve({}): {}", reservation, reservationId);
-    return pr;
   }
 
   @Override
