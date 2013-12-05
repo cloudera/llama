@@ -33,11 +33,6 @@ import java.util.Collections;
 import java.util.List;
 
 public class PlacedReservationImpl implements PlacedReservation, Expansion {
-  private static final byte RESERVATION = 1;
-  private static final byte EXPANSION = 2;
-  private static final byte PLACED_RESERVATION = 3;
-
-  private byte type;
   protected UUID reservationId;
   protected Status status;
   protected long placedOn;
@@ -50,13 +45,11 @@ public class PlacedReservationImpl implements PlacedReservation, Expansion {
   protected long allocatedOn;
   protected boolean queued;
 
-  private PlacedReservationImpl(byte type) {
-    this.type = type;
+  private PlacedReservationImpl() {
   }
 
   @SuppressWarnings("unchecked")
   private PlacedReservationImpl(
-      byte type,
       UUID reservationId,
       Status status,
       long placedOn,
@@ -69,7 +62,6 @@ public class PlacedReservationImpl implements PlacedReservation, Expansion {
       long allocatedOn,
       boolean queued
   ) {
-    this(type);
     this.reservationId = reservationId;
     this.status = status;
     this.placedOn = placedOn;
@@ -86,7 +78,7 @@ public class PlacedReservationImpl implements PlacedReservation, Expansion {
 
   @SuppressWarnings("unchecked")
   public PlacedReservationImpl(PlacedReservation r) {
-    this(((PlacedReservationImpl)r).type, r.getReservationId(),
+    this(r.getReservationId(),
         r.getStatus(),
         r.getPlacedOn(),
         r.getHandle(),
@@ -100,10 +92,10 @@ public class PlacedReservationImpl implements PlacedReservation, Expansion {
 
   @SuppressWarnings("unchecked")
   public PlacedReservationImpl(UUID reservationId, Reservation reservation) {
-    this(PLACED_RESERVATION, reservationId,
+    this(reservationId,
         Status.PENDING,
-        (((PlacedReservationImpl)reservation).type == PLACED_RESERVATION)
-        ? ((PlacedReservation)reservation).getPlacedOn()
+        (((PlacedReservation)reservation).getPlacedOn() != 0)
+        ? ((PlacedReservation) reservation).getPlacedOn()
         : Clock.currentTimeMillis(),
         reservation.getHandle(),
         reservation.getUser(),
@@ -143,23 +135,17 @@ public class PlacedReservationImpl implements PlacedReservation, Expansion {
   @Override
   public String toString() {
     String str;
-    switch (type) {
-      case RESERVATION:
+    if (getPlacedOn() == -1) {
         str = FastFormat.format(RESERVATION_TO_STRING, getHandle(), getUser(),
             getQueue(), isGang(), getResources());
-        break;
-      case EXPANSION:
+    } else if (getExpansionOf() != null) {
         str = FastFormat.format(EXPANSION_TO_STRING, getExpansionOf(),
             getResource());
-        break;
-      case PLACED_RESERVATION:
+    } else {
         str = FastFormat.format(PLACED_RESERVATION_TO_STRING,
             getReservationId(), getStatus(), getPlacedOn(), getAllocatedOn(),
             getExpansionOf(), getHandle(), getUser(), getQueue(), isGang(),
             isQueued(), getResources());
-        break;
-      default:
-        throw new IllegalStateException("Invalid type: " + type);
     }
     return str;
   }
@@ -269,7 +255,6 @@ public class PlacedReservationImpl implements PlacedReservation, Expansion {
     private List<Resource> resources;
 
     public XReservationBuilder() {
-      super(RESERVATION);
       resources = new ArrayList<Resource>();
     }
 
@@ -344,7 +329,6 @@ public class PlacedReservationImpl implements PlacedReservation, Expansion {
     private Resource resource;
 
     public XExpansionBuilder() {
-      super(EXPANSION);
     }
 
     @Override
