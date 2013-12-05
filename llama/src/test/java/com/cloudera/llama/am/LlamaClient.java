@@ -55,6 +55,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.security.auth.Subject;
 import javax.security.sasl.Sasl;
+import java.net.ConnectException;
+import java.net.Socket;
 import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -572,8 +574,18 @@ public class LlamaClient {
       t.setDaemon(true);
       t.start();
     }
-    Thread.sleep(1000);
+    //waiting until all callback servers are up.
     long start = System.currentTimeMillis();
+    for (int i = 0; i < clients; i++) {
+      try {
+        new Socket(callbackHost, callbackStartPort + i).close();
+      } catch (ConnectException ex) {
+        if (System.currentTimeMillis() - start > 30000) {
+          System.out.println("Callback servers cannot start, timedout :" + ex);
+        }
+      }
+    }
+    start = System.currentTimeMillis();
     CountDownLatch registerLatch = new CountDownLatch(clients);
     CountDownLatch startLatch = new CountDownLatch(1);
     CountDownLatch endLatch = new CountDownLatch(clients);
