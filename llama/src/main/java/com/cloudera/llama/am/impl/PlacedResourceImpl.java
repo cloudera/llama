@@ -126,7 +126,7 @@ public class PlacedResourceImpl
       "resourceId:{} status:{} locationAsk:{} localityAsk:{} cpuVCoresAsk:{} " +
       "memoryMbsAsk:{} placedOn:{} reservationId:{} handle:{} user:{} " +
       "queue:{} allocatedOn:{} location:{} cpuVCores:{} memoryMbs:{} " +
-      "rmResourceId:{} rmResourceIds:{}]";
+      "rmResourceId:{}]";
 
   @Override
   public String toString() {

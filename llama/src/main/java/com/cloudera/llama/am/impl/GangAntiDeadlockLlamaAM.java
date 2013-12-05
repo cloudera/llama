@@ -359,6 +359,7 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
     }
     while (isRunning()) {
       try {
+        LOG.trace("Running deadlock avoidance");
         LlamaAMEventImpl  event = new LlamaAMEventImpl();
         long sleepTime;
         synchronized (this) {
@@ -368,7 +369,7 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
         }
         dispatch(event);
 
-        LOG.debug("Deadlock avoidance thread sleeping for '{}' ms",
+        LOG.trace("Deadlock avoidance thread sleeping for '{}' ms",
             sleepTime);
         Thread.sleep(sleepTime);
       } catch (InterruptedException ex) {

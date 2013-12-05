@@ -377,13 +377,14 @@ public class ThrottleLlamaAM extends LlamaAMImpl
       try {
         Clock.sleep(1000);
       } catch (InterruptedException ex) {
-        LOG.debug("Interrupted");
+        LOG.trace("Interrupted");
       }
       placeThrottledReservations();
     }
   }
 
   synchronized void placeThrottledReservations() {
+    LOG.trace("Running throttle for '{}'", queue);
     LlamaAMEventImpl events = new LlamaAMEventImpl();
     Iterator<PlacedReservationImpl> it = queuedReservations.values().iterator();
     int placed = 0;
@@ -404,8 +405,10 @@ public class ThrottleLlamaAM extends LlamaAMImpl
         failed++;
       }
     }
-    LOG.debug("Placed '{}' reservations successfully and '{}' failed", placed,
-        failed);
+    if (placed + failed > 0) {
+      LOG.debug("Placed '{}' reservations successfully and '{}' failed", placed,
+          failed);
+    }
     if (!events.getReservationChanges().isEmpty()) {
       dispatch(events);
     }

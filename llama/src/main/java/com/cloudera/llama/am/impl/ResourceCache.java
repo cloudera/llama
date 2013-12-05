@@ -292,11 +292,14 @@ public class ResourceCache {
   }
 
   void runEviction() {
+    LOG.trace("Running eviction for '{}'", queue);
     List<Entry> entries;
     synchronized (ResourceCache.this) {
       entries = new ArrayList<Entry>(idToCacheEntryMap.values());
     }
-    LOG.debug("Eviction run, processing '{}' entries", entries.size());
+    if (!entries.isEmpty()) {
+      LOG.debug("Eviction processing '{}' entries", entries.size());
+    }
     int counter = 0;
     for (Entry entry : entries) {
       if (entry.isValid() && evictionPolicy.shouldEvict(entry)) {
@@ -313,7 +316,9 @@ public class ResourceCache {
         }
       }
     }
-    LOG.debug("Eviction run, evicted '{}' entries", counter);
+    if (counter > 0) {
+      LOG.debug("Eviction run, evicted '{}' entries", counter);
+    }
   }
 
   public synchronized void stop() {
