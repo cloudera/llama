@@ -66,6 +66,7 @@ public class LlamaAdminClient {
   private static final String RELEASE_CMD = "release";
   private static final String ERROR_CODES_CMD = "errorcodes";
   private static final String EMPTY_CACHE_CMD = "emptycache";
+  private static final String VERSION_CMD = "version";
 
   private static final String LLAMA = "llama";
   private static final String SECURE = "secure";
@@ -113,11 +114,6 @@ public class LlamaAdminClient {
     parser.addCommand(RELEASE_CMD, "",
         "release queues, handles or reservations", options, false);
 
-    //errorcodes
-    options = new Options();
-    parser.addCommand(ERROR_CODES_CMD, "", "list Llama error codes", options,
-        false);
-
     //emptycache
     options = new Options();
     options.addOption(llama);
@@ -126,6 +122,16 @@ public class LlamaAdminClient {
     options.addOption(allQueues);
     parser.addCommand(EMPTY_CACHE_CMD, "",
         "empty cached resources not in use", options, false);
+
+    //errorcodes
+    options = new Options();
+    parser.addCommand(ERROR_CODES_CMD, "", "list Llama error codes", options,
+        false);
+
+    //version
+    options = new Options();
+    parser.addCommand(VERSION_CMD, "", "prints version of the llamaadminclient",
+        options, false);
 
     return parser;
   }
@@ -194,6 +200,8 @@ public class LlamaAdminClient {
           System.out.println("  " + description);
         }
         System.out.println();
+      } else if (command.getName().equals(VERSION_CMD)) {
+        System.out.println(VersionInfo.getVersion());
       } else {
         System.err.println("Sub-command missing");
         System.err.println();
