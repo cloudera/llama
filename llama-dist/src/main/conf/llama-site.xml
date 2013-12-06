@@ -231,10 +231,10 @@
     </description>
   </property>
   <property>
-    <name>llama.am.initial.queues</name>
+    <name>llama.am.core.queues</name>
     <value></value>
     <description>
-      Queues LlamaAM should connect at start up.
+      Queues LlamaAM should connect to at start up.
     </description>
   </property>
 

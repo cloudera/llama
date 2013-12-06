@@ -39,8 +39,8 @@ public abstract class LlamaAM {
   public static final String RM_CONNECTOR_CLASS_KEY = PREFIX_KEY +
       "rm.connector.class";
 
-  public static final String INITIAL_QUEUES_KEY = PREFIX_KEY +
-      "initial.queues";
+  public static final String CORE_QUEUES_KEY = PREFIX_KEY +
+      "core.queues";
 
   public static final String GANG_ANTI_DEADLOCK_ENABLED_KEY = PREFIX_KEY +
       "gang.anti.deadlock.enabled";

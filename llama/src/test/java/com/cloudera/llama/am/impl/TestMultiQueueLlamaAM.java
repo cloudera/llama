@@ -217,7 +217,7 @@ public class TestMultiQueueLlamaAM {
     conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MyRMConnector.class,
         RMConnector.class);
     conf.setBoolean("fail.start", true);
-    conf.set(LlamaAM.INITIAL_QUEUES_KEY, "q");
+    conf.set(LlamaAM.CORE_QUEUES_KEY, "q");
     LlamaAM am = LlamaAM.create(conf);
     am.start();
   }
@@ -228,7 +228,7 @@ public class TestMultiQueueLlamaAM {
     conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MyRMConnector.class,
         RMConnector.class);
     conf.setBoolean("fail.register", true);
-    conf.set(LlamaAM.INITIAL_QUEUES_KEY, "q");
+    conf.set(LlamaAM.CORE_QUEUES_KEY, "q");
     LlamaAM am = LlamaAM.create(conf);
     am.start();
   }

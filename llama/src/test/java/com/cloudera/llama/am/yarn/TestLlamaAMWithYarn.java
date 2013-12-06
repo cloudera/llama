@@ -105,7 +105,7 @@ public class TestLlamaAMWithYarn {
 
   protected static Configuration getLlamaConfiguration() {
     Configuration conf = new Configuration(false);
-    conf.set(LlamaAM.INITIAL_QUEUES_KEY, "queue1,queue2");
+    conf.set(LlamaAM.CORE_QUEUES_KEY, "queue1,queue2");
     conf.set(LlamaAM.RM_CONNECTOR_CLASS_KEY, YarnRMConnector.class
         .getName());
     conf.setInt(YarnRMConnector.HEARTBEAT_INTERVAL_KEY, 50);
@@ -122,7 +122,7 @@ public class TestLlamaAMWithYarn {
       //we have to wait a bit to ensure the RM got the NM registered
       Thread.sleep(3000);
       Configuration conf = getLlamaConfiguration();
-      conf.unset(LlamaAM.INITIAL_QUEUES_KEY);
+      conf.unset(LlamaAM.CORE_QUEUES_KEY);
       LlamaAM llama = LlamaAM.create(conf);
       try {
         llama.start();

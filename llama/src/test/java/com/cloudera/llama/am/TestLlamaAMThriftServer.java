@@ -119,7 +119,7 @@ public class TestLlamaAMThriftServer {
 
     conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MockRMConnector.class,
         RMConnector.class);
-    conf.set(LlamaAM.INITIAL_QUEUES_KEY, "q1,q2");
+    conf.set(LlamaAM.CORE_QUEUES_KEY, "q1,q2");
     conf.set(MockRMConnector.QUEUES_KEY, "q1,q2");
     conf.set(MockRMConnector.NODES_KEY, "n1,n2");
     conf.setInt(MockRMConnector.EVENTS_MIN_WAIT_KEY, 5);

@@ -145,7 +145,7 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
   @Override
   public void start() throws LlamaException {
     for (String queue :
-        getConf().getTrimmedStringCollection(INITIAL_QUEUES_KEY)) {
+        getConf().getTrimmedStringCollection(CORE_QUEUES_KEY)) {
       try {
         getLlamaAM(queue, true);
       } catch (LlamaException ex) {

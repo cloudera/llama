@@ -67,7 +67,7 @@ public class TestMiniLlama {
       throws Exception {
     Configuration conf = MiniLlama.createMiniClusterConf(2);
     conf.set("yarn.scheduler.fair.allocation.file", "test-fair-scheduler.xml");
-    conf.set(LlamaAM.INITIAL_QUEUES_KEY, "default");
+    conf.set(LlamaAM.CORE_QUEUES_KEY, "default");
     testMiniLlama(conf, writeHdfsConf);
   }
 
@@ -76,7 +76,7 @@ public class TestMiniLlama {
     File confFile = null;
     MiniLlama server = new MiniLlama(conf);
     try {
-      Assert.assertNotNull(server.getConf().get(LlamaAM.INITIAL_QUEUES_KEY));
+      Assert.assertNotNull(server.getConf().get(LlamaAM.CORE_QUEUES_KEY));
       if (writeHdfsConf) {
         File confDir = new File("target", UUID.randomUUID().toString());
         confDir.mkdirs();
