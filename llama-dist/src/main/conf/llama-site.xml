@@ -234,7 +234,8 @@
     <name>llama.am.core.queues</name>
     <value></value>
     <description>
-      Queues LlamaAM should connect to at start up.
+      Queues LlamaAM should connect to at start up. Unlike queues that are
+      created in response to a reservation, these queues will never expire.
     </description>
   </property>
 
@@ -421,6 +422,15 @@
     <description>
       TimeoutEvictionPolicy policy timeout for resources sitting in the cache.
     </description>
+  </property>
+
+  <!-- MultiQueueLlamaAM configuration -->
+  <property>
+    <name>llama.am.queue.expire.ms</name>
+    <value>300000</value>
+    <description>Time in milliseconds after which Llama will discard its AM for
+    a queue that has been empty of reservations. Does not apply to queues
+    specified with the llama.am.core.queues property.
   </property>
 
   <!-- YarnLlamaAM configuration -->

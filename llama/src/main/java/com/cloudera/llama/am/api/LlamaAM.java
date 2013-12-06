@@ -71,6 +71,10 @@ public abstract class LlamaAM {
   public static final String THROTTLING_ENABLED_KEY =
       PREFIX_KEY + "throttling.enabled";
   public static final boolean THROTTLING_ENABLED_DEFAULT = true;
+  
+  public static final String QUEUE_AM_EXPIRE_MS =
+      PREFIX_KEY + "queue.expire.ms";
+  public static final int QUEUE_AM_EXPIRE_MS_DEFAULT = 5 * 60 * 1000;
 
   private static Configuration cloneConfiguration(Configuration conf) {
     Configuration clone = new Configuration(false);
@@ -146,6 +150,9 @@ public abstract class LlamaAM {
 
   public static final UUID WILDCARD_HANDLE = UUID.randomUUID();
 
+  /**
+   * If the reservation does not exist, returns null.
+   */
   public abstract PlacedReservation releaseReservation(UUID handle,
       UUID reservationId, boolean doNotCache)
       throws LlamaException;

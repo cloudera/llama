@@ -40,7 +40,7 @@ public class Clock {
       Thread.sleep(millis);
     }
   };
-
+  
   private static Impl clock = SYSTEM;
 
   public static void setClock(Impl clock) {
@@ -57,4 +57,19 @@ public class Clock {
   public static void sleep(long millis) throws InterruptedException {
     clock.sleep(millis);
   }
+  
+  public static class Mock implements Impl {
+    private long time;
+    
+    @Override
+    public long currentTimeMillis() {
+      return time;
+    }
+    
+    @Override
+    public void sleep(long millis) {
+      time += millis;
+    }
+  }
+
 }

@@ -19,8 +19,10 @@ package com.cloudera.llama.am.impl;
 
 import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.LlamaAMEvent;
+import com.cloudera.llama.util.Clock;
 import com.cloudera.llama.util.ErrorCode;
 import com.cloudera.llama.util.LlamaException;
+import com.cloudera.llama.util.ManualClock;
 import com.cloudera.llama.am.api.LlamaAMListener;
 import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.PlacedResource;
@@ -32,6 +34,7 @@ import com.cloudera.llama.am.spi.RMListener;
 import com.cloudera.llama.util.UUID;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -144,6 +147,11 @@ public class TestMultiQueueLlamaAM {
       return false;
     }
 
+  }
+  
+  @After
+  public void tearDown() {
+    Clock.setClock(Clock.SYSTEM);
   }
 
   @Test
@@ -291,5 +299,40 @@ public class TestMultiQueueLlamaAM {
     } finally {
       am.stop();
     }
+  }
+
+  @Test
+  public void testQueueExpiry() throws Exception {
+    ManualClock clock = new ManualClock();
+    Clock.setClock(clock);
+    Configuration conf = new Configuration(false);
+    conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MyRMConnector.class,
+        RMConnector.class);
+    conf.set(LlamaAM.CORE_QUEUES_KEY, "root.corequeue");
+    MultiQueueLlamaAM am = new MultiQueueLlamaAM(conf);
+    am.amCheckExpiryIntervalMs = 20;
+    am.start();
+
+    // Core queue should exist
+    Assert.assertEquals(1, am.ams.keySet().size());
+
+    UUID handle = UUID.randomUUID();
+    UUID resId = am.reserve(TestUtils.createReservation(handle, "root.someotherqueue", 1, true));
+    Assert.assertEquals(2, am.ams.keySet().size());
+    am.releaseReservation(handle, resId, true);
+    clock.increment(LlamaAM.QUEUE_AM_EXPIRE_MS_DEFAULT * 2);
+
+    Thread.sleep(300); // am expiry check should run in this time
+    // Other queue should get cleaned up
+    Assert.assertEquals(1, am.ams.keySet().size());
+
+    handle = UUID.randomUUID();
+    resId = am.reserve(TestUtils.createReservation(handle, "root.corequeue", 1, true));
+    am.releaseReservation(handle, resId, true);
+    clock.increment(LlamaAM.QUEUE_AM_EXPIRE_MS_DEFAULT * 2);
+
+    Thread.sleep(300); // am expiry check should run in this time
+    // Core queue should still exist
+    Assert.assertEquals(1, am.ams.keySet().size());
   }
 }

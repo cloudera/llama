@@ -24,6 +24,7 @@ import com.cloudera.llama.am.api.LlamaAMListener;
 import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.Reservation;
 import com.cloudera.llama.server.MetricUtil;
+import com.cloudera.llama.util.Clock;
 import com.cloudera.llama.util.FastFormat;
 import com.cloudera.llama.util.UUID;
 import com.codahale.metrics.CachedGauge;
@@ -43,6 +44,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
     IntraLlamaAMsCallback {
@@ -52,16 +54,26 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
   private static final String QUEUES_GAUGE = METRIC_PREFIX + "queues.gauge";
   private static final String RESERVATIONS_GAUGE = METRIC_PREFIX +
       "reservations.gauge";
+  private static final int AM_CHECK_EXPIRY_INTERVAL_MS = 5000;
 
-  private final Map<String, LlamaAM> ams;
+  // Maps queue name to AM info. Visible for testing.
+  final Map<String, SingleQueueAMInfo> ams;
   private SingleQueueLlamaAM llamaAMForGetNodes;
-  private final ConcurrentHashMap<UUID, String> reservationToQueue;
-  private boolean running;
+  private final Map<UUID, String> reservationToQueue;
+  private volatile boolean running;
+  private final int queueExpireMs;
+  private final ExpireThread expireThread;
+  // Visible for testing
+  int amCheckExpiryIntervalMs;
 
   public MultiQueueLlamaAM(Configuration conf) {
     super(conf);
-    ams = new HashMap<String, LlamaAM>();
-    reservationToQueue = new ConcurrentHashMap<UUID, String>();
+    ams = new ConcurrentHashMap<String, SingleQueueAMInfo>();
+    reservationToQueue = new HashMap<UUID, String>();
+    queueExpireMs = conf.getInt(QUEUE_AM_EXPIRE_MS,
+        QUEUE_AM_EXPIRE_MS_DEFAULT);
+    expireThread = new ExpireThread();
+    amCheckExpiryIntervalMs = AM_CHECK_EXPIRY_INTERVAL_MS;
     if (SingleQueueLlamaAM.getRMConnectorClass(conf) == null) {
       throw new IllegalArgumentException(FastFormat.format(
           "RMConnector class not defined in the configuration under '{}'",
@@ -72,8 +84,8 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
   @Override
   public synchronized void setMetricRegistry(MetricRegistry metricRegistry) {
     super.setMetricRegistry(metricRegistry);
-    for (LlamaAM am : ams.values()) {
-      am.setMetricRegistry(metricRegistry);
+    for (SingleQueueAMInfo amInfo : ams.values()) {
+      amInfo.am.setMetricRegistry(metricRegistry);
     }
     if (metricRegistry != null) {
       MetricUtil.registerGauge(metricRegistry, QUEUES_GAUGE,
@@ -106,12 +118,16 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
 
   private LlamaAM getLlamaAM(String queue, boolean create)
       throws LlamaException {
-    LlamaAM am;
+    return getSingleQueueAMInfo(queue, create, false).am;
+  }
+  
+  private SingleQueueAMInfo getSingleQueueAMInfo(String queue, boolean create, boolean core)
+      throws LlamaException {
+    SingleQueueAMInfo amInfo;
     synchronized (ams) {
-      am = ams.get(queue);
-      if (am == null && create) {
+      amInfo = ams.get(queue);
+      if (amInfo == null && create) {
         SingleQueueLlamaAM qAm = new SingleQueueLlamaAM(getConf(), queue);
-
         boolean throttling = getConf().getBoolean(
             THROTTLING_ENABLED_KEY,
             THROTTLING_ENABLED_DEFAULT);
@@ -119,6 +135,7 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
             THROTTLING_ENABLED_KEY + "." + queue, throttling);
         LOG.info("Throttling for queue '{}' enabled '{}'", queue,
             throttling);
+        LlamaAM am;
         if (throttling) {
           ThrottleLlamaAM tAm = new ThrottleLlamaAM(getConf(), queue, qAm);
           tAm.setCallback(this);
@@ -129,15 +146,16 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
         am.setMetricRegistry(getMetricRegistry());
         am.start();
         am.addListener(this);
-        ams.put(queue, am);
+        amInfo = new SingleQueueAMInfo(am, core);
+        ams.put(queue, amInfo);
       }
     }
-    return am;
+    return amInfo;
   }
 
-  private Set<LlamaAM> getLlamaAMs() throws LlamaException {
+  private Set<SingleQueueAMInfo> getLlamaAMs() throws LlamaException {
     synchronized (ams) {
-      return new HashSet<LlamaAM>(ams.values());
+      return new HashSet<SingleQueueAMInfo>(ams.values());
     }
   }
 
@@ -147,24 +165,75 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
     for (String queue :
         getConf().getTrimmedStringCollection(CORE_QUEUES_KEY)) {
       try {
-        getLlamaAM(queue, true);
+        getSingleQueueAMInfo(queue, true, true);
       } catch (LlamaException ex) {
         stop();
         throw ex;
       }
     }
     llamaAMForGetNodes = new SingleQueueLlamaAM(getConf(), null);
-    llamaAMForGetNodes.setCallback(this);
     llamaAMForGetNodes.start();
+
     running = true;
+    expireThread.start();
+  }
+
+  private class ExpireThread extends Thread {
+    public ExpireThread() {
+      super("Queue AM Expiry Thread");
+    }
+
+    @Override
+    public void run() {
+      while (running) {
+        long now = Clock.currentTimeMillis();
+        Set<Map.Entry<String, SingleQueueAMInfo>> entries;
+        synchronized (ams) {
+          entries =
+              new HashSet<Map.Entry<String, SingleQueueAMInfo>>(ams.entrySet());
+        }
+        for (Map.Entry<String, SingleQueueAMInfo> entry : entries) {
+          SingleQueueAMInfo amInfo = entry.getValue();
+          if (amInfo.isIdleTimeout(now)) {
+            // Only need to synchronize if we want to remove the AM
+            boolean removed = false;
+            synchronized (ams) {
+              if (amInfo.isIdleTimeout(now)) {
+                LOG.info("Expiring AM for queue '{}'", entry.getKey());
+                ams.remove(entry.getKey());
+                removed = true;
+              }
+            }
+            // Stopping requires communication with YARN so we don't
+            // want to hold on to the lock while we're doing this.
+            if (removed) {
+              amInfo.am.stop();
+            }
+          }
+        }
+
+        try {
+          Thread.sleep(amCheckExpiryIntervalMs);
+        } catch (InterruptedException ex) {
+          // Ignore
+        }
+      }
+    }
   }
 
   @Override
   public void stop() {
     running = false;
+    expireThread.interrupt();
+    try {
+      expireThread.join();
+    } catch (InterruptedException ex) {
+      LOG.warn("Interrupted while joining with ExpiryThread");
+    }
+    
     synchronized (ams) {
-      for (LlamaAM am : ams.values()) {
-        am.stop();
+      for (SingleQueueAMInfo am : ams.values()) {
+        am.am.stop();
       }
     }
     if (llamaAMForGetNodes != null) {
@@ -186,8 +255,14 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
   @Override
   public void reserve(UUID reservationId, Reservation reservation)
       throws LlamaException {
-    LlamaAM am = getLlamaAM(reservation.getQueue(), true);
-    am.reserve(reservationId, reservation);
+    SingleQueueAMInfo amInfo;
+    // Get AM info and update num reservations atomically so that we don't destroy
+    // the AM in between.
+    synchronized (ams) {
+      amInfo = getSingleQueueAMInfo(reservation.getQueue(), true, false);
+      amInfo.incrementReservations();
+    }
+    amInfo.am.reserve(reservationId, reservation);
     reservationToQueue.put(reservationId, reservation.getQueue());
   }
 
@@ -218,9 +293,12 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
     PlacedReservation pr = null;
     String queue = reservationToQueue.remove(reservationId);
     if (queue != null) {
-      LlamaAM am = getLlamaAM(queue, false);
-      if (am != null) {
-        pr = am.releaseReservation(handle, reservationId, doNotCache);
+      SingleQueueAMInfo amInfo = getSingleQueueAMInfo(queue, false, false);
+      if (amInfo != null) {
+        pr = amInfo.am.releaseReservation(handle, reservationId, doNotCache);
+        if (pr != null) {
+          amInfo.decrementReservations(1);
+        }
       } else {
         LOG.warn("Queue '{}' not available anymore", queue);
       }
@@ -237,9 +315,14 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
       throws LlamaException {
     List<PlacedReservation> reservations = new ArrayList<PlacedReservation>();
     LlamaException thrown = null;
-    for (LlamaAM am : getLlamaAMs()) {
+    for (SingleQueueAMInfo amInfo : getLlamaAMs()) {
       try {
-        reservations.addAll(am.releaseReservationsForHandle(handle, doNotCache));
+        List<PlacedReservation> released =
+            amInfo.am.releaseReservationsForHandle(handle, doNotCache);
+        if (!released.isEmpty()) {
+          amInfo.decrementReservations(released.size());
+        }
+        reservations.addAll(released);
       } catch (LlamaException ex) {
         if (thrown != null) {
           LOG.error("releaseReservationsForHandle({}), error: {}",
@@ -262,10 +345,12 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
     List<PlacedReservation> list;
     LlamaAM am;
     synchronized (ams) {
-      am = (doNotCache) ? ams.remove(queue) : ams.get(queue);
+      am = ((doNotCache) ? ams.remove(queue) : ams.get(queue)).am;
     }
     if (am != null) {
       list = am.releaseReservationsForQueue(queue, doNotCache);
+      getSingleQueueAMInfo(queue, false, false).decrementReservations(
+          list.size());
       if (doNotCache) {
         am.stop();
       }
@@ -278,8 +363,8 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
   @Override
   public void emptyCacheForQueue(String queue) throws LlamaException {
     if (queue == ALL_QUEUES) {
-      for (LlamaAM am : getLlamaAMs()) {
-        am.emptyCacheForQueue(queue);
+      for (SingleQueueAMInfo amInfo : getLlamaAMs()) {
+        amInfo.am.emptyCacheForQueue(queue);
       }
     } else {
       LlamaAM am = getLlamaAM(queue, false);
@@ -307,6 +392,38 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
   @Override
   public void discardReservation(UUID reservationId) {
     reservationToQueue.remove(reservationId);
+  }
+
+  private class SingleQueueAMInfo {
+    public final LlamaAM am;
+    private final AtomicInteger numReservations;
+    // Whether we shouldn't delete this AM after it's empty for a while
+    private final boolean core;
+    // Time at which the AM became empty
+    private volatile long emptyTime;
+
+    public SingleQueueAMInfo(LlamaAM am, boolean core) {
+      this.am = am;
+      this.core = core;
+      this.emptyTime = Long.MAX_VALUE;
+      this.numReservations = new AtomicInteger(0);
+    }
+
+    public boolean isIdleTimeout(long now) {
+      return !core && numReservations.get() == 0 &&
+          now - emptyTime > queueExpireMs;
+    }
+
+    public void incrementReservations() {
+      numReservations.incrementAndGet();
+    }
+
+    public void decrementReservations(int num) {
+      int numRemaining = numReservations.addAndGet(-num);
+      if (numRemaining == 0) {
+        emptyTime = Clock.currentTimeMillis();
+      }
+    }
   }
 
 }
