@@ -50,7 +50,10 @@ public enum ErrorCode {
   AM_RESOURCE_OVER_MAX_MEMORY(308, "AM '{}' resource request '{}' exceeds maximum cluster memory '{}' for a resource"),
   AM_RESOURCE_OVER_NODE_CPUS(309, "AM '{}' resource request '{}' exceeds maximum node CPUs '{}' for a resource"),
   AM_RESOURCE_OVER_NODE_MEMORY(310, "AM '{}' resource request '{}' exceeds maximum node memory '{}' for a resource"),
-  AM_RELEASE_ERROR(311, "AM '{}' cannot release '{}'")
+  AM_RELEASE_ERROR(311, "AM '{}' cannot release '{}'"),
+  
+  RESERVATION_USER_NOT_ALLOWED_IN_QUEUE(400, "Reservation from user '{}' with requested queue '{}' denied access to assigned queue '{}'"),
+  RESERVATION_USER_TO_QUEUE_MAPPING_NOT_FOUND(401, "No mapping found for reservation from user '{}' with requested queue '{}'")
   ;
 
   private final int code;

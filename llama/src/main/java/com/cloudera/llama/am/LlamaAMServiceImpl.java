@@ -37,12 +37,21 @@ import com.cloudera.llama.thrift.TLlamaAMReservationResponse;
 import com.cloudera.llama.thrift.TLlamaAMUnregisterRequest;
 import com.cloudera.llama.thrift.TLlamaAMUnregisterResponse;
 import com.cloudera.llama.thrift.TNetworkAddress;
+import com.cloudera.llama.util.ErrorCode;
+import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.util.UUID;
+
+import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.yarn.api.records.QueueACL;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.AllocationConfiguration;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class LlamaAMServiceImpl implements LlamaAMService.Iface {
   private static final Logger LOG = LoggerFactory.getLogger(
@@ -51,13 +60,16 @@ public class LlamaAMServiceImpl implements LlamaAMService.Iface {
   private final LlamaAM llamaAM;
   private final NodeMapper nodeMapper;
   private final ClientNotificationService clientNotificationService;
+  private final AtomicReference<AllocationConfiguration> allocConf;
 
   @SuppressWarnings("unchecked")
   public LlamaAMServiceImpl(LlamaAM llamaAM, NodeMapper nodeMapper,
-      ClientNotificationService clientNotificationService) {
+      ClientNotificationService clientNotificationService,
+      AtomicReference<AllocationConfiguration> allocConf) {
     this.llamaAM = llamaAM;
     this.nodeMapper = nodeMapper;
     this.clientNotificationService = clientNotificationService;
+    this.allocConf = allocConf;
     llamaAM.addListener(clientNotificationService);
   }
 
@@ -103,7 +115,11 @@ public class LlamaAMServiceImpl implements LlamaAMService.Iface {
     try {
       UUID handle = TypeUtils.toUUID(request.getAm_handle());
       clientNotificationService.validateHandle(handle);
-      Reservation reservation = TypeUtils.toReservation(request, nodeMapper);
+
+      String queue = assignToQueue(request);
+      checkAccess(request.getUser(), queue, request.getQueue());
+
+      Reservation reservation = TypeUtils.toReservation(request, nodeMapper, queue);
       UUID reservationId = llamaAM.reserve(reservation);
       response.setReservation_id(TypeUtils.toTUniqueId(reservationId));
       response.setStatus(TypeUtils.OK);
@@ -112,6 +128,54 @@ public class LlamaAMServiceImpl implements LlamaAMService.Iface {
       response.setStatus(TypeUtils.createError(ex));
     }
     return response;
+  }
+  
+  /**
+   * Assign reservation to a queue based on the placement policy specified
+   * in the alloc conf
+   */
+  // Visible for testing
+  String assignToQueue(TLlamaAMReservationRequest request)
+      throws LlamaException {
+    // Default means no queue requested
+    String requestedQueue = (request.isSetQueue()) ? request.getQueue()
+        : YarnConfiguration.DEFAULT_QUEUE_NAME;
+    if (requestedQueue == null) {
+      requestedQueue = YarnConfiguration.DEFAULT_QUEUE_NAME;
+    }
+    String user = request.getUser();
+    String queue;
+    try {
+      queue = allocConf.get().getPlacementPolicy()
+          .assignAppToQueue(requestedQueue, user);
+    } catch (IOException ex) {
+      throw new LlamaException(ex, ErrorCode.INTERNAL_ERROR);
+    }
+    if (queue == null) {
+      throw new LlamaException(
+          ErrorCode.RESERVATION_USER_TO_QUEUE_MAPPING_NOT_FOUND, requestedQueue,
+          user);
+    }
+    LOG.debug("Reservation from user " + user + " with requested queue " +
+        requestedQueue + " resolved to queue " + queue);
+    
+    return queue;
+  }
+
+  // Visible for testing
+  void checkAccess(String user, String queue, String requestedQueue)
+      throws LlamaException {
+    UserGroupInformation ugi;
+    try {
+      ugi = UserGroupInformation.createProxyUser(user,
+          UserGroupInformation.getCurrentUser());
+    } catch (IOException ex) {
+      throw new LlamaException(ex, ErrorCode.INTERNAL_ERROR);
+    }
+    if (!allocConf.get().hasAccess(queue, QueueACL.SUBMIT_APPLICATIONS, ugi)) {
+      throw new LlamaException(ErrorCode.RESERVATION_USER_NOT_ALLOWED_IN_QUEUE,
+          user, requestedQueue, queue);
+    }
   }
 
   @Override

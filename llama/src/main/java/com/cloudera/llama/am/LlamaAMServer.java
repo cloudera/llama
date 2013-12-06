@@ -33,6 +33,9 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.jmx.JMXJsonServlet;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.util.ReflectionUtils;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.AllocationConfiguration;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.AllocationFileLoaderService;
 import org.mortbay.jetty.Connector;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.bio.SocketConnector;
@@ -42,6 +45,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class LlamaAMServer extends
     ThriftServer<LlamaAMService.Processor, LlamaAMAdminService.Processor>
@@ -53,6 +57,8 @@ public class LlamaAMServer extends
   private LlamaAM llamaAm;
   private ClientNotificationService clientNotificationService;
   private NodeMapper nodeMapper;
+  private AllocationFileLoaderService allocsLoader;
+  private AtomicReference<AllocationConfiguration> allocConf;
   private String httpJmx;
   private String httpLlama;
   private RestData restData;
@@ -145,6 +151,27 @@ public class LlamaAMServer extends
       clientNotificationService.start();
       clientNotificationService.addListener(restData);
 
+      // For mapping reservations to queues and checking queue ACLs
+      YarnConfiguration yarnConf = new YarnConfiguration();
+      allocConf = new AtomicReference<AllocationConfiguration>();
+      allocsLoader = new AllocationFileLoaderService();
+      allocsLoader.init(yarnConf);
+      allocsLoader.setReloadListener(new AllocationFileLoaderService.Listener() {
+        @Override
+        public void onReload(AllocationConfiguration allocs) {
+          allocConf.set(allocs);
+        }
+      });
+      try {
+        allocsLoader.reloadAllocations();
+        allocsLoader.start();
+      } catch (Exception ex) {
+        LOG.warn("Failed to load queue allocations");
+      }
+      if (allocConf.get() == null) {
+        allocConf.set(new AllocationConfiguration(yarnConf));
+      }
+
       getConf().set(YarnRMConnector.ADVERTISED_HOSTNAME_KEY,
           ThriftEndPoint.getServerAddress(getServerConf()));
       getConf().setInt(YarnRMConnector.ADVERTISED_PORT_KEY,
@@ -174,7 +201,7 @@ public class LlamaAMServer extends
   @Override
   protected LlamaAMService.Processor createServiceProcessor() {
     LlamaAMService.Iface handler = new LlamaAMServiceImpl(llamaAm, nodeMapper,
-        clientNotificationService);
+        clientNotificationService, allocConf);
     MetricLlamaAMService.registerMetric(getMetricRegistry());
     handler = new MetricLlamaAMService(handler, getMetricRegistry());
     return new LlamaAMService.Processor<LlamaAMService.Iface>(handler);

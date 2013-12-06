@@ -119,8 +119,8 @@ public class TestLlamaAMThriftServer {
 
     conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MockRMConnector.class,
         RMConnector.class);
-    conf.set(LlamaAM.CORE_QUEUES_KEY, "q1,q2");
-    conf.set(MockRMConnector.QUEUES_KEY, "q1,q2");
+    conf.set(LlamaAM.CORE_QUEUES_KEY, "root.q1,root.q2");
+    conf.set(MockRMConnector.QUEUES_KEY, "root.q1,root.q2");
     conf.set(MockRMConnector.NODES_KEY, "n1,n2");
     conf.setInt(MockRMConnector.EVENTS_MIN_WAIT_KEY, 5);
     conf.setInt(MockRMConnector.EVENTS_MAX_WAIT_KEY, 10);
@@ -361,7 +361,7 @@ public class TestLlamaAMThriftServer {
     keys.addAll(MetricClientLlamaNotificationService.METRIC_KEYS);
     keys.addAll(MetricLlamaAMService.METRIC_KEYS);
     for (String key : SingleQueueLlamaAM.METRIC_TEMPLATE_KEYS) {
-      keys.add(FastFormat.format(key, "q1"));
+      keys.add(FastFormat.format(key, "root.q1"));
     }
     MetricRegistry mr = server.getMetricRegistry();
     Map<String, Metric> metrics = mr.getMetrics();
@@ -425,7 +425,7 @@ public class TestLlamaAMThriftServer {
           Assert.assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
 
           conn = (HttpURLConnection) new URL(server.getHttpLlamaUI() +
-              "json/v1/queue/q1").openConnection();
+              "json/v1/queue/root.q1").openConnection();
           Assert.assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
 
           conn = (HttpURLConnection) new URL(server.getHttpLlamaUI() +
@@ -852,7 +852,7 @@ public class TestLlamaAMThriftServer {
                 TLlamaAMAdminEmptyCacheRequest adminReq
                     = new TLlamaAMAdminEmptyCacheRequest();
                 adminReq.setVersion(TLlamaServiceVersion.V1);
-                adminReq.setQueues(Arrays.asList("q2"));
+                adminReq.setQueues(Arrays.asList("root.q2"));
                 TLlamaAMAdminEmptyCacheResponse adminRes
                     = admin.EmptyCache(adminReq);
                 Assert.assertEquals(TStatusCode.OK,
@@ -860,7 +860,7 @@ public class TestLlamaAMThriftServer {
               } else {
                 List<String> args = new ArrayList<String>(emptyCacheCliArgs);
                 args.add("-queues");
-                args.add("q2");
+                args.add("root.q2");
                 int exit = LlamaAdminClient.execute(args.toArray(new String[args.size()]));
                 Assert.assertEquals(0, exit);
               }
@@ -890,14 +890,14 @@ public class TestLlamaAMThriftServer {
               if (!useCLI) {
                 TLlamaAMAdminReleaseRequest adminReq = new TLlamaAMAdminReleaseRequest();
                 adminReq.setVersion(TLlamaServiceVersion.V1);
-                adminReq.setQueues(Arrays.asList("q2"));
+                adminReq.setQueues(Arrays.asList("root.q2"));
                 TLlamaAMAdminReleaseResponse adminRes = admin.Release(adminReq);
                 Assert.assertEquals(TStatusCode.OK,
                     adminRes.getStatus().getStatus_code());
               } else {
                 List<String> args = new ArrayList<String>(releaseCliArgs);
                 args.add("-queues");
-                args.add("q2");
+                args.add("root.q2");
                 int exit = LlamaAdminClient.execute(args.toArray(new String[args.size()]));
                 Assert.assertEquals(0, exit);
               }

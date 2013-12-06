@@ -142,17 +142,13 @@ public class TypeUtils {
   }
 
   public static Reservation toReservation(TLlamaAMReservationRequest request,
-      NodeMapper nodeMapper) {
+      NodeMapper nodeMapper, String queue) {
     UUID handle = toUUID(request.getAm_handle());
-    if (!request.isSetQueue()) {
-      throw new RuntimeException("For now queue MUST be set");
-    }
-    String queue = request.getQueue();
     boolean isGang = request.isGang();
     List<Resource> resources = toResourceList(request.getResources(),
         nodeMapper);
     Reservation.Builder builder = Builders.createReservationBuilder();
-    return builder.setHandle(handle).setUser("foo").setQueue(queue).
+    return builder.setHandle(handle).setUser(request.getUser()).setQueue(queue).
         setResources(resources).setGang(isGang).build();
   }
 
