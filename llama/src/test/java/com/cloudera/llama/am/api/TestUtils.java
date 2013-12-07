@@ -72,6 +72,14 @@ public class TestUtils {
     return b.build();
   }
 
+  public static Expansion createExpansion(PlacedReservation r) {
+    Expansion.Builder b = Builders.createExpansionBuilder();
+    b.setHandle(UUID.randomUUID());
+    b.setExpansionOf(r.getReservationId());
+    b.setResource(createResource("l"));
+    return b.build();
+  }
+
   public static Reservation createReservation(UUID handle, String user,
       String queue, Resource resource, boolean gang) {
     Reservation.Builder b = Builders.createReservationBuilder();

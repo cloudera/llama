@@ -36,6 +36,9 @@ public enum ErrorCode {
 
   LLAMA_MAX_RESERVATIONS_FOR_QUEUE(160, "Queue '{}' reached its limit of '{}' queued reservations"),
 
+  UNKNOWN_RESERVATION_FOR_EXPANSION(170, "Unknown reservation '{}' for expansion"),
+  CANNOT_EXPAND_AN_EXPANSION_RESERVATION(171, "Cannot expand an expansion reservation '{}'"),
+  CANNOT_EXPAND_A_RESERVATION_NOT_ALLOCATED(172, "Cannot expand reservation '{}' not in ALLOCATED status, current status '{}'"),
   AM_CANNOT_START(300, "cannot start AM"),
   AM_CANNOT_REGISTER(301, "cannot register AM '{}' for queue '{}'"),
   AM_CANNOT_CREATE(302, "cannot create AM for queue '{}'"),

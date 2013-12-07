@@ -305,7 +305,8 @@ public class ThrottleLlamaAM extends LlamaAMImpl
     if (reservation == null) {
       reservation = am.releaseReservation(handle, reservationId, doNotCache);
     } else {
-      dispatch(LlamaAMEventImpl.createEvent(!isAdminCall(), reservation));
+      dispatch(LlamaAMEventImpl.createEvent(isCallConsideredEcho(handle),
+          reservation));
     }
     return reservation;
   }
@@ -322,7 +323,8 @@ public class ThrottleLlamaAM extends LlamaAMImpl
         am.releaseReservationsForHandle(handle, doNotCache);
     reservations.addAll(pReservations);
     if (!localReservations.isEmpty()) {
-      dispatch(LlamaAMEventImpl.createEvent(!isAdminCall(), localReservations));
+      dispatch(LlamaAMEventImpl.createEvent(isCallConsideredEcho(handle),
+          localReservations));
     }
     return reservations;
   }
@@ -338,7 +340,8 @@ public class ThrottleLlamaAM extends LlamaAMImpl
         am.releaseReservationsForQueue(queue, doNotCache);
     reservations.addAll(pReservations);
     if (!localReservations.isEmpty()) {
-      dispatch(LlamaAMEventImpl.createEvent(!isAdminCall(), localReservations));
+      dispatch(LlamaAMEventImpl.createEvent(isCallConsideredEcho(WILDCARD_HANDLE),
+          localReservations));
     }
     return reservations;
   }

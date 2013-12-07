@@ -332,6 +332,13 @@ public class PlacedReservationImpl implements PlacedReservation, Expansion {
     }
 
     @Override
+    public Expansion.Builder setHandle(UUID handle) {
+      ParamChecker.notNull(handle, "handle");
+      this.handle = handle;
+      return this;
+    }
+
+    @Override
     public Expansion.Builder setExpansionOf(UUID expansionOf) {
       ParamChecker.notNull(expansionOf, "expansionOf");
       this.expansionOf = expansionOf;
@@ -352,10 +359,23 @@ public class PlacedReservationImpl implements PlacedReservation, Expansion {
 
     @Override
     public Expansion build() {
+      ParamChecker.notNull(handle, "handle");
       ParamChecker.notNull(expansionOf, "expansionOf");
       ParamChecker.notNull(resource, "resource");
       return new PlacedReservationImpl(this);
     }
+  }
+
+  public static Reservation createReservationForExpansion(
+      PlacedReservation originalReservation,  Expansion expansion) {
+    List<PlacedResourceImpl> resources =new ArrayList<PlacedResourceImpl>();
+    PlacedReservation reservation = new PlacedReservationImpl(null, null, 0,
+        expansion.getHandle(), originalReservation.getUser(),
+        originalReservation.getQueue(), false, resources,
+        originalReservation.getReservationId(), 0, false);
+    resources.add(PlacedResourceImpl.createPlaced(reservation,
+        expansion.getResource()));
+    return reservation;
   }
 
 }

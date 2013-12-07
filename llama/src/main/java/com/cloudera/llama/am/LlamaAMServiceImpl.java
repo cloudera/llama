@@ -17,6 +17,7 @@
  */
 package com.cloudera.llama.am;
 
+import com.cloudera.llama.am.api.Expansion;
 import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.Reservation;
 import com.cloudera.llama.server.ClientNotificationService;
@@ -29,6 +30,8 @@ import com.cloudera.llama.thrift.TLlamaAMRegisterRequest;
 import com.cloudera.llama.thrift.TLlamaAMRegisterResponse;
 import com.cloudera.llama.thrift.TLlamaAMReleaseRequest;
 import com.cloudera.llama.thrift.TLlamaAMReleaseResponse;
+import com.cloudera.llama.thrift.TLlamaAMReservationExpansionRequest;
+import com.cloudera.llama.thrift.TLlamaAMReservationExpansionResponse;
 import com.cloudera.llama.thrift.TLlamaAMReservationRequest;
 import com.cloudera.llama.thrift.TLlamaAMReservationResponse;
 import com.cloudera.llama.thrift.TLlamaAMUnregisterRequest;
@@ -106,6 +109,25 @@ public class LlamaAMServiceImpl implements LlamaAMService.Iface {
       response.setStatus(TypeUtils.OK);
     } catch (Throwable ex) {
       LOG.warn("Reserve() error: {}", ex.toString(), ex);
+      response.setStatus(TypeUtils.createError(ex));
+    }
+    return response;
+  }
+
+  @Override
+  public TLlamaAMReservationExpansionResponse Expand(
+      TLlamaAMReservationExpansionRequest request) throws TException {
+    TLlamaAMReservationExpansionResponse response =
+        new TLlamaAMReservationExpansionResponse();
+    try {
+      UUID handle = TypeUtils.toUUID(request.getAm_handle());
+      clientNotificationService.validateHandle(handle);
+      Expansion expansion = TypeUtils.toExpansion(request, nodeMapper);
+      UUID reservationId = llamaAM.expand(expansion);
+      response.setReservation_id(TypeUtils.toTUniqueId(reservationId));
+      response.setStatus(TypeUtils.OK);
+    } catch (Throwable ex) {
+      LOG.warn("Expand() error: {}", ex.toString(), ex);
       response.setStatus(TypeUtils.createError(ex));
     }
     return response;

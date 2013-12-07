@@ -18,6 +18,8 @@
 package com.cloudera.llama.server;
 
 import com.cloudera.llama.am.api.Builders;
+import com.cloudera.llama.am.api.Expansion;
+import com.cloudera.llama.thrift.TLlamaAMReservationExpansionRequest;
 import com.cloudera.llama.util.ErrorCode;
 import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.api.PlacedReservation;
@@ -39,7 +41,6 @@ import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -153,6 +154,16 @@ public class TypeUtils {
     Reservation.Builder builder = Builders.createReservationBuilder();
     return builder.setHandle(handle).setUser("foo").setQueue(queue).
         setResources(resources).setGang(isGang).build();
+  }
+
+  public static Expansion toExpansion(
+      TLlamaAMReservationExpansionRequest request, NodeMapper nodeMapper) {
+    UUID handle = toUUID(request.getAm_handle());
+    Resource resource = toResource(request.getResource(), nodeMapper);
+    Expansion.Builder builder = Builders.createExpansionBuilder();
+    return builder.setHandle(handle).
+        setExpansionOf(toUUID(request.getExpansion_of())).
+        setResource(resource).build();
   }
 
   public static TAllocatedResource toTAllocatedResource(PlacedResource

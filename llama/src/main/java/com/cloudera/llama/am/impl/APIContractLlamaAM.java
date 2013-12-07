@@ -17,6 +17,7 @@
  */
 package com.cloudera.llama.am.impl;
 
+import com.cloudera.llama.am.api.Expansion;
 import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.api.LlamaAMListener;
@@ -127,6 +128,16 @@ public class APIContractLlamaAM extends LlamaAM {
     ParamChecker.notNull(reservation, "reservation");
     llamaAM.reserve(reservationId, reservation);
     LOG.trace("reserve({}): {}", reservation, reservationId);
+  }
+
+  @Override
+  public void expand(UUID expansionId, Expansion expansion)
+      throws LlamaException {
+    checkIsRunning();
+    ParamChecker.notNull(expansionId, "reservationId");
+    ParamChecker.notNull(expansion, "reservation");
+    llamaAM.expand(expansionId, expansion);
+    LOG.trace("expand({}): {}", expansion, expansionId);
   }
 
   @Override

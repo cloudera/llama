@@ -273,7 +273,8 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
         }
         reservation = _deleteReservation(reservationId,
             PlacedReservation.Status.RELEASED);
-        event = LlamaAMEventImpl.createEvent(!isAdminCall(), reservation);
+        event = LlamaAMEventImpl.createEvent(isCallConsideredEcho(handle),
+            reservation);
       }
     }
     if (reservation != null) {
@@ -312,7 +313,8 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
           doNotCache);
     }
     if (!reservations.isEmpty()) {
-      dispatch(LlamaAMEventImpl.createEvent(!isAdminCall(), reservations));
+      dispatch(LlamaAMEventImpl.createEvent(isCallConsideredEcho(handle),
+          reservations));
     }
     return reservations;
   }
@@ -333,7 +335,8 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
       }
     }
     if (!reservations.isEmpty()) {
-      dispatch(LlamaAMEventImpl.createEvent(!isAdminCall(), reservations));
+      dispatch(LlamaAMEventImpl.createEvent(isCallConsideredEcho(WILDCARD_HANDLE),
+          reservations));
     }
     return reservations;
   }

@@ -26,6 +26,8 @@ import com.cloudera.llama.thrift.TLlamaAMRegisterRequest;
 import com.cloudera.llama.thrift.TLlamaAMRegisterResponse;
 import com.cloudera.llama.thrift.TLlamaAMReleaseRequest;
 import com.cloudera.llama.thrift.TLlamaAMReleaseResponse;
+import com.cloudera.llama.thrift.TLlamaAMReservationExpansionRequest;
+import com.cloudera.llama.thrift.TLlamaAMReservationExpansionResponse;
 import com.cloudera.llama.thrift.TLlamaAMReservationRequest;
 import com.cloudera.llama.thrift.TLlamaAMReservationResponse;
 import com.cloudera.llama.thrift.TLlamaAMUnregisterRequest;
@@ -44,9 +46,11 @@ public class MetricLlamaAMService implements LlamaAMService.Iface {
   private static final String REGISTER_TIMER = METRIC_PREFIX + "Register.timer";
   private static final String UNREGISTER_TIMER = METRIC_PREFIX + "Unregister.timer";
   private static final String RESERVE_TIMER = METRIC_PREFIX + "Reserve.timer";
+  private static final String EXPAND_TIMER = METRIC_PREFIX + "Expand.timer";
   private static final String RELEASE_TIMER = METRIC_PREFIX + "Release.timer";
   private static final String GET_NODES_TIMER = METRIC_PREFIX + "GetNodes.timer";
   private static final String RESERVE_METER = METRIC_PREFIX + "Reserve.meter";
+  private static final String EXPAND_METER = METRIC_PREFIX + "Expand.meter";
   private static final String RELEASE_METER = METRIC_PREFIX + "Release.meter";
 
   public static final List<String> METRIC_KEYS = Arrays.asList(
@@ -130,6 +134,24 @@ public class MetricLlamaAMService implements LlamaAMService.Iface {
         new LogContext(response.getStatus(), request.getAm_handle()) : null;
       MetricUtil.time(metricRegistry, RESERVE_TIMER, time, logContext);
       MetricUtil.meter(metricRegistry, RESERVE_METER, 1);
+    }
+  }
+
+
+  @Override
+  public TLlamaAMReservationExpansionResponse Expand(
+      TLlamaAMReservationExpansionRequest request) throws TException {
+    TLlamaAMReservationExpansionResponse response = null;
+    long time = System.currentTimeMillis();
+    try {
+      response = service.Expand(request);
+      return response;
+    } finally {
+      time = System.currentTimeMillis() - time;
+      Object logContext = (response != null) ?
+        new LogContext(response.getStatus(), request.getAm_handle()) : null;
+      MetricUtil.time(metricRegistry, EXPAND_TIMER, time, logContext);
+      MetricUtil.meter(metricRegistry, EXPAND_METER, 1);
     }
   }
 

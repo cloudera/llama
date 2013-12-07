@@ -270,7 +270,7 @@ public class TestSingleQueueLlamaAM {
         @Override
         public Void call() throws Exception {
           Assert.assertNotNull(llama.releaseReservation(
-              LlamaAM.ADMIN_HANDLE, reservationId, false));
+              LlamaAM.WILDCARD_HANDLE, reservationId, false));
           return null;
         }
       });

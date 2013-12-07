@@ -23,6 +23,8 @@ public interface Expansion {
 
   public interface Builder {
 
+    public Builder setHandle(UUID handle);
+
     public Builder setExpansionOf(UUID expansionOf);
 
     public Builder setResource(Resource resource);
@@ -30,6 +32,8 @@ public interface Expansion {
     public Expansion build();
 
   }
+
+  public UUID getHandle();
 
   public UUID getExpansionOf();
 

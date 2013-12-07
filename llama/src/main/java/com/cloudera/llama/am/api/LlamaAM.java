@@ -18,6 +18,7 @@
 package com.cloudera.llama.am.api;
 
 import com.cloudera.llama.am.impl.APIContractLlamaAM;
+import com.cloudera.llama.am.impl.ExpansionReservationsLlamaAM;
 import com.cloudera.llama.am.impl.GangAntiDeadlockLlamaAM;
 import com.cloudera.llama.am.impl.MultiQueueLlamaAM;
 import com.cloudera.llama.util.LlamaException;
@@ -87,6 +88,7 @@ public abstract class LlamaAM {
         GANG_ANTI_DEADLOCK_ENABLED_DEFAULT)) {
       am = new GangAntiDeadlockLlamaAM(conf, am);
     }
+    am = new ExpansionReservationsLlamaAM(am);
     return new APIContractLlamaAM(am);
   }
 
@@ -127,10 +129,22 @@ public abstract class LlamaAM {
     return id;
   }
 
+  public void expand(UUID expansionId, Expansion expansion)
+      throws LlamaException {
+    throw new UnsupportedOperationException();
+  }
+
+  public UUID expand(Expansion expansion)
+      throws LlamaException {
+    UUID id = UUID.randomUUID();
+    expand(id, expansion);
+    return id;
+  }
+
   public abstract PlacedReservation getReservation(UUID reservationId)
       throws LlamaException;
 
-  public static final UUID ADMIN_HANDLE = UUID.randomUUID();
+  public static final UUID WILDCARD_HANDLE = UUID.randomUUID();
 
   public abstract PlacedReservation releaseReservation(UUID handle,
       UUID reservationId, boolean doNotCache)
@@ -156,6 +170,10 @@ public abstract class LlamaAM {
 
   protected boolean isAdminCall() {
     return (AS_ADMIN.get() != null) ? AS_ADMIN.get() : false;
+  }
+
+  protected boolean isCallConsideredEcho(UUID handle) {
+    return !isAdminCall() && !handle.equals(WILDCARD_HANDLE);
   }
 
   public static <T> T doAsAdmin(Callable<T> callable) throws Exception {

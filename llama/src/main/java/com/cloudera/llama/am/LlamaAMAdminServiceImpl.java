@@ -18,7 +18,6 @@
 package com.cloudera.llama.am;
 
 import com.cloudera.llama.am.api.LlamaAM;
-import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.util.FastFormat;
 import com.cloudera.llama.server.ClientNotificationService;
 import com.cloudera.llama.server.ClientPrincipalTProcessor;
@@ -83,7 +82,7 @@ public class LlamaAMAdminServiceImpl implements LlamaAMAdminService.Iface {
           LlamaAM.doAsAdmin(new Callable<Void>() {
             @Override
             public Void call() throws Exception {
-              llamaAM.releaseReservation(LlamaAM.ADMIN_HANDLE, reservation,
+              llamaAM.releaseReservation(LlamaAM.WILDCARD_HANDLE, reservation,
                   doNotCache);
               return null;
             }

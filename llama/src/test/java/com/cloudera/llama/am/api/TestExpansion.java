@@ -50,9 +50,24 @@ public class TestExpansion {
     b.setResource(null);
   }
 
+  @Test(expected = IllegalArgumentException.class)
+  public void testBuilderFail5() {
+    Expansion.Builder b = Builders.createExpansionBuilder();
+    b.setExpansionOf(null);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testBuilderFail6() {
+    Expansion.Builder b = Builders.createExpansionBuilder();
+    b.setExpansionOf(UUID.randomUUID());
+    b.setResource(TestUtils.createResource("n"));
+    b.build();
+  }
+
   @Test
   public void testBuilderOk() {
     Expansion.Builder b = Builders.createExpansionBuilder();
+    b.setHandle(UUID.randomUUID());
     b.setExpansionOf(UUID.randomUUID());
     b.setResource(TestUtils.createResource("n"));
     Assert.assertNotNull(b.build());
@@ -61,12 +76,15 @@ public class TestExpansion {
   @Test
   public void testGetters1() {
     Expansion.Builder b = Builders.createExpansionBuilder();
+    UUID handle = UUID.randomUUID();
+    b.setHandle(handle);
     UUID reservationId = UUID.randomUUID();
     b.setExpansionOf(reservationId);
     Resource resource = TestUtils.createResource("n");
     b.setResource(resource);
     Expansion expansion = b.build();
     Assert.assertNotNull(expansion.toString());
+    Assert.assertEquals(handle, expansion.getHandle());
     Assert.assertEquals(reservationId, expansion.getExpansionOf());
     TestUtils.assertResource(resource, expansion.getResource());
   }

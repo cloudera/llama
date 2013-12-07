@@ -97,9 +97,6 @@ struct TLlamaAMUnregisterResponse {
   1: required TStatus status;
 }
 
-
-
-
 struct TLlamaAMReservationRequest {
   1: required TLlamaServiceVersion version;
   2: required TUniqueId            am_handle;
@@ -110,6 +107,18 @@ struct TLlamaAMReservationRequest {
 }
 
 struct TLlamaAMReservationResponse {
+  1: required TStatus   status;
+  2: optional TUniqueId reservation_id;
+}
+
+struct TLlamaAMReservationExpansionRequest {
+  1: required TLlamaServiceVersion version;
+  2: required TUniqueId            am_handle;
+  3: required TUniqueId            expansion_of;
+  4: required TResource            resource;
+}
+
+struct TLlamaAMReservationExpansionResponse {
   1: required TStatus   status;
   2: optional TUniqueId reservation_id;
 }
@@ -141,7 +150,10 @@ service LlamaAMService {
   TLlamaAMUnregisterResponse Unregister(1: TLlamaAMUnregisterRequest request);
   
   TLlamaAMReservationResponse Reserve(1: TLlamaAMReservationRequest request);
-  
+
+    TLlamaAMReservationExpansionResponse Expand(
+    1: TLlamaAMReservationExpansionRequest request);
+
   TLlamaAMReleaseResponse Release(1: TLlamaAMReleaseRequest request);
 
   TLlamaAMGetNodesResponse GetNodes(1: TLlamaAMGetNodesRequest request);

@@ -18,8 +18,11 @@
 package com.cloudera.llama.am;
 
 
+import com.cloudera.llama.am.api.AsyncLlamaAMListener;
 import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.mock.MockRMConnector;
+import com.cloudera.llama.thrift.TLlamaAMReservationExpansionRequest;
+import com.cloudera.llama.thrift.TLlamaAMReservationExpansionResponse;
 import com.cloudera.llama.util.ErrorCode;
 import com.cloudera.llama.util.FastFormat;
 import com.cloudera.llama.am.impl.GangAntiDeadlockLlamaAM;
@@ -460,6 +463,118 @@ public class TestLlamaAMThriftServer {
           turReq.setAm_handle(trRes.getAm_handle());
           TLlamaAMUnregisterResponse turRes = client.Unregister(turReq);
           Assert.assertEquals(TStatusCode.OK, 
+              turRes.getStatus().getStatus_code());
+
+          //test metric registration
+          verifyMetricRegistration(server);
+          return null;
+        }
+      });
+    } finally {
+      server.stop();
+      callbackServer.stop();
+    }
+  }
+
+  @Test
+  public void testExpansion() throws Exception {
+    final MyLlamaAMServer server = new MyLlamaAMServer();
+    final NotificationEndPoint callbackServer = new NotificationEndPoint();
+    try {
+      callbackServer.setConf(createCallbackConfiguration());
+      callbackServer.start();
+      server.setConf(createLlamaConfiguration());
+      server.start();
+
+      Subject.doAs(getClientSubject(), new PrivilegedExceptionAction<Object>() {
+        @Override
+        public Object run() throws Exception {
+          com.cloudera.llama.thrift.LlamaAMService.Client client = createClient(server);
+
+          TLlamaAMRegisterRequest trReq = new TLlamaAMRegisterRequest();
+          trReq.setVersion(TLlamaServiceVersion.V1);
+          trReq.setClient_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
+          TNetworkAddress tAddress = new TNetworkAddress();
+          tAddress.setHostname(callbackServer.getAddressHost());
+          tAddress.setPort(callbackServer.getAddressPort());
+          trReq.setNotification_callback_service(tAddress);
+
+          //register
+          TLlamaAMRegisterResponse trRes = client.Register(trReq);
+          Assert.assertEquals(TStatusCode.OK, trRes.getStatus().
+              getStatus_code());
+
+          //valid reservation
+          TLlamaAMReservationRequest tresReq = new TLlamaAMReservationRequest();
+          tresReq.setVersion(TLlamaServiceVersion.V1);
+          tresReq.setAm_handle(trRes.getAm_handle());
+          tresReq.setUser("dummyUser");
+          tresReq.setQueue("q1");
+          TResource tResource = new TResource();
+          tResource.setClient_resource_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
+          tResource.setAskedLocation(MockLlamaAMFlags.ALLOCATE + "n1");
+          tResource.setV_cpu_cores((short) 1);
+          tResource.setMemory_mb(1024);
+          tResource.setEnforcement(TLocationEnforcement.MUST);
+          tresReq.setResources(Arrays.asList(tResource));
+          tresReq.setGang(true);
+          TLlamaAMReservationResponse tresRes = client.Reserve(tresReq);
+          Assert.assertEquals(TStatusCode.OK,
+              tresRes.getStatus().getStatus_code());
+          //check notification delivery
+          Thread.sleep(300);
+          Assert.assertEquals(1, callbackServer.notifications.size());
+
+          callbackServer.notifications.clear();
+
+          //valid expansion
+          TLlamaAMReservationExpansionRequest tresExReq =
+              new TLlamaAMReservationExpansionRequest();
+          tresExReq.setVersion(TLlamaServiceVersion.V1);
+          tresExReq.setAm_handle(trRes.getAm_handle());
+          tresExReq.setExpansion_of(tresRes.getReservation_id());
+          tResource = new TResource();
+          tResource.setClient_resource_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
+          tResource.setAskedLocation(MockLlamaAMFlags.ALLOCATE + "n1");
+          tResource.setV_cpu_cores((short) 1);
+          tResource.setMemory_mb(1024);
+          tResource.setEnforcement(TLocationEnforcement.MUST);
+          tresExReq.setResource(tResource);
+
+          TLlamaAMReservationExpansionResponse tresExRes =
+              client.Expand(tresExReq);
+          Assert.assertEquals(TStatusCode.OK,
+              tresExRes.getStatus().getStatus_code());
+          //check notification delivery
+          Thread.sleep(300);
+          Assert.assertEquals(1, callbackServer.notifications.size());
+
+          //invalid expansion
+          tresExReq = new TLlamaAMReservationExpansionRequest();
+          tresExReq.setVersion(TLlamaServiceVersion.V1);
+          tresExReq.setAm_handle(trRes.getAm_handle());
+          tresExReq.setExpansion_of(TypeUtils.toTUniqueId(UUID.randomUUID()));
+          tResource = new TResource();
+          tResource.setClient_resource_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
+          tResource.setAskedLocation(MockLlamaAMFlags.ALLOCATE + "n1");
+          tResource.setV_cpu_cores((short) 1);
+          tResource.setMemory_mb(1024);
+          tResource.setEnforcement(TLocationEnforcement.MUST);
+          tresExReq.setResource(tResource);
+
+          tresExRes = client.Expand(tresExReq);
+          Assert.assertEquals(TStatusCode.REQUEST_ERROR, tresExRes.getStatus()
+              .getStatus_code());
+          Assert.assertEquals(ErrorCode.UNKNOWN_RESERVATION_FOR_EXPANSION.getCode(),
+              tresExRes.getStatus().getError_code());
+
+
+          //unregister
+          TLlamaAMUnregisterRequest turReq = new TLlamaAMUnregisterRequest();
+          turReq.setVersion(TLlamaServiceVersion.V1);
+          turReq.setAm_handle(trRes.getAm_handle());
+          TLlamaAMUnregisterResponse turRes = client.Unregister(turReq);
+          Assert.assertEquals(TStatusCode.OK,
               turRes.getStatus().getStatus_code());
 
           //test metric registration

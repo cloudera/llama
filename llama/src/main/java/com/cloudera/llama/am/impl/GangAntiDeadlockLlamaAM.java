@@ -224,7 +224,8 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
         reservationId, doNotCache);
     if (gPlacedReservation != null && placedReservation == null) {
       //reservation was local only
-      dispatch(LlamaAMEventImpl.createEvent(!isAdminCall(), gPlacedReservation));
+      dispatch(LlamaAMEventImpl.createEvent(isCallConsideredEcho(handle),
+          gPlacedReservation));
     }
     return (placedReservation != null) ? placedReservation : gPlacedReservation;
   }
@@ -248,7 +249,8 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
         gReleaseReservationsForHandle(handle);
     localReservations.removeAll(reservations);
     if (!localReservations.isEmpty()) {
-      dispatch(LlamaAMEventImpl.createEvent(!isAdminCall(), localReservations));
+      dispatch(LlamaAMEventImpl.createEvent(isCallConsideredEcho(handle),
+          localReservations));
     }
     reservations = new ArrayList<PlacedReservation>(reservations);
     reservations.addAll(localReservations);
@@ -284,7 +286,8 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
         gReleaseReservationsForQueue(queue);
     localReservations.removeAll(reservations);
     if (!localReservations.isEmpty()) {
-      dispatch(LlamaAMEventImpl.createEvent(!isAdminCall(), localReservations));
+      dispatch(LlamaAMEventImpl.createEvent(isCallConsideredEcho(WILDCARD_HANDLE),
+          localReservations));
     }
     reservations = new ArrayList<PlacedReservation>(reservations);
     reservations.addAll(localReservations);
