@@ -304,7 +304,7 @@ usage:
 +---+
     <property>
       <name>yarn.nodemanager.aux-services</name>
-      <value>mapreduce.shuffle,llama_nm_plugin</value>
+      <value>mapreduce_shuffle,llama_nm_plugin</value>
     </property>
     <property>
       <name>yarn.nodemanager.aux-services.llama_nm_plugin.class</name>
