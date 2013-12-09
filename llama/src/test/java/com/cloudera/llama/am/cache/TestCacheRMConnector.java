@@ -18,11 +18,10 @@
 package com.cloudera.llama.am.cache;
 
 import com.cloudera.llama.am.impl.PlacedResourceImpl;
-import com.cloudera.llama.util.LlamaException;
+import com.cloudera.llama.am.impl.RecordingMockRMConnector;
 import com.cloudera.llama.am.api.RMResource;
 import com.cloudera.llama.am.api.Resource;
 import com.cloudera.llama.am.api.TestUtils;
-import com.cloudera.llama.am.spi.RMConnector;
 import com.cloudera.llama.am.spi.RMEvent;
 import com.cloudera.llama.am.spi.RMListener;
 import com.cloudera.llama.util.Clock;
@@ -36,11 +35,8 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class TestCacheRMConnector {
   private ManualClock manualClock = new ManualClock();
@@ -55,78 +51,21 @@ public class TestCacheRMConnector {
     Clock.setClock(Clock.SYSTEM);
   }
 
-  private static class MyRMLlamaConnector implements RMConnector {
-    private Set<String> invoked = new HashSet<String>();
-
-    @Override
-    public void setLlamaAMCallback(RMListener callback) {
-      invoked.add("setLlamaAMCallback");
-    }
-
-    @Override
-    public void start() throws LlamaException {
-      invoked.add("start");
-    }
-
-    @Override
-    public void stop() {
-      invoked.add("stop");
-    }
-
-    @Override
-    public void register(String queue) throws LlamaException {
-      invoked.add("register");
-    }
-
-    @Override
-    public void unregister() {
-      invoked.add("unregister");
-    }
-
-    @Override
-    public List<String> getNodes() throws LlamaException {
-      invoked.add("getNodes");
-      return null;
-    }
-
-    @Override
-    public void reserve(Collection<RMResource> resources)
-        throws LlamaException {
-      invoked.add("reserve");
-    }
-
-    @Override
-    public void release(Collection<RMResource> resources, boolean doNotCache)
-        throws LlamaException {
-      invoked.add("release");
-    }
-
-    @Override
-    public boolean reassignResource(Object rmResourceId, UUID resourceId) {
-      invoked.add("reassignResource");
-      return true;
-    }
-
-    public void emptyCache() throws LlamaException {
-    }
-
-  }
-
   @Test
   public void testDelegation() throws Exception {
-    Set<String> expected = new HashSet<String>();
+    List<String> expected = new ArrayList<String>();
     expected.add("setLlamaAMCallback");
 
-    MyRMLlamaConnector connector = new MyRMLlamaConnector();
+    RecordingMockRMConnector connector = new RecordingMockRMConnector();
 
     CacheRMConnector cache = new CacheRMConnector(
         new Configuration(false), connector);
 
-    Assert.assertEquals(expected, connector.invoked);
+    Assert.assertEquals(expected, connector.getInvoked());
 
     expected.add("start");
-    expected.add("register");
     expected.add("getNodes");
+    expected.add("register");
 
     cache.setLlamaAMCallback(new RMListener() {
       @Override
@@ -142,7 +81,7 @@ public class TestCacheRMConnector {
     cache.register("q");
     cache.reassignResource("rm0", UUID.randomUUID());
 
-    Assert.assertEquals(expected, connector.invoked);
+    Assert.assertEquals(expected, connector.getInvoked());
 
     PlacedResourceImpl pr1 = TestUtils.createPlacedResourceImpl("l1",
         Resource.Locality.MUST, 1, 1024);
@@ -153,33 +92,30 @@ public class TestCacheRMConnector {
     pr1.setRmResourceId("rm1");
 
     expected.add("reserve");
-    Assert.assertEquals(expected, connector.invoked);
+    Assert.assertEquals(expected, connector.getInvoked());
 
     cache.release(Arrays.asList((RMResource)pr1), false);
 
     expected.add("release");
     expected.add("reassignResource");
-
-    Assert.assertEquals(expected, connector.invoked);
-
-    connector.invoked.remove("release");
+    Assert.assertEquals(expected, connector.getInvoked());
 
     cache.release(Arrays.asList((RMResource) pr1), true);
 
     expected.add("release");
-    Assert.assertEquals(expected, connector.invoked);
+    Assert.assertEquals(expected, connector.getInvoked());
 
     expected.add("unregister");
     expected.add("stop");
 
     cache.unregister();
     cache.stop();
-    Assert.assertEquals(expected, connector.invoked);
+    Assert.assertEquals(expected, connector.getInvoked());
   }
 
   @Test
   public void testCached() throws Exception {
-    MyRMLlamaConnector connector = new MyRMLlamaConnector();
+    RecordingMockRMConnector connector = new RecordingMockRMConnector();
     final List<RMEvent> rmEvents = new ArrayList<RMEvent>();
 
     CacheRMConnector cache = new CacheRMConnector(
@@ -205,7 +141,7 @@ public class TestCacheRMConnector {
 
     cache.reserve(Arrays.asList((RMResource) pr1));
 
-    Assert.assertTrue(connector.invoked.contains("reserve"));
+    Assert.assertTrue(connector.getInvoked().contains("reserve"));
     Assert.assertTrue(rmEvents.isEmpty());
 
     cache.onEvent(Arrays.asList(RMEvent.createAllocationEvent(
@@ -218,14 +154,14 @@ public class TestCacheRMConnector {
     cache.release(Arrays.asList((RMResource) pr1), false);
 
     rmEvents.clear();
-    connector.invoked.clear();
+    connector.getInvoked().clear();
 
     PlacedResourceImpl pr2 = TestUtils.createPlacedResourceImpl("l1",
         Resource.Locality.MUST, 1, 1024);
 
     cache.reserve(Arrays.asList((RMResource) pr2));
 
-    Assert.assertFalse(connector.invoked.contains("reserve"));
+    Assert.assertFalse(connector.getInvoked().contains("reserve"));
     Assert.assertFalse(rmEvents.isEmpty());
     Assert.assertEquals(pr2.getResourceId(), rmEvents.get(0).getResourceId());
     cache.unregister();
@@ -234,7 +170,7 @@ public class TestCacheRMConnector {
 
   @Test
   public void testDoNotCache() throws Exception {
-    MyRMLlamaConnector connector = new MyRMLlamaConnector();
+    RecordingMockRMConnector connector = new RecordingMockRMConnector();
 
     CacheRMConnector cache = new CacheRMConnector(
         new Configuration(false), connector);
@@ -267,11 +203,11 @@ public class TestCacheRMConnector {
 
     cache.release(Arrays.asList((RMResource) pr1), false);
 
-    Assert.assertFalse(connector.invoked.contains("release"));
+    Assert.assertFalse(connector.getInvoked().contains("release"));
 
     cache.release(Arrays.asList((RMResource) pr1), true);
 
-    Assert.assertTrue(connector.invoked.contains("release"));
+    Assert.assertTrue(connector.getInvoked().contains("release"));
 
     cache.unregister();
     cache.stop();
@@ -279,7 +215,7 @@ public class TestCacheRMConnector {
 
   @Test
   public void testEviction() throws Exception {
-    MyRMLlamaConnector connector = new MyRMLlamaConnector();
+    RecordingMockRMConnector connector = new RecordingMockRMConnector();
 
     CacheRMConnector cache = new CacheRMConnector(
         new Configuration(false), connector);
@@ -311,12 +247,12 @@ public class TestCacheRMConnector {
         new HashMap<String, Object>())));
 
     cache.release(Arrays.asList((RMResource) pr1), false);
-    Assert.assertFalse(connector.invoked.contains("release"));
+    Assert.assertFalse(connector.getInvoked().contains("release"));
 
     manualClock.increment(ResourceCache.EVICTION_IDLE_TIMEOUT_DEFAULT+1);
     Thread.sleep(100);
 
-    Assert.assertTrue(connector.invoked.contains("release"));
+    Assert.assertTrue(connector.getInvoked().contains("release"));
 
     cache.unregister();
     cache.stop();
@@ -324,7 +260,7 @@ public class TestCacheRMConnector {
 
   @Test
   public void testEmptyCache() throws Exception {
-    MyRMLlamaConnector connector = new MyRMLlamaConnector();
+    RecordingMockRMConnector connector = new RecordingMockRMConnector();
 
     CacheRMConnector cache = new CacheRMConnector(
         new Configuration(false), connector);
@@ -356,11 +292,11 @@ public class TestCacheRMConnector {
         new HashMap<String, Object>())));
 
     cache.release(Arrays.asList((RMResource) pr1), false);
-    Assert.assertFalse(connector.invoked.contains("release"));
+    Assert.assertFalse(connector.getInvoked().contains("release"));
 
     cache.emptyCache();
 
-    Assert.assertTrue(connector.invoked.contains("release"));
+    Assert.assertTrue(connector.getInvoked().contains("release"));
 
     cache.unregister();
     cache.stop();
@@ -368,7 +304,7 @@ public class TestCacheRMConnector {
 
   @Test
   public void testMatchingOnRelease() throws Exception {
-    MyRMLlamaConnector connector = new MyRMLlamaConnector();
+    RecordingMockRMConnector connector = new RecordingMockRMConnector();
     final List<RMEvent> rmEvents = new ArrayList<RMEvent>();
 
     CacheRMConnector cache = new CacheRMConnector(
@@ -393,7 +329,7 @@ public class TestCacheRMConnector {
         Resource.Locality.MUST, 1, 1024);
     cache.reserve(Arrays.asList((RMResource) pr1));
 
-    Assert.assertTrue(connector.invoked.contains("reserve"));
+    Assert.assertTrue(connector.getInvoked().contains("reserve"));
     Assert.assertTrue(rmEvents.isEmpty());
 
     Assert.assertEquals(1, cache.getPendingSize());

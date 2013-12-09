@@ -106,17 +106,28 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
       boolean caching = getConf().getBoolean(
           CACHING_ENABLED_KEY,
           CACHING_ENABLED_DEFAULT);
+      boolean normalizing = getConf().getBoolean(
+          NORMALIZING_ENABLED_KEY,
+          NORMALIZING_ENABLED_DEFAULT);
       caching = getConf().getBoolean(
           CACHING_ENABLED_KEY + "." + queue, caching);
       LOG.info("Caching for queue '{}' enabled '{}'", queue,
           caching);
-      if (caching) {
+      if (caching && normalizing) {
         CacheRMConnector connectorCache =
             new CacheRMConnector(getConf(), rmConnector);
-        connectorCache.setMetricRegistry(getMetricRegistry());
         rmConnector = connectorCache;
+      } else if (caching) {
+        LOG.warn("Caching not allowed without normalization. To enable caching," +
+            "set '{}' to true.", LlamaAM.NORMALIZING_ENABLED_KEY);
+      }
+      if (normalizing) {
+        NormalizerRMConnector normalizer =
+            new NormalizerRMConnector(getConf(), rmConnector);
+        rmConnector = normalizer;
       }
     }
+    rmConnector.setMetricRegistry(getMetricRegistry());
     rmConnector.setLlamaAMCallback(this);
     rmConnector.start();
     if (queue != null) {

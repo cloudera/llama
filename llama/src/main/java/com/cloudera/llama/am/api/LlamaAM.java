@@ -76,6 +76,18 @@ public abstract class LlamaAM {
       PREFIX_KEY + "queue.expire.ms";
   public static final int QUEUE_AM_EXPIRE_MS_DEFAULT = 5 * 60 * 1000;
 
+  public static final String NORMALIZING_ENABLED_KEY =
+      PREFIX_KEY + "resource.normalizing.enabled";
+  public static final boolean NORMALIZING_ENABLED_DEFAULT = true;
+
+  public static final String NORMALIZING_STANDARD_MBS_KEY =
+      PREFIX_KEY + "resource.normalizing.standard.mbs";
+  public static final int NORMALIZING_SIZE_MBS_DEFAULT = 1024;
+
+  public static final String NORMALIZING_STANDARD_VCORES_KEY =
+      PREFIX_KEY + "resource.normalizing.standard.vcores";
+  public static final int NORMALIZING_SIZE_VCORES_DEFAULT = 1;
+
   private static Configuration cloneConfiguration(Configuration conf) {
     Configuration clone = new Configuration(false);
     for (Map.Entry<String, String> entry : conf) {

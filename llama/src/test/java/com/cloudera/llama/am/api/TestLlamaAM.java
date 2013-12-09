@@ -21,6 +21,8 @@ import com.cloudera.llama.am.spi.RMConnector;
 import com.cloudera.llama.am.spi.RMListener;
 import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.util.UUID;
+import com.codahale.metrics.MetricRegistry;
+
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Assert;
 import org.junit.Test;
@@ -80,6 +82,9 @@ public class TestLlamaAM {
     public void emptyCache() throws LlamaException {
     }
 
+    @Override
+    public void setMetricRegistry(MetricRegistry registry) {
+    }
   }
 
   private void testCreate(Configuration conf) throws Exception {

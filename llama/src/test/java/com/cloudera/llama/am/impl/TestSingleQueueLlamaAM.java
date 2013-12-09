@@ -31,6 +31,8 @@ import com.cloudera.llama.am.spi.RMEvent;
 import com.cloudera.llama.am.spi.RMListener;
 import com.cloudera.llama.am.spi.RMConnector;
 import com.cloudera.llama.util.UUID;
+import com.codahale.metrics.MetricRegistry;
+
 import junit.framework.Assert;
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Test;
@@ -105,6 +107,9 @@ public class TestSingleQueueLlamaAM {
       return false;
     }
 
+    @Override
+    public void setMetricRegistry(MetricRegistry registry) {
+    }
   }
 
   public static class DummyLlamaAMListener implements LlamaAMListener {

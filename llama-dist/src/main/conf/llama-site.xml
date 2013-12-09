@@ -434,6 +434,32 @@
       specified with the llama.am.core.queues property.
     </description>d
   </property>
+  
+  <!-- Resource normalization configuration -->
+  <property>
+    <name>llama.am.resource.normalizing.enabled</name>
+    <value>true</value>
+    <description>
+      Whether to break resource requests into smaller requests of standard size
+      before the cache.
+    </description>
+  </property>
+  <property>
+    <name>llama.am.resource.normalizing.standard.mbs</name>
+    <value>1024</value>
+    <description>
+      The standard size in MB to break requests into when normalizing is turned
+      on.
+    </description>
+  </property>
+  <property>
+    <name>llama.am.resource.normalizing.standard.vcores</name>
+    <value>1</value>
+    <description>
+      The standard size in vcores to break requests into when normalizing is
+      turned on.
+    </description>
+  </property>
 
   <!-- YarnLlamaAM configuration -->
   <property>

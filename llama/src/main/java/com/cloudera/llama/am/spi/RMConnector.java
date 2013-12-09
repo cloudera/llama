@@ -20,6 +20,7 @@ package com.cloudera.llama.am.spi;
 import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.api.RMResource;
 import com.cloudera.llama.util.UUID;
+import com.codahale.metrics.MetricRegistry;
 
 import java.util.Collection;
 import java.util.List;
@@ -38,13 +39,24 @@ public interface RMConnector {
 
   public List<String> getNodes() throws LlamaException;
 
+  /**
+   * Submits requests for the given resources to the RM.
+   */
   public void reserve(Collection<RMResource> resources) throws LlamaException;
 
+  /**
+   * Releases the given resources by giving back allocated containers
+   * to the RM and canceling outstanding requests.
+   */
   public void release(Collection<RMResource> resources, boolean doNotCache)
       throws LlamaException;
 
+  /**
+   * Used to cache resources.
+   */
   public boolean reassignResource(Object rmResourceId, UUID resourceId);
 
   public void emptyCache() throws LlamaException;
 
+  public void setMetricRegistry(MetricRegistry registry);
 }

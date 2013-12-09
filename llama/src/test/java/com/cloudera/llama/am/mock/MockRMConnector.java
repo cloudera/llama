@@ -27,6 +27,8 @@ import com.cloudera.llama.util.FastFormat;
 import com.cloudera.llama.am.spi.RMConnector;
 import com.cloudera.llama.util.NamedThreadFactory;
 import com.cloudera.llama.util.UUID;
+import com.codahale.metrics.MetricRegistry;
+
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 
@@ -279,4 +281,7 @@ public class MockRMConnector
     }
   }
 
+  @Override
+  public void setMetricRegistry(MetricRegistry registry) {
+  }
 }

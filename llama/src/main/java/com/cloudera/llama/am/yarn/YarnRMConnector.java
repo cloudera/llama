@@ -27,6 +27,8 @@ import com.cloudera.llama.am.spi.RMEvent;
 import com.cloudera.llama.am.spi.RMListener;
 import com.cloudera.llama.util.NamedThreadFactory;
 import com.cloudera.llama.util.UUID;
+import com.codahale.metrics.MetricRegistry;
+
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -136,6 +138,10 @@ public class YarnRMConnector implements RMConnector, Configurable,
 
   public YarnRMConnector() {
     nodes = Collections.synchronizedMap(new HashMap<String, Resource>());
+  }
+
+  @Override
+  public void setMetricRegistry(MetricRegistry metricRegistry) {
   }
 
   @Override

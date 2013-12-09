@@ -88,8 +88,10 @@ public class CacheRMConnector implements RMConnector,
     cacheHits = new Meter();
   }
 
+  @Override
   public void setMetricRegistry(MetricRegistry metricRegistry) {
     this.metricRegistry = metricRegistry;
+    connector.setMetricRegistry(metricRegistry);
   }
 
   @Override

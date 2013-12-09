@@ -30,7 +30,6 @@ import com.cloudera.llama.am.api.RMResource;
 import com.cloudera.llama.am.api.TestUtils;
 import com.cloudera.llama.am.spi.RMConnector;
 import com.cloudera.llama.am.spi.RMEvent;
-import com.cloudera.llama.am.spi.RMListener;
 import com.cloudera.llama.util.UUID;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
@@ -40,41 +39,27 @@ import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class TestMultiQueueLlamaAM {
 
-  private static Set<String> EXPECTED = new HashSet<String>();
+  private static List<String> EXPECTED = Arrays.asList("setConf",
+      "setLlamaAMCallback", "start", "register", "reserve", "release",
+      "unregister", "stop");
 
-  static {
-    EXPECTED.add("setConf");
-    EXPECTED.add("setLlamaAMCallback");
-    EXPECTED.add("start");
-    EXPECTED.add("stop");
-    EXPECTED.add("register");
-    EXPECTED.add("unregister");
-    EXPECTED.add("getNodes");
-    EXPECTED.add("reserve");
-    EXPECTED.add("release");
-  }
-
-  public static class MyRMConnector implements RMConnector,
-      Configurable {
-    public static RMListener callback;
-    public static Set<String> methods = new HashSet<String>();
-
+  private static MyRMConnector rmConnector;
+  
+  public static class MyRMConnector extends RecordingMockRMConnector
+      implements Configurable {
     private Configuration conf;
 
     public MyRMConnector() {
-      methods.clear();
+      rmConnector = this;
     }
 
     @Override
     public void setConf(Configuration conf) {
-      methods.add("setConf");
+      invoked.add("setConf");
       this.conf = conf;
     }
 
@@ -84,67 +69,29 @@ public class TestMultiQueueLlamaAM {
     }
 
     @Override
-    public void setLlamaAMCallback(RMListener callback) {
-      MyRMConnector.callback = callback;
-      methods.add("setLlamaAMCallback");
-    }
-
-    @Override
     public void start() throws LlamaException {
-      methods.add("start");
+      super.start();
       if (conf.getBoolean("fail.start", false)) {
         throw new LlamaException(ErrorCode.TEST);
       }
     }
 
     @Override
-    public void stop() {
-      methods.add("stop");
-    }
-
-    @Override
     public void register(String queue) throws LlamaException {
-      methods.add("register");
+      super.register(queue);
       if (conf.getBoolean("fail.register", false)) {
         throw new LlamaException(ErrorCode.TEST);
       }
     }
 
     @Override
-    public void unregister() {
-      methods.add("unregister");
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public List<String> getNodes() throws LlamaException {
-      methods.add("getNodes");
-      return Collections.EMPTY_LIST;
-    }
-
-    @Override
-    public void reserve(Collection<RMResource> resources)
-        throws LlamaException {
-      methods.add("reserve");
-    }
-
-    @Override
-    public void emptyCache() throws LlamaException {
-    }
-
-    @Override
     public void release(Collection<RMResource> resources,
         boolean doNotCache)
         throws LlamaException {
-      methods.add("release");
+      super.release(resources, doNotCache);
       if (conf.getBoolean("release.fail", false)) {
         throw new LlamaException(ErrorCode.TEST);
       }
-    }
-
-    @Override
-    public boolean reassignResource(Object rmResourceId, UUID resourceId) {
-      return false;
     }
 
   }
@@ -177,7 +124,7 @@ public class TestMultiQueueLlamaAM {
       am.releaseReservationsForHandle(UUID.randomUUID(), false);
       am.stop();
 
-      Assert.assertEquals(EXPECTED, MyRMConnector.methods);
+      Assert.assertEquals(EXPECTED, rmConnector.invoked);
     } finally {
       am.stop();
     }
@@ -263,6 +210,7 @@ public class TestMultiQueueLlamaAM {
 
   private boolean listenerCalled;
 
+  @SuppressWarnings("unchecked")
   @Test
   public void testMultiQueueListener() throws Exception {
     Configuration conf = new Configuration(false);
@@ -286,8 +234,9 @@ public class TestMultiQueueLlamaAM {
       am.addListener(listener);
       am.getReservation(id);
       Assert.assertFalse(listenerCalled);
-      MyRMConnector.callback.onEvent(Arrays.asList(RMEvent
-          .createStatusChangeEvent(rr.getPlacedResources().get(0).getResourceId(),
+      List<RMResource> resources = (List<RMResource>) rmConnector.args.get(3);
+      rmConnector.callback.onEvent(Arrays.asList(RMEvent
+          .createStatusChangeEvent(resources.get(0).getResourceId(),
               PlacedResource.Status.REJECTED)));
       Assert.assertTrue(listenerCalled);
       am.releaseReservation(handle, id, false);
