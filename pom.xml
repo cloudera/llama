@@ -1168,6 +1168,16 @@ TODO: need license header
         <version>${cdh.slf4j.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>jcl-over-slf4j</artifactId>
+        <version>${cdh.slf4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>jul-to-slf4j</artifactId>
+        <version>${cdh.slf4j.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.eclipse.jdt</groupId>
         <artifactId>core</artifactId>
         <version>3.1.1</version>
