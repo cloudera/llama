@@ -432,24 +432,6 @@ public class YarnRMConnector implements RMConnector, Configurable,
     }
   }
 
-  private static final 
-  Map<com.cloudera.llama.am.api.Resource.Locality, Priority> 
-      REQ_PRIORITY 
-        = new HashMap<com.cloudera.llama.am.api.Resource.Locality, 
-                     Priority>();
-
-  static {
-    REQ_PRIORITY.put(
-        com.cloudera.llama.am.api.Resource.Locality.DONT_CARE,
-        Priority.newInstance(3));
-    REQ_PRIORITY.put(
-        com.cloudera.llama.am.api.Resource.Locality.PREFERRED,
-        Priority.newInstance(2));
-    REQ_PRIORITY.put(
-        com.cloudera.llama.am.api.Resource.Locality.MUST,
-        Priority.newInstance(1));
-  }
-
   private static final String[] RACKS = new String[0];
 
   class LlamaContainerRequest extends AMRMClient.ContainerRequest {
@@ -461,7 +443,8 @@ public class YarnRMConnector implements RMConnector, Configurable,
                 resource.getCpuVCoresAsk()),
             new String[]{ resource.getLocationAsk()},
             RACKS,
-            REQ_PRIORITY.get(resource.getLocalityAsk()),
+            getRequestPriority(resource.getMemoryMbsAsk(),
+                resource.getCpuVCoresAsk(), resource.getLocalityAsk()),
             (resource.getLocalityAsk() !=
                 com.cloudera.llama.am.api.Resource.Locality.MUST)
       );
@@ -695,6 +678,7 @@ public class YarnRMConnector implements RMConnector, Configurable,
     List<RMEvent> changes = new ArrayList<RMEvent>();
     // no need to use a ugi.doAs() as this is called from within Yarn client
     for (Container container : containers) {
+      System.out.println("Received container with " + container.getResource());
       List<? extends Collection<LlamaContainerRequest>> matchingContainerReqs =
           amRmClientAsync.getMatchingRequests(container.getPriority(),
               getNodeName(container.getNodeId()), container.getResource());
@@ -773,6 +757,37 @@ public class YarnRMConnector implements RMConnector, Configurable,
     // no need to use a ugi.doAs() as this is called from within Yarn client
     _stop(FinalApplicationStatus.FAILED, "Error in Yarn client: " + ex
         .toString(), true);
+  }
+
+  /**
+   * YARN only allows one resource size per priority, so map resource sizes
+   * to priorities.
+   * Should be able to remove this when YARN-314 is fixed and choose purely on
+   * locality.
+   */
+  static Priority getRequestPriority(int mbs, int vcores,
+      com.cloudera.llama.am.api.Resource.Locality locality) {
+    // Lower values mean higher priority
+    // More restrictive localities should get higher priority because they are
+    // harder to satisfy
+    // Higher values should get higher priority because they are harder to satisfy
+    // Giving memory priority over CPU isn't ideal, but the alternative isn't any better
+    int priority;
+    switch (locality) {
+      case MUST:
+        priority = 1000000;
+        break;
+      case PREFERRED:
+        priority = 2000000;
+        break;
+      default:
+        priority = 3000000;
+        break;
+    }
+
+    priority -= mbs;
+    priority -= vcores;
+    return Priority.newInstance(priority);
   }
 
 }
