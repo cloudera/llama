@@ -37,7 +37,7 @@
      "parquet-format": {"track-branch": "cdh5-1.0.0", "dir": "repos/cdh5/parquet-format", "remotes": ["origin"]},
      "spark": {"track-branch": "cdh5-0.8.0", "dir": "repos/cdh5/spark", "remotes": ["origin"]},
 
-     "cdk": {"track-branch": "cdh5-0.8.0", "dir": "repos/cdh5/cdk", "remotes": ["origin"] },
+     "kite": {"track-branch": "cdh5-0.10.0", "dir": "repos/cdh5/kite", "remotes": ["origin"] },
 
      "cdh-package": { "track-branch": "cdh5-0.6.0", "dir":
           "repos/cdh5/cdh-package", "remotes": ["origin"]},
