@@ -71,14 +71,12 @@ TODO: need license header
     <cdh.parquet-format.version>1.0.0-cdh5.0.0-SNAPSHOT</cdh.parquet-format.version>
     <cdh.spark.version>0.8.0-cdh5.0.0-SNAPSHOT</cdh.spark.version>
     <cdh.crunch.version>0.8.0-cdh5.0.0-SNAPSHOT</cdh.crunch.version>
+    <cdh.avro.version>1.7.4-cdh5.0.0-SNAPSHOT</cdh.avro.version>
     
     <cdh.hadoop-lzo.version>0.4.15-cdh5.0.0-SNAPSHOT</cdh.hadoop-lzo.version>
     <cdh.impala-lzo.version>1.2.0-cdh5.0.0-SNAPSHOT</cdh.impala-lzo.version>
 
     <!-- Versions of the dependencies we manage -->
-    <!-- <cdh.avro.version>1.7.4-cdh5.0.0-SNAPSHOT</cdh.avro.version> -->
-    <!-- This is wrong but we'll need to change how it is used in individual projects -->
-    <cdh.avro.version>1.7.4</cdh.avro.version>
     <cdh.tika.version>1.4</cdh.tika.version>
     <!-- Use this property in your subprojects's pom. -->
     <cdh.tomcat.major.version>6</cdh.tomcat.major.version>
