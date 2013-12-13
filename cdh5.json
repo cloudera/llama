@@ -32,7 +32,7 @@
      "llama": { "track-branch": "cdh5-1.0.0", "dir": "repos/cdh5/llama", "remotes": ["origin"]},
      "search": {"track-branch": "cdh5-1.0.0", "dir": "repos/cdh5/search", "remotes": ["origin"]},
      "hbase-solr": {"track-branch": "cdh5-1.3", "dir": "repos/cdh5/hbase-solr", "remotes": ["origin"], "remote-project-name": "hbase-indexer"},
-     "avro": {"track-branch": "cdh5-1.7.4", "dir": "repos/cdh5/avro", "remotes": ["origin"]},
+     "avro": {"track-branch": "cdh5-1.7.5", "dir": "repos/cdh5/avro", "remotes": ["origin"]},
      "parquet": {"track-branch": "cdh5-1.2.5", "dir": "repos/cdh5/parquet", "remotes": ["origin"]},
      "parquet-format": {"track-branch": "cdh5-1.0.0", "dir": "repos/cdh5/parquet-format", "remotes": ["origin"]},
      "spark": {"track-branch": "cdh5-0.8.0", "dir": "repos/cdh5/spark", "remotes": ["origin"]},
