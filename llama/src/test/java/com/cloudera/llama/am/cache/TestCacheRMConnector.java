@@ -36,6 +36,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
@@ -171,6 +172,56 @@ public class TestCacheRMConnector {
     cache.unregister();
     cache.stop();
     Assert.assertEquals(expected, connector.invoked);
+  }
+
+  @Test
+  public void testCached() throws Exception {
+    MyRMLlamaConnector connector = new MyRMLlamaConnector();
+    final List<RMEvent> rmEvents = new ArrayList<RMEvent>();
+
+    CacheRMConnector cache = new CacheRMConnector(
+        new Configuration(false), connector);
+
+    cache.setLlamaAMCallback(new RMListener() {
+      @Override
+      public void stoppedByRM() {
+      }
+
+      @Override
+      public void onEvent(List<RMEvent> events) {
+        rmEvents.addAll(events);
+      }
+    });
+
+    cache.start();
+    cache.getNodes();
+    cache.register("q");
+
+    PlacedResourceImpl pr1 = TestUtils.createPlacedResourceImpl("l1",
+        Resource.Locality.MUST, 1, 1024);
+
+    cache.reserve(Arrays.asList((RMResource) pr1));
+
+    Assert.assertTrue(connector.invoked.contains("reserve"));
+    Assert.assertTrue(rmEvents.isEmpty());
+
+    pr1.setAllocationInfo("l1", 1, 1024);
+    pr1.setRmResourceId("rm1");
+
+    cache.release(Arrays.asList((RMResource) pr1), false);
+
+    connector.invoked.clear();
+
+    PlacedResourceImpl pr2 = TestUtils.createPlacedResourceImpl("l1",
+        Resource.Locality.MUST, 1, 1024);
+
+    cache.reserve(Arrays.asList((RMResource) pr2));
+
+    Assert.assertFalse(connector.invoked.contains("reserve"));
+    Assert.assertFalse(rmEvents.isEmpty());
+    Assert.assertEquals(pr2.getResourceId(), rmEvents.get(0).getResourceId());
+    cache.unregister();
+    cache.stop();
   }
 
   @Test
