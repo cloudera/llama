@@ -15,9 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.cloudera.llama.am.impl;
+package com.cloudera.llama.am.cache;
 
 import com.cloudera.llama.am.api.LlamaAM;
+import com.cloudera.llama.am.impl.PlacedResourceImpl;
 import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.api.RMResource;
 import com.cloudera.llama.am.spi.RMEvent;
@@ -143,7 +144,7 @@ public class CacheRMConnector implements RMConnector,
     Iterator<RMResource> it = list.iterator();
     while (it.hasNext()) {
       RMResource resource = it.next();
-      ResourceCache.CachedRMResource cached = cache.findAndRemove(resource);
+      CacheRMResource cached = cache.findAndRemove(resource);
       resourcesAsked.mark();
       if (cached != null) {
         cacheHits.mark();
@@ -171,7 +172,7 @@ public class CacheRMConnector implements RMConnector,
       while (it.hasNext()) {
         RMResource resource = it.next();
         if (resource.getRmResourceId() != null) {
-          UUID cacheId = cache.cache(resource);
+          UUID cacheId = cache.add(resource);
           if (connector.reassignResource(resource.getRmResourceId(), cacheId)) {
             LOG.debug("Caching released resource '{}'", resource);
             it.remove();
@@ -195,7 +196,7 @@ public class CacheRMConnector implements RMConnector,
 
   @Override
   public void emptyCache() throws LlamaException {
-    List<RMResource> cachedList = cache.emptyCache();
+    List<RMResource> cachedList = cache.emptyStore();
     LOG.debug("Emptying cache for queue '{}'", queue);
     connector.release(cachedList, true);
   }
@@ -221,7 +222,7 @@ public class CacheRMConnector implements RMConnector,
 
   @Override
   @SuppressWarnings("unchecked")
-  public void onEviction(ResourceCache.CachedRMResource cachedRMResource) {
+  public void onEviction(CacheRMResource cachedRMResource) {
     RMResource dummyPlacedResource = new PlacedResourceImpl();
     dummyPlacedResource.getRmData().putAll((Map) cachedRMResource.getRmData());
     try {

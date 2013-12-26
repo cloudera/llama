@@ -15,8 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.cloudera.llama.am.impl;
+package com.cloudera.llama.am.cache;
 
+import com.cloudera.llama.am.cache.CacheRMConnector;
+import com.cloudera.llama.am.cache.ResourceCache;
+import com.cloudera.llama.am.impl.PlacedResourceImpl;
 import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.api.RMResource;
 import com.cloudera.llama.am.api.Resource;

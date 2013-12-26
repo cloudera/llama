@@ -19,6 +19,7 @@ package com.cloudera.llama.am.impl;
 
 import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.LlamaAMEvent;
+import com.cloudera.llama.am.cache.CacheRMConnector;
 import com.cloudera.llama.util.ErrorCode;
 import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.api.PlacedReservation;
