@@ -33,11 +33,15 @@ public class TestResourceStore {
     PlacedResourceImpl pr1 = TestUtils.createPlacedResourceImpl(r1);
     pr1.setAllocationInfo("l1", 1, 1024);
     pr1.setRmResourceId("rm1");
-    UUID id1 = store.add(pr1);
+    Entry entry = Entry.createCacheEntry(pr1);
+    UUID id1 = entry.getResourceId();
+    store.add(entry);
 
     pr1.setAllocationInfo("l1", 1, 1024);
     pr1.setRmResourceId("rm2");
-    UUID id2 = store.add(pr1);
+    entry = Entry.createCacheEntry(pr1);
+    UUID id2 = entry.getResourceId();
+    store.add(entry);
 
     Assert.assertEquals(2, store.getSize());
 
@@ -66,14 +70,14 @@ public class TestResourceStore {
     PlacedResourceImpl pr1 = TestUtils.createPlacedResourceImpl(r1);
     pr1.setAllocationInfo("l1", 1, 512);
     pr1.setRmResourceId("rm1");
-    store.add(pr1);
+    store.add(Entry.createCacheEntry(pr1));
 
     r1 = TestUtils.createResource("l1",
         Resource.Locality.MUST, 2, 1024);
     pr1 = TestUtils.createPlacedResourceImpl(r1);
     pr1.setAllocationInfo("l1", 2, 1024);
     pr1.setRmResourceId("rm2");
-    store.add(pr1);
+    store.add(Entry.createCacheEntry(pr1));
 
     Resource r2 = TestUtils.createResource("l1",
         Resource.Locality.MUST, 1, 1024);
@@ -93,14 +97,14 @@ public class TestResourceStore {
     PlacedResourceImpl pr1 = TestUtils.createPlacedResourceImpl(r1);
     pr1.setAllocationInfo("l1", 1, 512);
     pr1.setRmResourceId("rm1");
-    store.add(pr1);
+    store.add(Entry.createCacheEntry(pr1));
 
     r1 = TestUtils.createResource("l1",
         Resource.Locality.MUST, 2, 1024);
     pr1 = TestUtils.createPlacedResourceImpl(r1);
     pr1.setAllocationInfo("l1", 2, 1024);
     pr1.setRmResourceId("rm2");
-    store.add(pr1);
+    store.add(Entry.createCacheEntry(pr1));
 
     Resource r2 = TestUtils.createResource("l2",
         Resource.Locality.PREFERRED, 1, 1024);
@@ -110,7 +114,7 @@ public class TestResourceStore {
     Assert.assertNotNull(cr1);
     Assert.assertEquals("rm2", cr1.getRmResourceId());
 
-    store.add(pr1);
+    store.add(Entry.createCacheEntry(pr1));
 
     Resource r3 = TestUtils.createResource("l2",
         Resource.Locality.DONT_CARE, 1, 1024);
@@ -130,8 +134,8 @@ public class TestResourceStore {
     PlacedResourceImpl pr1 = TestUtils.createPlacedResourceImpl(r1);
     pr1.setAllocationInfo("l1", 1, 1024);
     pr1.setRmResourceId("rm1");
-    store.add(pr1);
-    store.add(pr1);
+    store.add(Entry.createCacheEntry(pr1));
+    store.add(Entry.createCacheEntry(pr1));
 
     Resource r2 = TestUtils.createResource("l2",
         Resource.Locality.PREFERRED, 1, 1024);
@@ -159,7 +163,7 @@ public class TestResourceStore {
     PlacedResourceImpl pr1 = TestUtils.createPlacedResourceImpl(r1);
     pr1.setAllocationInfo("l1", 1, 1024);
     pr1.setRmResourceId("rm1");
-    store.add(pr1);
+    store.add(Entry.createCacheEntry(pr1));
 
     Resource r2 = TestUtils.createResource("l1",
         Resource.Locality.MUST, 2, 1024);
@@ -190,7 +194,7 @@ public class TestResourceStore {
     PlacedResourceImpl pr1 = TestUtils.createPlacedResourceImpl(r1);
     pr1.setAllocationInfo("l1", 1, 1024);
     pr1.setRmResourceId("rm1");
-    store.add(pr1);
+    store.add(Entry.createCacheEntry(pr1));
 
     Resource r2 = TestUtils.createResource("l2",
         Resource.Locality.PREFERRED, 2, 1024);

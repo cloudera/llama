@@ -22,18 +22,23 @@ import com.cloudera.llama.util.FastFormat;
 
 import com.cloudera.llama.util.UUID;
 
+import java.util.Map;
+
 public class RMEvent {
   private final UUID resourceId;
   private final Object rmResourceId;
+  private final Map<String, Object> rmData;
   private final PlacedResource.Status status;
   private final int cpuVCores;
   private final int memoryMbs;
   private final String location;
 
-  private RMEvent(UUID resourceId, Object rmResourceId, String location,
-      int cpuVCores, int memoryMbs, PlacedResource.Status status) {
+  private RMEvent(UUID resourceId, Object rmResourceId,
+      Map<String, Object> rmData, String location, int cpuVCores, int memoryMbs,
+      PlacedResource.Status status) {
     this.resourceId = resourceId;
     this.rmResourceId = rmResourceId;
+    this.rmData = rmData;
     this.status = status;
     this.location = location;
     this.cpuVCores = cpuVCores;
@@ -41,14 +46,15 @@ public class RMEvent {
   }
 
   public static RMEvent createAllocationEvent(UUID resourceId,
-      String location, int vCpuCores, int memoryMb, Object rmResourceId) {
-    return new RMEvent(resourceId, rmResourceId, location, vCpuCores,
+      String location, int vCpuCores, int memoryMb, Object rmResourceId,
+      Map<String, Object> rmData) {
+    return new RMEvent(resourceId, rmResourceId, rmData, location, vCpuCores,
         memoryMb, PlacedResource.Status.ALLOCATED);
   }
 
   public static RMEvent createStatusChangeEvent(UUID resourceId,
       PlacedResource.Status status) {
-    return new RMEvent(resourceId, null, null, -1, -1, status);
+    return new RMEvent(resourceId, null, null, null, -1, -1, status);
   }
 
   public UUID getResourceId() {
@@ -57,6 +63,10 @@ public class RMEvent {
 
   public Object getRmResourceId() {
     return rmResourceId;
+  }
+
+  public Map<String, Object> getRmData() {
+    return rmData;
   }
 
   public PlacedResource.Status getStatus() {

@@ -35,6 +35,13 @@ public interface RMResource extends Resource {
 
   public void setRmResourceId(Object rmResourceId);
 
+  /**
+   * This Map is to be used by RMConnector implementations to store RM
+   * specific data associated with the resource for later use by the RMConnector
+   * itself.
+   *
+   * @return a Map instance.
+   */
   public Map<String, Object> getRmData();
 
 }

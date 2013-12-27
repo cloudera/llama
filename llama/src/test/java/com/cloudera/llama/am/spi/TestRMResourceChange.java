@@ -22,13 +22,15 @@ import com.cloudera.llama.util.UUID;
 import junit.framework.Assert;
 import org.junit.Test;
 
+import java.util.HashMap;
+
 public class TestRMResourceChange {
 
   @Test
   public void testAllocate() {
     UUID cId = UUID.randomUUID();
-    RMEvent c = RMEvent.createAllocationEvent(cId, "l", 1, 2, "id"
-    );
+    RMEvent c = RMEvent.createAllocationEvent(cId, "l", 1, 2, "id",
+    new HashMap<String, Object>());
     c.toString();
     Assert.assertEquals(cId, c.getResourceId());
     Assert.assertEquals("id", c.getRmResourceId());

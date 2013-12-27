@@ -19,7 +19,6 @@ package com.cloudera.llama.am.cache;
 
 import com.cloudera.llama.am.api.RMResource;
 import com.cloudera.llama.am.api.Resource;
-import com.cloudera.llama.util.Clock;
 import com.cloudera.llama.util.ParamChecker;
 import com.cloudera.llama.util.UUID;
 import org.slf4j.Logger;
@@ -44,11 +43,9 @@ public class ResourceStore {
     idToEntryMap = new HashMap<UUID, Entry>();
   }
 
-  public synchronized UUID add(RMResource resource) {
-    UUID id = UUID.randomUUID();
-    Entry entry = new Entry(id, resource, Clock.currentTimeMillis());
+  public synchronized void add(Entry entry) {
     entry.setValid(true);
-    idToEntryMap.put(id, entry);
+    idToEntryMap.put(entry.getResourceId(), entry);
     Key key = new Key(entry);
     List<Entry> list = store.get(key);
     if (list == null) {
@@ -61,7 +58,6 @@ public class ResourceStore {
     } else {
       list.add(- (idx + 1), entry);
     }
-    return id;
   }
 
   private enum Mode {SAME_REF, STRICT_LOCATION, ANY_LOCATION}

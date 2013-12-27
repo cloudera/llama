@@ -20,27 +20,40 @@ package com.cloudera.llama.am.cache;
 import com.cloudera.llama.am.api.Resource;
 import com.cloudera.llama.am.api.TestUtils;
 import com.cloudera.llama.am.impl.PlacedResourceImpl;
-import com.cloudera.llama.util.UUID;
+import com.cloudera.llama.util.Clock;
+import com.cloudera.llama.util.ManualClock;
 import junit.framework.Assert;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 public class TestEntry {
+  private ManualClock manualClock = new ManualClock();
+
+  @Before
+  public void setup() {
+    Clock.setClock(manualClock);
+  }
+
+  @After
+  public void destroy() {
+    Clock.setClock(Clock.SYSTEM);
+  }
 
   @Test
   public void testEntry() throws Exception {
-    UUID cacheId = UUID.randomUUID();
+    manualClock.set(1000l);
     Resource resource = TestUtils.createResource("l1",
         Resource.Locality.MUST, 1, 1024);
     PlacedResourceImpl placedResource = TestUtils.createPlacedResourceImpl(resource);
     placedResource.setAllocationInfo("l11", 2, 2048);
     placedResource.setRmResourceId("rm11");
-    Entry entry1 = new Entry(cacheId,
-        placedResource, 1000l);
+    Entry entry1 = Entry.createCacheEntry(placedResource);
     Assert.assertNotNull(entry1.toString());
     Assert.assertFalse(entry1.isValid());
     entry1.setValid(true);
     Assert.assertTrue(entry1.isValid());
-    Assert.assertEquals(cacheId, entry1.getResourceId());
+    Assert.assertNotNull(entry1.getResourceId());
     Assert.assertEquals(1000l, entry1.getCachedOn());
     Assert.assertEquals("l11", entry1.getLocation());
     Assert.assertEquals("rm11", entry1.getRmResourceId());
@@ -49,8 +62,7 @@ public class TestEntry {
 
     placedResource.setAllocationInfo("l22", 2, 2048);
     placedResource.setRmResourceId("rm22");
-    Entry entry2 = new Entry(cacheId,
-        placedResource, 1000l);
+    Entry entry2 = Entry.createCacheEntry(placedResource);
     Assert.assertTrue(entry1.compareTo(entry1) == 0);
     Assert.assertTrue(entry1.compareTo(entry2) < 0);
     Assert.assertTrue(entry2.compareTo(entry1) > 0);

@@ -18,39 +18,61 @@
 package com.cloudera.llama.am.cache;
 
 import com.cloudera.llama.am.api.RMResource;
+import com.cloudera.llama.am.spi.RMEvent;
+import com.cloudera.llama.util.Clock;
 import com.cloudera.llama.util.FastFormat;
 import com.cloudera.llama.util.UUID;
 
 import java.util.Map;
 
 public class Entry implements Comparable<Entry>, CacheRMResource {
-  private final UUID cacheId;
+  private final UUID id;
   private final long cachedOn;
   private final Object rmResourceId;
   private final String location;
   private final int cpuVCores;
-  private final int memoryMb;
+  private final int memoryMbs;
   private final Map<String, Object> rmData;
   private volatile boolean valid;
 
-  Entry(String location, int cpuVCores, int memoryMb) {
-    cacheId = null;
+  public static Entry createStoreEntry(RMResource resource) {
+    return new Entry(resource.getResourceId(), resource.getRmResourceId(),
+        resource.getRmData(), resource.getLocationAsk(),
+        resource.getCpuVCoresAsk(), resource.getMemoryMbsAsk());
+  }
+
+  public static Entry createCacheEntry(RMResource resource) {
+    return new Entry(UUID.randomUUID(), resource.getRmResourceId(),
+        resource.getRmData(), resource.getLocation(), resource.getCpuVCores(),
+        resource.getMemoryMbs());
+  }
+
+  public static Entry createCacheEntry(RMEvent rmEvent) {
+    return new Entry(UUID.randomUUID(), rmEvent.getRmResourceId(),
+        rmEvent.getRmData(), rmEvent.getLocation(), rmEvent.getCpuVCores(),
+        rmEvent.getMemoryMbs());
+  }
+
+  // used internally by ResourceStore
+  Entry(String location, int cpuVCores, int memoryMbs) {
+    id = null;
     cachedOn = 0;
     rmResourceId = null;
     this.location = location;
     this.cpuVCores = cpuVCores;
-    this.memoryMb = memoryMb;
+    this.memoryMbs = memoryMbs;
     rmData = null;
   }
 
-  Entry(UUID cacheId, RMResource resource, long cachedOn) {
-    this.cacheId = cacheId;
-    this.cachedOn = cachedOn;
-    rmResourceId = resource.getRmResourceId();
-    location = resource.getLocation();
-    cpuVCores = resource.getCpuVCores();
-    memoryMb = resource.getMemoryMbs();
-    rmData = resource.getRmData();
+  private Entry(UUID id, Object rmResourceId, Map<String, Object> rmData,
+      String location, int cpuVCores, int memoryMbs) {
+    this.id = id;
+    this.cachedOn = Clock.currentTimeMillis();
+    this.rmResourceId = rmResourceId;
+    this.location = location;
+    this.cpuVCores = cpuVCores;
+    this.memoryMbs = memoryMbs;
+    this.rmData = rmData;
   }
 
   void setValid(boolean valid) {
@@ -64,7 +86,7 @@ public class Entry implements Comparable<Entry>, CacheRMResource {
 
   @Override
   public UUID getResourceId() {
-    return cacheId;
+    return id;
   }
 
   @Override
@@ -109,7 +131,7 @@ public class Entry implements Comparable<Entry>, CacheRMResource {
 
   @Override
   public int getMemoryMbs() {
-    return memoryMb;
+    return memoryMbs;
   }
 
   @Override
@@ -126,8 +148,8 @@ public class Entry implements Comparable<Entry>, CacheRMResource {
     return valid;
   }
 
-  private static final String TO_STRING = "ResourceCache [cacheId: {} " +
-      "cachedOn: {} rmResourceId: {} location: {} cpuVCores: {} memoryMb: {}]";
+  private static final String TO_STRING = "ResourceCache [id: {} " +
+      "cachedOn: {} rmResourceId: {} location: {} cpuVCores: {} memoryMbs: {}]";
 
   @Override
   public String toString() {

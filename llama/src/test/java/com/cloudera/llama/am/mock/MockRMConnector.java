@@ -219,10 +219,10 @@ public class MockRMConnector
     }
 
     private void toAllocate() {
-      RMEvent change = RMEvent.createAllocationEvent
-          (resource.getResourceId(), getLocation(resource.getLocationAsk()), resource.getCpuVCoresAsk(), resource.getMemoryMbsAsk(), "c" + counter.incrementAndGet
-              ()
-          );
+      RMEvent change = RMEvent.createAllocationEvent(resource.getResourceId(),
+          getLocation(resource.getLocationAsk()), resource.getCpuVCoresAsk(),
+          resource.getMemoryMbsAsk(), "c" + counter.incrementAndGet(),
+          new HashMap<String, Object>());
       callback.onEvent(Arrays.asList(change));
     }
 

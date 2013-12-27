@@ -17,8 +17,6 @@
  */
 package com.cloudera.llama.am.cache;
 
-import com.cloudera.llama.am.cache.CacheRMConnector;
-import com.cloudera.llama.am.cache.ResourceCache;
 import com.cloudera.llama.am.impl.PlacedResourceImpl;
 import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.api.RMResource;
@@ -39,6 +37,7 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -158,8 +157,12 @@ public class TestCacheRMConnector {
 
     cache.release(Arrays.asList((RMResource)pr1), false);
 
+    expected.add("release");
     expected.add("reassignResource");
+
     Assert.assertEquals(expected, connector.invoked);
+
+    connector.invoked.remove("release");
 
     cache.release(Arrays.asList((RMResource) pr1), true);
 
@@ -205,11 +208,16 @@ public class TestCacheRMConnector {
     Assert.assertTrue(connector.invoked.contains("reserve"));
     Assert.assertTrue(rmEvents.isEmpty());
 
+    cache.onEvent(Arrays.asList(RMEvent.createAllocationEvent(
+        pr1.getResourceId(), "l1", 1, 1024, "rm1",
+        new HashMap<String, Object>())));
+
     pr1.setAllocationInfo("l1", 1, 1024);
     pr1.setRmResourceId("rm1");
 
     cache.release(Arrays.asList((RMResource) pr1), false);
 
+    rmEvents.clear();
     connector.invoked.clear();
 
     PlacedResourceImpl pr2 = TestUtils.createPlacedResourceImpl("l1",
@@ -253,6 +261,10 @@ public class TestCacheRMConnector {
     pr1.setAllocationInfo("'l1", 1, 1024);
     pr1.setRmResourceId("rm1");
 
+    cache.onEvent(Arrays.asList(RMEvent.createAllocationEvent(
+        pr1.getResourceId(), "l1", 1, 1024, "rm1",
+        new HashMap<String, Object>())));
+
     cache.release(Arrays.asList((RMResource) pr1), false);
 
     Assert.assertFalse(connector.invoked.contains("release"));
@@ -293,6 +305,10 @@ public class TestCacheRMConnector {
     cache.reserve(Arrays.asList((RMResource) pr1));
     pr1.setAllocationInfo("'l1", 1, 1024);
     pr1.setRmResourceId("rm1");
+
+    cache.onEvent(Arrays.asList(RMEvent.createAllocationEvent(
+        pr1.getResourceId(), "l1", 1, 1024, "rm1",
+        new HashMap<String, Object>())));
 
     cache.release(Arrays.asList((RMResource) pr1), false);
     Assert.assertFalse(connector.invoked.contains("release"));
@@ -335,6 +351,10 @@ public class TestCacheRMConnector {
     pr1.setAllocationInfo("'l1", 1, 1024);
     pr1.setRmResourceId("rm1");
 
+    cache.onEvent(Arrays.asList(RMEvent.createAllocationEvent(
+        pr1.getResourceId(), "l1", 1, 1024, "rm1",
+        new HashMap<String, Object>())));
+
     cache.release(Arrays.asList((RMResource) pr1), false);
     Assert.assertFalse(connector.invoked.contains("release"));
 
@@ -345,5 +365,73 @@ public class TestCacheRMConnector {
     cache.unregister();
     cache.stop();
   }
+
+  @Test
+  public void testMatchingOnRelease() throws Exception {
+    MyRMLlamaConnector connector = new MyRMLlamaConnector();
+    final List<RMEvent> rmEvents = new ArrayList<RMEvent>();
+
+    CacheRMConnector cache = new CacheRMConnector(
+        new Configuration(false), connector);
+
+    cache.setLlamaAMCallback(new RMListener() {
+      @Override
+      public void stoppedByRM() {
+      }
+
+      @Override
+      public void onEvent(List<RMEvent> events) {
+        rmEvents.addAll(events);
+      }
+    });
+
+    cache.start();
+    cache.getNodes();
+    cache.register("q");
+
+    PlacedResourceImpl pr1 = TestUtils.createPlacedResourceImpl("l1",
+        Resource.Locality.MUST, 1, 1024);
+    cache.reserve(Arrays.asList((RMResource) pr1));
+
+    Assert.assertTrue(connector.invoked.contains("reserve"));
+    Assert.assertTrue(rmEvents.isEmpty());
+
+    Assert.assertEquals(1, cache.getPendingSize());
+    Assert.assertEquals(0, cache.getCacheSize());
+
+    cache.onEvent(Arrays.asList(RMEvent.createAllocationEvent(
+        pr1.getResourceId(), "l1", 1, 1024, "rm1",
+        new HashMap<String, Object>())));
+
+    Assert.assertEquals(0, cache.getPendingSize());
+    Assert.assertEquals(0, cache.getCacheSize());
+
+    Assert.assertEquals(1, rmEvents.size());
+    Assert.assertEquals(pr1.getResourceId(), rmEvents.get(0).getResourceId());
+    rmEvents.clear();
+
+    pr1.setAllocationInfo("l1", 1, 1024);
+    pr1.setRmResourceId("rm1");
+
+    PlacedResourceImpl pr2 = TestUtils.createPlacedResourceImpl("l1",
+        Resource.Locality.MUST, 1, 1024);
+    cache.reserve(Arrays.asList((RMResource) pr2));
+
+    Assert.assertEquals(1, cache.getPendingSize());
+    Assert.assertEquals(0, cache.getCacheSize());
+
+    cache.release(Arrays.asList((RMResource) pr1), false);
+
+    Assert.assertEquals(0, cache.getPendingSize());
+    Assert.assertEquals(0, cache.getCacheSize());
+
+    Assert.assertEquals(1, rmEvents.size());
+    Assert.assertEquals(pr2.getResourceId(), rmEvents.get(0).getResourceId());
+
+
+    cache.unregister();
+    cache.stop();
+  }
+
 
 }

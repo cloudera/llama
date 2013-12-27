@@ -114,7 +114,7 @@ public class TestResourceCache {
       PlacedResourceImpl pr1 = TestUtils.createPlacedResourceImpl(r1);
       pr1.setAllocationInfo("l1", 1, 1024);
       pr1.setRmResourceId("rm1");
-      cache.add(pr1);
+      cache.add(Entry.createCacheEntry(pr1));
       Assert.assertNull(listener.resourceEvicted);
       manualClock.increment(ResourceCache.EVICTION_IDLE_TIMEOUT_DEFAULT + 1);
       cache.runEviction();
@@ -139,7 +139,7 @@ public class TestResourceCache {
       PlacedResourceImpl pr1 = TestUtils.createPlacedResourceImpl(r1);
       pr1.setAllocationInfo("l1", 1, 1024);
       pr1.setRmResourceId("rm1");
-      cache.add(pr1);
+      cache.add(Entry.createCacheEntry(pr1));
 
       Assert.assertNull(listener.resourceEvicted);
       Assert.assertEquals(1, cache.getSize());
@@ -151,7 +151,7 @@ public class TestResourceCache {
 
       pr1.setAllocationInfo("l1", 1, 1024);
       pr1.setRmResourceId("rm2");
-      cache.add(pr1);
+      cache.add(Entry.createCacheEntry(pr1));
 
       Assert.assertNull(listener.resourceEvicted);
       Assert.assertEquals(2, cache.getSize());
@@ -186,11 +186,15 @@ public class TestResourceCache {
       PlacedResourceImpl pr1 = TestUtils.createPlacedResourceImpl(r1);
       pr1.setAllocationInfo("l1", 1, 1024);
       pr1.setRmResourceId("rm1");
-      UUID id1 = cache.add(pr1);
+      Entry entry = Entry.createCacheEntry(pr1);
+      UUID id1 = entry.getResourceId();
+      cache.add(entry);
 
       pr1.setAllocationInfo("l1", 1, 1024);
       pr1.setRmResourceId("rm2");
-      UUID id2 = cache.add(pr1);
+      entry = Entry.createCacheEntry(pr1);
+      UUID id2 = entry.getResourceId();
+      cache.add(entry);
 
       Assert.assertEquals(2, cache.getSize());
 
