@@ -428,9 +428,11 @@
   <property>
     <name>llama.am.queue.expire.ms</name>
     <value>300000</value>
-    <description>Time in milliseconds after which Llama will discard its AM for
-    a queue that has been empty of reservations. Does not apply to queues
-    specified with the llama.am.core.queues property.
+    <description>
+      Time in milliseconds after which Llama will discard its AM for
+      a queue that has been empty of reservations. Does not apply to queues
+      specified with the llama.am.core.queues property.
+    </description>d
   </property>
 
   <!-- YarnLlamaAM configuration -->
