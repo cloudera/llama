@@ -17,7 +17,7 @@
  */
 package com.cloudera.llama.am.cache;
 
-import com.cloudera.llama.am.api.RMResource;
+import com.cloudera.llama.am.spi.RMResource;
 import com.cloudera.llama.am.spi.RMEvent;
 import com.cloudera.llama.util.Clock;
 import com.cloudera.llama.util.FastFormat;

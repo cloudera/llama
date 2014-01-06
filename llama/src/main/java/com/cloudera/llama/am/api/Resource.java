@@ -19,8 +19,40 @@ package com.cloudera.llama.am.api;
 
 import com.cloudera.llama.util.UUID;
 
+/**
+ * A <code>Resource</code> defines a request for a unit of capacity in the
+ * cluster, it comprises of an ID, a desired location, the locality constraints,
+ * a desired amount of CPU (in terms of virtual cores) and of Memory (in terms
+ * of MBs).
+ * <p/>
+ * A <code>Resource</code> can have zero CPU or Memory, but both cannot be zero.
+ * <p/>
+ * <code>Resource</code>s are requested as part of {@link Reservation}.
+ * <p/>
+ * Once a <code>Resource</code> is reserved, it will have a matching
+ * {@link PlacedResource}.
+ * <p/>
+ * <code>Resources</code> are created using a {@link Builder}.
+ * <p/>
+ * A <code>Resource</code> is immutable.
+ *
+ * @see Builder
+ * @see Builders#createResourceBuilder
+ * @see Reservation
+ * @see PlacedResource
+ */
 public interface Resource {
 
+  /**
+   * Builder for {@link Resource} instances.
+   * <p/>
+   * Instances are created using the {@link Builders#createResourceBuilder}
+   * method.
+   * <p/>
+   * A <code>Builder</code> is not thread safe. A <code>Builder</code> can be
+   * use to create several {@link Resource} instances, one at the time, and it
+   * can be modified between {@link #build} invocations.
+   */
   public interface Builder {
 
     public Builder setResourceId(UUID resourceId);
@@ -37,12 +69,32 @@ public interface Resource {
 
   }
 
+  /**
+   * Defines the desired locality constraints for a {@link Resource}.
+   */
   public enum Locality {
-    MUST, PREFERRED, DONT_CARE
+
+    /**
+     * The allocated resource must be in the requested node location.
+     * <p/>
+     * In Llama <code>1.0.0</code> {@link Locality#PREFERRED} and
+     * {@link Locality#DONT_CARE} are handled in the same way.
+     */
+    MUST,
+
+    /**
+     * The allocated resource should be in the requested node location but and
+     * alternate location is acceptable.
+     */
+    PREFERRED,
+
+    /**
+     * The allocated resource can be in any node of the cluster.
+     */
+    DONT_CARE
   }
 
   public UUID getResourceId();
-
 
   public String getLocationAsk();
 

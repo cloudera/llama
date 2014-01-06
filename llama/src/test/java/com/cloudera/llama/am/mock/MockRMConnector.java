@@ -20,7 +20,7 @@ package com.cloudera.llama.am.mock;
 import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.api.PlacedResource;
-import com.cloudera.llama.am.api.RMResource;
+import com.cloudera.llama.am.spi.RMResource;
 import com.cloudera.llama.am.spi.RMEvent;
 import com.cloudera.llama.am.spi.RMListener;
 import com.cloudera.llama.util.FastFormat;
@@ -141,8 +141,8 @@ public class MockRMConnector
   }
 
   @Override
-  public void setLlamaAMCallback(RMListener callback) {
-    this.callback = callback;
+  public void setRMListener(RMListener listener) {
+    this.callback = listener;
   }
 
   @Override

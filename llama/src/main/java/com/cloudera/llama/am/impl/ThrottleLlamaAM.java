@@ -39,6 +39,27 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;import java.util.Map;
 
+/**
+ * The <code>ThrottleLlamaAM</code> implements admission control for
+ * reservations for a single queue. It is a {@link LlamaAM} wrapper.
+ * <p/>
+ * It allows N concurrent reservations to be placed on the underlying
+ * <code>LlamaAM</code>, once the N limit is reached, it queues M reservations
+ * and places them as the N concurrent ones are being released. Once M
+ * reservations are queued, it starts rejecting new reservations.
+ * <p/>
+ * Different queues can have different N and M configurations.
+ * <p/>
+ * There are 4 configuration properties that drive the logic of this class:
+ * <ul>
+ *   <li>{@link #MAX_PLACED_RESERVATIONS_KEY}</li>
+ *   <li>{@link #MAX_QUEUED_RESERVATIONS_KEY}</li>
+ *   <li>{@link #MAX_PLACED_RESERVATIONS_KEY}.[QUEUE]</li> (if not present
+ *   {@link #MAX_PLACED_RESERVATIONS_KEY} is used)
+ *   <li>{@link #MAX_QUEUED_RESERVATIONS_KEY}.[QUEUE]</li> (if not present
+ *   {@link #MAX_QUEUED_RESERVATIONS_KEY} is used)
+ * </ul>
+ */
 public class ThrottleLlamaAM extends LlamaAMImpl
     implements LlamaAMListener, IntraLlamaAMsCallback, Runnable {
   private static final Logger LOG =
@@ -305,7 +326,7 @@ public class ThrottleLlamaAM extends LlamaAMImpl
     if (reservation == null) {
       reservation = am.releaseReservation(handle, reservationId, doNotCache);
     } else {
-      dispatch(LlamaAMEventImpl.createEvent(isCallConsideredEcho(handle),
+      dispatch(LlamaAMEventImpl.createEvent(isCallProducingEchoEvent(handle),
           reservation));
     }
     return reservation;
@@ -323,7 +344,7 @@ public class ThrottleLlamaAM extends LlamaAMImpl
         am.releaseReservationsForHandle(handle, doNotCache);
     reservations.addAll(pReservations);
     if (!localReservations.isEmpty()) {
-      dispatch(LlamaAMEventImpl.createEvent(isCallConsideredEcho(handle),
+      dispatch(LlamaAMEventImpl.createEvent(isCallProducingEchoEvent(handle),
           localReservations));
     }
     return reservations;
@@ -340,7 +361,7 @@ public class ThrottleLlamaAM extends LlamaAMImpl
         am.releaseReservationsForQueue(queue, doNotCache);
     reservations.addAll(pReservations);
     if (!localReservations.isEmpty()) {
-      dispatch(LlamaAMEventImpl.createEvent(isCallConsideredEcho(WILDCARD_HANDLE),
+      dispatch(LlamaAMEventImpl.createEvent(isCallProducingEchoEvent(WILDCARD_HANDLE),
           localReservations));
     }
     return reservations;
@@ -362,7 +383,7 @@ public class ThrottleLlamaAM extends LlamaAMImpl
     if (count > 0) {
       decreasePlaced(count);
     }
-    dispatch(event);
+    dispatch(LlamaAMEventImpl.convertToImpl(event));
   }
 
   @Override

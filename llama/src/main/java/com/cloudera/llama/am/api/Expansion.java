@@ -19,8 +19,36 @@ package com.cloudera.llama.am.api;
 
 import com.cloudera.llama.util.UUID;
 
+/**
+ * An <code>Expansion</code> is a special type of {@link Reservation} which
+ * purpose is to expand the capacity of {@link Reservation} with a single
+ * additional {@link Resource}.
+ * <p/>
+ * Once an <code>Expansion</code> is reserved, it will have a matching
+ * {@link PlacedReservation}.
+ * <p/>
+ * <code>Expansions</code> are created using a {@link Builder}.
+ * <p/>
+ * An <code>Expansion</code> is immutable.
+ *
+ * @see Builder
+ * @see Builders#createExpansionBuilder
+ * @see Resource
+ * @see PlacedReservation
+ * @see LlamaAM#expand(Expansion)
+ */
 public interface Expansion {
 
+  /**
+   * Builder for {@link Expansion} instances.
+   * <p/>
+   * Instances are created using the {@link Builders#createExpansionBuilder()}
+   * method.
+   * <p/>
+   * A <code>Builder</code> is not thread safe. A <code>Builder</code> can be
+   * use to create several {@link Expansion} instances, one at the time, and it
+   * can be modified between {@link #build} invocations.
+   */
   public interface Builder {
 
     public Builder setHandle(UUID handle);

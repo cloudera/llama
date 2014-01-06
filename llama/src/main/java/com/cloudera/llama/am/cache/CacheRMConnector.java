@@ -21,7 +21,7 @@ import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.PlacedResource;
 import com.cloudera.llama.am.impl.PlacedResourceImpl;
 import com.cloudera.llama.util.LlamaException;
-import com.cloudera.llama.am.api.RMResource;
+import com.cloudera.llama.am.spi.RMResource;
 import com.cloudera.llama.am.spi.RMEvent;
 import com.cloudera.llama.am.spi.RMListener;
 import com.cloudera.llama.am.spi.RMConnector;
@@ -42,6 +42,16 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * <code>RMConnector</code> implementation that caches resources upon release.
+ * <p/>
+ * There are two configuration properties that drive the logic of this class:
+ * <ul>
+ * <li>{@link LlamaAM#EVICTION_POLICY_CLASS_KEY}</li>
+ * <li>{@link LlamaAM#EVICTION_RUN_INTERVAL_KEY}</li>
+ * <li>{@link LlamaAM#EVICTION_IDLE_TIMEOUT_KEY}</li>
+ * </ul>
+ */
 public class CacheRMConnector implements RMConnector,
     RMListener, ResourceCache.Listener {
   private static final Logger LOG =
@@ -83,7 +93,7 @@ public class CacheRMConnector implements RMConnector,
       RMConnector connector) {
     this.conf = conf;
     this.connector = connector;
-    connector.setLlamaAMCallback(this);
+    connector.setRMListener(this);
     resourcesAsked = new Meter();
     cacheHits = new Meter();
   }
@@ -95,8 +105,8 @@ public class CacheRMConnector implements RMConnector,
   }
 
   @Override
-  public void setLlamaAMCallback(RMListener callback) {
-    this.callback = callback;
+  public void setRMListener(RMListener listener) {
+    this.callback = listener;
   }
 
   @Override

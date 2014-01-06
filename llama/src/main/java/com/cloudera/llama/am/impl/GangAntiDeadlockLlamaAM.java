@@ -44,6 +44,29 @@ import java.util.concurrent.DelayQueue;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * The <code>GangAntiDeadlockLlamaAM</code> keeps track of outstanding gang
+ * reservations and the progress and if it detects there is no progress for
+ * a while on any reservation it triggers a back-off mechanism that will
+ * transparently cancel random reservations and put them on hold for a while
+ * to give, thus making more resources available to the surviving outstanding
+ * gang reservations.
+ * <p/>
+ * There are 4 configuration properties that drive the logic of this class:
+ * <ul>
+ *   <li>{@link #GANG_ANTI_DEADLOCK_NO_ALLOCATION_LIMIT_KEY}</li>
+ *   <li>{@link #GANG_ANTI_DEADLOCK_BACKOFF_PERCENT_KEY}</li>
+ *   <li>{@link #GANG_ANTI_DEADLOCK_BACKOFF_MIN_DELAY_KEY}</li>
+ *   <li>{@link #GANG_ANTI_DEADLOCK_BACKOFF_MAX_DELAY_KEY}</li>
+ * </ul>
+ * <p/>
+ * The anti deadlock policy is done across all queues and it is repeated until
+ * there is progress.
+ * <p/>
+ * The <code>GangAntiDeadlockLlamaAM</code> works as a wrapper on top of a
+ * {@link LlamaAM} that provides all LlamaAM functionality but gang
+ * anti-deadlock handling.
+ */
 public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
     LlamaAMListener, Runnable {
   private static final Logger LOG = 
@@ -224,7 +247,7 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
         reservationId, doNotCache);
     if (gPlacedReservation != null && placedReservation == null) {
       //reservation was local only
-      dispatch(LlamaAMEventImpl.createEvent(isCallConsideredEcho(handle),
+      dispatch(LlamaAMEventImpl.createEvent(isCallProducingEchoEvent(handle),
           gPlacedReservation));
     }
     return (placedReservation != null) ? placedReservation : gPlacedReservation;
@@ -249,7 +272,7 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
         gReleaseReservationsForHandle(handle);
     localReservations.removeAll(reservations);
     if (!localReservations.isEmpty()) {
-      dispatch(LlamaAMEventImpl.createEvent(isCallConsideredEcho(handle),
+      dispatch(LlamaAMEventImpl.createEvent(isCallProducingEchoEvent(handle),
           localReservations));
     }
     reservations = new ArrayList<PlacedReservation>(reservations);
@@ -286,7 +309,7 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
         gReleaseReservationsForQueue(queue);
     localReservations.removeAll(reservations);
     if (!localReservations.isEmpty()) {
-      dispatch(LlamaAMEventImpl.createEvent(isCallConsideredEcho(WILDCARD_HANDLE),
+      dispatch(LlamaAMEventImpl.createEvent(isCallProducingEchoEvent(WILDCARD_HANDLE),
           localReservations));
     }
     reservations = new ArrayList<PlacedReservation>(reservations);
@@ -331,7 +354,7 @@ public class GangAntiDeadlockLlamaAM extends LlamaAMImpl implements
 
   @Override
   public synchronized void onEvent(LlamaAMEvent event) {
-    LlamaAMEventImpl eventImpl = (LlamaAMEventImpl) event;
+    LlamaAMEventImpl eventImpl = LlamaAMEventImpl.convertToImpl(event);
     for (PlacedResource resource : eventImpl.getResourceChanges()) {
       if (resource.getStatus() == PlacedResource.Status.ALLOCATED &&
           submittedReservations.contains(resource.getReservationId())) {

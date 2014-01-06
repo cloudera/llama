@@ -17,8 +17,23 @@
  */
 package com.cloudera.llama.am.api;
 
+/**
+ * A <code>LlamaAMListener</code> can be registered with a {@link LlamaAM} to
+ * receive {@link LlamaAMEvent}s.
+ *
+ * @see LlamaAMEvent
+ * @see LlamaAM#addListener(LlamaAMListener)
+ * @see LlamaAM#removeListener(LlamaAMListener)
+ */
 public interface LlamaAMListener {
 
+  /**
+   * This method is invoked by the {@link LlamaAM} instance where the listener
+   * is registered when an event is available.
+   *
+   * @param event an event with status changes from the {@link LlamaAM}. The
+   * event instance is immutable. Events are never replayed.
+   */
   public void onEvent(LlamaAMEvent event);
 
 }

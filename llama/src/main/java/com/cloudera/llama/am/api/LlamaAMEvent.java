@@ -17,16 +17,42 @@
  */
 package com.cloudera.llama.am.api;
 
+import com.cloudera.llama.util.UUID;
+
 import java.util.List;
 
+/**
+ * Events produced by {@link LlamaAM} to notify {@linke PlacedResource} and
+ * {@link PlacedReservation} status changes. These events are delivered to
+ * {@link LlamaAMListener} registered to the <code>LlamaAM</code>.
+ */
 public interface LlamaAMEvent {
 
-  public boolean isEmpty();
-
+  /**
+   * Indicates if the event is an echo event or not. Echo events are events
+   * generated in response to changes of state because of a client operation
+   * ({@link LlamaAM#reserve(Reservation)}, {@link LlamaAM#expand(Expansion)},
+   * {@link LlamaAM#releaseReservation(UUID, UUID, boolean)}). Changes of events
+   * produced because of admin operations of because of changed driven by the
+   * Resource Manager are not echo events.
+   *
+   * @return <code>TRUE</code> if the event is an echo event, <code>FALSE</code>
+   * otherwise.
+   */
   public boolean isEcho();
 
+  /**
+   * Returns the list of {@link PlacedReservation} with status changes.
+   * 
+   * @return the list of {@link PlacedReservation} with status changes.
+   */
   public List<PlacedReservation> getReservationChanges();
 
+  /**
+   * Returns the list of {@link PlacedResource} with status changes.
+   *
+   * @return the list of {@link PlacedResource} with status changes.
+   */
   public List<PlacedResource> getResourceChanges();
 
 }

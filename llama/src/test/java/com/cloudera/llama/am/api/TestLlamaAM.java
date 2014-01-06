@@ -19,6 +19,7 @@ package com.cloudera.llama.am.api;
 
 import com.cloudera.llama.am.spi.RMConnector;
 import com.cloudera.llama.am.spi.RMListener;
+import com.cloudera.llama.am.spi.RMResource;
 import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.util.UUID;
 import com.codahale.metrics.MetricRegistry;
@@ -40,7 +41,7 @@ public class TestLlamaAM {
     }
 
     @Override
-    public void setLlamaAMCallback(RMListener callback) {
+    public void setRMListener(RMListener listener) {
     }
 
     @Override

@@ -39,21 +39,6 @@ public class ResourceCache extends ResourceStore {
     public void onEviction(CacheRMResource cachedRMResource);
   }
 
-  public static final String PREFIX = LlamaAM.PREFIX_KEY + "cache.";
-
-  public static final String EVICTION_POLICY_CLASS_KEY =
-      PREFIX + "eviction.policy.class";
-
-  public static final String EVICTION_RUN_INTERVAL_KEY =
-      PREFIX + "eviction.run.interval.timeout.ms";
-
-  public static final int EVICTION_RUN_INTERVAL_DEFAULT = 5000;
-
-  public static final String EVICTION_IDLE_TIMEOUT_KEY =
-      PREFIX + "eviction.timeout.policy.idle.timeout.ms";
-
-  public static final int EVICTION_IDLE_TIMEOUT_DEFAULT = 30000;
-
   public static class TimeoutEvictionPolicy
       implements EvictionPolicy, Configurable {
 
@@ -63,8 +48,8 @@ public class ResourceCache extends ResourceStore {
     @Override
     public void setConf(Configuration conf) {
       this.conf = conf;
-      timeout = conf.getInt(EVICTION_IDLE_TIMEOUT_KEY,
-          EVICTION_IDLE_TIMEOUT_DEFAULT);
+      timeout = conf.getInt(LlamaAM.EVICTION_IDLE_TIMEOUT_KEY,
+          LlamaAM.EVICTION_IDLE_TIMEOUT_DEFAULT);
     }
 
     public long getTimeout() {
@@ -90,15 +75,16 @@ public class ResourceCache extends ResourceStore {
   private Thread evictionThread;
   private final Listener listener;
 
+  @SuppressWarnings("unchecked")
   public ResourceCache(String queue, Configuration conf, Listener listener) {
     this.queue = ParamChecker.notEmpty(queue, "queue");
     this.listener = ParamChecker.notNull(listener, "listener");
     Class<? extends EvictionPolicy> klass =
-        conf.getClass(EVICTION_POLICY_CLASS_KEY, TimeoutEvictionPolicy.class,
-            EvictionPolicy.class);
+        conf.getClass(LlamaAM.EVICTION_POLICY_CLASS_KEY,
+            LlamaAM.EVICTION_POLICY_CLASS_DEFAULT, EvictionPolicy.class);
     evictionPolicy = ReflectionUtils.newInstance(klass, conf);
-    evictionRunInterval = conf.getInt(EVICTION_RUN_INTERVAL_KEY,
-        EVICTION_RUN_INTERVAL_DEFAULT);
+    evictionRunInterval = conf.getInt(LlamaAM.EVICTION_RUN_INTERVAL_KEY,
+        LlamaAM.EVICTION_RUN_INTERVAL_DEFAULT);
   }
 
 

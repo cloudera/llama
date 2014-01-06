@@ -19,10 +19,26 @@ package com.cloudera.llama.am.spi;
 
 import java.util.List;
 
+/**
+ * A <code>RMListener</code> can be registered in an {@link RMConnector} in
+ * order to receive events regarding status changes of placed
+ * {@link RMResource}s.
+ */
 public interface RMListener {
 
+  /**
+   * If the <code>RMConnector</code> has been stopped by the Resource Manager,
+   * the listener is notified via this method.
+   */
   public void stoppedByRM();
 
+  /**
+   * This method is invoked by the {@link RMConnector} the listener is
+   * registered to notify of resource status changes.
+   *
+   * @param events list of events being notified back to the listener. Events
+   * are never replayed.
+   */
   public void onEvent(final List<RMEvent> events);
 
 }

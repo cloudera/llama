@@ -22,7 +22,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import com.cloudera.llama.am.api.RMResource;
+import com.cloudera.llama.am.spi.RMResource;
 import com.cloudera.llama.am.spi.RMConnector;
 import com.cloudera.llama.am.spi.RMListener;
 import com.cloudera.llama.util.LlamaException;
@@ -40,9 +40,9 @@ public class RecordingMockRMConnector implements RMConnector {
   }
 
   @Override
-  public void setLlamaAMCallback(RMListener callback) {
-    this.callback = callback;
-    invoked.add("setLlamaAMCallback");
+  public void setRMListener(RMListener listener) {
+    this.callback = listener;
+    invoked.add("setRMListener");
     args.add(null);
   }
 

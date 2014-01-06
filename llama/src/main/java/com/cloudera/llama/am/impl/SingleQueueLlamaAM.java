@@ -18,13 +18,12 @@
 package com.cloudera.llama.am.impl;
 
 import com.cloudera.llama.am.api.LlamaAM;
-import com.cloudera.llama.am.api.LlamaAMEvent;
 import com.cloudera.llama.am.cache.CacheRMConnector;
 import com.cloudera.llama.util.ErrorCode;
 import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.PlacedResource;
-import com.cloudera.llama.am.api.RMResource;
+import com.cloudera.llama.am.spi.RMResource;
 import com.cloudera.llama.am.api.Reservation;
 import com.cloudera.llama.am.spi.RMEvent;
 import com.cloudera.llama.am.spi.RMListener;
@@ -45,6 +44,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * The <code>SingleQueueLlamaAM</code> handles the core logic to do gang
+ * reservations and interacts with a {@link RMConnector} to request resources
+ * from the Resource Manager.
+ * There are three configuration properties that drive the logic of this class:
+ * <ul>
+ * <li>{@link #RM_CONNECTOR_CLASS_KEY}</li>
+ * <li>{@link #CACHING_ENABLED_KEY}</li>
+ * <li>{@link #NORMALIZING_ENABLED_KEY}</li>
+ * </ul>
+ */
 public class SingleQueueLlamaAM extends LlamaAMImpl implements
     RMListener {
   private static final Logger LOG = 
@@ -128,7 +138,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
       }
     }
     rmConnector.setMetricRegistry(getMetricRegistry());
-    rmConnector.setLlamaAMCallback(this);
+    rmConnector.setRMListener(this);
     rmConnector.start();
     if (queue != null) {
       rmConnector.register(queue);
@@ -239,7 +249,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
       throws LlamaException {
     final PlacedReservationImpl impl = new PlacedReservationImpl(reservationId,
         reservation);
-    LlamaAMEvent event = LlamaAMEventImpl.createEvent(true, impl);
+    LlamaAMEventImpl event = LlamaAMEventImpl.createEvent(true, impl);
     synchronized (this) {
       _addReservation(impl);
     }
@@ -275,7 +285,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
       final UUID reservationId, boolean doNotCache, boolean doNotDispatch)
       throws LlamaException {
     PlacedReservationImpl reservation;
-    LlamaAMEvent event = null;
+    LlamaAMEventImpl event = null;
     synchronized (this) {
       reservation = _getReservation(reservationId);
       if (reservation != null) {
@@ -285,7 +295,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
         }
         reservation = _deleteReservation(reservationId,
             PlacedReservation.Status.RELEASED);
-        event = LlamaAMEventImpl.createEvent(isCallConsideredEcho(handle),
+        event = LlamaAMEventImpl.createEvent(isCallProducingEchoEvent(handle),
             reservation);
       }
     }
@@ -325,7 +335,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
           doNotCache);
     }
     if (!reservations.isEmpty()) {
-      dispatch(LlamaAMEventImpl.createEvent(isCallConsideredEcho(handle),
+      dispatch(LlamaAMEventImpl.createEvent(isCallProducingEchoEvent(handle),
           reservations));
     }
     return reservations;
@@ -347,7 +357,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
       }
     }
     if (!reservations.isEmpty()) {
-      dispatch(LlamaAMEventImpl.createEvent(isCallConsideredEcho(WILDCARD_HANDLE),
+      dispatch(LlamaAMEventImpl.createEvent(isCallProducingEchoEvent(WILDCARD_HANDLE),
           reservations));
     }
     return reservations;

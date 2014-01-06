@@ -17,6 +17,7 @@
  */
 package com.cloudera.llama.am.cache;
 
+import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.Resource;
 import com.cloudera.llama.am.api.TestUtils;
 import com.cloudera.llama.am.impl.PlacedResourceImpl;
@@ -49,12 +50,12 @@ public class TestResourceCache {
 
     Configuration conf = new Configuration(false);
     if (timeout > 0) {
-      conf.setLong(ResourceCache.EVICTION_IDLE_TIMEOUT_KEY, timeout);
+      conf.setLong(LlamaAM.EVICTION_IDLE_TIMEOUT_KEY, timeout);
     }
     ep.setConf(conf);
 
     long expected = (timeout == 0)
-                    ? ResourceCache.EVICTION_IDLE_TIMEOUT_DEFAULT : timeout;
+                    ? LlamaAM.EVICTION_IDLE_TIMEOUT_DEFAULT : timeout;
     Assert.assertEquals(expected, ep.getTimeout());
 
     manualClock.set(1000);
@@ -107,7 +108,7 @@ public class TestResourceCache {
         listener);
     try {
       cache.start();
-      manualClock.increment(ResourceCache.EVICTION_IDLE_TIMEOUT_DEFAULT + 1);
+      manualClock.increment(LlamaAM.EVICTION_IDLE_TIMEOUT_DEFAULT + 1);
       Thread.sleep(100); //to ensure eviction thread runs
       Resource r1 = TestUtils.createResource("l1",
           Resource.Locality.MUST, 1, 1024);
@@ -116,7 +117,7 @@ public class TestResourceCache {
       pr1.setRmResourceId("rm1");
       cache.add(Entry.createCacheEntry(pr1));
       Assert.assertNull(listener.resourceEvicted);
-      manualClock.increment(ResourceCache.EVICTION_IDLE_TIMEOUT_DEFAULT + 1);
+      manualClock.increment(LlamaAM.EVICTION_IDLE_TIMEOUT_DEFAULT + 1);
       cache.runEviction();
       Assert.assertEquals("rm1", listener.resourceEvicted);
     } finally {
@@ -144,7 +145,7 @@ public class TestResourceCache {
       Assert.assertNull(listener.resourceEvicted);
       Assert.assertEquals(1, cache.getSize());
 
-      manualClock.increment(ResourceCache.EVICTION_IDLE_TIMEOUT_DEFAULT / 2 + 1);
+      manualClock.increment(LlamaAM.EVICTION_IDLE_TIMEOUT_DEFAULT / 2 + 1);
 
       Assert.assertNull(listener.resourceEvicted);
       Assert.assertEquals(1, cache.getSize());
@@ -156,13 +157,13 @@ public class TestResourceCache {
       Assert.assertNull(listener.resourceEvicted);
       Assert.assertEquals(2, cache.getSize());
 
-      manualClock.increment(ResourceCache.EVICTION_IDLE_TIMEOUT_DEFAULT / 2 + 1);
+      manualClock.increment(LlamaAM.EVICTION_IDLE_TIMEOUT_DEFAULT / 2 + 1);
       cache.runEviction();
 
       Assert.assertEquals("rm1", listener.resourceEvicted);
       Assert.assertEquals(1, cache.getSize());
 
-      manualClock.increment(ResourceCache.EVICTION_IDLE_TIMEOUT_DEFAULT / 2 + 1);
+      manualClock.increment(LlamaAM.EVICTION_IDLE_TIMEOUT_DEFAULT / 2 + 1);
       cache.runEviction();
 
       Assert.assertEquals("rm2", listener.resourceEvicted);

@@ -19,7 +19,7 @@ package com.cloudera.llama.am.impl;
 
 import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.PlacedResource;
-import com.cloudera.llama.am.api.RMResource;
+import com.cloudera.llama.am.spi.RMResource;
 import com.cloudera.llama.am.api.Resource;
 import com.cloudera.llama.util.Clock;
 import com.cloudera.llama.util.FastFormat;

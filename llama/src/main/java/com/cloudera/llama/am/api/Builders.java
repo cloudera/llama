@@ -20,6 +20,10 @@ package com.cloudera.llama.am.api;
 import com.cloudera.llama.am.impl.PlacedReservationImpl;
 import com.cloudera.llama.am.impl.PlacedResourceImpl;
 
+/**
+ * {@link Resource}, {@link Reservation}, {@link Expansion}
+ * <code>Builders</code> factory.
+ */
 public class Builders {
 
   public static Resource.Builder createResourceBuilder() {

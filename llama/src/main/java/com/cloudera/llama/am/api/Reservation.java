@@ -21,8 +21,44 @@ import com.cloudera.llama.util.UUID;
 
 import java.util.List;
 
+/**
+ * A <code>Reservation</code> defines a request for capacity in the cluster, it
+ * comprises of a list of {@link Resource}s defining the total capacity the
+ * reservation is asking for; the user that is asking for the reservation;
+ * the RM queue from where the reservation must be fulfilled; the handle of the
+ * client asking for the reservation and if the reservation is a gang
+ * reservation or not.
+ * <p/>
+ * A gang reservation is a reservation that must be fulfilled at once, without
+ * incremental/partial fulfillment.
+ * <p/>
+ * A <code>Reservation</code> must have at least one {@link Resource}.
+ * <p/>
+ * Once a <code>Reservation</code> is reserved, it will have a matching
+ * {@link PlacedReservation}.
+ * <p/>
+ * <code>Reservations</code> are created using a {@link Builder}.
+ * <p/>
+ * A <code>Reservation</code> is immutable.
+ *
+ * @see Builder
+ * @see Builders#createReservationBuilder
+ * @see Resource
+ * @see PlacedReservation
+ * @see LlamaAM#reserve(Reservation)
+ */
 public interface Reservation {
 
+  /**
+   * Builder for {@link Reservation} instances.
+   * <p/>
+   * Instances are created using the {@link Builders#createReservationBuilder()}
+   * method.
+   * <p/>
+   * A <code>Builder</code> is not thread safe. A <code>Builder</code> can be
+   * use to create several {@link Reservation} instances, one at the time, and
+   * it can be modified between {@link #build} invocations.
+   */
   public interface Builder {
 
     public Builder setHandle(UUID handle);

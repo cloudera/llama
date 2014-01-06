@@ -26,7 +26,7 @@ import com.cloudera.llama.util.ManualClock;
 import com.cloudera.llama.am.api.LlamaAMListener;
 import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.PlacedResource;
-import com.cloudera.llama.am.api.RMResource;
+import com.cloudera.llama.am.spi.RMResource;
 import com.cloudera.llama.am.api.TestUtils;
 import com.cloudera.llama.am.spi.RMConnector;
 import com.cloudera.llama.am.spi.RMEvent;
@@ -44,7 +44,7 @@ import java.util.List;
 public class TestMultiQueueLlamaAM {
 
   private static List<String> EXPECTED = Arrays.asList("setConf",
-      "setLlamaAMCallback", "start", "register", "reserve", "release",
+      "setRMListener", "start", "register", "reserve", "release",
       "unregister", "stop");
 
   private static MyRMConnector rmConnector;
@@ -269,7 +269,7 @@ public class TestMultiQueueLlamaAM {
     UUID resId = am.reserve(TestUtils.createReservation(handle, "root.someotherqueue", 1, true));
     Assert.assertEquals(2, am.ams.keySet().size());
     am.releaseReservation(handle, resId, true);
-    clock.increment(LlamaAM.QUEUE_AM_EXPIRE_MS_DEFAULT * 2);
+    clock.increment(LlamaAM.QUEUE_AM_EXPIRE_DEFAULT * 2);
 
     Thread.sleep(300); // am expiry check should run in this time
     // Other queue should get cleaned up
@@ -278,7 +278,7 @@ public class TestMultiQueueLlamaAM {
     handle = UUID.randomUUID();
     resId = am.reserve(TestUtils.createReservation(handle, "root.corequeue", 1, true));
     am.releaseReservation(handle, resId, true);
-    clock.increment(LlamaAM.QUEUE_AM_EXPIRE_MS_DEFAULT * 2);
+    clock.increment(LlamaAM.QUEUE_AM_EXPIRE_DEFAULT * 2);
 
     Thread.sleep(300); // am expiry check should run in this time
     // Core queue should still exist

@@ -54,7 +54,6 @@ public class LlamaAMEventImpl implements LlamaAMEvent {
     resources.add(new PlacedResourceImpl(resource));
   }
 
-  @Override
   public boolean isEmpty() {
     return reservations.isEmpty() && resources.isEmpty();
   }
@@ -83,19 +82,23 @@ public class LlamaAMEventImpl implements LlamaAMEvent {
     return merged;
   }
 
-  public static LlamaAMEvent createEvent(boolean echo, PlacedReservation pr) {
+  public static LlamaAMEventImpl createEvent(boolean echo, PlacedReservation pr) {
     LlamaAMEventImpl e = new LlamaAMEventImpl(echo);
     e.addReservation(pr);
     return e;
   }
 
-  public static LlamaAMEvent createEvent(boolean echo,
+  public static LlamaAMEventImpl createEvent(boolean echo,
       List<PlacedReservation> prs) {
     LlamaAMEventImpl e = new LlamaAMEventImpl(echo);
     for (PlacedReservation pr : prs) {
       e.addReservation(pr);
     }
     return e;
+  }
+
+  public static LlamaAMEventImpl convertToImpl(LlamaAMEvent event) {
+    return (LlamaAMEventImpl) event;
   }
 
 }

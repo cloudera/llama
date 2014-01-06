@@ -21,8 +21,30 @@ import com.cloudera.llama.util.UUID;
 
 import java.util.List;
 
+/**
+ * A <code>PlacedResource</code> represents a {@link Resource} that has been
+ * reserved.
+ * <p/>
+ * In defines its current status and if ALLOCATED it provides the actual
+ * location, CPU and memory allocated to the resource. It also provides, for
+ * cross-referencing purposes many of the properties from the
+ * {@link PlacedReservation} owning the <code>PlacedResource</code>.
+ * <p/>
+ * A returned <code>PlacedResource</code> instance via the {@link LlamaAM} API
+ * is immutable.
+ * <p/>
+ * @see PlacedReservation
+ * @see Resource
+ * @see LlamaAM
+ */
 public interface PlacedResource extends Resource {
 
+  /**
+   * Possible status of a {@link PlacedResource}.
+   * <p/>
+   * The <code>final</code> property indicates if the status is final or not.
+   * A final status means that the resource status cannot change anymore.
+   */
   public enum Status {
     PENDING(false),
     ALLOCATED(false),

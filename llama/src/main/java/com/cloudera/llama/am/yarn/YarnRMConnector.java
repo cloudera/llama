@@ -21,7 +21,7 @@ import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.util.ErrorCode;
 import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.api.PlacedResource;
-import com.cloudera.llama.am.api.RMResource;
+import com.cloudera.llama.am.spi.RMResource;
 import com.cloudera.llama.am.spi.RMConnector;
 import com.cloudera.llama.am.spi.RMEvent;
 import com.cloudera.llama.am.spi.RMListener;
@@ -162,8 +162,8 @@ public class YarnRMConnector implements RMConnector, Configurable,
   }
 
   @Override
-  public void setLlamaAMCallback(RMListener callback) {
-    llamaCallback = callback;
+  public void setRMListener(RMListener listener) {
+    llamaCallback = listener;
   }
 
   private UserGroupInformation createUGIForApp() throws Exception {

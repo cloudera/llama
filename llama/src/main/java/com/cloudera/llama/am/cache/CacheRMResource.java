@@ -17,7 +17,7 @@
  */
 package com.cloudera.llama.am.cache;
 
-import com.cloudera.llama.am.api.RMResource;
+import com.cloudera.llama.am.spi.RMResource;
 
 public interface CacheRMResource extends RMResource {
 

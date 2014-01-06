@@ -19,6 +19,7 @@ package com.cloudera.llama.am.api;
 
 import com.cloudera.llama.am.impl.PlacedReservationImpl;
 import com.cloudera.llama.am.impl.PlacedResourceImpl;
+import com.cloudera.llama.am.spi.RMResource;
 import com.cloudera.llama.util.UUID;
 import junit.framework.Assert;
 

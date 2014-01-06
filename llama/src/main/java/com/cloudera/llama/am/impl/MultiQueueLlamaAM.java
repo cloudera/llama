@@ -46,6 +46,22 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * The <code>MultiQueueLlamaAM</code> multiplexes reservations to different
+ * Resource Manager queues. This is done by having a map of queue-names to
+ * {@link SingleQueueLlamaAM}s. A <code>SingleQueueLlamaAM</code> instance
+ * can make reservations to a single queue (it is backed by a Yarn AM).
+ * <p/>
+ * The <code>MultiQueueLlamaAM</code> has a list (via configuration) of core
+ * queues for which it has always a running AM, for all other queues, AMs are
+ * created on the fly and after a timeout of inactivity they are shutdown.
+ * <p/>
+ * There are two configuration properties that drive the logic of this class:
+ * <ul>
+ *   <li>{@link #CORE_QUEUES_KEY}</li>
+ *   <li>{@link #QUEUE_AM_EXPIRE_KEY}</li>
+ * </ul>
+ */
 public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
     IntraLlamaAMsCallback {
   private static final Logger LOG = 
@@ -70,8 +86,8 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
     super(conf);
     ams = new ConcurrentHashMap<String, SingleQueueAMInfo>();
     reservationToQueue = new HashMap<UUID, String>();
-    queueExpireMs = conf.getInt(QUEUE_AM_EXPIRE_MS,
-        QUEUE_AM_EXPIRE_MS_DEFAULT);
+    queueExpireMs = conf.getInt(QUEUE_AM_EXPIRE_KEY,
+        QUEUE_AM_EXPIRE_DEFAULT);
     expireThread = new ExpireThread();
     amCheckExpiryIntervalMs = AM_CHECK_EXPIRY_INTERVAL_MS;
     if (SingleQueueLlamaAM.getRMConnectorClass(conf) == null) {
@@ -111,7 +127,7 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
 
   @Override
   public void onEvent(LlamaAMEvent event) {
-    dispatch(event);
+    dispatch(LlamaAMEventImpl.convertToImpl(event));
   }
 
   // LlamaAM API

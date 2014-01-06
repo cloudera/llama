@@ -17,7 +17,7 @@
  */
 package com.cloudera.llama.am.cache;
 
-import com.cloudera.llama.am.api.RMResource;
+import com.cloudera.llama.am.spi.RMResource;
 import com.cloudera.llama.am.api.Resource;
 import com.cloudera.llama.util.ParamChecker;
 import com.cloudera.llama.util.UUID;

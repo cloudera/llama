@@ -22,7 +22,7 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.cloudera.llama.am.api.RMResource;
+import com.cloudera.llama.am.spi.RMResource;
 import com.cloudera.llama.am.api.Resource.Locality;
 import com.cloudera.llama.am.api.TestUtils;
 

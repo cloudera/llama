@@ -17,7 +17,7 @@
  */
 package com.cloudera.llama.am.impl;
 
-import com.cloudera.llama.am.api.RMResource;
+import com.cloudera.llama.am.spi.RMResource;
 import com.cloudera.llama.util.FastFormat;
 import com.cloudera.llama.util.UUID;
 

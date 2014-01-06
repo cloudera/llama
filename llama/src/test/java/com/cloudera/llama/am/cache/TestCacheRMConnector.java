@@ -17,9 +17,10 @@
  */
 package com.cloudera.llama.am.cache;
 
+import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.impl.PlacedResourceImpl;
 import com.cloudera.llama.am.impl.RecordingMockRMConnector;
-import com.cloudera.llama.am.api.RMResource;
+import com.cloudera.llama.am.spi.RMResource;
 import com.cloudera.llama.am.api.Resource;
 import com.cloudera.llama.am.api.TestUtils;
 import com.cloudera.llama.am.spi.RMEvent;
@@ -54,7 +55,7 @@ public class TestCacheRMConnector {
   @Test
   public void testDelegation() throws Exception {
     List<String> expected = new ArrayList<String>();
-    expected.add("setLlamaAMCallback");
+    expected.add("setRMListener");
 
     RecordingMockRMConnector connector = new RecordingMockRMConnector();
 
@@ -67,7 +68,7 @@ public class TestCacheRMConnector {
     expected.add("getNodes");
     expected.add("register");
 
-    cache.setLlamaAMCallback(new RMListener() {
+    cache.setRMListener(new RMListener() {
       @Override
       public void stoppedByRM() {
       }
@@ -121,7 +122,7 @@ public class TestCacheRMConnector {
     CacheRMConnector cache = new CacheRMConnector(
         new Configuration(false), connector);
 
-    cache.setLlamaAMCallback(new RMListener() {
+    cache.setRMListener(new RMListener() {
       @Override
       public void stoppedByRM() {
       }
@@ -175,7 +176,7 @@ public class TestCacheRMConnector {
     CacheRMConnector cache = new CacheRMConnector(
         new Configuration(false), connector);
 
-    cache.setLlamaAMCallback(new RMListener() {
+    cache.setRMListener(new RMListener() {
       @Override
       public void stoppedByRM() {
       }
@@ -220,7 +221,7 @@ public class TestCacheRMConnector {
     CacheRMConnector cache = new CacheRMConnector(
         new Configuration(false), connector);
 
-    cache.setLlamaAMCallback(new RMListener() {
+    cache.setRMListener(new RMListener() {
       @Override
       public void stoppedByRM() {
       }
@@ -249,7 +250,7 @@ public class TestCacheRMConnector {
     cache.release(Arrays.asList((RMResource) pr1), false);
     Assert.assertFalse(connector.getInvoked().contains("release"));
 
-    manualClock.increment(ResourceCache.EVICTION_IDLE_TIMEOUT_DEFAULT+1);
+    manualClock.increment(LlamaAM.EVICTION_IDLE_TIMEOUT_DEFAULT+1);
     Thread.sleep(100);
 
     Assert.assertTrue(connector.getInvoked().contains("release"));
@@ -265,7 +266,7 @@ public class TestCacheRMConnector {
     CacheRMConnector cache = new CacheRMConnector(
         new Configuration(false), connector);
 
-    cache.setLlamaAMCallback(new RMListener() {
+    cache.setRMListener(new RMListener() {
       @Override
       public void stoppedByRM() {
       }
@@ -310,7 +311,7 @@ public class TestCacheRMConnector {
     CacheRMConnector cache = new CacheRMConnector(
         new Configuration(false), connector);
 
-    cache.setLlamaAMCallback(new RMListener() {
+    cache.setRMListener(new RMListener() {
       @Override
       public void stoppedByRM() {
       }

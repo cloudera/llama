@@ -28,7 +28,7 @@ import org.junit.Test;
 
 import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.PlacedResource.Status;
-import com.cloudera.llama.am.api.RMResource;
+import com.cloudera.llama.am.spi.RMResource;
 import com.cloudera.llama.am.api.TestUtils;
 import com.cloudera.llama.am.api.Resource.Locality;
 import com.cloudera.llama.am.spi.RMEvent;
@@ -49,7 +49,7 @@ public class TestNormalizerRMConnector {
     conf.setInt(LlamaAM.NORMALIZING_STANDARD_VCORES_KEY, 2);
     normalizer = new NormalizerRMConnector(conf, connector);
     listener = new CallbackStorer();
-    normalizer.setLlamaAMCallback(listener);
+    normalizer.setRMListener(listener);
   }
 
   @Test

@@ -32,8 +32,20 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
+/**
+ * The <code>APIContractLlamaAM</code> is a wrapper that enforces precondition
+ * checks for all {@link LlamaAM} methods, both state of the
+ * <code>LlamaAM</code> instance and the parameter values. It also logs
+ * (<code>TRACE</code> level) all invocations to the <code>LlamaAM</code>.
+ * <p/>
+ * The {@link LlamaAM#create(Configuration)} wraps all created instances with
+ * a <code>APIContractLlamaAM</code>.
+ * <p/>
+ * This implementation does not have configuration knobs.
+*/
 public class APIContractLlamaAM extends LlamaAM {
-  private static final Logger LOG = LoggerFactory.getLogger(APIContractLlamaAM.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(APIContractLlamaAM.class);
   private final LlamaAM llamaAM;
   private volatile boolean stopped;
 

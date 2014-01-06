@@ -18,7 +18,6 @@
 package com.cloudera.llama.am.impl;
 
 import com.cloudera.llama.am.api.LlamaAM;
-import com.cloudera.llama.am.api.LlamaAMEvent;
 import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.api.LlamaAMListener;
 import com.cloudera.llama.am.api.PlacedReservation;
@@ -203,7 +202,7 @@ public class TestGangAntiDeadlockLlamaAM {
     }
 
     @Override
-    public void dispatch(LlamaAMEvent event) {
+    public void dispatch(LlamaAMEventImpl event) {
       super.dispatch(event);
     }
   }

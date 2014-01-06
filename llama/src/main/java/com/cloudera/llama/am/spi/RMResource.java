@@ -15,12 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.cloudera.llama.am.api;
+package com.cloudera.llama.am.spi;
 
+import com.cloudera.llama.am.api.Resource;
 import com.cloudera.llama.util.UUID;
 
 import java.util.Map;
 
+/**
+ * A <code>RMResource</code> represents a single resource requested to the
+ * Resource Manager via a {@link RMConnector} instance.
+ * <p/>
+ * The {@link #getResourceId()} is the client ID of the resource, the
+ * {@link #getRmResourceId()} is the Resource Manager ID of the resource.
+ * <p/>
+ * The {@link #getRmData()} Map can be used by the {@link RMConnector}
+ * implementations to store RM specific data associated with the resource for
+ * use by the connector itself while the resource is active.
+ */
 public interface RMResource extends Resource {
 
   public String getLocation();
@@ -35,13 +47,6 @@ public interface RMResource extends Resource {
 
   public void setRmResourceId(Object rmResourceId);
 
-  /**
-   * This Map is to be used by RMConnector implementations to store RM
-   * specific data associated with the resource for later use by the RMConnector
-   * itself.
-   *
-   * @return a Map instance.
-   */
   public Map<String, Object> getRmData();
 
 }

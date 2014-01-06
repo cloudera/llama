@@ -24,6 +24,14 @@ import com.cloudera.llama.util.UUID;
 
 import java.util.Map;
 
+/**
+ * The {@link RMConnector} via the {@link RMListener} produces
+ * <code>RMEvent</code>s to signal status changes of resources, such as
+ * allocations, preemptions, etc.
+ * <p/>
+ * An <code>RMEven</code> corresponds to a single status change for a single
+ * {@link RMResource}.
+ */
 public class RMEvent {
   private final UUID resourceId;
   private final Object rmResourceId;
@@ -45,6 +53,9 @@ public class RMEvent {
     this.memoryMbs = memoryMbs;
   }
 
+  /**
+   * Creates an allocation event for an exiting {@link RMResource}.
+   */
   public static RMEvent createAllocationEvent(UUID resourceId,
       String location, int vCpuCores, int memoryMb, Object rmResourceId,
       Map<String, Object> rmData) {
@@ -52,6 +63,9 @@ public class RMEvent {
         memoryMb, PlacedResource.Status.ALLOCATED);
   }
 
+  /**
+   * Creates an status change event for an exiting {@link RMResource}.
+   */
   public static RMEvent createStatusChangeEvent(UUID resourceId,
       PlacedResource.Status status) {
     return new RMEvent(resourceId, null, null, null, -1, -1, status);

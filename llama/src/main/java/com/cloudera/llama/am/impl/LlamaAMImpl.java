@@ -20,13 +20,22 @@ package com.cloudera.llama.am.impl;
 import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.LlamaAMEvent;
 import com.cloudera.llama.am.api.LlamaAMListener;
+import com.cloudera.llama.util.UUID;
 import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
+/**
+ * Base {@link LlamaAM} implementation class used by all its implementations.
+ * <p/>
+ * It provides common functionality to its subclasses.
+ * <p/>
+ * This implementation does not have configuration knobs.
+ */
 public abstract class LlamaAMImpl extends LlamaAM {
   private static final Logger LOG = LoggerFactory.getLogger(LlamaAMImpl.class);
   private volatile Set<LlamaAMListener> listeners;
@@ -48,7 +57,7 @@ public abstract class LlamaAMImpl extends LlamaAM {
     listeners = newSet;
   }
 
-  protected void dispatch(LlamaAMEvent event) {
+  protected void dispatch(LlamaAMEventImpl event) {
     if (!event.isEmpty()) {
       for (LlamaAMListener listener : listeners) {
         try {
@@ -58,6 +67,19 @@ public abstract class LlamaAMImpl extends LlamaAM {
         }
       }
     }
+  }
+
+
+  /**
+   * Tells, a Llama implementation class, if the current call is in the context
+   * of an admin operation.
+   *
+   * @return <code>TRUE</code> if the current call is in teh context of an
+   * admin operation, <code>FALSE</code> otherwise.
+   * @see #doAsAdmin(Callable)
+   */
+  protected boolean isCallProducingEchoEvent(UUID handle) {
+    return !isAdminCall() && !handle.equals(WILDCARD_HANDLE);
   }
 
 }

@@ -21,8 +21,30 @@ import com.cloudera.llama.util.UUID;
 
 import java.util.List;
 
+/**
+ * A <code>PlacedReservation</code> represents a {@link Reservation} or a
+ * {@link Expansion} that has been reserved.
+ * <p/>
+ * In defines its current status and also if the reservation is active or
+ * queued.
+ * <p/>
+ * A returned <code>PlacedReservation</code> instance via the {@link LlamaAM}
+ * API is immutable.
+ * <p/>
+ *
+ * @see PlacedResource
+ * @see Reservation
+ * @see Expansion
+ * @see LlamaAM
+ */
 public interface PlacedReservation extends Reservation {
 
+  /**
+   * Possible status of a {@link PlacedReservation}.
+   * <p/>
+   * The <code>final</code> property indicates if the status is final or not.
+   * A final status means that the reservation status cannot change anymore.
+   */
   public enum Status {
     PENDING(false),
     BACKED_OFF(false),

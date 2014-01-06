@@ -18,7 +18,7 @@
 package com.cloudera.llama.am.impl;
 
 import com.cloudera.llama.am.api.LlamaAM;
-import com.cloudera.llama.am.api.RMResource;
+import com.cloudera.llama.am.spi.RMResource;
 import com.cloudera.llama.am.spi.RMConnector;
 import com.cloudera.llama.am.spi.RMEvent;
 import com.cloudera.llama.am.spi.RMListener;
@@ -37,10 +37,16 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Breaks up resource requests into smaller requests of standardized size.  The
- * advantage of a standard size is that, when the normalizer wraps the cache,
- * requests can be satisfied by cached resources even when the original request
- * sizes were different.
+ * <code>RMConnector</code> implementation that breaks up resource requests
+ * into smaller requests of standardized size.  The advantage of a standard
+ * size is that, when the normalizer wraps the cache, requests can be satisfied
+ * by cached resources even when the original request sizes were different.
+ * <p/>
+ * There are two configuration properties that drive the logic of this class:
+ * <ul>
+ * <li>{@link LlamaAM#NORMALIZING_STANDARD_VCORES_KEY}</li>
+ * <li>{@link LlamaAM#NORMALIZING_STANDARD_MBS_KEY}</li>
+ * </ul>
  */
 public class NormalizerRMConnector implements RMConnector, RMListener {
   private static final Logger LOG =
@@ -56,7 +62,7 @@ public class NormalizerRMConnector implements RMConnector, RMListener {
 
   public NormalizerRMConnector(Configuration conf, RMConnector connector) {
     this.connector = connector;
-    connector.setLlamaAMCallback(this);
+    connector.setRMListener(this);
     normalCpuVCores = conf.getInt(LlamaAM.NORMALIZING_STANDARD_VCORES_KEY,
         LlamaAM.NORMALIZING_SIZE_VCORES_DEFAULT);
     normalMemoryMbs = conf.getInt(LlamaAM.NORMALIZING_STANDARD_MBS_KEY,
@@ -71,8 +77,8 @@ public class NormalizerRMConnector implements RMConnector, RMListener {
   }
 
   @Override
-  public void setLlamaAMCallback(RMListener callback) {
-    this.listener = callback;
+  public void setRMListener(RMListener listener) {
+    this.listener = listener;
   }
 
   @Override

@@ -23,7 +23,7 @@ import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.api.LlamaAMListener;
 import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.PlacedResource;
-import com.cloudera.llama.am.api.RMResource;
+import com.cloudera.llama.am.spi.RMResource;
 import com.cloudera.llama.am.api.Reservation;
 import com.cloudera.llama.am.api.Resource;
 import com.cloudera.llama.am.api.TestUtils;
@@ -59,8 +59,8 @@ public class TestSingleQueueLlamaAM {
     }
 
     @Override
-    public void setLlamaAMCallback(RMListener callback) {
-      this.callback = callback;
+    public void setRMListener(RMListener listener) {
+      this.callback = listener;
     }
 
     @Override

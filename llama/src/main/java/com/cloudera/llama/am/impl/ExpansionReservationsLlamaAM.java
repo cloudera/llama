@@ -35,7 +35,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ExpansionReservationsLlamaAM extends LlamaAMImpl implements LlamaAMListener {
+/**
+ * The <code>ExpansionReservationsLlamaAM</code> is a {@link LlamaAM} wrapper
+ * that specializes in providing support for reservation expansions on top of
+ * a LlamaAM providing only reservations support.
+ * <p/>
+ * This implementation does not have configuration knobs.
+ */
+public class ExpansionReservationsLlamaAM extends LlamaAMImpl
+    implements LlamaAMListener {
   private static final Logger LOG = LoggerFactory.getLogger(
       ExpansionReservationsLlamaAM.class);
 
@@ -218,7 +226,7 @@ public class ExpansionReservationsLlamaAM extends LlamaAMImpl implements LlamaAM
         }
       }
     }
-    dispatch(event);
+    dispatch(LlamaAMEventImpl.convertToImpl(event));
   }
 
 }
