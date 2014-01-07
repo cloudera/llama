@@ -30,6 +30,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.ProxyUsers;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.server.MiniYARNCluster;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.FairScheduler;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.bridge.SLF4JBridgeHandler;
@@ -65,6 +66,9 @@ public class TestLlamaAMWithYarn {
       throws Exception {
     Configuration conf = new YarnConfiguration();
     conf.set("yarn.scheduler.fair.allocation.file", "test-fair-scheduler.xml");
+    conf.setInt(YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_MB, 0);
+    conf.setInt(YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_VCORES, 0);
+    conf.setClass(YarnConfiguration.RM_SCHEDULER, FairScheduler.class, FairScheduler.class);
 
     //proxy user config
     String llamaProxyUser = System.getProperty("user.name");
@@ -295,7 +299,9 @@ public class TestLlamaAMWithYarn {
       conf.setInt(YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES, 2);
       conf.setInt(YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_MB, 5020);
       startYarn(conf, 1);
-      LlamaAM llama = LlamaAM.create(getLlamaConfiguration());
+      Configuration llamaConf = getLlamaConfiguration();
+      llamaConf.setBoolean(LlamaAM.NORMALIZING_ENABLED_KEY, false);
+      LlamaAM llama = LlamaAM.create(llamaConf);
       try {
         llama.start();
         List<String> nodes = llama.getNodes();

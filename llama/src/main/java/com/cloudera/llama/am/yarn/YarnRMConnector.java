@@ -686,7 +686,6 @@ public class YarnRMConnector implements RMConnector, Configurable,
     List<RMEvent> changes = new ArrayList<RMEvent>();
     // no need to use a ugi.doAs() as this is called from within Yarn client
     for (Container container : containers) {
-      System.out.println("Received container with " + container.getResource());
       List<? extends Collection<LlamaContainerRequest>> matchingContainerReqs =
           amRmClientAsync.getMatchingRequests(container.getPriority(),
               getNodeName(container.getNodeId()), container.getResource());

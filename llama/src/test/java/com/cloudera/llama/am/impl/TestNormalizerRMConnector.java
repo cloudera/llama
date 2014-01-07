@@ -83,6 +83,32 @@ public class TestNormalizerRMConnector {
 
   @Test
   @SuppressWarnings("unchecked")
+  public void testAllocationGreaterThanNormalSize() throws LlamaException {
+    RMResource request = TestUtils.createRMResource("node1", Locality.MUST, 3,
+        3000);
+    normalizer.reserve(Arrays.asList(request));
+    assertEquals("reserve", connector.invoked.get(1));
+    List<RMResource> normalResources = (List<RMResource>) connector.args.get(1);
+    assertEquals(2 + 6, normalResources.size());
+
+    for (RMResource normalResource : normalResources) {
+      // Normalizer shouldn't call back until it has the full reservation
+      assertTrue(listener.events == null || listener.events.size() == 0);
+      RMEvent allocateEvent = createAllocationEvent(normalResource, 3000, 3);
+      normalizer.onEvent(Arrays.asList(allocateEvent));
+    }
+
+    assertNotNull(listener.events);
+    assertEquals(1, listener.events.size());
+    RMEvent event = listener.events.get(0);
+    assertEquals(24, event.getCpuVCores());
+    assertEquals(24000, event.getMemoryMbs());
+    assertEquals("node1", event.getLocation());
+    assertEquals(request.getResourceId(), event.getResourceId());
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
   public void testRejected() throws Exception {
     RMResource request = TestUtils.createRMResource("node1", Locality.MUST, 3,
         3000);
@@ -154,6 +180,13 @@ public class TestNormalizerRMConnector {
     return RMEvent.createAllocationEvent(resource.getResourceId(),
         resource.getLocationAsk(), resource.getCpuVCoresAsk(),
         resource.getMemoryMbsAsk(), resource.getRmResourceId(), null);
+  }
+
+  private RMEvent createAllocationEvent(RMResource resource, int memoryAlloc,
+      int cpuAlloc) {
+    return RMEvent.createAllocationEvent(resource.getResourceId(),
+        resource.getLocationAsk(), cpuAlloc, memoryAlloc,
+        resource.getRmResourceId(), null);
   }
 
   private class CallbackStorer implements RMListener {
