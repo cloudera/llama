@@ -29,7 +29,7 @@
     </td>
 </tr>
 <tr>
-<td><a name="llama.am.server.thrift.transport.timeout.ms">llama.am.server.thrift.transport.timeout.ms</a></td><td>1000</td><td>
+<td><a name="llama.am.server.thrift.transport.timeout.ms">llama.am.server.thrift.transport.timeout.ms</a></td><td>3600000</td><td>
       Socket time, in milliseconds, used LlamaAM server for all its server and 
       client Thrift connections.
     </td>
@@ -77,6 +77,17 @@
     </td>
 </tr>
 <tr>
+<td><a name="llama.am.server.thrift.admin.address">llama.am.server.thrift.admin.address</a></td><td>localhost:15002</td><td>The admin address the LlamaAM server listen at.
+      If 0.0.0.0 is specified as IP, the server will listen in all available
+      network addresses. If the port is not specified, the default port is
+      15002.
+      If the specified port is 0, an ephemeral port will be used, the port in
+      use will be printed in the logs at startup.
+      IMPORTANT: It is strongly recommended to use 'localhost' as the bind
+      address when security is not enabled.
+    </td>
+</tr>
+<tr>
 <td><a name="llama.am.server.thrift.http.address">llama.am.server.thrift.http.address</a></td><td>0.0.0.0:15001</td><td>The address the LlamaAM server exposes its HTTP server for
       JMX and the Web UI.
       If 0.0.0.0 is specified as IP, the server will listen in all available
@@ -89,9 +100,24 @@
     </td>
 </tr>
 <tr>
+<td><a name="llama.am.server.thrift.loggers.servlet.read.only">llama.am.server.thrift.loggers.servlet.read.only</a></td><td>true</td><td>
+      If the /loggers servlet is read only.
+      If not in read only mode, the servlet can be used to change logger levels.
+    </td>
+</tr>
+<tr>
 <td><a name="llama.am.server.thrift.security">llama.am.server.thrift.security</a></td><td>false</td><td>
       Indicates if security is enabled or not. If enabled, LlamaAM server uses
       Kerberos Thrift SASL for all server and client Thrift connections.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.server.thrift.security.QOP">llama.am.server.thrift.security.QOP</a></td><td>auth</td><td>
+      Indicates the quality of protection if security is enabled.
+      Valid values are:
+        'auth'      : authentication
+        'auth-int'  : authentication and integrity
+        'auth-conf' : authentication, integrity and confidentiality
     </td>
 </tr>
 <tr>
@@ -133,15 +159,16 @@
     </td>
 </tr>
 <tr>
-<td><a name="llama.am.rm.connector.class">llama.am.rm.connector.class</a></td><td>com.cloudera.llama.am.yarn.YarnRMLlamaAMConnector</td><td>
+<td><a name="llama.am.rm.connector.class">llama.am.rm.connector.class</a></td><td>com.cloudera.llama.am.yarn.YarnRMConnector</td><td>
       Backing LlamaAM implementation to use.
       Available for functional testing:
       MockRMLlamaAMConnector
     </td>
 </tr>
 <tr>
-<td><a name="llama.am.initial.queues">llama.am.initial.queues</a></td><td>queue1,queue2</td><td>
-      Queues LlamaAM should connect at start up.
+<td><a name="llama.am.core.queues">llama.am.core.queues</a></td><td></td><td>
+      Queues LlamaAM should connect to at start up. Unlike queues that are
+      created in response to a reservation, these queues will never expire.
     </td>
 </tr>
 <tr>
@@ -180,6 +207,46 @@
     </td>
 </tr>
 <tr>
+<td><a name="llama.am.throttling.enabled">llama.am.throttling.enabled</a></td><td>true</td><td>
+      Global setting that indicates if Llama should throttle reservations.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.throttling.enabled.#QUEUE#">llama.am.throttling.enabled.#QUEUE#</a></td><td>true</td><td>
+      Per queue setting that indicates if Llama should throttle reservations for
+      the #QUEUE# queue. If not set, the 'llama.am.throttling.enabled' is used.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.throttling.maximum.placed.reservations">llama.am.throttling.maximum.placed.reservations</a></td><td>20</td><td>
+      Global maximum number of reservations per queue. Once this number of
+      reservations is reached for a queue, reservations are queued up.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.throttling.maximum.queued.reservations">llama.am.throttling.maximum.queued.reservations</a></td><td>50</td><td>
+      Global maximum number of queued reservations per queue. Once this number
+      of reservations is reached for a queue, new reservations are rejected.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.throttling.maximum.placed.reservations.#QUEUE#">llama.am.throttling.maximum.placed.reservations.#QUEUE#</a></td><td>20</td><td>
+      Maximum number of reservations for #QUEUE# queue. Once this number of
+      reservations is reached for the #QUEUE# queue, reservations are queued up.
+      If this property is not set for the #QUEUE#, the global configuration
+      property is used 'llama.am.throttling.maximum.placed.reservations'.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.throttling.maximum.queued.reservations.#QUEUE#">llama.am.throttling.maximum.queued.reservations.#QUEUE#</a></td><td>50</td><td>
+      Maximum number of queued reservations for #QUEUE# queue. Once this number
+      of reservations is reached for the #QUEUE# queue, new reservations are
+      rejected.
+      If this property is not set for the #QUEUE#, the global configuration
+      property is used 'llama.am.throttling.maximum.queued.reservations'.
+    </td>
+</tr>
+<tr>
 <td><a name="llama.am.mock.nodes">llama.am.mock.nodes</a></td><td>node1,node2</td><td>
       List of nodes to offer.
     </td>
@@ -199,6 +266,61 @@
 <td><a name="llama.am.mock.events.max.wait.ms">llama.am.mock.events.max.wait.ms</a></td><td>10000</td><td>
       Maximum wait time, in milliseconds, for events to be delivered after
       reservation. Actual wait time is a random value.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.cache.enabled">llama.am.cache.enabled</a></td><td>true</td><td>
+      Global setting that indicates if Llama should cache allocated resources on
+      release.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.cache.enabled.#QUEUE#">llama.am.cache.enabled.#QUEUE#</a></td><td>true</td><td>
+      Per queue setting that indicates if Llama should cache allocated resources
+      on release for the #QUEUE# queue. If not set, the
+      'llama.am.caching.enabled' is used.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.cache.eviction.run.interval.timeout.ms">llama.am.cache.eviction.run.interval.timeout.ms</a></td><td>5000</td><td>
+      Interval of time between eviction policy runs.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.cache.eviction.policy.class">llama.am.cache.eviction.policy.class</a></td><td>com.cloudera.llama.am.cache.ResourceCache$TimeoutEvictionPolicy</td><td>
+      The eviction policy for cached resources. The TimeoutEvictionPolicy
+      evicts resources that have been sitting in the cache for a period of time
+      equal or greater than the timeout.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.cache.eviction.timeout.policy.idle.timeout.ms">llama.am.cache.eviction.timeout.policy.idle.timeout.ms</a></td><td>30000</td><td>
+      TimeoutEvictionPolicy policy timeout for resources sitting in the cache.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.queue.expire.ms">llama.am.queue.expire.ms</a></td><td>300000</td><td>
+      Time in milliseconds after which Llama will discard its AM for
+      a queue that has been empty of reservations. Does not apply to queues
+      specified with the llama.am.core.queues property.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.resource.normalizing.enabled">llama.am.resource.normalizing.enabled</a></td><td>true</td><td>
+      Whether to break resource requests into smaller requests of standard size
+      before the cache.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.resource.normalizing.standard.mbs">llama.am.resource.normalizing.standard.mbs</a></td><td>1024</td><td>
+      The standard size in MB to break requests into when normalizing is turned
+      on.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.resource.normalizing.standard.vcores">llama.am.resource.normalizing.standard.vcores</a></td><td>1</td><td>
+      The standard size in vcores to break requests into when normalizing is
+      turned on.
     </td>
 </tr>
 <tr>
@@ -268,7 +390,7 @@
     </td>
 </tr>
 <tr>
-<td><a name="llama.nm.server.thrift.transport.timeout.ms">llama.nm.server.thrift.transport.timeout.ms</a></td><td>1000</td><td>
+<td><a name="llama.nm.server.thrift.transport.timeout.ms">llama.nm.server.thrift.transport.timeout.ms</a></td><td>3600000</td><td>
       Socket time, in milliseconds, used LlamaNM auxiliary service for all its 
       server and client Thrift connections.
     </td>
