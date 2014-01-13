@@ -176,6 +176,36 @@ usage:
     * The <<<-hdfswriteconf FILE>>> option writes out MiniHDFS configuration to
     the specified <<FILE>>.
 
+*** MiniLLama Node Mapper CLI Tool
+
+  To use  a MiniLlama instance running against a multi-node cluster in a single
+  machine, the configuration of MiniLlama must include the mapping between
+  DataNode and NodeManager pairs, this mapping is of the form
+  <<<DataNodeHost:DataNodePort>>> to <<<NodeManagerHost:NodeManagerPort>>>. This
+  mapping must be set in the <<<llama-site.xml>>> file used by the MiniLlama
+  instance in the <<<llama.minicluster.node.mapper.mapping>>> configuration
+  property using the JDK <<<Properties>>> String encoding. MiniLlama includes a
+  CLI tool, <<<minillamanodemapper>>>, to aid with this encoding.
+
+  The <<<minillamanodemapper>>> usage syntax is:
+
++---+
+Usage: minillamanodemapper [DNHOST:DNPORT=NMHOST:NMPORT]+
++---+
+
+  For example:
+
++---+
+$ minillamanodemapper localhost:20001=localhost:20002 localhost:20003=localhost:20004
+  Picked up _JAVA_OPTIONS: -Djava.awt.headless=true
+  #
+  #Mon Jan 13 10:09:50 PST 2014
+  localhost\:20003=localhost\:20004
+  localhost\:20001=localhost\:20002
+$
++---+
+
+
 * Using the LlamaClient Command-Line Tool
 
   The LlamaClient command-line tool allows to interact with a Llama AM running

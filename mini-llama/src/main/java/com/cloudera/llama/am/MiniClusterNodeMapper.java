@@ -32,18 +32,53 @@ import java.util.Properties;
 
 public class MiniClusterNodeMapper implements NodeMapper, Configurable {
 
+  //java ...MiniClusterNodeMapper DNHOST:PORT=NMHOST:PORT DNHOST:PORT=NMHOST:PORT
+
+  /**
+   * Convenience Main class for integration testing that takes several arguments
+   * with the DNHOST:DNPORT=NMHOST:NMPORT and returns a string with an encoded
+   * <code>Properties</code> instance with those arguments. That string can be
+   * used for setting the {@link #MAPPING_KEY} property in the
+   * <code>llama-site.xml</code> when using the
+   * <code>MiniClusterNodeMapper</code>.
+   *
+   * @param args multiple arguments, all with the DNHOST:DNPORT=NMHOST:NMPORT
+   * pattern.
+   * @throws Exception throw if there was an error parsing the arguments or
+   * encoding them as a <code>Properties</code> string.
+   */
+  public static void main(String[] args)  throws Exception {
+    if (args.length > 0) {
+      Map<String, String> map = new HashMap<String, String>();
+      for (String arg : args) {
+        String s[] = arg.split("=");
+        map.put(s[0], s[1]);
+      }
+      System.out.println(encodeMapAsPropertiesString(map));
+      System.exit(0);
+    } else {
+      System.err.println("Usage: minillamanodemapper [DNHOST:DNPORT=NMHOST:NMPORT]+");
+      System.exit(1);
+    }
+  }
+
+  private static String encodeMapAsPropertiesString(Map<String, String> map)
+      throws Exception {
+    Properties props = new Properties();
+    props.putAll(map);
+    StringWriter writer = new StringWriter();
+    props.store(writer, "");
+    writer.close();
+    return writer.toString();
+  }
+
   public static final String MAPPING_KEY =
       "llama.minicluster.node.mapper.mapping";
 
   public static void addMapping(Configuration conf,
       Map<String, String> mapping) {
     try {
-      Properties props = new Properties();
-      props.putAll(mapping);
-      StringWriter writer = new StringWriter();
-      props.store(writer, "");
-      writer.close();
-      conf.set(MAPPING_KEY, writer.toString());
+      conf.set(MAPPING_KEY, encodeMapAsPropertiesString(mapping));
     } catch (Throwable ex) {
       throw new RuntimeException(ex);
     }
