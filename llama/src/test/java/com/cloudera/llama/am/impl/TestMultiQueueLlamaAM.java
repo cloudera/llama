@@ -72,7 +72,8 @@ public class TestMultiQueueLlamaAM {
     public void start() throws LlamaException {
       super.start();
       if (conf.getBoolean("fail.start", false)) {
-        throw new LlamaException(ErrorCode.TEST);
+        throw new LlamaException(ErrorCode.TEST, "fail.start","TRUE");
+        
       }
     }
 
@@ -80,7 +81,7 @@ public class TestMultiQueueLlamaAM {
     public void register(String queue) throws LlamaException {
       super.register(queue);
       if (conf.getBoolean("fail.register", false)) {
-        throw new LlamaException(ErrorCode.TEST);
+        throw new LlamaException(ErrorCode.TEST, "fail.register", "TRUE");
       }
     }
 
@@ -89,8 +90,8 @@ public class TestMultiQueueLlamaAM {
         boolean doNotCache)
         throws LlamaException {
       super.release(resources, doNotCache);
-      if (conf.getBoolean("release.fail", false)) {
-        throw new LlamaException(ErrorCode.TEST);
+      if (conf.getBoolean("fail.release", false)) {
+        throw new LlamaException(ErrorCode.TEST, "fail.release", "TRUE");
       }
     }
 
@@ -135,7 +136,7 @@ public class TestMultiQueueLlamaAM {
     Configuration conf = new Configuration(false);
     conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MyRMConnector.class,
         RMConnector.class);
-    conf.setBoolean("release.fail", true);
+    conf.setBoolean("fail.release", true);
     LlamaAM am = LlamaAM.create(conf);
     try {
       am.start();
@@ -153,7 +154,7 @@ public class TestMultiQueueLlamaAM {
     Configuration conf = new Configuration(false);
     conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MyRMConnector.class,
         RMConnector.class);
-    conf.setBoolean("release.fail", true);
+    conf.setBoolean("fail.release", true);
     LlamaAM am = LlamaAM.create(conf);
     try {
       am.start();

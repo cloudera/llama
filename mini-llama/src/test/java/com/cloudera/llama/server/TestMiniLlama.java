@@ -19,6 +19,7 @@ package com.cloudera.llama.server;
 
 import com.cloudera.llama.am.MiniLlama;
 import com.cloudera.llama.am.api.LlamaAM;
+import com.cloudera.llama.am.yarn.YarnRMConnector;
 import com.cloudera.llama.thrift.LlamaAMService;
 import com.cloudera.llama.thrift.TLlamaAMGetNodesRequest;
 import com.cloudera.llama.thrift.TLlamaAMGetNodesResponse;

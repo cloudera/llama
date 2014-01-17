@@ -116,6 +116,8 @@ public class TestLlamaAMWithYarn {
     for (Map.Entry entry : miniYarn.getConfig()) {
       conf.set((String) entry.getKey(), (String) entry.getValue());
     }
+    conf.set(YarnRMConnector.HADOOP_USER_NAME_KEY,
+        System.getProperty("user.name"));
     return conf;
   }
 

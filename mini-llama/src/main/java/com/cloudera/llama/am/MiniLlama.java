@@ -187,6 +187,8 @@ public class MiniLlama {
         ServerConfiguration.HTTP_ADDRESS_KEY), "localhost:0");
     conf.setBoolean(YarnConfiguration.RM_SCHEDULER_INCLUDE_PORT_IN_NODE_NAME,
         true);
+    conf.set(YarnRMConnector.HADOOP_USER_NAME_KEY,
+        System.getProperty("user.name"));
     return conf;
   }
 
