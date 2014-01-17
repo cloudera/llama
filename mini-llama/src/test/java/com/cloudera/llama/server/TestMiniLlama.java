@@ -22,6 +22,7 @@ import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.thrift.LlamaAMService;
 import com.cloudera.llama.thrift.TLlamaAMGetNodesRequest;
 import com.cloudera.llama.thrift.TLlamaAMGetNodesResponse;
+import com.cloudera.llama.thrift.TLlamaAMNotificationRequest;
 import com.cloudera.llama.thrift.TLlamaAMRegisterRequest;
 import com.cloudera.llama.thrift.TLlamaAMRegisterResponse;
 import com.cloudera.llama.thrift.TLlamaAMReleaseRequest;
@@ -48,8 +49,10 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 
 public class TestMiniLlama {
 
@@ -69,6 +72,35 @@ public class TestMiniLlama {
     testMiniLlamaWithHadoopMiniCluster(true);
   }
 
+  public static class NotificationServerConfiguration
+      extends ServerConfiguration {
+
+    public NotificationServerConfiguration() {
+      super("client", new Configuration(false));
+    }
+
+    @Override
+    public int getThriftDefaultPort() {
+      return 0;
+    }
+
+    @Override
+    public int getHttpDefaultPort() {
+      return 0;
+    }
+  }
+
+  protected Configuration createCallbackConfiguration() throws Exception {
+    ServerConfiguration cConf = new NotificationServerConfiguration();
+    Configuration conf = new Configuration(false);
+    conf.set(ServerConfiguration.CONFIG_DIR_KEY, TestAbstractMain.createTestDir());
+    conf.set(cConf.getPropertyName(ServerConfiguration.SERVER_ADDRESS_KEY),
+        "localhost:0");
+    conf.set(cConf.getPropertyName(ServerConfiguration.HTTP_ADDRESS_KEY),
+        "localhost:0");
+    return conf;
+  }
+
   private void testMiniLlamaWithHadoopMiniCluster(boolean writeHdfsConf) 
       throws Exception {
     Configuration conf = MiniLlama.createMiniClusterConf(2);
@@ -81,7 +113,10 @@ public class TestMiniLlama {
       throws Exception {
     File confFile = null;
     MiniLlama server = new MiniLlama(conf);
+    final NotificationEndPoint callbackServer = new NotificationEndPoint();
     try {
+      callbackServer.setConf(createCallbackConfiguration());
+      callbackServer.start();
       Assert.assertNotNull(server.getConf().get(LlamaAM.CORE_QUEUES_KEY));
       if (writeHdfsConf) {
         File confDir = new File("target", UUID.randomUUID().toString());
@@ -105,8 +140,8 @@ public class TestMiniLlama {
       trReq.setVersion(TLlamaServiceVersion.V1);
       trReq.setClient_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
       TNetworkAddress tAddress = new TNetworkAddress();
-      tAddress.setHostname("localhost");
-      tAddress.setPort(0);
+      tAddress.setHostname(callbackServer.getAddressHost());
+      tAddress.setPort(callbackServer.getAddressPort());
       trReq.setNotification_callback_service(tAddress);
 
       //register
@@ -140,6 +175,24 @@ public class TestMiniLlama {
       TLlamaAMReservationResponse tresRes = client.Reserve(tresReq);
       Assert.assertEquals(TStatusCode.OK, tresRes.getStatus().getStatus_code());
 
+      //check notification delivery
+      while (callbackServer.notifications.isEmpty()) {
+        Thread.sleep(300);
+      }
+      boolean allocated = false;
+      while (!allocated) {
+        List<TLlamaAMNotificationRequest> list =
+            new ArrayList<TLlamaAMNotificationRequest>(callbackServer.notifications);
+        for (TLlamaAMNotificationRequest notif : list) {
+          if (notif.isSetAllocated_resources()) {
+            allocated = true;
+          }
+        }
+        if (!allocated) {
+          Thread.sleep(300);
+        }
+      }
+
       //release
       TLlamaAMReleaseRequest trelReq = new TLlamaAMReleaseRequest();
       trelReq.setVersion(TLlamaServiceVersion.V1);
@@ -164,6 +217,7 @@ public class TestMiniLlama {
       Assert.assertEquals(TStatusCode.OK, turRes.getStatus().getStatus_code());
     } finally {
       server.stop();
+      callbackServer.stop();
     }
   }
 
