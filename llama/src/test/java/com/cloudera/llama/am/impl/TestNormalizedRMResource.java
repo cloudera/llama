@@ -17,11 +17,9 @@
  */
 package com.cloudera.llama.am.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import java.util.List;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import com.cloudera.llama.am.api.RMResource;
@@ -35,7 +33,7 @@ public class TestNormalizedRMResource {
         Locality.MUST, 3, 2048);
     List<NormalizedRMResource> chunks = NormalizedRMResource.normalize(
         requested, 1, 1024);
-    assertEquals(5, chunks.size());
+    Assert.assertEquals(5, chunks.size());
     verifyChunks(chunks, 2048, 3, 1024, 1);
   }
 
@@ -45,7 +43,7 @@ public class TestNormalizedRMResource {
         Locality.MUST, 3, 3000);
     List<NormalizedRMResource> chunks = NormalizedRMResource.normalize(
         requested, 1, 1024);
-    assertEquals(6, chunks.size());
+    Assert.assertEquals(6, chunks.size());
     verifyChunks(chunks, 3072, 3, 1024, 1);
   }
 
@@ -55,7 +53,7 @@ public class TestNormalizedRMResource {
         Locality.PREFERRED, 3, 2048);
     List<NormalizedRMResource> chunks = NormalizedRMResource.normalize(
         requested, 1, 1024);
-    assertEquals(5, chunks.size());
+    Assert.assertEquals(5, chunks.size());
     verifyChunks(chunks, 2048, 3, 1024, 1);
   }
 
@@ -64,15 +62,15 @@ public class TestNormalizedRMResource {
     int memSum = 0;
     int cpuSum = 0;
     for (NormalizedRMResource chunk : chunks) {
-      assertTrue("Invalid chunk, vcores=" + chunk.getCpuVCoresAsk() + ", mb=" +
+      Assert.assertTrue("Invalid chunk, vcores=" + chunk.getCpuVCoresAsk() + ", mb=" +
           chunk.getMemoryMbsAsk(),
           (chunk.getCpuVCoresAsk() == cpuSize) !=
           (chunk.getMemoryMbsAsk() == memSize));
       cpuSum += chunk.getCpuVCoresAsk();
       memSum += chunk.getMemoryMbsAsk();
-      assertEquals(Locality.MUST, chunk.getLocalityAsk());
+      Assert.assertEquals(Locality.MUST, chunk.getLocalityAsk());
     }
-    assertEquals(expectedMemSum, memSum);
-    assertEquals(expectedCpuSum, cpuSum);
+    Assert.assertEquals(expectedMemSum, memSum);
+    Assert.assertEquals(expectedCpuSum, cpuSum);
   }
 }

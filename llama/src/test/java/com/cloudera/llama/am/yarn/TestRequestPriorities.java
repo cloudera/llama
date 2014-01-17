@@ -17,10 +17,7 @@
  */
 package com.cloudera.llama.am.yarn;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static com.cloudera.llama.am.yarn.YarnRMConnector.getRequestPriority;
-
+import org.junit.Assert;
 import org.junit.Test;
 
 import com.cloudera.llama.am.api.Resource;
@@ -28,22 +25,28 @@ import com.cloudera.llama.am.api.Resource;
 public class TestRequestPriorities {
   @Test
   public void testRequestPriorities() {
-    assertEquals(getRequestPriority(1024, 1, Resource.Locality.MUST),
-        getRequestPriority(1024, 1, Resource.Locality.MUST));
+    Assert.assertEquals(
+        YarnRMConnector.getRequestPriority(1024, 1, Resource.Locality.MUST),
+        YarnRMConnector.getRequestPriority(1024, 1, Resource.Locality.MUST));
 
-    assertTrue(getRequestPriority(2048, 1, Resource.Locality.MUST).compareTo(
-        getRequestPriority(1024, 1, Resource.Locality.MUST)) > 0);
+    Assert.assertTrue(
+        YarnRMConnector.getRequestPriority(2048, 1, Resource.Locality.MUST).compareTo(
+        YarnRMConnector.getRequestPriority(1024, 1, Resource.Locality.MUST)) > 0);
 
-    assertTrue(getRequestPriority(1024, 2, Resource.Locality.MUST).compareTo(
-        getRequestPriority(1024, 1, Resource.Locality.MUST)) > 0);
+    Assert.assertTrue(
+        YarnRMConnector.getRequestPriority(1024, 2, Resource.Locality.MUST).compareTo(
+        YarnRMConnector.getRequestPriority(1024, 1, Resource.Locality.MUST)) > 0);
 
-    assertTrue(getRequestPriority(1024, 1, Resource.Locality.MUST).compareTo(
-        getRequestPriority(1024, 1, Resource.Locality.PREFERRED)) > 0);
+    Assert.assertTrue(
+        YarnRMConnector.getRequestPriority(1024, 1, Resource.Locality.MUST).compareTo(
+        YarnRMConnector.getRequestPriority(1024, 1, Resource.Locality.PREFERRED)) > 0);
 
-    assertTrue(getRequestPriority(1024, 1, Resource.Locality.PREFERRED).compareTo(
-        getRequestPriority(1024, 1, Resource.Locality.DONT_CARE)) > 0);
+    Assert.assertTrue(
+        YarnRMConnector.getRequestPriority(1024, 1, Resource.Locality.PREFERRED).compareTo(
+        YarnRMConnector.getRequestPriority(1024, 1, Resource.Locality.DONT_CARE)) > 0);
 
-    assertTrue(getRequestPriority(1024, 1, Resource.Locality.MUST).compareTo(
-        getRequestPriority(2048, 1, Resource.Locality.PREFERRED)) > 0);
+    Assert.assertTrue(
+        YarnRMConnector.getRequestPriority(1024, 1, Resource.Locality.MUST).compareTo(
+        YarnRMConnector.getRequestPriority(2048, 1, Resource.Locality.PREFERRED)) > 0);
   }
 }

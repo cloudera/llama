@@ -17,9 +17,6 @@
  */
 package com.cloudera.llama.am;
 
-import static org.mockito.Mockito.*;
-import static junit.framework.Assert.*;
-
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.hadoop.security.UserGroupInformation;
@@ -27,6 +24,7 @@ import org.apache.hadoop.yarn.api.records.QueueACL;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.AllocationConfiguration;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.QueuePlacementPolicy;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -34,6 +32,7 @@ import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.thrift.TLlamaAMReservationRequest;
 import com.cloudera.llama.util.ErrorCode;
 import com.cloudera.llama.util.LlamaException;
+import org.mockito.Mockito;
 
 public class TestQueueAssignment {
   private LlamaAMServiceImpl amService;
@@ -42,56 +41,56 @@ public class TestQueueAssignment {
   
   @Before
   public void setUp() {
-    allocConf = mock(AllocationConfiguration.class);
-    placementPolicy = mock(QueuePlacementPolicy.class);
-    when(allocConf.hasAccess(anyString(), any(QueueACL.class),
-        any(UserGroupInformation.class))).thenReturn(true);
-    when(allocConf.getPlacementPolicy()).thenReturn(placementPolicy);
-    amService = new LlamaAMServiceImpl(mock(LlamaAM.class), null, null,
+    allocConf = Mockito.mock(AllocationConfiguration.class);
+    placementPolicy = Mockito.mock(QueuePlacementPolicy.class);
+    Mockito.when(allocConf.hasAccess(Mockito.anyString(), Mockito.any(QueueACL.class),
+        Mockito.any(UserGroupInformation.class))).thenReturn(true);
+    Mockito.when(allocConf.getPlacementPolicy()).thenReturn(placementPolicy);
+    amService = new LlamaAMServiceImpl(Mockito.mock(LlamaAM.class), null, null,
         new AtomicReference<AllocationConfiguration>(allocConf));
   }
   
   @Test
   public void testAccepted() throws Exception {
     TLlamaAMReservationRequest request = mockRequest("queue", true, "user");
-    when(placementPolicy.assignAppToQueue(eq("queue"), anyString()))
+    Mockito.when(placementPolicy.assignAppToQueue(Mockito.eq("queue"), Mockito.anyString()))
         .thenReturn("resolved");
     String queue = amService.assignToQueue(request);
     amService.checkAccess(request.getUser(), queue, request.getQueue());
-    assertEquals("resolved", queue);
+    Assert.assertEquals("resolved", queue);
   }
   
   @Test
   public void testRequestedQueueNotSet() throws Exception {
     TLlamaAMReservationRequest request = mockRequest(null, false, "user");
-    when(placementPolicy.assignAppToQueue(eq(YarnConfiguration.DEFAULT_QUEUE_NAME),
-        anyString())).thenReturn("resolved");
+    Mockito.when(placementPolicy.assignAppToQueue(Mockito.eq(YarnConfiguration.DEFAULT_QUEUE_NAME),
+        Mockito.anyString())).thenReturn("resolved");
     String queue = amService.assignToQueue(request);
     amService.checkAccess(request.getUser(), queue, request.getQueue());
-    assertEquals("resolved", queue);
+    Assert.assertEquals("resolved", queue);
   }
   
   @Test
   public void testRequestedQueueNull() throws Exception {
     TLlamaAMReservationRequest request = mockRequest(null, true, "user");
-    when(placementPolicy.assignAppToQueue(eq(YarnConfiguration.DEFAULT_QUEUE_NAME),
-        anyString())).thenReturn("resolved");
+    Mockito.when(placementPolicy.assignAppToQueue(Mockito.eq(YarnConfiguration.DEFAULT_QUEUE_NAME),
+        Mockito.anyString())).thenReturn("resolved");
     String queue = amService.assignToQueue(request);
     amService.checkAccess(request.getUser(), queue, request.getQueue());
-    assertEquals("resolved", queue);
+    Assert.assertEquals("resolved", queue);
   }
   
   @Test
   public void testRejectedByPolicy() throws Exception {
     try {
       TLlamaAMReservationRequest request = mockRequest("queue", true, "user");
-      when(placementPolicy.assignAppToQueue(anyString(), anyString()))
+      Mockito.when(placementPolicy.assignAppToQueue(Mockito.anyString(), Mockito.anyString()))
           .thenReturn(null);
       String queue = amService.assignToQueue(request);
       amService.checkAccess(request.getUser(), queue, request.getQueue());
-      fail("Should have hit exception");
+      Assert.fail("Should have hit exception");
     } catch (LlamaException ex) {
-      assertEquals(ErrorCode.RESERVATION_USER_TO_QUEUE_MAPPING_NOT_FOUND.getCode(),
+      Assert.assertEquals(ErrorCode.RESERVATION_USER_TO_QUEUE_MAPPING_NOT_FOUND.getCode(),
           ex.getErrorCode());
     }
   }
@@ -100,25 +99,25 @@ public class TestQueueAssignment {
   public void testRejectedByAcls() throws Exception {
     try {
       TLlamaAMReservationRequest request = mockRequest("queue", true, "user");
-      when(placementPolicy.assignAppToQueue(anyString(), anyString()))
+      Mockito.when(placementPolicy.assignAppToQueue(Mockito.anyString(), Mockito.anyString()))
           .thenReturn("resolved");
-      when(allocConf.hasAccess(anyString(), any(QueueACL.class),
-          any(UserGroupInformation.class))).thenReturn(false);
+      Mockito.when(allocConf.hasAccess(Mockito.anyString(), Mockito.any(QueueACL.class),
+          Mockito.any(UserGroupInformation.class))).thenReturn(false);
       String queue = amService.assignToQueue(request);
       amService.checkAccess(request.getUser(), queue, request.getQueue());
-      fail("Should have hit exception");
+      Assert.fail("Should have hit exception");
     } catch (LlamaException ex) {
-      assertEquals(ErrorCode.RESERVATION_USER_NOT_ALLOWED_IN_QUEUE.getCode(),
+      Assert.assertEquals(ErrorCode.RESERVATION_USER_NOT_ALLOWED_IN_QUEUE.getCode(),
           ex.getErrorCode());
     }
   }
   
   private TLlamaAMReservationRequest mockRequest(String queue,
       boolean isSetQueue, String user) {
-    TLlamaAMReservationRequest request = mock(TLlamaAMReservationRequest.class);
-    when(request.isSetQueue()).thenReturn(isSetQueue);
-    when(request.getQueue()).thenReturn(queue);
-    when(request.getUser()).thenReturn(user);
+    TLlamaAMReservationRequest request = Mockito.mock(TLlamaAMReservationRequest.class);
+    Mockito.when(request.isSetQueue()).thenReturn(isSetQueue);
+    Mockito.when(request.getQueue()).thenReturn(queue);
+    Mockito.when(request.getUser()).thenReturn(user);
     return request;
   }
 }

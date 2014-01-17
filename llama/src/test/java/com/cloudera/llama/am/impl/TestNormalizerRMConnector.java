@@ -17,15 +17,11 @@
  */
 package com.cloudera.llama.am.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 import java.util.Arrays;
 import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -61,24 +57,24 @@ public class TestNormalizerRMConnector {
     RMResource request = TestUtils.createRMResource("node1", Locality.MUST, 3,
         3000);
     normalizer.reserve(Arrays.asList(request));
-    assertEquals("reserve", connector.invoked.get(1));
+    Assert.assertEquals("reserve", connector.invoked.get(1));
     List<RMResource> normalResources = (List<RMResource>) connector.args.get(1);
-    assertEquals(2 + 6, normalResources.size());
+    Assert.assertEquals(2 + 6, normalResources.size());
 
     for (RMResource normalResource : normalResources) {
       // Normalizer shouldn't call back until it has the full reservation
-      assertTrue(listener.events == null || listener.events.size() == 0);
+      Assert.assertTrue(listener.events == null || listener.events.size() == 0);
       RMEvent allocateEvent = createAllocationEvent(normalResource);
       normalizer.onEvent(Arrays.asList(allocateEvent));
     }
 
-    assertNotNull(listener.events);
-    assertEquals(1, listener.events.size());
+    Assert.assertNotNull(listener.events);
+    Assert.assertEquals(1, listener.events.size());
     RMEvent event = listener.events.get(0);
-    assertEquals(4, event.getCpuVCores());
-    assertEquals(512 * 6, event.getMemoryMbs());
-    assertEquals("node1", event.getLocation());
-    assertEquals(request.getResourceId(), event.getResourceId());
+    Assert.assertEquals(4, event.getCpuVCores());
+    Assert.assertEquals(512 * 6, event.getMemoryMbs());
+    Assert.assertEquals("node1", event.getLocation());
+    Assert.assertEquals(request.getResourceId(), event.getResourceId());
   }
 
   @Test
@@ -87,24 +83,24 @@ public class TestNormalizerRMConnector {
     RMResource request = TestUtils.createRMResource("node1", Locality.MUST, 3,
         3000);
     normalizer.reserve(Arrays.asList(request));
-    assertEquals("reserve", connector.invoked.get(1));
+    Assert.assertEquals("reserve", connector.invoked.get(1));
     List<RMResource> normalResources = (List<RMResource>) connector.args.get(1);
-    assertEquals(2 + 6, normalResources.size());
+    Assert.assertEquals(2 + 6, normalResources.size());
 
     for (RMResource normalResource : normalResources) {
       // Normalizer shouldn't call back until it has the full reservation
-      assertTrue(listener.events == null || listener.events.size() == 0);
+      Assert.assertTrue(listener.events == null || listener.events.size() == 0);
       RMEvent allocateEvent = createAllocationEvent(normalResource, 3000, 3);
       normalizer.onEvent(Arrays.asList(allocateEvent));
     }
 
-    assertNotNull(listener.events);
-    assertEquals(1, listener.events.size());
+    Assert.assertNotNull(listener.events);
+    Assert.assertEquals(1, listener.events.size());
     RMEvent event = listener.events.get(0);
-    assertEquals(24, event.getCpuVCores());
-    assertEquals(24000, event.getMemoryMbs());
-    assertEquals("node1", event.getLocation());
-    assertEquals(request.getResourceId(), event.getResourceId());
+    Assert.assertEquals(24, event.getCpuVCores());
+    Assert.assertEquals(24000, event.getMemoryMbs());
+    Assert.assertEquals("node1", event.getLocation());
+    Assert.assertEquals(request.getResourceId(), event.getResourceId());
   }
 
   @Test
@@ -114,24 +110,24 @@ public class TestNormalizerRMConnector {
         3000);
 
     normalizer.reserve(Arrays.asList(request));
-    assertEquals("reserve", connector.invoked.get(1));
+    Assert.assertEquals("reserve", connector.invoked.get(1));
     List<RMResource> normalResources = (List<RMResource>) connector.args.get(1);
-    assertEquals(2 + 6, normalResources.size());
+    Assert.assertEquals(2 + 6, normalResources.size());
 
     RMEvent rejectionEvent = RMEvent.createStatusChangeEvent(
         normalResources.get(0).getResourceId(), Status.REJECTED);
     normalizer.onEvent(Arrays.asList(rejectionEvent));
 
-    assertNotNull(listener.events);
-    assertEquals(1, listener.events.size());
+    Assert.assertNotNull(listener.events);
+    Assert.assertEquals(1, listener.events.size());
     RMEvent event = listener.events.get(0);
-    assertEquals(request.getResourceId(), event.getResourceId());
-    assertEquals(Status.REJECTED, event.getStatus());
+    Assert.assertEquals(request.getResourceId(), event.getResourceId());
+    Assert.assertEquals(Status.REJECTED, event.getStatus());
 
     // The entry should be removed, both for the original ID and for other
     // normalized IDs from the same original
-    assertNull(normalizer.getEntryUsingOriginalId(request.getResourceId()));
-    assertNull(normalizer.getEntryUsingNormalizedId(
+    Assert.assertNull(normalizer.getEntryUsingOriginalId(request.getResourceId()));
+    Assert.assertNull(normalizer.getEntryUsingNormalizedId(
         normalResources.get(1).getResourceId()));
   }
 
@@ -142,11 +138,11 @@ public class TestNormalizerRMConnector {
         3000);
     normalizer.reserve(Arrays.asList(request));
     normalizer.release(Arrays.asList(request), true);
-    assertEquals("release", connector.invoked.get(2));
+    Assert.assertEquals("release", connector.invoked.get(2));
     List<RMResource> normalResources = (List<RMResource>) connector.args.get(1);
-    assertEquals(2 + 6, normalResources.size());
+    Assert.assertEquals(2 + 6, normalResources.size());
     for (RMResource normalResource : normalResources) {
-      assertTrue(!normalResource.getResourceId().equals(request.getResourceId()));
+      Assert.assertTrue(!normalResource.getResourceId().equals(request.getResourceId()));
     }
   }
 
@@ -157,18 +153,18 @@ public class TestNormalizerRMConnector {
         3000);
     normalizer.reserve(Arrays.asList(request));
     List<RMResource> reservedResources = (List<RMResource>) connector.args.get(1);
-    assertEquals(2 + 6, reservedResources.size());
+    Assert.assertEquals(2 + 6, reservedResources.size());
     for (int i = 0; i < reservedResources.size() - 4; i++) {
       RMEvent allocateEvent = createAllocationEvent(reservedResources.get(i));
       normalizer.onEvent(Arrays.asList(allocateEvent));
     }
 
     normalizer.release(Arrays.asList(request), true);
-    assertEquals("release", connector.invoked.get(2));
+    Assert.assertEquals("release", connector.invoked.get(2));
     List<RMResource> releasedResources = (List<RMResource>) connector.args.get(1);
-    assertEquals(2 + 6, releasedResources.size());
+    Assert.assertEquals(2 + 6, releasedResources.size());
     for (RMResource normalResource : releasedResources) {
-      assertTrue(!normalResource.getResourceId().equals(request.getResourceId()));
+      Assert.assertTrue(!normalResource.getResourceId().equals(request.getResourceId()));
     }
   }
 
