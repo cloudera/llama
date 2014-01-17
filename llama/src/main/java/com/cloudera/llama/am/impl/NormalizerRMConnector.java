@@ -127,7 +127,7 @@ public class NormalizerRMConnector implements RMConnector, RMListener {
      * request is fully satisfied.
      */
     public boolean addAllocation(UUID normalizedId, String location,
-        int cpuVCores, int memoryMbs) {
+        int cpuVCores, int memoryMbs, Object rmResourceId) {
       boolean fullyAllocated = false;
       NormalizedRMResource nr = null;
       for (int i = 0; nr == null && i < normalized.size(); i++) {
@@ -141,6 +141,7 @@ public class NormalizerRMConnector implements RMConnector, RMListener {
           this.cpuVCores += cpuVCores;
           this.memoryMbs += memoryMbs;
           nr.setAllocationInfo(location, cpuVCores, memoryMbs);
+          nr.setRmResourceId(rmResourceId);
           waitingAllocations--;
           fullyAllocated = waitingAllocations == 0;
         }
@@ -262,11 +263,11 @@ public class NormalizerRMConnector implements RMConnector, RMListener {
         switch (event.getStatus()) {
           case ALLOCATED:
             if (entry.addAllocation(event.getResourceId(), event.getLocation(),
-                event.getCpuVCores(), event.getMemoryMbs())) {
-              RMResource original = entry.getOriginal();
-              LOG.debug("All normalized chunks allocated for resource '{}'",
-                  original.getResourceId());
-              original.setRmResourceId(entry.getRmResourceId());
+                event.getCpuVCores(), event.getMemoryMbs(),
+                event.getRmResourceId())) {
+              LOG.debug("All normalized chunks allocated for resource '{}', " +
+                  "RmResourceIds '{}'", entry.getOriginal().getResourceId(),
+                  entry.getOriginal().getRmResourceId());
               normalizerEvents.add(entry.createAllocatedEvent());
             }
             break;

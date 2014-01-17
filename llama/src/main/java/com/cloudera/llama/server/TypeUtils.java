@@ -162,12 +162,29 @@ public class TypeUtils {
         setResource(resource).build();
   }
 
+  static String objectToString(Object obj) {
+    String ret = null;
+    if (obj instanceof List) {
+      List list = (List) obj;
+      StringBuilder sb = new StringBuilder();
+      String separator = "";
+      for (Object o : list) {
+        sb.append(separator).append(o);
+        separator = ",";
+      }
+      ret = sb.toString();
+    } else if (obj != null) {
+      ret = obj.toString();
+    }
+    return ret;
+  }
+
   public static TAllocatedResource toTAllocatedResource(PlacedResource
       resource, NodeMapper nodeMapper) {
     TAllocatedResource tResource = new TAllocatedResource();
     tResource.setReservation_id(toTUniqueId(resource.getReservationId()));
     tResource.setClient_resource_id(toTUniqueId(resource.getResourceId()));
-    tResource.setRm_resource_id("TODO"); //TODO flatten container ids resource.getRmResourceIds());
+    tResource.setRm_resource_id(objectToString(resource.getRmResourceId()));
     tResource.setV_cpu_cores((short) resource.getCpuVCores());
     tResource.setMemory_mb(resource.getMemoryMbs());
     tResource.setLocation(nodeMapper.getDataNode(resource.getLocation()));

@@ -20,8 +20,11 @@ package com.cloudera.llama.am;
 
 import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.mock.MockRMConnector;
+import com.cloudera.llama.thrift.TAllocatedResource;
+import com.cloudera.llama.thrift.TLlamaAMNotificationRequest;
 import com.cloudera.llama.thrift.TLlamaAMReservationExpansionRequest;
 import com.cloudera.llama.thrift.TLlamaAMReservationExpansionResponse;
+import com.cloudera.llama.thrift.TLlamaNMNotificationRequest;
 import com.cloudera.llama.util.ErrorCode;
 import com.cloudera.llama.util.FastFormat;
 import com.cloudera.llama.am.impl.GangAntiDeadlockLlamaAM;
@@ -459,6 +462,15 @@ public class TestLlamaAMThriftServer {
           //check notification delivery
           Thread.sleep(300);
           Assert.assertEquals(1, callbackServer.notifications.size());
+
+          for (TLlamaAMNotificationRequest notification : callbackServer.notifications) {
+            if (notification.isSetAllocated_resources()) {
+              for (TAllocatedResource allocRes : notification.getAllocated_resources()) {
+                Assert.assertTrue(allocRes.isSetRm_resource_id());
+                Assert.assertFalse(allocRes.getRm_resource_id().isEmpty());
+              }
+            }
+          }
 
           //unregister
           TLlamaAMUnregisterRequest turReq = new TLlamaAMUnregisterRequest();

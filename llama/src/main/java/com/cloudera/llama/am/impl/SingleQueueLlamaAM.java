@@ -397,6 +397,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
       RMEvent change, LlamaAMEventImpl event) {
     resource.setAllocationInfo(change.getLocation(), change.getCpuVCores(),
         change.getMemoryMbs());
+    resource.setRmResourceId(change.getRmResourceId());
     UUID reservationId = resource.getReservationId();
     PlacedReservationImpl reservation = reservationsMap.get(reservationId);
     if (reservation == null) {

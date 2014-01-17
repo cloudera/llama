@@ -20,6 +20,7 @@ package com.cloudera.llama.am.impl;
 import java.util.Arrays;
 import java.util.List;
 
+import com.cloudera.llama.util.UUID;
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Assert;
 import org.junit.Before;
@@ -64,6 +65,7 @@ public class TestNormalizerRMConnector {
     for (RMResource normalResource : normalResources) {
       // Normalizer shouldn't call back until it has the full reservation
       Assert.assertTrue(listener.events == null || listener.events.size() == 0);
+      normalResource.setRmResourceId(UUID.randomUUID());
       RMEvent allocateEvent = createAllocationEvent(normalResource);
       normalizer.onEvent(Arrays.asList(allocateEvent));
     }
@@ -75,6 +77,13 @@ public class TestNormalizerRMConnector {
     Assert.assertEquals(512 * 6, event.getMemoryMbs());
     Assert.assertEquals("node1", event.getLocation());
     Assert.assertEquals(request.getResourceId(), event.getResourceId());
+    Assert.assertNotNull(event.getRmResourceId());
+    Assert.assertTrue(event.getRmResourceId() instanceof List);
+    List list = (List) event.getRmResourceId();
+    Assert.assertFalse(list.isEmpty());
+    for (Object o : list) {
+      Assert.assertNotNull(o);
+    }
   }
 
   @Test
