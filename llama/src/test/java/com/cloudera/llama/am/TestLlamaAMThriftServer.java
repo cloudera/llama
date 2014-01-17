@@ -18,7 +18,6 @@
 package com.cloudera.llama.am;
 
 
-import com.cloudera.llama.am.api.AsyncLlamaAMListener;
 import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.mock.MockRMConnector;
 import com.cloudera.llama.thrift.TLlamaAMReservationExpansionRequest;
@@ -99,6 +98,10 @@ public class TestLlamaAMThriftServer {
     public int getHttpDefaultPort() {
       return 0;
     }
+  }
+
+  protected String getUserName() {
+    return System.getProperty("user.name");
   }
 
   protected Configuration createCallbackConfiguration() throws Exception {
@@ -401,7 +404,7 @@ public class TestLlamaAMThriftServer {
           TLlamaAMReservationRequest tresReq = new TLlamaAMReservationRequest();
           tresReq.setVersion(TLlamaServiceVersion.V1);
           tresReq.setAm_handle(trRes.getAm_handle());
-          tresReq.setUser("dummyUser");
+          tresReq.setUser(getUserName());
           tresReq.setQueue("q1");
           TResource tResource = new TResource();
           tResource.setClient_resource_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
@@ -436,7 +439,7 @@ public class TestLlamaAMThriftServer {
           tresReq = new TLlamaAMReservationRequest();
           tresReq.setVersion(TLlamaServiceVersion.V1);
           tresReq.setAm_handle(trRes.getAm_handle());
-          tresReq.setUser("dummyUser");
+          tresReq.setUser(getUserName());
           tresReq.setQueue("q1");
           tResource = new TResource();
           tResource.setClient_resource_id(TypeUtils.toTUniqueId(UUID
@@ -508,7 +511,7 @@ public class TestLlamaAMThriftServer {
           TLlamaAMReservationRequest tresReq = new TLlamaAMReservationRequest();
           tresReq.setVersion(TLlamaServiceVersion.V1);
           tresReq.setAm_handle(trRes.getAm_handle());
-          tresReq.setUser("dummyUser");
+          tresReq.setUser(getUserName());
           tresReq.setQueue("q1");
           TResource tResource = new TResource();
           tResource.setClient_resource_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
@@ -620,7 +623,7 @@ public class TestLlamaAMThriftServer {
           TLlamaAMReservationRequest tresReq = new TLlamaAMReservationRequest();
           tresReq.setVersion(TLlamaServiceVersion.V1);
           tresReq.setAm_handle(trRes.getAm_handle());
-          tresReq.setUser("dummyUser");
+          tresReq.setUser(getUserName());
           tresReq.setQueue("q1");
           TResource tResource = new TResource();
           tResource.setClient_resource_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
@@ -704,7 +707,7 @@ public class TestLlamaAMThriftServer {
           TLlamaAMReservationRequest tresReq = new TLlamaAMReservationRequest();
           tresReq.setVersion(TLlamaServiceVersion.V1);
           tresReq.setAm_handle(trRes.getAm_handle());
-          tresReq.setUser("dummyUser");
+          tresReq.setUser(getUserName());
           tresReq.setQueue("q1");
           TResource tResource = new TResource();
           tResource.setClient_resource_id(
@@ -822,7 +825,7 @@ public class TestLlamaAMThriftServer {
               TLlamaAMReservationRequest tresReq = new TLlamaAMReservationRequest();
               tresReq.setVersion(TLlamaServiceVersion.V1);
               tresReq.setAm_handle(trRes.getAm_handle());
-              tresReq.setUser("dummyUser");
+              tresReq.setUser(getUserName());
               tresReq.setQueue("q1");
               TResource tResource = new TResource();
               tResource.setClient_resource_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
@@ -837,7 +840,7 @@ public class TestLlamaAMThriftServer {
                   tresRes1.getStatus().getStatus_code());
 
               tResource.setClient_resource_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
-              tresReq.setUser("dummyUser");
+              tresReq.setUser(getUserName());
               tresReq.setQueue("q2");
               TLlamaAMReservationResponse tresRes2 = client.Reserve(tresReq);
               Assert.assertEquals(TStatusCode.OK,
