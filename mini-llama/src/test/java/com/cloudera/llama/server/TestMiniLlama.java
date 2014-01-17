@@ -24,6 +24,8 @@ import com.cloudera.llama.thrift.TLlamaAMGetNodesRequest;
 import com.cloudera.llama.thrift.TLlamaAMGetNodesResponse;
 import com.cloudera.llama.thrift.TLlamaAMRegisterRequest;
 import com.cloudera.llama.thrift.TLlamaAMRegisterResponse;
+import com.cloudera.llama.thrift.TLlamaAMReleaseRequest;
+import com.cloudera.llama.thrift.TLlamaAMReleaseResponse;
 import com.cloudera.llama.thrift.TLlamaAMReservationRequest;
 import com.cloudera.llama.thrift.TLlamaAMReservationResponse;
 import com.cloudera.llama.thrift.TLlamaAMUnregisterRequest;
@@ -50,6 +52,10 @@ import java.util.Arrays;
 import java.util.HashSet;
 
 public class TestMiniLlama {
+
+  protected String getUserName() {
+    return System.getProperty("user.name");
+  }
 
   @Test
   public void testMiniLlamaWithHadoopMiniCluster()
@@ -121,7 +127,7 @@ public class TestMiniLlama {
       TLlamaAMReservationRequest tresReq = new TLlamaAMReservationRequest();
       tresReq.setVersion(TLlamaServiceVersion.V1);
       tresReq.setAm_handle(trRes.getAm_handle());
-      tresReq.setUser("dummyuser");
+      tresReq.setUser(getUserName());
       tresReq.setQueue("default");
       TResource tResource = new TResource();
       tResource.setClient_resource_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
@@ -133,6 +139,14 @@ public class TestMiniLlama {
       tresReq.setGang(true);
       TLlamaAMReservationResponse tresRes = client.Reserve(tresReq);
       Assert.assertEquals(TStatusCode.OK, tresRes.getStatus().getStatus_code());
+
+      //release
+      TLlamaAMReleaseRequest trelReq = new TLlamaAMReleaseRequest();
+      trelReq.setVersion(TLlamaServiceVersion.V1);
+      trelReq.setAm_handle(trRes.getAm_handle());
+      trelReq.setReservation_id(tresRes.getReservation_id());
+      TLlamaAMReleaseResponse trelRes = client.Release(trelReq);
+      Assert.assertEquals(TStatusCode.OK, trelRes.getStatus().getStatus_code());
 
       //test MiniHDFS
       FileSystem fs = FileSystem.get(server.getConf());
