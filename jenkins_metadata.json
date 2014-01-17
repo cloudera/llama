@@ -1,0 +1,119 @@
+{
+    "repo-category": "cdh5-nightly",
+
+    "release": "cdh5.0.0",
+    "short-release": "cdh5",
+    "cdh-branch": "cdh5",
+    
+    "components": {
+        
+        "avro": {
+            "step": 1
+        },
+        "bigtop-utils": {
+            "step": 1,
+            "skipRelNotes": true,
+            "skipBinaryTarball": true,
+            "version": "0.4",
+            "skipMiscBits": true
+        },
+        "parquet-format": {
+            "step": 1
+        },
+        "zookeeper": {
+            "step": 1
+        },
+
+        "hadoop": {
+            "step": 2
+        },
+        "impala": {
+            "step": 2,
+            "skipBinaryTarball": true
+        },
+        "bigtop-jsvc": {
+            "step": 2,
+            "skipRelNotes": true,
+            "version": "1.0.10",
+            "makefileAsMetadata": true
+        },
+        "bigtop-tomcat": {
+            "step": 2,
+            "skipRelNotes": true,
+            "version": "6.0.35",
+            "makefileAsMetadata": true
+        },
+
+        "hbase": {
+            "step": 3,
+            "mailto": "int-hbase@cloudera.com"
+        },
+        "llama": {
+            "step": 3
+        },
+        "parquet": {
+            "step": 3
+        },
+
+        "crunch": {
+            "step": 4
+        },
+        "hive": {
+            "step": 4
+        },
+        "pig": {
+            "step": 4
+        },
+        "solr": {
+            "step": 4
+        },
+        "spark": {
+            "step": 4
+        },
+
+        "kite": {
+            "step": 5
+        },
+        "sentry": {
+            "step": 5
+        },
+        "sqoop": {
+            "step": 5
+        },
+        "sqoop2": {
+            "step": 5
+        },
+
+        "flume-ng": {
+            "step": 6
+        },
+        "hbase-solr": {
+            "step": 6
+        },
+        "hue": {
+            "step": 6
+        },
+        "oozie": {
+            "step": 6
+        },
+
+        "datafu": {
+            "step": 7
+        },
+        "whirr": {
+            "step": 7
+        },
+        "search": {
+            "step": 7
+        },
+        "mahout": {
+            "step": 7
+        }
+    },
+
+    "c5-parcel": true,
+
+    "java7": true,
+
+    "platforms": [ "centos5", "rhel6", "sles11", "precise", "wheezy" ],
+}        
