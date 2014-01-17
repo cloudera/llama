@@ -284,5 +284,13 @@ public class TestMultiQueueLlamaAM {
     Thread.sleep(300); // am expiry check should run in this time
     // Core queue should still exist
     Assert.assertEquals(1, am.ams.keySet().size());
+
+    Assert.assertFalse(am.ams.containsKey("root.someotherqueue"));
+
+    handle = UUID.randomUUID();
+    am.reserve(TestUtils.createReservation(handle, "root.someotherqueue", 1, true));
+
+    Assert.assertTrue(am.ams.containsKey("root.someotherqueue"));
+
   }
 }
