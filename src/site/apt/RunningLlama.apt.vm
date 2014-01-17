@@ -46,7 +46,22 @@ Running Llama
 
   <<NOTE:>> These files have all configuration properties with their default 
   values.
-    
+
+** Llama AM Requires Hadoop Yarn Fair Scheduler and Its Configuration File
+
+  Llama AM Leverages Hadoop Yarn Fair Scheduler user to queue mapping and queue
+  ACL enforcement.
+
+  For Llama to work properly, Hadoop Yarn must be configured with the Fair
+  Scheduler and the <<<fair-scheduler.xml>>> configuration file used by Hadoop
+  Yarn must be available in Llama AMs configuration directory or in a directory
+  in Llama's CLASSPATH.
+
+  Llama AM, as Hadoop Yarn Fair Scheduler, detects changes and reloads the
+  <<<fair-scheduler.xml>>> configuration without requiring a restart. For
+  Llama to work properly, the <<<fair-scheduler.xml>>> files in Hadoop Yarn and
+  in Llama should be kept in sync.
+
 ** Hadoop Yarn Configuration for Llama AM (Required)
     
   The user running LlamaAM must be configured in Hadoop as a proxy user for 
@@ -91,7 +106,7 @@ Running Llama
   <<NOTE:>> For development and testing, if the values are set to <<<*>>> the 
   LlamaAM server can be running from any host and there is no need to create a 
   <<<llamagroup>>>.
-  
+
 ** Run Llama AM
 
   To start Llama:

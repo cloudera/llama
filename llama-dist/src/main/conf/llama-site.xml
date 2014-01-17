@@ -236,6 +236,9 @@
     <description>
       Queues LlamaAM should connect to at start up. Unlike queues that are
       created in response to a reservation, these queues will never expire.
+      IMPORTANT: all queue names should be canonical queue names, this is
+      prefixed with "root.". This is required because Yarn normalizes queue
+      names to their canonical name.
     </description>
   </property>
 

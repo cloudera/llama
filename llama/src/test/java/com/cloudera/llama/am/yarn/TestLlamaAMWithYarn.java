@@ -109,7 +109,7 @@ public class TestLlamaAMWithYarn {
 
   protected static Configuration getLlamaConfiguration() {
     Configuration conf = new Configuration(false);
-    conf.set(LlamaAM.CORE_QUEUES_KEY, "queue1,queue2");
+    conf.set(LlamaAM.CORE_QUEUES_KEY, "root.queue1,root.queue2");
     conf.set(LlamaAM.RM_CONNECTOR_CLASS_KEY, YarnRMConnector.class
         .getName());
     conf.setInt(YarnRMConnector.HEARTBEAT_INTERVAL_KEY, 50);
@@ -155,8 +155,8 @@ public class TestLlamaAMWithYarn {
         Assert.assertFalse(nodes.isEmpty());
         Resource a1 = TestUtils.createResource(nodes.get(0),
             Resource.Locality.MUST, 1, 1024);
-        llama.reserve(TestUtils.createReservation(UUID.randomUUID(), "u", "queue1",
-            a1, true));
+        llama.reserve(TestUtils.createReservation(UUID.randomUUID(), "u",
+            "root.queue1", a1, true));
         while (listener.events.isEmpty()) {
           Thread.sleep(100);
         }
@@ -192,14 +192,14 @@ public class TestLlamaAMWithYarn {
         Resource a1 = TestUtils.createResource(nodes.get(0),
             Resource.Locality.MUST, 1, 1024);
         llama.reserve(TestUtils.createReservation(UUID.randomUUID(), "u",
-            "queue1", a1, true));
+            "root.queue1", a1, true));
         while (listener.events.size() < 2) {
           Thread.sleep(100);
         }
         restartMiniYarn();
         listener.events.clear();
         llama.reserve(TestUtils.createReservation(UUID.randomUUID(), "u",
-            "queue1", a1, true));
+            "root.queue1", a1, true));
         while (listener.events.size() < 2) {
           Thread.sleep(100);
         }
@@ -226,16 +226,16 @@ public class TestLlamaAMWithYarn {
         Assert.assertFalse(nodes.isEmpty());
         Resource r = TestUtils.createResource(nodes.get(0),
             Resource.Locality.MUST, 1, 1024);
-        UUID pr1 = llama.reserve(TestUtils.createReservation(UUID.randomUUID(), "u", "queue1",
-            Arrays.asList(r), true));
+        UUID pr1 = llama.reserve(TestUtils.createReservation(UUID.randomUUID(),
+            "u", "root.queue1", Arrays.asList(r), true));
         r = TestUtils.createResource(nodes.get(0),
             Resource.Locality.PREFERRED, 1, 1024);
-        UUID pr2 = llama.reserve(TestUtils.createReservation(UUID.randomUUID(), "u", "queue1",
-            Arrays.asList(r), true));
+        UUID pr2 = llama.reserve(TestUtils.createReservation(UUID.randomUUID(),
+            "u", "root.queue1", Arrays.asList(r), true));
         r = TestUtils.createResource(nodes.get(0),
             Resource.Locality.DONT_CARE, 1, 1024);
-        UUID pr3 = llama.reserve(TestUtils.createReservation(UUID.randomUUID(), "u", "queue1",
-            Arrays.asList(r), true));
+        UUID pr3 = llama.reserve(TestUtils.createReservation(UUID.randomUUID(),
+            "u", "root.queue1", Arrays.asList(r), true));
         while (listener.events.size() < 6) {
           Thread.sleep(100);
         }
@@ -312,8 +312,8 @@ public class TestLlamaAMWithYarn {
         try {
           Resource r = TestUtils.createResource("xyz:-1",
               Resource.Locality.MUST, 1, 4096);
-          llama.reserve(TestUtils.createReservation(UUID.randomUUID(), "u", "queue1",
-              Arrays.asList(r), true));
+          llama.reserve(TestUtils.createReservation(UUID.randomUUID(), "u",
+              "root.queue1", Arrays.asList(r), true));
           Assert.fail();
         } catch (LlamaException ex) {
           //NOP
@@ -323,8 +323,8 @@ public class TestLlamaAMWithYarn {
         try {
           Resource r = TestUtils.createResource(nodes.get(0),
               Resource.Locality.MUST, 3, 4096);
-          llama.reserve(TestUtils.createReservation(UUID.randomUUID(), "u", "queue1",
-              Arrays.asList(r), true));
+          llama.reserve(TestUtils.createReservation(UUID.randomUUID(), "u",
+              "root.queue1", Arrays.asList(r), true));
            Assert.fail();
         } catch (LlamaException ex) {
           //NOP
@@ -334,8 +334,8 @@ public class TestLlamaAMWithYarn {
         try {
           Resource r = TestUtils.createResource(nodes.get(0),
               Resource.Locality.MUST, 1, 4097);
-          llama.reserve(TestUtils.createReservation(UUID.randomUUID(), "u", "queue1",
-              Arrays.asList(r), true));
+          llama.reserve(TestUtils.createReservation(UUID.randomUUID(), "u",
+              "root.queue1", Arrays.asList(r), true));
           Assert.fail();
         } catch (LlamaException ex) {
           //NOP
@@ -345,8 +345,8 @@ public class TestLlamaAMWithYarn {
         try {
           Resource r = TestUtils.createResource(nodes.get(0),
               Resource.Locality.MUST, 2, 4096);
-          llama.reserve(TestUtils.createReservation(UUID.randomUUID(), "u", "queue1",
-              Arrays.asList(r), true));
+          llama.reserve(TestUtils.createReservation(UUID.randomUUID(), "u",
+              "root.queue1", Arrays.asList(r), true));
           Assert.fail();
         } catch (LlamaException ex) {
           //NOP
@@ -356,8 +356,8 @@ public class TestLlamaAMWithYarn {
         try {
           Resource r = TestUtils.createResource(nodes.get(0),
               Resource.Locality.MUST, 1, 5021);
-          llama.reserve(TestUtils.createReservation(UUID.randomUUID(), "u", "queue1",
-              Arrays.asList(r), true));
+          llama.reserve(TestUtils.createReservation(UUID.randomUUID(), "u",
+              "root.queue1", Arrays.asList(r), true));
           Assert.fail();
         } catch (LlamaException ex) {
           //NOP

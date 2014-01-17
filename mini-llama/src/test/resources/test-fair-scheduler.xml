@@ -22,4 +22,8 @@
   </queue>
   <queue name="queue3">
   </queue>
+  <queuePlacementPolicy>
+    <specified create="true"/>
+    <reject/>
+  </queuePlacementPolicy>
 </allocations>

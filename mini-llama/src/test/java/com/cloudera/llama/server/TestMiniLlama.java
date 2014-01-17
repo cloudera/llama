@@ -19,7 +19,6 @@ package com.cloudera.llama.server;
 
 import com.cloudera.llama.am.MiniLlama;
 import com.cloudera.llama.am.api.LlamaAM;
-import com.cloudera.llama.am.yarn.YarnRMConnector;
 import com.cloudera.llama.thrift.LlamaAMService;
 import com.cloudera.llama.thrift.TLlamaAMGetNodesRequest;
 import com.cloudera.llama.thrift.TLlamaAMGetNodesResponse;
@@ -106,7 +105,7 @@ public class TestMiniLlama {
       throws Exception {
     Configuration conf = MiniLlama.createMiniClusterConf(2);
     conf.set("yarn.scheduler.fair.allocation.file", "test-fair-scheduler.xml");
-    conf.set(LlamaAM.CORE_QUEUES_KEY, "default");
+    conf.set(LlamaAM.CORE_QUEUES_KEY, "root.queue1");
     testMiniLlama(conf, writeHdfsConf);
   }
 
@@ -164,7 +163,7 @@ public class TestMiniLlama {
       tresReq.setVersion(TLlamaServiceVersion.V1);
       tresReq.setAm_handle(trRes.getAm_handle());
       tresReq.setUser(getUserName());
-      tresReq.setQueue("default");
+      tresReq.setQueue("queue1");
       TResource tResource = new TResource();
       tResource.setClient_resource_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
       tResource.setAskedLocation(server.getDataNodes().get(0));
