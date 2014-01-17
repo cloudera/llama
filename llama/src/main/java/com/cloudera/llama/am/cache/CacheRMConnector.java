@@ -167,6 +167,10 @@ public class CacheRMConnector implements RMConnector,
     connector.unregister();
     cache.stop();
     if (metricRegistry != null) {
+      metricRegistry.remove(FastFormat.format(PENDING_RESOURCES_TEMPLATE,
+          queue));
+      metricRegistry.remove(FastFormat.format(CACHED_RESOURCES_TEMPLATE,
+          queue));
       metricRegistry.remove(FastFormat.format(ONE_MIN_CACHE_RATIO_TEMPLATE,
           queue));
       metricRegistry.remove(FastFormat.format(FIVE_MIN_CACHE_RATIO_TEMPLATE,
