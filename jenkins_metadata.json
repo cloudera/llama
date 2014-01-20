@@ -29,7 +29,8 @@
         },
         "impala": {
             "step": 2,
-            "skipBinaryTarball": true
+            "skipBinaryTarball": true,
+            "mailto": "impala-jenkins@cloudera.com"
         },
         "bigtop-jsvc": {
             "step": 2,
@@ -59,7 +60,8 @@
             "step": 4
         },
         "hive": {
-            "step": 4
+            "step": 4,
+            "mailto": "builds-access-integration@cloudera.com"
         },
         "pig": {
             "step": 4
@@ -72,7 +74,8 @@
         },
 
         "kite": {
-            "step": 5
+            "step": 5,
+            "mailto": "int-cdk@cloudera.com"
         },
         "sentry": {
             "step": 5
@@ -85,13 +88,16 @@
         },
 
         "flume-ng": {
-            "step": 6
+            "step": 6,
+            "mailto": "int-flume@cloudera.com,builds-access-integration@cloudera.com"
         },
         "hbase-solr": {
-            "step": 6
+            "step": 6,
+            "mailto": "int-search@cloudera.com"
         },
         "hue": {
-            "step": 6
+            "step": 6,
+            "mailto": "hue-build@cloudera.com, builds-access-integration@cloudera.com"
         },
         "oozie": {
             "step": 6
@@ -107,7 +113,86 @@
             "step": 7
         },
         "mahout": {
+            "step": 7,
+            "mailto": "
+        "sentry": {
+            "step": 5
+        },
+        "sqoop": {
+            "step": 5
+        },
+        "sqoop2": {
+            "step": 5
+        },
+
+        "flume-ng": {
+            "step": 6,
+            "mailto": "int-flume@cloudera.com,builds-access-integration@cloudera.com"
+        },
+        "hbase-solr": {
+            "step": 6,
+            "mailto": "int-search@cloudera.com"
+        },
+        "hue": {
+            "step": 6,
+            "mailto": "hue-build@cloudera.com, builds-access-integration@cloudera.com"
+        },
+        "oozie": {
+            "step": 6
+        },
+
+        "datafu": {
             "step": 7
+        },
+        "whirr": {
+            "step": 7
+        },
+        "search": {
+            "step": 7
+        },
+        "mahout": {
+            "step": 7,
+            "mailto": "
+        "sentry": {
+            "step": 5
+        },
+        "sqoop": {
+            "step": 5,
+            "mailto": "builds-access-integration@cloudera.com"
+        },
+        "sqoop2": {
+            "step": 5,
+            "mailto": "builds-access-integration@cloudera.com"
+        },
+
+        "flume-ng": {
+            "step": 6,
+            "mailto": "int-flume@cloudera.com,builds-access-integration@cloudera.com"
+        },
+        "hbase-solr": {
+            "step": 6,
+            "mailto": "int-search@cloudera.com"
+        },
+        "hue": {
+            "step": 6,
+            "mailto": "hue-build@cloudera.com, builds-access-integration@cloudera.com"
+        },
+        "oozie": {
+            "step": 6
+        },
+
+        "datafu": {
+            "step": 7
+        },
+        "whirr": {
+            "step": 7
+        },
+        "search": {
+            "step": 7
+        },
+        "mahout": {
+            "step": 7,
+            "mailto": "builds-access-integration@cloudera.com"
         }
     },
 
