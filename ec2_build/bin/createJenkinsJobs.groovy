@@ -1,3 +1,4 @@
+@GrabResolver(name='cloudera-local-snap', root='file:///Users/abayer/.m2/repository')
 @GrabResolver(name='cloudera-snap', root='https://repository.cloudera.com/artifactory/libs-snapshot')
 @Grab(group='com.cloudera.kitchen', module='package-tools', version='0.5-SNAPSHOT')
 
@@ -22,7 +23,7 @@ def pkgGitInfo = ['branch': rawPackageCrepo['track-branch'],
 // In that case, the job prefix will be the short-release. Otherwise, it'll be
 // the full release.
 def jobPrefix
-if (jenkinsJson['short-release'] eq jenkinsJson['cdh-branch']) {
+if (jenkinsJson['short-release'] == jenkinsJson['cdh-branch']) {
     jobPrefix = jenkinsJson['short-release']
 } else {
     jobPrefix = jenkinsJson['release']
@@ -39,7 +40,7 @@ def components = jenkinsJson.components.collectEntries { k, v ->
         v['repo'] = "git://github.mtv.cloudera.com/CDH/${repoName}.git".replaceAll("impala", "Impala")
     }
 
-    v['job-name'] = JenkinsDslUtils.componentJobName(jobPrefix, k)
+    v['job-name'] = JenkinsDslUtils.componentJobName(jobPrefix, v['display-name'] ?: k.capitalize())
     v['child-jobs'] = jenkinsJson.platforms.collect { JenkinsDslUtils.platformToJob(it) }
 
     if (!v['skipBinaryTarball']) {
@@ -267,13 +268,15 @@ job {
         shell(JenkinsDslUtils.updateStaticRepoFullBuildStep(jenkinsJson['repo-category']))
 
         if (jenkinsJson['update-nightly']) {
-            conditionalStep {
-                status('Success', 'Success')
-            }
-            runner("Fail")
-            downstreamParameterized {
-                trigger(jobPrefix.toUpperCase() + "-Packaging-Update-Nightly", "ALWAYS", false) { 
-                    predefinedProp('PARENT_BUILD_ID', '${JOB_NAME}-${BUILD_ID}')
+            conditionalSteps {
+                condition { 
+                    status('Success', 'Success')
+                }
+                runner("Fail")
+                downstreamParameterized {
+                    trigger(jobPrefix.toUpperCase() + "-Packaging-Update-Nightly", "ALWAYS", false) { 
+                        predefinedProp('PARENT_BUILD_ID', '${JOB_NAME}-${BUILD_ID}')
+                    }
                 }
             }
         }
