@@ -1,6 +1,3 @@
-
-
-@GrabResolver(name='cloudera-local-snap', root='file:///Users/abayer/.m2/repository')
 @GrabResolver(name='cloudera-snap', root='https://repository.cloudera.com/artifactory/libs-snapshot')
 @Grab(group='com.cloudera.kitchen', module='package-tools', version='0.5-SNAPSHOT')
 
@@ -10,9 +7,7 @@ import com.cloudera.kitchen.jobdsl.JenkinsDslUtils
 
 def slurper = new JsonSlurper()
 def jenkinsJson = slurper.parseText(readFileFromWorkspace("jenkins_metadata.json"))
-//def jenkinsJson = slurper.parseText(new File("jenkins_metadata.json").text)
 def crepoJson = slurper.parseText(readFileFromWorkspace("${jenkinsJson['short-release']}.json"))
-//def crepoJson = slurper.parseText(new File("${jenkinsJson['short-release']}.json").text)
 
 def phases = []
 
@@ -217,7 +212,7 @@ job {
     jdk JobDslConstants.PACKAGING_JOB_JDK
 
     parameters {
-        stringParam("PARENT_BUILD_ID", "", "description of PARENT_BUILD_ID here")
+        stringParam("PARENT_BUILD_ID", "", "Build ID of parent job whose artifacts will be added to the repo.")
     }
 
     repoThrottle(delegate, jenkinsJson['short-release'])
@@ -315,9 +310,14 @@ def repoThrottle(Object delegate, String shortRel) {
 
 def componentParams(Object delegate, String release) {
     return delegate.parameters {
-        choiceParam('CHILD_BUILD', ["false", "true"], "description of CHILD_BUILD here")
-        stringParam("FULL_PARENT_BUILD_ID", "", "description of FULL_PARENT_BUILD_ID here")
-        stringParam("RELEASE_CODENAME", release, "description of RELEASE_CODENAME here")
+        choiceParam('CHILD_BUILD', ["false", "true"], "When called directly or as a result of polling for changes, "
+                    + "this will be no, and the existing repository for this release will be re-used. If this is "
+                    + "called automatically from the full all-components build, this will be yes, and all repository "
+                    + "management will be handled in the parent job.")
+        stringParam("FULL_PARENT_BUILD_ID", "", "When called directly or as a result of polling for changes, this "
+                    + "will be empty and ignored. If called from the full all-components build, this will be set "
+                    + "the build id of the parent build, and used for staging information.")
+        stringParam("RELEASE_CODENAME", release, "Release codename - generally will not need to be overridden.")
     }
 }
 
