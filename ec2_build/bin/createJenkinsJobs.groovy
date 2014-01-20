@@ -18,6 +18,15 @@ def pkgGitInfo = ['branch': rawPackageCrepo['track-branch'],
                   'repo': "git://github.mtv.cloudera.com/CDH/cdh-package.git"
                  ];
 
+// If the short-release and cdh-branch fields are the same, we're on "trunk".
+// In that case, the job prefix will be the short-release. Otherwise, it'll be
+// the full release.
+def jobPrefix
+if (jenkinsJson['short-release'] eq jenkinsJson['cdh-branch']) {
+    jobPrefix = jenkinsJson['short-release']
+} else {
+    jobPrefix = jenkinsJson['release']
+}
 
 def components = jenkinsJson.components.collectEntries { k, v ->
     def crepoInfo = crepoJson.projects[k]
@@ -30,7 +39,7 @@ def components = jenkinsJson.components.collectEntries { k, v ->
         v['repo'] = "git://github.mtv.cloudera.com/CDH/${repoName}.git".replaceAll("impala", "Impala")
     }
 
-    v['job-name'] = JenkinsDslUtils.componentJobName(jenkinsJson['short-release'], k)
+    v['job-name'] = JenkinsDslUtils.componentJobName(jobPrefix, k)
     v['child-jobs'] = jenkinsJson.platforms.collect { JenkinsDslUtils.platformToJob(it) }
 
     if (!v['skipBinaryTarball']) {
@@ -62,7 +71,7 @@ components.each { component, config ->
     
     job {
         name config['job-name']
-        description "${jenkinsJson['short-release'].toUpperCase()} ${component} Packaging Parent Build"
+        description "${jobPrefix.toUpperCase()} ${component} Packaging Parent Build"
         logRotator(-1, 15, -1, -1)
 
         disabled(true)
@@ -99,7 +108,7 @@ components.each { component, config ->
 
             componentChildren(delegate, downstreamJobs, jenkinsJson.java7)
 
-            conditionalRepoUpdate(delegate, jenkinsJson['short-release'])
+            conditionalRepoUpdate(delegate, jobPrefix)
         }
 
         publishers {
@@ -122,7 +131,7 @@ def downstreamParcelJobs = jenkinsJson.platforms.collect { p ->
 
 // Parcel job
 job {
-    name JenkinsDslUtils.componentJobName(jenkinsJson['short-release'], "Parcel")
+    name JenkinsDslUtils.componentJobName(jobPrefix, "Parcel")
 
     logRotator(-1, 15, -1, -1)
     
@@ -149,7 +158,7 @@ job {
 
         componentChildren(delegate, downstreamParcelJobs, jenkinsJson.java7)
 
-        conditionalRepoUpdate(delegate, jenkinsJson['short-release'])
+        conditionalRepoUpdate(delegate, jobPrefix)
     }
     
     publishers {
@@ -168,7 +177,7 @@ job {
 // Parent POM job
 
 job {
-    name JenkinsDslUtils.componentJobName(jenkinsJson['short-release'], "Parent-POM")
+    name JenkinsDslUtils.componentJobName(jobPrefix, "Parent-POM")
     
     logRotator(-1, 15, -1, -1)
     
@@ -197,7 +206,7 @@ job {
 // Update Repos job
 
 job {
-    name JenkinsDslUtils.componentJobName(jenkinsJson['short-release'], "Update-Repos")
+    name JenkinsDslUtils.componentJobName(jobPrefix, "Update-Repos")
     
     logRotator(-1, 15, -1, -1)
     
@@ -215,7 +224,7 @@ job {
         stringParam("PARENT_BUILD_ID", "", "Build ID of parent job whose artifacts will be added to the repo.")
     }
 
-    repoThrottle(delegate, jenkinsJson['short-release'])
+    repoThrottle(delegate, jobPrefix)
 
     steps {
         shell(JenkinsDslUtils.constructRepoUpdateStep(jenkinsJson['repo-category'],
@@ -227,7 +236,7 @@ job {
 // Full build job
 
 job {
-    name JenkinsDslUtils.componentJobName(jenkinsJson['short-release'], "Full-Build")
+    name JenkinsDslUtils.componentJobName(jobPrefix, "Full-Build")
     logRotator(-1, 15, -1, -1)
     
     disabled(true)
@@ -244,17 +253,17 @@ job {
         cron("13 1 * * 1,3,6")
     }
     
-    repoThrottle(delegate, jenkinsJson['short-release'])
+    repoThrottle(delegate, jobPrefix)
 
     steps {
         shell(JenkinsDslUtils.firstFullBuildStep(jenkinsJson.release))
-        parentCall(delegate, JenkinsDslUtils.componentJobName(jenkinsJson['short-release'], "Parent-POM"), false)
+        parentCall(delegate, JenkinsDslUtils.componentJobName(jobPrefix, "Parent-POM"), false)
         phases.each { p ->
             parentCall(delegate, p.collect { it.value['job-name'] }.join(", "), jenkinsJson.java7)
         }
-        parentCall(delegate, JenkinsDslUtils.componentJobName(jenkinsJson['short-release'], "Parcel"))
+        parentCall(delegate, JenkinsDslUtils.componentJobName(jobPrefix, "Parcel"))
         shell(JenkinsDslUtils.repoGenFullBuildStep(jenkinsJson['repo-category'], jenkinsJson['c5-parcel'],
-                                                   jenkinsJson.platforms, jenkinsJson['baseRepo']))
+                                                   jenkinsJson.platforms, jenkinsJson['base-repo']))
         shell(JenkinsDslUtils.updateStaticRepoFullBuildStep(jenkinsJson['repo-category']))
 
         if (jenkinsJson['update-nightly']) {
@@ -263,7 +272,7 @@ job {
             }
             runner("Fail")
             downstreamParameterized {
-                trigger(shortRel.toUpperCase() + "-Packaging-Update-Nightly", "ALWAYS", false) { 
+                trigger(jobPrefix.toUpperCase() + "-Packaging-Update-Nightly", "ALWAYS", false) { 
                     predefinedProp('PARENT_BUILD_ID', '${JOB_NAME}-${BUILD_ID}')
                 }
             }
@@ -346,14 +355,14 @@ def componentChildren(Object delegate, List<String> jobs, boolean java7 = true) 
     }
 }
 
-def conditionalRepoUpdate(Object delegate, String shortRel) {
+def conditionalRepoUpdate(Object delegate, String jobPrefix) {
     return delegate.conditionalSteps {
         condition {
             stringsMatch('${ENV,var="CHILD_BUILD"}', "false", false)
         }
         runner("Fail")
         downstreamParameterized {
-            trigger(shortRel.toUpperCase() + "-Packaging-Update-Repos", "ALWAYS", false) { 
+            trigger(jobPrefix.toUpperCase() + "-Packaging-Update-Repos", "ALWAYS", false) { 
                 predefinedProp('PARENT_BUILD_ID', '${JOB_NAME}-${BUILD_ID}')
             }
         }
