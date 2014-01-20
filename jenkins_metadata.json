@@ -116,4 +116,6 @@
     "java7": true,
 
     "platforms": [ "centos5", "rhel6", "sles11", "precise", "wheezy" ],
+
+    "update-nightly": true,
 }        

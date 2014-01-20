@@ -256,6 +256,18 @@ job {
         shell(JenkinsDslUtils.repoGenFullBuildStep(jenkinsJson['repo-category'], jenkinsJson['c5-parcel'],
                                                    jenkinsJson.platforms, jenkinsJson['baseRepo']))
         shell(JenkinsDslUtils.updateStaticRepoFullBuildStep(jenkinsJson['repo-category']))
+
+        if (jenkinsJson['update-nightly']) {
+            conditionalStep {
+                status('Success', 'Success')
+            }
+            runner("Fail")
+            downstreamParameterized {
+                trigger(shortRel.toUpperCase() + "-Packaging-Update-Nightly", "ALWAYS", false) { 
+                    predefinedProp('PARENT_BUILD_ID', '${JOB_NAME}-${BUILD_ID}')
+                }
+            }
+        }
     }
 
 }
@@ -347,3 +359,4 @@ def conditionalRepoUpdate(Object delegate, String shortRel) {
         }
     } 
 }
+
