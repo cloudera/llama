@@ -1128,7 +1128,7 @@ TODO: need license header
       <dependency>
         <groupId>commons-lang</groupId>
         <artifactId>commons-lang</artifactId>
-        <version>2.5</version>
+        <version>2.6</version>
       </dependency>
       <dependency>
         <groupId>commons-collections</groupId>
@@ -1414,7 +1414,7 @@ TODO: need license header
       <dependency>
         <groupId>commons-io</groupId>
         <artifactId>commons-io</artifactId>
-        <version>2.1</version>
+        <version>2.4</version>
       </dependency>
       <dependency>
         <groupId>ant-contrib</groupId>
@@ -1724,7 +1724,7 @@ TODO: need license header
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-antrun-plugin</artifactId>
-          <version>1.6</version>
+          <version>1.7</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
