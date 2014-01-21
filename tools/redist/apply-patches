@@ -20,6 +20,6 @@ cd $TARGET_DIR
 git init-db
 for PATCH in `ls -1 $PATCH_DIR/* | sort` ; do
     if [ -s $PATCH ]; then
-        git apply --whitespace=nowarn $PATCH
+        git apply --ignore-whitespace --ignore-space-change --whitespace=nowarn $PATCH
     fi
 done
