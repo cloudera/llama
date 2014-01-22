@@ -1146,6 +1146,11 @@ TODO: need license header
         <version>1.8.0.10</version>
       </dependency>
       <dependency>
+        <groupId>org.hsqldb</groupId>
+        <artifactId>hsqldb</artifactId>
+        <version>2.0.0</version>
+      </dependency>
+      <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-api</artifactId>
         <version>${cdh.slf4j.version}</version>
