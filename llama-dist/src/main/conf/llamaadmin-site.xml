@@ -29,7 +29,7 @@
     </description>
   </property>
   <property>
-    <name>llama.am.server.thrift.secure</name>
+    <name>llamaadmin.server.thrift.secure</name>
     <value>false</value>
     <description>
       Indicates if security is enabled or not. If enabled, llamaadmin uses

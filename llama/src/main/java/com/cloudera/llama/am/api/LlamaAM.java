@@ -91,7 +91,7 @@ public abstract class LlamaAM {
   public static final String THROTTLING_ENABLED_KEY =
       PREFIX_KEY + "throttling.enabled";
   public static final boolean THROTTLING_ENABLED_DEFAULT = true;
-  
+
   public static final String QUEUE_AM_EXPIRE_KEY =
       PREFIX_KEY + "queue.expire.ms";
   public static final int QUEUE_AM_EXPIRE_DEFAULT = 5 * 60 * 1000;

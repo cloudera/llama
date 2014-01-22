@@ -287,7 +287,7 @@ usage:
   following configuration properties (default values shown):
 
     * llamaadmin.server.thrift.address = localhost:15002
-    * llama.am.server.thrift.secure = false
+    * llamaadmin.server.thrift.secure = false
 
   The Llama server will only enforce the admin ACLS if security is enabled.
 
