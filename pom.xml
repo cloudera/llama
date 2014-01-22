@@ -94,7 +94,7 @@ TODO: need license header
       - look for <httpcore.version> under <properties>:
       https://svn.apache.org/repos/asf/httpcomponents/httpclient/tags/4.2.5/pom.xml
     -->
-    <cdh.httpcomponents.core.version>4.2.4</cdh.httpcomponents.core.version>
+    <cdh.httpcomponents.core.version>4.2.5</cdh.httpcomponents.core.version>
 
     <cdh.slf4j.version>1.7.5</cdh.slf4j.version>
 
