@@ -189,18 +189,6 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
   @Override
   public synchronized void stop() {
     running = false;
-    if (getMetricRegistry() != null) {
-      if (getMetricRegistry() != null) {
-        String key = FastFormat.format(RESERVATIONS_GAUGE_TEMPLATE, queue);
-        getMetricRegistry().remove(key);
-        key = FastFormat.format(RESOURCES_GAUGE_TEMPLATE, queue);
-        getMetricRegistry().remove(key);
-        key = FastFormat.format(RESERVATIONS_ALLOCATION_TIMER_TEMPLATE, queue);
-        getMetricRegistry().remove(key);
-        key = FastFormat.format(RESOURCES_ALLOCATION_TIMER_TEMPLATE, queue);
-        getMetricRegistry().remove(key);
-      }
-    }
     if (rmConnector != null) {
       if (queue != null) {
         rmConnector.unregister();

@@ -109,7 +109,7 @@ public class ClientNotificationService implements ClientNotifier.ClientRegistry,
     this.metricRegistry = metricRegistry;
     if (metricRegistry != null) {
       MetricClientLlamaNotificationService.registerMetric(metricRegistry);
-      metricRegistry.register(CLIENTS_GAUGE, this);
+      MetricUtil.registerGauge(metricRegistry, CLIENTS_GAUGE, this);
       MetricUtil.registerMeter(metricRegistry, CLIENTS_EVICTION_METER);
       ClientNotifier.registerMetric(metricRegistry);
     }

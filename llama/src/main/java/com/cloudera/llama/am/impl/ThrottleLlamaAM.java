@@ -186,12 +186,6 @@ public class ThrottleLlamaAM extends LlamaAMImpl
   public void stop() {
     running = false;
     thread.interrupt();
-    if (getMetricRegistry() != null) {
-      String key = FastFormat.format(PLACED_RESERVATIONS_GAUGE_TEMPLATE, queue);
-      getMetricRegistry().remove(key);
-      key = FastFormat.format(QUEUED_RESERVATIONS_GAUGE_TEMPLATE, queue);
-      getMetricRegistry().remove(key);
-    }
     am.stop();
   }
 

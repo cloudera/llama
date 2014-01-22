@@ -75,14 +75,16 @@ public abstract class ThriftServer<T extends TProcessor, A extends TProcessor>
         minThreads, maxThreads);
     executor.prestartAllCoreThreads();
     if (getMetricRegistry() != null) {
-      getMetricRegistry().register("llama.am." + name + ".active.threads.gauge",
+      MetricUtil.registerGauge(getMetricRegistry(),
+          "llama.am." + name + ".active.threads.gauge",
           new Gauge<Integer>() {
             @Override
             public Integer getValue() {
               return executor.getActiveCount();
             }
           });
-      getMetricRegistry().register("llama.am." + name + ".total.threads.gauge",
+      MetricUtil.registerGauge(getMetricRegistry(),
+          "llama.am." + name + ".total.threads.gauge",
           new Gauge<Integer>() {
             @Override
             public Integer getValue() {

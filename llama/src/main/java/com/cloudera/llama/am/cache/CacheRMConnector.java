@@ -20,6 +20,7 @@ package com.cloudera.llama.am.cache;
 import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.PlacedResource;
 import com.cloudera.llama.am.impl.PlacedResourceImpl;
+import com.cloudera.llama.server.MetricUtil;
 import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.spi.RMResource;
 import com.cloudera.llama.am.spi.RMEvent;
@@ -140,23 +141,27 @@ public class CacheRMConnector implements RMConnector,
               resourcesAsked.getFiveMinuteRate());
         }
       };
-      metricRegistry.register(FastFormat.format(PENDING_RESOURCES_TEMPLATE,
+      MetricUtil.registerGauge(metricRegistry,
+          FastFormat.format(PENDING_RESOURCES_TEMPLATE,
           queue), new Gauge<Integer>() {
         @Override
         public Integer getValue() {
           return pending.getSize();
         }
       });
-      metricRegistry.register(FastFormat.format(CACHED_RESOURCES_TEMPLATE,
+      MetricUtil.registerGauge(metricRegistry,
+          FastFormat.format(CACHED_RESOURCES_TEMPLATE,
           queue), new Gauge<Integer>() {
         @Override
         public Integer getValue() {
           return cache.getSize();
         }
       });
-      metricRegistry.register(FastFormat.format(ONE_MIN_CACHE_RATIO_TEMPLATE,
+      MetricUtil.registerGauge(metricRegistry,
+          FastFormat.format(ONE_MIN_CACHE_RATIO_TEMPLATE,
           queue), oneMinGauge);
-      metricRegistry.register(FastFormat.format(FIVE_MIN_CACHE_RATIO_TEMPLATE,
+      MetricUtil.registerGauge(metricRegistry,
+          FastFormat.format(FIVE_MIN_CACHE_RATIO_TEMPLATE,
           queue), fiveMinGauge);
     }
     connector.register(queue);
@@ -166,16 +171,6 @@ public class CacheRMConnector implements RMConnector,
   public void unregister() {
     connector.unregister();
     cache.stop();
-    if (metricRegistry != null) {
-      metricRegistry.remove(FastFormat.format(PENDING_RESOURCES_TEMPLATE,
-          queue));
-      metricRegistry.remove(FastFormat.format(CACHED_RESOURCES_TEMPLATE,
-          queue));
-      metricRegistry.remove(FastFormat.format(ONE_MIN_CACHE_RATIO_TEMPLATE,
-          queue));
-      metricRegistry.remove(FastFormat.format(FIVE_MIN_CACHE_RATIO_TEMPLATE,
-          queue));
-    }
   }
 
   @Override
