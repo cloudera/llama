@@ -83,14 +83,13 @@ public class ThrottleLlamaAM extends LlamaAMImpl
   static final String MAX_QUEUED_RESERVATIONS_QUEUE_KEY =
       MAX_QUEUED_RESERVATIONS_KEY + ".{}";
 
-  static final String METRIC_PREFIX_TEMPLATE = LlamaAM.METRIC_PREFIX +
-      "queue({}).";
+  static final String METRIC_PREFIX = LlamaAM.METRIC_PREFIX + "queue-throttle.";
 
-  private static final String PLACED_RESERVATIONS_GAUGE_TEMPLATE =
-      METRIC_PREFIX_TEMPLATE + "throttle.placed-reservations.gauge";
+  private static final String PLACED_RESERVATIONS_GAUGE_TEMPLATE = METRIC_PREFIX
+      + "placed-reservations[{}].gauge";
 
-  private static final String QUEUED_RESERVATIONS_GAUGE_TEMPLATE =
-      METRIC_PREFIX_TEMPLATE + "throttle.queued-reservations.gauge";
+  private static final String QUEUED_RESERVATIONS_GAUGE_TEMPLATE = METRIC_PREFIX
+      + "queued-reservations[{}].gauge";
 
   private final String queue;
   private final SingleQueueLlamaAM am;

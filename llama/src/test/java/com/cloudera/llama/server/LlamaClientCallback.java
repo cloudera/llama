@@ -76,7 +76,7 @@ public class LlamaClientCallback extends
   }
 
   public LlamaClientCallback() {
-    super("LlamaClientCallback", ClientCallbackServerConfiguration.class);
+    super("llama.client-callback", ClientCallbackServerConfiguration.class);
   }
 
   public static class LNServiceImpl implements LlamaNotificationService.Iface {

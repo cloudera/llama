@@ -17,6 +17,7 @@
  */
 package com.cloudera.llama.am;
 
+import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.server.MetricUtil;
 import com.cloudera.llama.server.TypeUtils;
 import com.cloudera.llama.thrift.LlamaAMService;
@@ -41,17 +42,27 @@ import java.util.Arrays;
 import java.util.List;
 
 public class MetricLlamaAMService implements LlamaAMService.Iface {
-  private static final String METRIC_PREFIX = "llama.server.thrift-incoming.";
+  private static final String METRIC_PREFIX = LlamaAM.METRIC_PREFIX +
+      "thrift-server.";
 
-  private static final String REGISTER_TIMER = METRIC_PREFIX + "Register.timer";
-  private static final String UNREGISTER_TIMER = METRIC_PREFIX + "Unregister.timer";
-  private static final String RESERVE_TIMER = METRIC_PREFIX + "Reserve.timer";
-  private static final String EXPAND_TIMER = METRIC_PREFIX + "Expand.timer";
-  private static final String RELEASE_TIMER = METRIC_PREFIX + "Release.timer";
-  private static final String GET_NODES_TIMER = METRIC_PREFIX + "GetNodes.timer";
-  private static final String RESERVE_METER = METRIC_PREFIX + "Reserve.meter";
-  private static final String EXPAND_METER = METRIC_PREFIX + "Expand.meter";
-  private static final String RELEASE_METER = METRIC_PREFIX + "Release.meter";
+  private static final String REGISTER_TIMER = METRIC_PREFIX +
+      "register-call.timer";
+  private static final String UNREGISTER_TIMER = METRIC_PREFIX +
+      "unregister-call.timer";
+  private static final String RESERVE_TIMER = METRIC_PREFIX +
+      "reserve-call.timer";
+  private static final String EXPAND_TIMER = METRIC_PREFIX +
+      "expand-call.timer";
+  private static final String RELEASE_TIMER = METRIC_PREFIX +
+      "release-call.timer";
+  private static final String GET_NODES_TIMER = METRIC_PREFIX +
+      "getNodes-call.timer";
+  private static final String RESERVE_METER = METRIC_PREFIX +
+      "reserve-call.meter";
+  private static final String EXPAND_METER = METRIC_PREFIX +
+      "expand-call.meter";
+  private static final String RELEASE_METER = METRIC_PREFIX +
+      "release-call.meter";
 
   public static final List<String> METRIC_KEYS = Arrays.asList(
       REGISTER_TIMER, UNREGISTER_TIMER, RESERVE_TIMER, RELEASE_TIMER,

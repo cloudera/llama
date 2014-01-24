@@ -17,6 +17,7 @@
  */
 package com.cloudera.llama.server;
 
+import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.LlamaAMEvent;
 import com.cloudera.llama.am.api.LlamaAMListener;
 import com.cloudera.llama.util.ErrorCode;
@@ -35,14 +36,13 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class ClientNotificationService implements ClientNotifier.ClientRegistry,
     LlamaAMListener, Gauge<Integer> {
 
-  private static final String METRIC_PREFIX = "llama.server.";
-
-  private static final String CLIENTS_GAUGE = METRIC_PREFIX + "clients.gauge";
-  private static final String CLIENTS_EVICTION_METER = METRIC_PREFIX +
-      "clients-eviction.meter";
+  private static final String CLIENTS_GAUGE = LlamaAM.METRIC_PREFIX +
+      "clients.current.gauge";
+  private static final String CLIENTS_LOST_METER = LlamaAM.METRIC_PREFIX +
+      "clients.lost.meter";
 
   public static final List<String> METRIC_KEYS = Arrays.asList(
-      CLIENTS_GAUGE, CLIENTS_EVICTION_METER);
+      CLIENTS_GAUGE, CLIENTS_LOST_METER);
 
   public interface Listener {
 
@@ -110,7 +110,7 @@ public class ClientNotificationService implements ClientNotifier.ClientRegistry,
     if (metricRegistry != null) {
       MetricClientLlamaNotificationService.registerMetric(metricRegistry);
       MetricUtil.registerGauge(metricRegistry, CLIENTS_GAUGE, this);
-      MetricUtil.registerMeter(metricRegistry, CLIENTS_EVICTION_METER);
+      MetricUtil.registerMeter(metricRegistry, CLIENTS_LOST_METER);
       ClientNotifier.registerMetric(metricRegistry);
     }
     clientNotifier = new ClientNotifier(conf, nodeMapper, this, metricRegistry);
@@ -233,7 +233,7 @@ public class ClientNotificationService implements ClientNotifier.ClientRegistry,
 
   @Override
   public void onMaxFailures(UUID handle) {
-    MetricUtil.meter(metricRegistry, CLIENTS_EVICTION_METER, 1);
+    MetricUtil.meter(metricRegistry, CLIENTS_LOST_METER, 1);
     unregister(handle);
   }
 

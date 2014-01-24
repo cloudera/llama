@@ -17,6 +17,7 @@
  */
 package com.cloudera.llama.server;
 
+import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.LlamaAMEvent;
 import com.cloudera.llama.am.api.LlamaAMListener;
 import com.cloudera.llama.am.api.PlacedReservation;
@@ -47,11 +48,11 @@ public class ClientNotifier implements LlamaAMListener {
   private static final Logger LOG = LoggerFactory.getLogger(
       ClientNotifier.class);
 
-  private static final String METRIC_PREFIX =
-      "llama.server.thrift-outgoing.";
+  private static final String METRIC_PREFIX = LlamaAM.METRIC_PREFIX +
+      "thrift-client.";
 
   private static final String NOTIFICATION_FAILURES_METER = METRIC_PREFIX +
-      "Notification.failures.meter";
+      "notification-failures.meter";
 
   public static final List<String> METRIC_KEYS = Arrays.asList(
       NOTIFICATION_FAILURES_METER);
