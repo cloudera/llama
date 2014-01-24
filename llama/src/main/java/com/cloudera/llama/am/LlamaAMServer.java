@@ -65,7 +65,7 @@ public class LlamaAMServer extends
   private AsyncLlamaAMListener asyncListener;
 
   public LlamaAMServer() {
-    super("LlamaAM", AMServerConfiguration.class);
+    super("llama.am", AMServerConfiguration.class);
   }
 
   private JmxReporter reporter;

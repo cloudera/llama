@@ -33,13 +33,13 @@ import java.util.List;
 public class MetricClientLlamaNotificationService implements
     LlamaNotificationService.Iface {
   private static final String METRIC_PREFIX =
-      "llama.server.thrift-outgoing.";
+      "llama.am.thrift-client.";
 
   private static final String NOTIFICATION_TIMER = METRIC_PREFIX +
-      "Notification.timer";
+      "notifications.timer";
 
   private static final String NOTIFICATION_METER = METRIC_PREFIX +
-      "Notification.meter";
+      "notifications.meter";
 
   public static final List<String> METRIC_KEYS = Arrays.asList(
       NOTIFICATION_TIMER, NOTIFICATION_METER);

@@ -58,20 +58,20 @@ public class CacheRMConnector implements RMConnector,
   private static final Logger LOG =
       LoggerFactory.getLogger(CacheRMConnector.class);
 
-  private static final String METRIC_PREFIX_TEMPLATE = LlamaAM.METRIC_PREFIX +
-      "queue({}).cache.";
+  private static final String METRIC_PREFIX = LlamaAM.METRIC_PREFIX +
+      "queue-cache.";
 
-  private static final String PENDING_RESOURCES_TEMPLATE
-      = METRIC_PREFIX_TEMPLATE + "pending.resources.gauge";
+  private static final String PENDING_RESOURCES_TEMPLATE = METRIC_PREFIX +
+      "pending-resources[{}].gauge";
 
-  private static final String CACHED_RESOURCES_TEMPLATE
-      = METRIC_PREFIX_TEMPLATE + "cached.resources.gauge";
+  private static final String CACHED_RESOURCES_TEMPLATE = METRIC_PREFIX +
+      "cached-resources[{}].gauge";
 
-  private static final String ONE_MIN_CACHE_RATIO_TEMPLATE
-      = METRIC_PREFIX_TEMPLATE + "one.min.ratio.gauge";
+  private static final String ONE_MIN_CACHE_RATIO_TEMPLATE = METRIC_PREFIX +
+      "one-min-ratio[{}].gauge";
 
-  private static final String FIVE_MIN_CACHE_RATIO_TEMPLATE
-      = METRIC_PREFIX_TEMPLATE + "five.min.ratio.gauge";
+  private static final String FIVE_MIN_CACHE_RATIO_TEMPLATE = METRIC_PREFIX +
+      "five-min-ratio[{}].gauge";
 
   private Configuration conf;
   // pending keeps track of pending resources, so when a resource is released

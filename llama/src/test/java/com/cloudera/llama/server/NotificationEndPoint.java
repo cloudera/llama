@@ -53,7 +53,7 @@ public class NotificationEndPoint extends
   }
 
   public NotificationEndPoint() {
-    super("NotificationEndPoint", ClientServerConfiguration.class);
+    super("llama.notification-endpoint", ClientServerConfiguration.class);
   }
 
   @Override

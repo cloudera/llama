@@ -60,17 +60,16 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
   private static final Logger LOG = 
       LoggerFactory.getLogger(SingleQueueLlamaAM.class);
 
-  private static final String METRIC_PREFIX_TEMPLATE = LlamaAM.METRIC_PREFIX +
-      "queue({}).";
+  private static final String METRIC_PREFIX = LlamaAM.METRIC_PREFIX + "queue.";
 
   private static final String RESERVATIONS_GAUGE_TEMPLATE =
-      METRIC_PREFIX_TEMPLATE + "reservations.gauge";
+      METRIC_PREFIX + "reservations[{}].gauge";
   private static final String RESOURCES_GAUGE_TEMPLATE =
-      METRIC_PREFIX_TEMPLATE + "resources.gauge";
+      METRIC_PREFIX + "resources[{}].gauge";
   private static final String RESERVATIONS_ALLOCATION_TIMER_TEMPLATE =
-      METRIC_PREFIX_TEMPLATE + "reservations-allocation-time.timer";
+      METRIC_PREFIX + "reservations-allocation-latency[{}].timer";
   private static final String RESOURCES_ALLOCATION_TIMER_TEMPLATE =
-      METRIC_PREFIX_TEMPLATE + "resources-allocation-time.timer";
+      METRIC_PREFIX + "resources-allocation-latency[{}].timer";
 
   public static final List<String> METRIC_TEMPLATE_KEYS = Arrays.asList(
       RESERVATIONS_GAUGE_TEMPLATE, RESOURCES_GAUGE_TEMPLATE,

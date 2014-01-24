@@ -34,7 +34,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class AsyncLlamaAMListener implements LlamaAMListener {
 
   private final static String QUEUE_GAUGE = LlamaAM.METRIC_PREFIX +
-      ".async.listener.queue.size.gauge";
+      "async-listener.queue.gauge";
 
   private static final int DISPATCH_INTERVAL_MS = 50;
 

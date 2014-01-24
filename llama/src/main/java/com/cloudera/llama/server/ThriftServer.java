@@ -17,6 +17,7 @@
  */
 package com.cloudera.llama.server;
 
+import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.util.FastFormat;
 import com.cloudera.llama.util.ThriftThreadPoolExecutor;
 import com.codahale.metrics.Gauge;
@@ -36,6 +37,9 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 public abstract class ThriftServer<T extends TProcessor, A extends TProcessor>
     extends AbstractServer {
+
+  private static final String METRIC_PREFIX = LlamaAM.METRIC_PREFIX +
+      "thrift-server.";
 
   private Class<? extends ServerConfiguration> serverConfClass;
   private ServerConfiguration sConf;
@@ -76,7 +80,7 @@ public abstract class ThriftServer<T extends TProcessor, A extends TProcessor>
     executor.prestartAllCoreThreads();
     if (getMetricRegistry() != null) {
       MetricUtil.registerGauge(getMetricRegistry(),
-          "llama.am." + name + ".active.threads.gauge",
+          name + "thrift-server." + ".active.threads.gauge",
           new Gauge<Integer>() {
             @Override
             public Integer getValue() {
@@ -84,7 +88,7 @@ public abstract class ThriftServer<T extends TProcessor, A extends TProcessor>
             }
           });
       MetricUtil.registerGauge(getMetricRegistry(),
-          "llama.am." + name + ".total.threads.gauge",
+          name + "thrift-server." + ".total.threads.gauge",
           new Gauge<Integer>() {
             @Override
             public Integer getValue() {

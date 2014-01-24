@@ -36,7 +36,7 @@ public class LlamaNMServer extends
   private Resource totalCapacity;
 
   protected LlamaNMServer() {
-    super("LlamaNM", NMServerConfiguration.class);
+    super("llama.nm", NMServerConfiguration.class);
   }
 
   @Override
