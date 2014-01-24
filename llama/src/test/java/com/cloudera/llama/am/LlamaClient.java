@@ -84,6 +84,7 @@ public class LlamaClient {
   private static final String HANDLE = "handle";
   private static final String SECURE = "secure";
   private static final String CALLBACK = "callback";
+  private static final String USER = "user";
   private static final String QUEUE = "queue";
   private static final String LOCATIONS = "locations";
   private static final String CPUS = "cpus";
@@ -115,8 +116,10 @@ public class LlamaClient {
     callback.setRequired(true);
     Option handle = new Option(HANDLE, true, "<UUID> from registration");
     handle.setRequired(true);
-    Option queue = new Option(QUEUE, true, "queue of reservation");
-    queue.setRequired(true);
+    Option user = new Option(USER, true, "reservation user");
+    user.setRequired(true);
+    Option queue = new Option(QUEUE, true, "reservation queue");
+    queue.setRequired(false);
     Option locations = new Option(LOCATIONS, true,
         "locations of reservation, comma separated");
     locations.setRequired(true);
@@ -199,6 +202,7 @@ public class LlamaClient {
     options.addOption(noLog);
     options.addOption(llama);
     options.addOption(handle);
+    options.addOption(user);
     options.addOption(queue);
     options.addOption(locations);
     options.addOption(cpus);
@@ -235,6 +239,7 @@ public class LlamaClient {
     options.addOption(rounds);
     options.addOption(holdTime);
     options.addOption(sleepTime);
+    options.addOption(user);
     options.addOption(queue);
     options.addOption(locations);
     options.addOption(cpus);
@@ -284,6 +289,7 @@ public class LlamaClient {
       } else if (command.getName().equals(RESERVE_CMD)) {
         String llama = cl.getOptionValue(LLAMA);
         UUID handle = UUID.fromString(cl.getOptionValue(HANDLE));
+        String user = cl.getOptionValue(USER);
         String queue = cl.getOptionValue(QUEUE);
         String[] locations = cl.getOptionValue(LOCATIONS).split(",");
         int cpus = Integer.parseInt(cl.getOptionValue(CPUS));
@@ -292,7 +298,7 @@ public class LlamaClient {
         boolean relaxLocality = cl.hasOption(RELAX_LOCALITY);
 
         UUID reservation = reserve(secure, getHost(llama), getPort(llama),
-            handle, queue, locations, cpus, memory, relaxLocality, gang);
+            handle, user, queue, locations, cpus, memory, relaxLocality, gang);
         System.out.println(reservation);
       } else if (command.getName().equals(RELEASE_CMD)) {
         String llama = cl.getOptionValue(LLAMA);
@@ -309,6 +315,7 @@ public class LlamaClient {
         int rounds = Integer.parseInt(cl.getOptionValue(ROUNDS));
         int holdTime = Integer.parseInt(cl.getOptionValue(HOLD_TIME));
         int sleepTime = Integer.parseInt(cl.getOptionValue(SLEEP_TIME));
+        String user = cl.getOptionValue(USER);
         String queue = cl.getOptionValue(QUEUE);
         String[] locations = cl.getOptionValue(LOCATIONS).split(",");
         int cpus = Integer.parseInt(cl.getOptionValue(CPUS));
@@ -319,7 +326,7 @@ public class LlamaClient {
             ? Integer.parseInt(cl.getOptionValue(ALLOCATION_TIMEOUT)) : 10000;
         runLoad(secure, getHost(llama), getPort(llama), clients,
             getHost(callback), getPort(callback), rounds, holdTime, sleepTime,
-            queue, locations, relaxLocality, cpus, memory, gang,
+            user, queue, locations, relaxLocality, cpus, memory, gang,
             allocationTimeout);
       } else {
         System.err.println("Missing sub-command");
@@ -486,17 +493,17 @@ public class LlamaClient {
   }
 
   static UUID reserve(final boolean secure, final String llamaHost,
-      final int llamaPort, final UUID handle, final String queue,
-      final String[] locations, final int cpus, final int memory,
-      final boolean relaxLocality,
-      final boolean gang) throws Exception {
+      final int llamaPort, final UUID handle, final String user,
+      final String queue, final String[] locations, final int cpus,
+      final int memory, final boolean relaxLocality, final boolean gang)
+      throws Exception {
     return Subject.doAs(getSubject(secure),
         new PrivilegedExceptionAction<UUID>() {
           @Override
           public UUID run() throws Exception {
             LlamaAMService.Client client = createClient(secure, llamaHost,
                 llamaPort);
-            return reserve(client, handle, "user", queue, locations,
+            return reserve(client, handle, user, queue, locations,
                 relaxLocality, cpus, memory, gang);
           }
         });
@@ -552,10 +559,9 @@ public class LlamaClient {
 
   static void runLoad(final boolean secure, String llamaHost, int llamaPort,
       int clients, String callbackHost, int callbackStartPort, int rounds,
-      int holdTime, int sleepTime, String queue, String[] locations,
-      boolean relaxLocality, int cpus, int memory, boolean gang,
-      int allocationTimeout)
-      throws Exception {
+      int holdTime, int sleepTime, String user, String queue,
+      String[] locations, boolean relaxLocality, int cpus, int memory,
+      boolean gang, int allocationTimeout) throws Exception {
 
     //start callback servers
     for (int i = 0; i < clients; i++) {
@@ -597,9 +603,9 @@ public class LlamaClient {
     AtomicInteger allocationTimeouts = new AtomicInteger();
     for (int i = 0; i < clients; i++) {
       runClientLoad(secure, llamaHost, llamaPort, callbackHost,
-          callbackStartPort + i, rounds, holdTime, sleepTime, queue, locations,
-          relaxLocality, cpus, memory, gang, registerLatch, startLatch,
-          endLatch, allocationTimeout, timers, allocationTimeouts,
+          callbackStartPort + i, rounds, holdTime, sleepTime, user, queue,
+          locations, relaxLocality, cpus, memory, gang, registerLatch,
+          startLatch, endLatch, allocationTimeout, timers, allocationTimeouts,
           reservationErrorCount);
     }
     registerLatch.await();
@@ -656,7 +662,7 @@ public class LlamaClient {
 
   static void runClientLoad(final boolean secure, final String llamaHost,
       final int llamaPort, final String callbackHost, final int callbackPort,
-      final int rounds, final int holdTime, final int sleepTime,
+      final int rounds, final int holdTime, final int sleepTime, final String user,
       final String queue, final String[] locations, final boolean relaxLocality,
       final int cpus, final int memory, final boolean gang,
       final CountDownLatch registerLatch, final CountDownLatch startLatch,
@@ -695,7 +701,7 @@ public class LlamaClient {
                       UUID reservation = null;
                       try {
                         start = System.currentTimeMillis();
-                        reservation = reserve(client, handle, "user",
+                        reservation = reserve(client, handle, user,
                             queue, locations, relaxLocality, cpus, memory, gang);
                         end = System.currentTimeMillis();
                         timers[RESERVE].update(end - start, TimeUnit.MILLISECONDS);
