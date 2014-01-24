@@ -33,7 +33,8 @@
         "impala": {
             "step": 2,
             "skipBinaryTarball": true,
-            "mailto": "impala-jenkins@cloudera.com"
+            "mailto": "impala-jenkins@cloudera.com",
+            "job-suffix": "-impala"
         },
         "bigtop-jsvc": {
             "step": 2,

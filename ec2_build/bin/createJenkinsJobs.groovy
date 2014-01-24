@@ -41,7 +41,7 @@ def components = jenkinsJson.components.collectEntries { k, v ->
     }
 
     v['job-name'] = JenkinsDslUtils.componentJobName(jobPrefix, v['display-name'] ?: k.capitalize())
-    v['child-jobs'] = jenkinsJson.platforms.collect { JenkinsDslUtils.platformToJob(it) }
+    v['child-jobs'] = jenkinsJson.platforms.collect { JenkinsDslUtils.platformToJob(it, v['job-suffix'] ?: "") }
 
     if (!v['skipBinaryTarball']) {
         v['child-jobs'] << JobDslConstants.TARBALL_DEPLOY_JOB
@@ -57,7 +57,7 @@ phases = stepNumbers.collect { s ->
 
 components.each { component, config ->
     def downstreamJobs = jenkinsJson.platforms.collect { p ->
-        JenkinsDslUtils.platformToJob(p)
+        JenkinsDslUtils.platformToJob(p, config['job-suffix'] ?: "")
     }
 
     if (!config.skipBinaryTarball) {
@@ -127,7 +127,7 @@ components.each { component, config ->
 
 
 def downstreamParcelJobs = jenkinsJson.platforms.collect { p ->
-    JenkinsDslUtils.platformToJob(p, true)
+    JenkinsDslUtils.platformToJob(p, "", true)
 }
 
 // Parcel job
