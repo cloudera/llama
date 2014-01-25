@@ -75,7 +75,7 @@ components.each { component, config ->
         description "${jobPrefix.toUpperCase()} ${component} Packaging Parent Build"
         logRotator(-1, 15, -1, -1)
 
-        disabled(true)
+        //dissabled(true)
 
         componentParams(delegate, jenkinsJson.release)
 
@@ -107,7 +107,7 @@ components.each { component, config ->
                                                      config.skipMiscBits ? true : false,
                                                      config.version ?: ""))
 
-            componentChildren(delegate, downstreamJobs, jenkinsJson.java7)
+            componentChildren(delegate, downstreamJobs, component, jenkinsJson.java7)
 
             conditionalRepoUpdate(delegate, jobPrefix)
         }
@@ -136,7 +136,7 @@ job {
 
     logRotator(-1, 15, -1, -1)
     
-    disabled(true)
+    //dissabled(true)
 
     componentParams(delegate, jenkinsJson.release)
     
@@ -157,7 +157,7 @@ job {
         shell(JobDslConstants.SHELL_SCRIPT_CLEAN_CACHES)
         shell(JenkinsDslUtils.parcelBuildStep(jenkinsJson['short-release']))
 
-        componentChildren(delegate, downstreamParcelJobs, jenkinsJson.java7)
+        componentChildren(delegate, downstreamParcelJobs, "cdh-parcel", jenkinsJson.java7)
 
         conditionalRepoUpdate(delegate, jobPrefix)
     }
@@ -182,7 +182,7 @@ job {
     
     logRotator(-1, 15, -1, -1)
     
-    disabled(true)
+    //dissabled(true)
 
     scm { 
         cdhGit(delegate, jenkinsJson['cdh-branch'], "(?!.*pom\\.xml.*)")
@@ -211,7 +211,7 @@ job {
     
     logRotator(-1, 15, -1, -1)
     
-    disabled(true)
+    //dissabled(true)
 
     scm { 
         cdhGit(delegate, jenkinsJson['cdh-branch'])
@@ -240,7 +240,7 @@ job {
     name JenkinsDslUtils.componentJobName(jobPrefix, "Full-Build")
     logRotator(-1, 15, -1, -1)
     
-    disabled(true)
+    //dissabled(true)
 
     scm {
         cdhGit(delegate, jenkinsJson['cdh-branch'])
@@ -345,13 +345,13 @@ def componentParams(Object delegate, String release) {
     }
 }
 
-def componentChildren(Object delegate, List<String> jobs, boolean java7 = true) {
+def componentChildren(Object delegate, List<String> jobs, String pkg, boolean java7 = true) {
     return delegate.downstreamParameterized {
         trigger(jobs.join(", "), "ALWAYS", false,
                 ["buildStepFailure": "FAILURE",
                  "failure": "FAILURE"]) {
             predefinedProps(['PARENT_BUILD_ID': '${JOB_NAME}-${BUILD_ID}',
-                             'PACKAGES': "cdh-parcel",
+                             'PACKAGES': pkg,
                              'CDH_RELEASE': '${RELEASE_CODENAME}',
                              'JAVA7_BUILD': java7 ? "true" : ""])
         }
@@ -365,7 +365,7 @@ def conditionalRepoUpdate(Object delegate, String jobPrefix) {
         }
         runner("Fail")
         downstreamParameterized {
-            trigger(jobPrefix.toUpperCase() + "-Packaging-Update-Repos", "ALWAYS", false) { 
+            trigger(JenkinsDslUtils.componentJobName(jobPrefix, "Update-Repos"), "ALWAYS", false) { 
                 predefinedProp('PARENT_BUILD_ID', '${JOB_NAME}-${BUILD_ID}')
             }
         }
