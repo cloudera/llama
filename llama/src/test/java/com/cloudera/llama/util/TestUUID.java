@@ -20,10 +20,9 @@ package com.cloudera.llama.util;
 import junit.framework.Assert;
 import org.junit.Test;
 
-public class TestUUID {
+import java.math.BigInteger;
 
-  //Java:  0f5dc366968d463394a29c8a3bde83d1
-  //Impala: f5dc366968d4633:94a29c8a3bde83d1
+public class TestUUID {
 
   @Test
   public void testUUID() throws Exception {
@@ -38,9 +37,16 @@ public class TestUUID {
 
   @Test
   public void testImpalaUUIDFormat() throws Exception {
-    String impalaValue = "f5dc366968d4633:94a29c8a3bde83d1";
+    String highStr = "f5dc366968d4633";
+    String lowStr = "94a29c8a3bde83d1";
+    String impalaValue = highStr + ":" + lowStr;
     UUID uuid = UUID.fromString(impalaValue);
     Assert.assertEquals(impalaValue, uuid.toString());
+
+    long high = new BigInteger(highStr, 16).longValue();
+    long low = new BigInteger(lowStr, 16).longValue();
+    Assert.assertEquals(high, uuid.getMostSignificantBits());
+    Assert.assertEquals(low, uuid.getLeastSignificantBits());
   }
 
   @Test
