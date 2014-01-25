@@ -70,18 +70,18 @@ public class UUID {
       throw new IllegalArgumentException(
           "Invalid UUID string value, missing ':' : " + value);
     }
-    String sLow = value.substring(0, sep);
-    String sHigh = value.substring(sep + 1);
-    if (sLow.length() > 16) {
-      throw new IllegalArgumentException(
-          "Invalid UUID string value, low is not a 32 bit hexa: " + value);
-    }
+    String sHigh = value.substring(0, sep);
+    String sLow = value.substring(sep + 1);
     if (sHigh.length() > 16) {
       throw new IllegalArgumentException(
           "Invalid UUID string value, high is not a 32 bit hexa: " + value);
     }
-    long low = new BigInteger(sLow, 16).longValue();
+    if (sLow.length() > 16) {
+      throw new IllegalArgumentException(
+          "Invalid UUID string value, low is not a 32 bit hexa: " + value);
+    }
     long high = new BigInteger(sHigh, 16).longValue();
+    long low = new BigInteger(sLow, 16).longValue();
     return new UUID(high, low);
   }
 
@@ -90,7 +90,7 @@ public class UUID {
   public String toString() {
     String sLow = Long.toHexString(low);
     String sHigh = Long.toHexString(high);
-    return trimZeros(sLow) + ":" + trimZeros(sHigh);
+    return trimZeros(sHigh) + ":" + trimZeros(sLow);
   }
 
   private String trimZeros(String value) {
