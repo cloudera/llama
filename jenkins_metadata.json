@@ -135,4 +135,6 @@
     "platforms": [ "centos5", "rhel6", "sles11", "precise", "wheezy" ],
 
     "update-nightly": true,
+
+    "unit-test-aggregate": "CDH5-Unit-Tests-Aggregate",
 }
