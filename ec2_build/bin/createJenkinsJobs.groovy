@@ -12,22 +12,9 @@ def crepoJson = slurper.parseText(readFileFromWorkspace("${jenkinsJson['short-re
 
 def phases = []
 
-def rawPackageCrepo = crepoJson.projects['cdh-package']
+def pkgGitInfo = JenkinsDslUtils.getPkgGitInfo(crepoJson)
 
-def pkgGitInfo = ['branch': rawPackageCrepo['track-branch'],
-                  'dir': rawPackageCrepo['dir'],
-                  'repo': "git://github.mtv.cloudera.com/CDH/cdh-package.git"
-                 ];
-
-// If the short-release and cdh-branch fields are the same, we're on "trunk".
-// In that case, the job prefix will be the short-release. Otherwise, it'll be
-// the full release.
-def jobPrefix
-if (jenkinsJson['short-release'] == jenkinsJson['cdh-branch']) {
-    jobPrefix = jenkinsJson['short-release']
-} else {
-    jobPrefix = jenkinsJson['release']
-}
+def jobPrefix = JenkinsDslUtils.getJobPrefix(jenkinsJson)
 
 def components = jenkinsJson.components.collectEntries { k, v ->
     def crepoInfo = crepoJson.projects[k]
