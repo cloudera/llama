@@ -55,7 +55,11 @@ function relnote_gen {
   git ls-files | grep -E "(common|deb|rpm)/$9" | xargs git log --pretty=oneline --no-color ${10} > $package_commit_log
   git ls-files | grep -E "(common|deb|rpm)/$9" | xargs git log --pretty=medium --no-color ${10} > $package_changes_file
   popd >& /dev/null
+  virtualenv --clear $gen_dir/virtualenv
+  . $gen_dir/virtualenv/bin/activate
+  pip install pymongo
   python ./tools/relnotes/relnotegen.py -l $commit_log -r "$4" -a $5 -c $6 -n "$7" > $relnote_file
+  deactivate
 }
 
 relnote_gen $1 $2 $3 "$4" $5 $6 "$7" $8 $9 "${10}"

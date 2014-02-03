@@ -16,7 +16,11 @@ from xml.etree import ElementTree
 from xml.parsers.expat import ExpatError
 from relnotehtml import printRelNotes
 from utils import getJiraIssueXMLURL, getJiraList
+from pymongo import MongoClient
 
+mongoHost = "golden.jenkins.cloudera.com"
+mongoPort = 27017
+mongoDb = "jiras"
 
 #
 #  Maps the project type and jira type to a list of pairs where
@@ -66,10 +70,13 @@ def getJiraDOM(jira):
     except ExpatError as e:
       print >> sys.stderr, "ERROR. Skip %s (%s)" % (jira, e)
       return None
+    except ElementTree.ParseError as e:
+      print >> sys.stderr, "ERROR. Not finding %s" % (jira)
+      return None
   return dom
 
 
-def parseJiras(commitLog):
+def parseJiras(commitLog, mongoJira):
     """ Parse jiras and add them to the dictionary """
 
     # A git object identifier is 40 chars
@@ -79,24 +86,36 @@ def parseJiras(commitLog):
         proj = m.group(1)
         num  = m.group(2)
         jira = proj+"-"+num
-        dom = getJiraDOM(jira)
-        if dom is None:
-          continue
-        summary = dom.find('./channel/item/summary').text
-        jiraType = dom.find('./channel/item/type').text
-        # For Sub-tasks use the type of the parent jira
-        if jiraType == "Sub-task":
-          p = getJiraDOM(dom.find('./channel/item/parent').text)
-          jiraType = p.find('./channel/item/type').text
-        # Progress tick
+        summary = ""
+        jiraType = ""
+
+        cachedJira = mongoJira.find_one({"jira": jira})
+        if cachedJira is None:
+          cachedJira = {}
+          dom = getJiraDOM(jira)
+          if dom is None:
+            continue
+          cachedJira['jira'] = jira
+          cachedJira['proj'] = proj
+          cachedJira['summary'] = dom.find('./channel/item/summary').text
+          cachedJira['jiraType'] = dom.find('./channel/item/type').text
+          # For Sub-tasks use the type of the parent jira
+          if cachedJira['jiraType'] == "Sub-task":
+            p = getJiraDOM(dom.find('./channel/item/parent').text)
+            cachedJira['jiraType'] = p.find('./channel/item/type').text
+            # Progress tick
+          mongoJira.insert(cachedJira)
+        
         print >> sys.stderr, ".",
-        addJira(proj, jiraType, jira, summary)
+        addJira(proj, cachedJira['jiraType'], jira, cachedJira['summary'])
 
 
 def main():
     args = parse_args()
     commitLog = open(args.commit_log, 'r').read()
-    parseJiras(commitLog)
+    mongoJira = MongoClient(mongoHost, mongoPort)[mongoDb].jiras
+    
+    parseJiras(commitLog, mongoJira)
     printRelNotes(args.cdh_release_version,
                   args.apache_base_version,
                   args.cdh_project_version,
