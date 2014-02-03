@@ -218,6 +218,11 @@ job {
         shell(JenkinsDslUtils.constructRepoUpdateStep(jenkinsJson['repo-category'],
                                                       jenkinsJson['c5-parcel'],
                                                       jenkinsJson.platforms))
+        shell("""#!/bin/bash
+rm /data/4/repos/cdh5-nightly/parcels/*.parcel
+rm /data/4/repos/cdh5-nightly/parcels/manifest.json
+rsync -av --link-dest=/data/4/repos/cdh5-nightly/parcels/latest/ /data/4/repos/cdh5-nightly/parcels/latest/* /data/4/repos/cdh5-nightly/parcels/
+""")
     }
 }
 
@@ -253,7 +258,9 @@ job {
         shell(JenkinsDslUtils.repoGenFullBuildStep(jenkinsJson['repo-category'], jenkinsJson['c5-parcel'],
                                                    jenkinsJson.platforms, jenkinsJson['base-repo']))
         shell(JenkinsDslUtils.updateStaticRepoFullBuildStep(jenkinsJson['repo-category']))
-
+        shell("""#!/bin/bash
+rsync -av --link-dest=/data/4/repos/cdh5-nightly/parcels/latest/ /data/4/repos/cdh5-nightly/parcels/latest/* /data/4/repos/cdh5-nightly/parcels/
+""")
         if (jenkinsJson['update-nightly']) {
             conditionalSteps {
                 condition { 
