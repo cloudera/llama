@@ -2,7 +2,8 @@
 def getApacheJiraList():
     return ["HADOOP","HDFS","MAPREDUCE", "ZOOKEEPER", "PIG", "HIVE",
             "OOZIE", "HBASE", "WHIRR", "SQOOP", "FLUME", "BIGTOP",
-            "HCATALOG", "HCAT", "CRUNCH"]
+            "HCATALOG", "HCAT", "CRUNCH", "SENTRY", "SOLR", "LUCENE",
+            "AVRO"]
 
 def getClouderaJiraList():
     return ["DISTRO","HUE"]
