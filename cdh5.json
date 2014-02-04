@@ -41,6 +41,6 @@
 
      "cdh-package": { "track-branch": "cdh5-0.6.0", "dir":
           "repos/cdh5/cdh-package", "remotes": ["origin"]},
-     "crunch": {"track-branch": "cdh5-0.8.0", "dir": "repos/cdh5/crunch", "remotes": ["origin"]}
+     "crunch": {"track-branch": "cdh5-0.9.0", "dir": "repos/cdh5/crunch", "remotes": ["origin"]}
     }
 }
