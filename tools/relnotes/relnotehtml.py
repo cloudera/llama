@@ -3,7 +3,7 @@
 #
 
 import cgi
-from utils import getJiraIssueURL
+from utils import getJiraIssueURL, getJiraMap
 
 def printHeader(cdhReleaseVersion, baseVersion, cdhProjectVersion, cdhProjectName):
     print """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
@@ -79,19 +79,9 @@ def printRelNotes(cdhReleaseVersion, baseVersion, cdhProjectVersion,
     jiraCount = 0
 
     printHeader(cdhReleaseVersion, baseVersion, cdhProjectVersion, cdhProjectName)
-    jiraCount += printProject(jiraDict, "DISTRO", "CDH")
-    jiraCount += printProject(jiraDict, "HADOOP", "Common")
-    jiraCount += printProject(jiraDict, "HDFS", "HDFS")
-    jiraCount += printProject(jiraDict, "MAPREDUCE", "MapReduce")
-    jiraCount += printProject(jiraDict, "ZOOKEEPER", "Zookeeper")
-    jiraCount += printProject(jiraDict, "PIG", "Pig")
-    jiraCount += printProject(jiraDict, "HBASE", "HBase")
-    jiraCount += printProject(jiraDict, "HIVE", "Hive")
-    jiraCount += printProject(jiraDict, "OOZIE", "Oozie")
-    jiraCount += printProject(jiraDict, "WHIRR", "Whirr")
-    jiraCount += printProject(jiraDict, "SQOOP", "Sqoop")
-    jiraCount += printProject(jiraDict, "FLUME", "Flume")
-    jiraCount += printProject(jiraDict, "HCATALOG", "HCatalog")
-    jiraCount += printProject(jiraDict, "CRUNCH", "Crunch")
+    jiraMap = getJiraMap()
+
+    for k in jiraMap:
+        jiraCount += printProject(jiraDict, k, jiraMap[k]) 
     
     printFooter(jiraCount)

@@ -1,12 +1,37 @@
 
+def getApacheJiraMap():
+    return {"HADOOP" : "Common",
+            "HDFS" : "HDFS",
+            "MAPREDUCE" : "MapReduce",
+            "ZOOKEEPER" : "ZooKeeper",
+            "PIG" : "Pig",
+            "HIVE" : "Hive",
+            "OOZIE" : "Oozie",
+            "HBASE" : "HBase",
+            "WHIRR" : "Whirr",
+            "SQOOP" : "Sqoop",
+            "FLUME" : "Flume",
+            "BIGTOP" : "Bigtop",
+            "HCATALOG" : "HCatalog",
+            "CRUNCH" : "Crunch",
+            "SENTRY" : "Sentry",
+            "SOLR" : "Solr",
+            "LUCENE" : "Lucene",
+            "AVRO" : "Avro",
+            "MAHOUT" : "Mahout",
+            "SPARK" : "Spark" }
+
 def getApacheJiraList():
-    return ["HADOOP","HDFS","MAPREDUCE", "ZOOKEEPER", "PIG", "HIVE",
-            "OOZIE", "HBASE", "WHIRR", "SQOOP", "FLUME", "BIGTOP",
-            "HCATALOG", "HCAT", "CRUNCH", "SENTRY", "SOLR", "LUCENE",
-            "AVRO", "MAHOUT", "SPARK"]
+    return getApacheJiraMap().keys()
+
+def getClouderaJiraMap():
+    return {"DISTRO" : "CDH", "HUE" : "Hue"}
 
 def getClouderaJiraList():
-    return ["DISTRO","HUE"]
+    return getClouderaJiraMap().keys()
+
+def getJiraMap():
+    return dict(getApacheJiraMap().items() + getApacheJiraMap().items())
 
 def getJiraList():
     return getApacheJiraList() + getClouderaJiraList()
