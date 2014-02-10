@@ -359,16 +359,16 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
       boolean doNotCache)
       throws LlamaException {
     List<PlacedReservation> list;
-    LlamaAM am;
+    SingleQueueAMInfo amInfo;
     synchronized (ams) {
-      am = ((doNotCache) ? ams.remove(queue) : ams.get(queue)).am;
+      amInfo = ((doNotCache) ? ams.remove(queue) : ams.get(queue));
     }
-    if (am != null) {
-      list = am.releaseReservationsForQueue(queue, doNotCache);
-      getSingleQueueAMInfo(queue, false, false).decrementReservations(
+    if (amInfo != null) {
+      list = amInfo.am.releaseReservationsForQueue(queue, doNotCache);
+      amInfo.decrementReservations(
           list.size());
       if (doNotCache) {
-        am.stop();
+        amInfo.am.stop();
       }
     } else {
       list = Collections.EMPTY_LIST;

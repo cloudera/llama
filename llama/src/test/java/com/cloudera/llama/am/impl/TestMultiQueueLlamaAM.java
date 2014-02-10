@@ -293,4 +293,45 @@ public class TestMultiQueueLlamaAM {
     Assert.assertTrue(am.ams.containsKey("root.someotherqueue"));
 
   }
+
+  @Test
+  public void testReleaseReservationsForQueue() throws Exception {
+    Configuration conf = new Configuration(false);
+    conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MyRMConnector.class,
+            RMConnector.class);
+    MultiQueueLlamaAM am = new MultiQueueLlamaAM(conf);
+    am.start();
+
+    UUID handle = UUID.randomUUID();
+    am.reserve(TestUtils.createReservation(handle, "root.q1", 1, true));
+
+    Assert.assertTrue(am.ams.containsKey("root.q1"));
+
+    // Release the queue without caching.
+    am.releaseReservationsForQueue("root.q1", true);
+    Assert.assertFalse(am.ams.containsKey("root.q1"));
+
+    // Try to release it again, the queue does not exist. without cache.
+    am.releaseReservationsForQueue("root.q1", true);
+
+    // Try to release it again, the queue does not exist. with cache.
+    am.releaseReservationsForQueue("root.q1", false);
+    Assert.assertFalse(am.ams.containsKey("root.q1"));
+
+    // Now create another reservation and try to release the queue by using cache,
+    am.reserve(TestUtils.createReservation(handle, "root.q2", 1, true));
+
+    Assert.assertTrue(am.ams.containsKey("root.q2"));
+
+    // Release the queue without caching.
+    am.releaseReservationsForQueue("root.q2", false);
+    Assert.assertTrue(am.ams.containsKey("root.q2"));
+
+    // Try to release it again, the queue does not exist. with cache.
+    am.releaseReservationsForQueue("root.q2", false);
+
+    // Try to release it again, the queue does not exist. without cache.
+    am.releaseReservationsForQueue("root.q2", true);
+    Assert.assertFalse(am.ams.containsKey("root.q2"));
+  }
 }
