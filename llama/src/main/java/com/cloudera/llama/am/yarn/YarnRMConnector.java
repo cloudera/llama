@@ -18,6 +18,7 @@
 package com.cloudera.llama.am.yarn;
 
 import com.cloudera.llama.am.api.LlamaAM;
+import com.cloudera.llama.util.Clock;
 import com.cloudera.llama.util.ErrorCode;
 import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.api.PlacedResource;
@@ -32,6 +33,7 @@ import com.codahale.metrics.MetricRegistry;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.yarn.api.protocolrecords.RegisterApplicationMasterResponse;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.ApplicationReport;
@@ -55,6 +57,7 @@ import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.client.api.YarnClientApplication;
 import org.apache.hadoop.yarn.client.api.async.AMRMClientAsync;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
+import org.apache.hadoop.yarn.security.AMRMTokenIdentifier;
 import org.apache.hadoop.yarn.util.Records;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -206,10 +209,21 @@ public class YarnRMConnector implements RMConnector, Configurable,
   @SuppressWarnings("unchecked")
   public void register(final String queue) throws LlamaException {
     try {
+      Token<AMRMTokenIdentifier> amRmToken = ugi.doAs(
+          new PrivilegedExceptionAction<Token<AMRMTokenIdentifier>>() {
+            @Override
+            public Token<AMRMTokenIdentifier> run() throws Exception {
+              return _initYarnApp(queue);
+            }
+          });
+      ugi.addToken(amRmToken);
+      // we need to use a new doAs block after adding the AMRM token because
+      // the UGI credentials are copied on doAs() invocation and changes won't
+      // be reflected.
       ugi.doAs(new PrivilegedExceptionAction<Void>() {
         @Override
         public Void run() throws Exception {
-          _initYarnApp(queue);
+          _registerSchedulerAndCreateNMClient(queue);
           return null;
         }
       });
@@ -248,15 +262,31 @@ public class YarnRMConnector implements RMConnector, Configurable,
     }
   }
   
-  private void _initYarnApp(String queue) throws Exception {
+  private Token<AMRMTokenIdentifier> _initYarnApp(String queue) throws Exception {
+    appId = _createApp(yarnClient, queue);
+    _monitorAppState(yarnClient, appId, ACCEPTED, false);
+    LOG.debug("Created Application, AM '{}' for '{}' queue", appId, queue);
+    Token<AMRMTokenIdentifier> token = yarnClient.getAMRMToken(appId);
+    int counter = 0;
+    while (token == null && counter < 10) {
+      Clock.sleep(200);
+      token = yarnClient.getAMRMToken(appId);
+      counter++;
+    }
+    if (token == null) {
+      throw new LlamaException(ErrorCode.AM_AMRM_TOKEN_CANNOT_BE_FETCHED, queue);
+    }
+    return token;
+  }
+
+  private void _registerSchedulerAndCreateNMClient(String queue) throws Exception {
     NMTokenCache nmTokenCache = new NMTokenCache();
     nmClient = NMClient.createNMClient();
     nmClient.setNMTokenCache(nmTokenCache);
     nmClient.init(yarnConf);
     nmClient.start();
-    appId = _createApp(yarnClient, queue);
-    _monitorAppState(yarnClient, appId, ACCEPTED, false);
-    ugi.addToken(yarnClient.getAMRMToken(appId));
+    LOG.debug("Started NMClient, AM '{}' with scheduler for '{}' queue", appId,
+        queue);
     int heartbeatInterval = getConf().getInt(HEARTBEAT_INTERVAL_KEY,
         HEARTBEAT_INTERNAL_DEFAULT);
     AMRMClient<LlamaContainerRequest> amRmClient = AMRMClient.createAMRMClient();
@@ -281,7 +311,7 @@ public class YarnRMConnector implements RMConnector, Configurable,
             nodeReport.getCapability().getMemory());
       }
     }
-    LOG.debug("Started AM '{}' for '{}' queue", appId, queue);
+    LOG.debug("Registered with scheduler, AM '{}' for '{}' queue", appId, queue);
   }
 
   private ApplicationId _createApp(YarnClient rmClient, String queue)
