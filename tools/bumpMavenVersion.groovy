@@ -4,6 +4,7 @@
 
 def opts = parseArgs(this.args)
 
+println "Replacing ${opts.'old-version'} with ${opts.'new-version'}"
 updateMakefileAndParentPom(opts.'root-dir', opts.'old-version', opts.'new-version')
 replaceCdhVersion(opts.'root-dir' + "/repos", opts.'old-version', opts.'new-version')
 replaceRootVersion(opts.'root-dir' + "/repos", opts.'old-version', opts.'new-version')
@@ -26,8 +27,14 @@ def parseArgs(cliArgs) {
 def updateMakefileAndParentPom(rootDir, oldVersion, newVersion) {
     File makeFile = new File(rootDir, "Makefile")
     String mfText = makeFile.text
-    mfText = mfText.replaceAll("CDH_VERSION_STRING ?= cdh${oldVersion}",
-            "CDH_VERSION_STRING ?= cdh${newVersion}")
+    mfText = mfText.replaceAll("cdh${oldVersion}",
+            "cdh${newVersion}")
+    // Just in case, also replace any non-SNAPSHOT occurences
+    if (oldVersion.contains("SNAPSHOT")) {
+        def snapLessOld = oldVersion.replaceAll("-SNAPSHOT", "")
+        def snapLessNew = newVersion.replaceAll("-SNAPSHOT", "")
+        mfText = mfText.replaceAll("cdh${snapLessOld}", "cdh${snapLessNew}")
+    }
     makeFile.write(mfText)
 
     File pom = new File(rootDir, "pom.xml")
@@ -42,14 +49,16 @@ def updateMakefileAndParentPom(rootDir, oldVersion, newVersion) {
 }
 
 def replaceRootVersion(rootDir, oldVersion, newVersion) {
-    def filesToUpdate = new AntBuilder().fileset(dir: rootDir,
-            includes: "**/*",
-            excludes: "**/.git,impala/**/*,hue/apps/jobsub/src/jobsubd,hue/data") {
-        and(contains(text:"cdh-root"),
-                filename(name:"**/*pom.xml*"))
-    }*.files
+    def filesToUpdate = new AntBuilder().fileScanner {
+        fileset(dir: rootDir,
+                includes: "**/*pom.xml*",
+                excludes: "**/.git,impala/**/*,**/hue/apps/jobsub/src/jobsubd,**/hue/data") {
+            contains(text:"cdh-root")
+        }
+    }
 
     filesToUpdate.each { File f ->
+        println "Replacing root version in ${f.canonicalPath}"
         String fileText = f.text
         fileText = fileText.replaceFirst("<version>${oldVersion}</version>", "<version>${newVersion}</version>")
         f.write(fileText)
@@ -57,13 +66,16 @@ def replaceRootVersion(rootDir, oldVersion, newVersion) {
 }
 
 def replaceCdhVersion(rootDir, oldVersion, newVersion) {
-    def filesToUpdate = new AntBuilder().fileset(dir: rootDir,
-            includes: "**/*",
-            excludes: "**/.git,impala/**/*,hue/apps/jobsub/src/jobsubd,hue/data") {
-        contains text:"cdh${oldVersion}"
-    }*.files
+    def filesToUpdate = new AntBuilder().fileScanner {
+        fileset(dir: rootDir,
+                includes: "**/*",
+                excludes: "**/.git,impala/**/*,**/hue/apps/jobsub/src/jobsubd,**/hue/data") {
+            contains text:"cdh${oldVersion}"
+        }
+    }
 
-    filesToUpdate.each { f ->
+    filesToUpdate.each { File f ->
+        println "Replacing CDH version in ${f.canonicalPath}"
         String fileText = f.text
         fileText = fileText.replaceAll("cdh${oldVersion}", "cdh${newVersion}")
         f.write(fileText)
