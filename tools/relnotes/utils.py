@@ -3,6 +3,7 @@ def getApacheJiraMap():
     return {"HADOOP" : "Common",
             "HDFS" : "HDFS",
             "MAPREDUCE" : "MapReduce",
+            "YARN": "YARN",
             "ZOOKEEPER" : "ZooKeeper",
             "PIG" : "Pig",
             "HIVE" : "Hive",
