@@ -283,7 +283,7 @@ $(1)-patch: $(1)-prep $$($(2)_TARGET_PATCH)
 $(1): $(1)-patch $$($(2)_TARGET_BUILD) $$($(2)_HOOK_POST_BUILD)
 
 # To do the Maven-only build target, we need to patch first.
-$(1)-maven: $(1)-patch $$($(2)_TARGET_BUILD) $$($(2)_HOOK_POST_BUILD)
+$(1)-maven: $(1)-patch $$($(2)_TARGET_MAVEN)
 
 # To make srpms, we need to build the package
 $(1)-srpm: $(1) $$($(2)_TARGET_SRPM)
