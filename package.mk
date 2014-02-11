@@ -69,6 +69,21 @@ $(BUILD_DIR)/%/.build:
 	  cp $($(PKG)_SOURCE_DIR)/build/$($(PKG)_NAME)-$($(PKG)_FULL_VERSION).tar.gz $($(PKG)_OUTPUT_DIR)
 	touch $@
 
+# Maven deploy (for version changes)
+$(BUILD_DIR)/%/.maven:
+	# Hack - use tarball dst here because we want to do the build for CM, but not for bigtop-utils.
+	cd $($(PKG)_SOURCE_DIR) ;\
+	[ -z "$($(PKG)_TARBALL_DST)" ] || /usr/bin/env \
+	  -u DISPLAY \
+	  JAVA5_HOME=$(JAVA5_HOME) \
+	  FORREST_HOME=$(FORREST_HOME) \
+	  THRIFT_HOME=$(THRIFT_HOME) \
+	  NODE_HOME=$(NODE_HOME) \
+	  MAVEN_ONLY=true \
+	  FULL_VERSION=$($(PKG)_FULL_VERSION) \
+	  $($(PKG)_PACKAGE_GIT_REPO)/common/$($(PKG)_NAME)/do-component-build
+	touch $@
+
 # Make source RPMs
 $(BUILD_DIR)/%/.srpm:
 	-rm -rf $(PKG_BUILD_DIR)/rpm/
@@ -253,6 +268,7 @@ $(2)_TARGET_RPM      = $$($(2)_BUILD_DIR)/.rpm
 $(2)_TARGET_SDEB     = $$($(2)_BUILD_DIR)/.sdeb
 $(2)_TARGET_DEB      = $$($(2)_BUILD_DIR)/.deb
 $(2)_TARGET_RELNOTES = $$($(2)_BUILD_DIR)/.relnotes
+$(2)_TARGET_MAVEN    = $$($(2)_BUILD_DIR)/.maven
 
 # We download target when the source is not in the download directory
 $(1)-download: $$($(2)_TARGET_DL)
@@ -265,6 +281,9 @@ $(1)-patch: $(1)-prep $$($(2)_TARGET_PATCH)
 
 # To build target, we need to patch it first
 $(1): $(1)-patch $$($(2)_TARGET_BUILD) $$($(2)_HOOK_POST_BUILD)
+
+# To do the Maven-only build target, we need to patch first.
+$(1)-maven: $(1)-patch $$($(2)_TARGET_BUILD) $$($(2)_HOOK_POST_BUILD)
 
 # To make srpms, we need to build the package
 $(1)-srpm: $(1) $$($(2)_TARGET_SRPM)
