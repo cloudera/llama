@@ -25,15 +25,18 @@
 # $8 CDH Packaging repository source directory
 # $9 Base project name
 # ${10} Packaging git range
+# ${11} Since-last-release range.
 set -ex
 function relnote_gen {
   local gen_dir=$1
   local commit_log=$gen_dir/$6-changes.log
   local commit_since_last_log=$gen_dir/$6-since-last-release-changes.log
   local package_commit_log=$gen_dir/$6-package-changes.log
+  local package_commit_since_last_log=$gen_dir/$6-package-since-last-release-changes.log
   local changes_file=$gen_dir/$6.CHANGES.txt
   local changes_since_last_file=$gen_dir/$6.since.last.release.CHANGES.txt
   local package_changes_file=$gen_dir/$6.package.CHANGES.txt
+  local package_changes_since_last_file=$gen_dir/$6.package.since.last.release.CHANGES.txt
   local relnote_file=$gen_dir/$6.releasenotes.html
   echo "pushd $2 >& /dev/null"
   if [ ! -d $gen_dir ]; then

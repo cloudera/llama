@@ -198,6 +198,7 @@ $(BUILD_DIR)/%/.relnotes:
 		"$($(PKG)_RELNOTES_NAME)" \
 		"$($(PKG)_PACKAGE_GIT_REPO)" \
 		"$($(PKG)_NAME)" \
+		"$(BIGTOP_UTILS_BASE_REF)..HEAD" \
 		"$(PREV_RELEASE_TAG)..HEAD"
 	touch $@
 
