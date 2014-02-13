@@ -59,6 +59,18 @@ public class ParamChecker {
     return i;
   }
 
+  public static long greaterEqualZero(long i, String paramName) {
+    return greaterThan(i, -1, paramName);
+  }
+
+  public static long greaterThan(long i, long base, String paramName) {
+    if (i <= base) {
+      throw new IllegalArgumentException(paramName + " must be greater than " +
+          base);
+    }
+    return i;
+  }
+
   public static void asserts(boolean b, String msg) {
     if (!b) {
       throw new IllegalArgumentException(msg);
