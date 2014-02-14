@@ -1,0 +1,33 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+<title>LLAMA 5b2 patch</title>
+</head>
+<body>
+
+<h2 id="llama5b2bugpatch">LLAMA 5b2 Bug Patch</h2>
+
+<p>The CDH 5 (beta 2) release of LLAMA is affected by a critical bug where the
+resource allocation could sometimes fail due to a race condition. Here is a
+patch.</p>
+
+<ol>
+    <li><p>Backup your existing LLAMA jar. Depending on whether you installed
+    via
+    packages or parcels, do:</p>
+
+    <pre>
+    $ sudo mv /usr/lib/llama/llama-1.0.0-cdh5.0.0-beta-2.jar{,.bak}
+    $ sudo mv /opt/cloudera/parcels/CDH/lib/llama/llama-1.0.0-cdh5.0.0-beta-2.jar{,.bak}</pre>
+    </li>
+
+    <li><p>Download the patched LLAMA jar <a
+        href="./llama-1.0.0-cdh5.0.0-beta-2.jar">llama-1.0.0-cdh5.0.0-beta-2.jar</a>
+    (SHA1 8ee78d273b3cefe843890041ba8112447c156d82) to the same
+    location.</p></li>
+    <li><p>Restart LLAMA and Impala.</p></li>
+</ol>
+</body>
+</html>
