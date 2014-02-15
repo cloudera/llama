@@ -67,4 +67,4 @@ function relnote_gen {
   deactivate
 }
 
-relnote_gen $1 $2 $3 "$4" $5 $6 "$7" $8 $9 "${10}"
+relnote_gen $1 $2 $3 "$4" $5 $6 "$7" $8 $9 "${10}" "${11}"
