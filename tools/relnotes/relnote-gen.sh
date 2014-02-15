@@ -46,17 +46,19 @@ function relnote_gen {
   git log --pretty=oneline --no-color $3 > $commit_log
   git log --pretty=medium --no-color $3 > $changes_file
 
-  local previous_release=$(echo ${10} | perl -pe 's/\.\.HEAD//')
+  local previous_release=$(echo ${11} | perl -pe 's/\.\.HEAD//')
   
   # Only do the since-last-release changes if the previous release is an ancestor of the current head
   if git rev-list HEAD | grep -q $(git rev-parse $previous_release); then 
-      git log --pretty=oneline --no-color ${10} > $commit_since_last_log
-      git log --pretty=medium --no-color ${10} > $changes_since_last_file
+      git log --pretty=oneline --no-color ${11} > $commit_since_last_log
+      git log --pretty=medium --no-color ${11} > $changes_since_last_file
   fi
   popd >& /dev/null
   pushd $8 >& /dev/null
   git ls-files | grep -E "(common|deb|rpm)/$9" | xargs git log --pretty=oneline --no-color ${10} > $package_commit_log
   git ls-files | grep -E "(common|deb|rpm)/$9" | xargs git log --pretty=medium --no-color ${10} > $package_changes_file
+  git ls-files | grep -E "(common|deb|rpm)/$9" | xargs git log --pretty=oneline --no-color ${11} > $package_commit_since_last_log
+  git ls-files | grep -E "(common|deb|rpm)/$9" | xargs git log --pretty=medium --no-color ${11} > $package_changes_since_last_file
   popd >& /dev/null
   virtualenv --clear $gen_dir/virtualenv
   . $gen_dir/virtualenv/bin/activate
