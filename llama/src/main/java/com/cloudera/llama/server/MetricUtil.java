@@ -113,9 +113,9 @@ public class MetricUtil {
       metricReg.timer(key).update(msTime, TimeUnit.MILLISECONDS);
       if (LOG.isInfoEnabled()) {
         if (logContext != null) {
-          LOG.info("key:{} - time:{}ms - {}", key, msTime, logContext);
+          LOG.info("key:{} - time: {}ms - {}", key, msTime, logContext);
         } else {
-          LOG.info("key:{} - time:{}ms", key, msTime);
+          LOG.info("key:{} - time: {}ms", key, msTime);
         }
       }
     }
