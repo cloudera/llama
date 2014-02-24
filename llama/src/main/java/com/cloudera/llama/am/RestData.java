@@ -30,6 +30,7 @@ import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.Version;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.SerializationConfig;
 import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.module.SimpleModule;
 import org.codehaus.jackson.map.ser.SerializerBase;
@@ -118,6 +119,7 @@ public class RestData implements LlamaAMListener,
     module.addSerializer(new PlacedReservationSerializer());
     module.addSerializer(new PlacedResourceSerializer());
     mapper.registerModule(module);
+    mapper.configure(SerializationConfig.Feature.FAIL_ON_EMPTY_BEANS, false);
     return mapper;
   }
 
