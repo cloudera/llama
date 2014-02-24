@@ -111,13 +111,6 @@ public class MetricUtil {
       Object logContext) {
     if (metricReg != null) {
       metricReg.timer(key).update(msTime, TimeUnit.MILLISECONDS);
-      if (LOG.isInfoEnabled()) {
-        if (logContext != null) {
-          LOG.info("key:{} - time: {}ms - {}", key, msTime, logContext);
-        } else {
-          LOG.info("key:{} - time: {}ms", key, msTime);
-        }
-      }
     }
   }
 
@@ -149,6 +142,5 @@ public class MetricUtil {
     public String toString() {
       return FastFormat.format(messagePattern, massageArgs(args));
     }
-
   }
 }
