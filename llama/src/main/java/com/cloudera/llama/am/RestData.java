@@ -499,7 +499,7 @@ public class RestData implements LlamaAMListener,
   }
 
   @SuppressWarnings("unchecked")
-  private void writeAsJson(String payloadType, Object obj, Writer out)
+  void writeAsJson(String payloadType, Object obj, Writer out)
       throws IOException, NotFoundException {
     if (obj != null) {
       Map map = new LinkedHashMap();

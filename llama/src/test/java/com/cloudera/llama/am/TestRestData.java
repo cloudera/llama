@@ -315,8 +315,19 @@ public class TestRestData {
     assertHandle(restData, handle1, false);
 
   }
-
+  public class EmptyBean {
+    public EmptyBean() {}
+  };
   @Test
+  public void testEmptyBean() throws Exception {
+    RestData restData = new RestData();
+    StringWriter writer = new StringWriter();
+    EmptyBean obj = new EmptyBean();
+    restData.writeAsJson("Test", obj, writer);
+    writer.close();
+    // Test passes if there is no exception thrown.
+  }
+    @Test
   public void testAll() throws Exception {
     RestData restData = new RestData();
     UUID id1 = UUID.randomUUID();
