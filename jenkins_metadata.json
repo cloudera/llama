@@ -1,7 +1,7 @@
 {
     "repo-category": "cdh5-nightly",
 
-    "release": "cdh5.0.0",
+    "release": "cdh5.1.0",
     "short-release": "cdh5",
     "cdh-branch": "cdh5",
     
