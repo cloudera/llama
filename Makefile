@@ -5,8 +5,8 @@ OUTPUT_DIR?=$(BASE_DIR)/output
 REPO_DIR  ?=$(BASE_DIR)/repos
 CONFIG    ?=$(BASE_DIR)/config.mk
 CDH       ?=cdh5
-CDH_VERSION_STRING ?= cdh5.0.0-SNAPSHOT
-CDH_REL_STRING ?= cdh5.0.0
+CDH_VERSION_STRING ?= cdh5.1.0-SNAPSHOT
+CDH_REL_STRING ?= cdh5.1.0
 # Only defined if we are doing a beta release. This will
 # show up in the release identifier
 #CDH_BETA_REL_STRING ?= cdh5b2
