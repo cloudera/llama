@@ -284,4 +284,9 @@ public class MockRMConnector
   @Override
   public void setMetricRegistry(MetricRegistry registry) {
   }
+
+  @Override
+  public boolean hasResources() {
+    return false;
+  }
 }

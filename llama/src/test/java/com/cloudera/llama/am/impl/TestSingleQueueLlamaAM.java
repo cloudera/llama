@@ -43,6 +43,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
 
 public class TestSingleQueueLlamaAM {
 
@@ -110,6 +111,11 @@ public class TestSingleQueueLlamaAM {
     @Override
     public void setMetricRegistry(MetricRegistry registry) {
     }
+
+    @Override
+    public boolean hasResources() {
+      return false;
+    }
   }
 
   public static class DummyLlamaAMListener implements LlamaAMListener {
@@ -139,24 +145,29 @@ public class TestSingleQueueLlamaAM {
         RMConnector.class);
     conf.setBoolean(LlamaAM.NORMALIZING_ENABLED_KEY, false);
     conf.setBoolean(LlamaAM.CACHING_ENABLED_KEY, false);
-    SingleQueueLlamaAM am = new SingleQueueLlamaAM(conf, "queue");
+    SingleQueueLlamaAM am = new SingleQueueLlamaAM(conf, "queue",
+        Executors.newScheduledThreadPool(4));
     am.setCallback(new DummySingleQueueLlamaAMCallback());
     return am;
   }
 
+  private MyRMConnector getMyRmConnector(SingleQueueLlamaAM llama) {
+    return ((MyRMConnector)
+        ((PhasingOutRMConnector)llama.getRMConnector()).getConnector());
+  }
   @Test
   public void testRmStartStop() throws Exception {
     SingleQueueLlamaAM llama = createLlamaAM();
     try {
       Assert.assertFalse(llama.isRunning());
       llama.start();
-      Assert.assertTrue(((MyRMConnector) llama.getRMConnector()).start);
+      Assert.assertTrue(getMyRmConnector(llama).start);
       Assert.assertTrue(llama.isRunning());
-      Assert.assertFalse(((MyRMConnector) llama.getRMConnector()).stop);
+      Assert.assertFalse(getMyRmConnector(llama).stop);
     } finally {
       llama.stop();
       Assert.assertFalse(llama.isRunning());
-      Assert.assertTrue(((MyRMConnector) llama.getRMConnector()).stop);
+      Assert.assertTrue(getMyRmConnector(llama).stop);
       llama.stop();
     }
   }
@@ -216,8 +227,8 @@ public class TestSingleQueueLlamaAM {
       llama.start();
       UUID reservationId = llama.reserve(RESERVATION1_NONGANG);
 
-      Assert.assertTrue(((MyRMConnector) llama.getRMConnector()).reserve);
-      Assert.assertFalse(((MyRMConnector) llama.getRMConnector()).release);
+      Assert.assertTrue(getMyRmConnector(llama).reserve);
+      Assert.assertFalse(getMyRmConnector(llama).release);
 
       PlacedReservation placedReservation = llama.getReservation(reservationId);
       Assert.assertNotNull(placedReservation);
@@ -247,8 +258,8 @@ public class TestSingleQueueLlamaAM {
       UUID reservationId = llama.reserve(RESERVATION1_NONGANG);
       Assert.assertNotNull(llama.releaseReservation(
           RESERVATION1_NONGANG.getHandle(), reservationId, true));
-      Assert.assertTrue(((MyRMConnector) llama.getRMConnector()).release);
-      Assert.assertTrue(((MyRMConnector) llama.getRMConnector()).doNotCache);
+      Assert.assertTrue(getMyRmConnector(llama).release);
+      Assert.assertTrue(getMyRmConnector(llama).doNotCache);
       Assert.assertNull(llama._getReservation(reservationId));
     } finally {
       llama.stop();
@@ -281,7 +292,7 @@ public class TestSingleQueueLlamaAM {
           return null;
         }
       });
-      Assert.assertTrue(((MyRMConnector) llama.getRMConnector()).release);
+      Assert.assertTrue(getMyRmConnector(llama).release);
       Assert.assertNull(llama._getReservation(reservationId));
     } finally {
       llama.stop();

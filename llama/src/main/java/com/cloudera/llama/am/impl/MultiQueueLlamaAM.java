@@ -43,6 +43,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -74,6 +76,7 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
 
   // Maps queue name to AM info. Visible for testing.
   final Map<String, SingleQueueAMInfo> ams;
+  private final ScheduledExecutorService stp;
   private SingleQueueLlamaAM llamaAMForGetNodes;
   private final Map<UUID, String> reservationToQueue;
   private volatile boolean running;
@@ -95,6 +98,8 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
           "RMConnector class not defined in the configuration under '{}'",
           SingleQueueLlamaAM.RM_CONNECTOR_CLASS_KEY));
     }
+    //TODO: Make this a configuration parameter?
+    stp = Executors.newScheduledThreadPool(4);
   }
 
   @Override
@@ -143,7 +148,7 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
     synchronized (ams) {
       amInfo = ams.get(queue);
       if (amInfo == null && create) {
-        SingleQueueLlamaAM qAm = new SingleQueueLlamaAM(getConf(), queue);
+        SingleQueueLlamaAM qAm = new SingleQueueLlamaAM(getConf(), queue, stp);
         boolean throttling = getConf().getBoolean(
             THROTTLING_ENABLED_KEY,
             THROTTLING_ENABLED_DEFAULT);
@@ -187,7 +192,7 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
         throw ex;
       }
     }
-    llamaAMForGetNodes = new SingleQueueLlamaAM(getConf(), null);
+    llamaAMForGetNodes = new SingleQueueLlamaAM(getConf(), null, stp);
     llamaAMForGetNodes.start();
 
     running = true;

@@ -77,6 +77,11 @@ public class NormalizerRMConnector implements RMConnector, RMListener {
   }
 
   @Override
+  public boolean hasResources() {
+    return connector.hasResources();
+  }
+
+  @Override
   public void setRMListener(RMListener listener) {
     this.listener = listener;
   }

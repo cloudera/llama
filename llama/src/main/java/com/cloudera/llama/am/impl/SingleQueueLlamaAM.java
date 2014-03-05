@@ -43,6 +43,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * The <code>SingleQueueLlamaAM</code> handles the core logic to do gang
@@ -79,6 +80,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
   private final String queue;
   private final Map<UUID, PlacedReservationImpl> reservationsMap;
   private final Map<UUID, PlacedResourceImpl> resourcesMap;
+  private final ScheduledExecutorService stp;
   private IntraLlamaAMsCallback callback;
   private String reservationsAllocationTimerKey;
   private String resourcesAllocationTimerKey;
@@ -87,27 +89,26 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
 
   public static Class<? extends RMConnector> getRMConnectorClass(
       Configuration conf) {
-    return conf.getClass(RM_CONNECTOR_CLASS_KEY, YarnRMConnector.class,
+    return conf.getClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, YarnRMConnector.class,
         RMConnector.class);
   }
 
-  public SingleQueueLlamaAM(Configuration conf, String queue) {
+  public SingleQueueLlamaAM(Configuration conf, String queue,
+                            ScheduledExecutorService stp) {
     super(conf);
     this.queue = queue;
     reservationsMap = new HashMap<UUID, PlacedReservationImpl>();
     resourcesMap = new HashMap<UUID, PlacedResourceImpl>();
+    this.stp = stp;
   }
 
   public void setCallback(IntraLlamaAMsCallback callback) {
     this.callback = callback;
   }
 
-  // LlamaAM API
-
-  @Override
-  public void start() throws LlamaException {
+  private  RMConnector createRMConnector() {
     Class<? extends RMConnector> klass = getRMConnectorClass(getConf());
-    rmConnector = ReflectionUtils.newInstance(klass, getConf());
+    RMConnector connector = ReflectionUtils.newInstance(klass, getConf());
 
     // queue is null only for the AM used to report getNodes(),
     // we don't need caching for it TODO and no normalization either when done
@@ -124,18 +125,31 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
           caching);
       if (caching && normalizing) {
         CacheRMConnector connectorCache =
-            new CacheRMConnector(getConf(), rmConnector);
-        rmConnector = connectorCache;
+            new CacheRMConnector(getConf(), connector);
+        connector = connectorCache;
       } else if (caching) {
         LOG.warn("Caching not allowed without normalization. To enable caching," +
             "set '{}' to true.", LlamaAM.NORMALIZING_ENABLED_KEY);
       }
       if (normalizing) {
         NormalizerRMConnector normalizer =
-            new NormalizerRMConnector(getConf(), rmConnector);
-        rmConnector = normalizer;
+            new NormalizerRMConnector(getConf(), connector);
+        connector = normalizer;
       }
     }
+    return connector;
+  }
+  // LlamaAM API
+
+  @Override
+  public void start() throws LlamaException {
+    rmConnector = new PhasingOutRMConnector(getConf(), stp,
+        new PhasingOutRMConnector.RmConnectorCreator() {
+          @Override
+          public RMConnector create() {
+            return createRMConnector();
+          }
+        });
     rmConnector.setMetricRegistry(getMetricRegistry());
     rmConnector.setRMListener(this);
     rmConnector.start();

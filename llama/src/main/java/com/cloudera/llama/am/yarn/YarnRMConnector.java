@@ -121,6 +121,7 @@ public class YarnRMConnector implements RMConnector, Configurable,
   public static final String ADVERTISED_TRACKING_URL_KEY = PREFIX_KEY +
       "advertised.tracking.url";
 
+  private static final String YARN_RM_CONNECTOR_KEY = "yarn-rm-connector";
 
   private static final int SLEEP_TIME_SEC = 315360000; //10 years
 
@@ -145,6 +146,11 @@ public class YarnRMConnector implements RMConnector, Configurable,
 
   @Override
   public void setMetricRegistry(MetricRegistry metricRegistry) {
+  }
+
+  @Override
+  public boolean hasResources() {
+    return this.containerToResourceMap.size() != 0;
   }
 
   @Override
@@ -527,6 +533,8 @@ public class YarnRMConnector implements RMConnector, Configurable,
       LlamaContainerRequest request = new LlamaContainerRequest(resource);
       amRmClientAsync.addContainerRequest(request);
       resource.getRmData().put("request", request);
+
+      resource.getRmData().put(YARN_RM_CONNECTOR_KEY, this);
     }
   }
 
@@ -553,6 +561,12 @@ public class YarnRMConnector implements RMConnector, Configurable,
   private void _release(Collection<RMResource> resources)
       throws LlamaException {
     for (RMResource resource : resources) {
+      YarnRMConnector connector =
+          (YarnRMConnector) resource.getRmData().get(YARN_RM_CONNECTOR_KEY);
+      if (connector == null || !connector.equals(this)) {
+        continue; // Not allocated by this connector.
+      }
+
       boolean released = false;
       LlamaContainerRequest request = (LlamaContainerRequest)
           resource.getRmData().get("request");

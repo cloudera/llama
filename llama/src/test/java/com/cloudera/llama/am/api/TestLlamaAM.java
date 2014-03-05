@@ -86,6 +86,11 @@ public class TestLlamaAM {
     @Override
     public void setMetricRegistry(MetricRegistry registry) {
     }
+
+    @Override
+    public boolean hasResources() {
+      return false;
+    }
   }
 
   private void testCreate(Configuration conf) throws Exception {

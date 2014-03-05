@@ -59,6 +59,11 @@ public abstract class LlamaAM {
   public static final String RM_CONNECTOR_CLASS_KEY = PREFIX_KEY +
       "rm.connector.class";
 
+  public static final String RM_CONNECTOR_RECYCLE_INTERVAL_KEY =
+      PREFIX_KEY + "rm.connector.recycle.interval.mins";
+  public static final int RM_CONNECTOR_RECYCLE_INTERVAL_DEFAULT =
+      3*24*60; // 3 days
+
   public static final String CORE_QUEUES_KEY = PREFIX_KEY +
       "core.queues";
 

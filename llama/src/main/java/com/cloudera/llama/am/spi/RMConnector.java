@@ -148,4 +148,12 @@ public interface RMConnector {
   public void emptyCache() throws LlamaException;
 
   public void setMetricRegistry(MetricRegistry registry);
+
+  /**
+   * Checks if the connector still has pending resources which are yet
+   * to be released.
+   * @return <code>TRUE</code>, if there are resources reserved,
+   * <code>FALSE</code> otherwise.
+   */
+  public boolean hasResources();
 }

@@ -233,6 +233,18 @@
     </description>
   </property>
   <property>
+    <name>llama.am.rm.connector.recycle.interval.mins</name>
+    <value>4320</value>
+    <description>
+        Yarn AM-RM protocol does not have a way of renewing long lasting tokens.
+        So, Llama recycyles the yarn connectors half way through the token
+        expiry to avoid any failures due to invalid tokens. By default this is
+        set to 3 days. This should be set to about half the time of the
+        yarn.resourcemanager.delegation.token.max-lifetime property in
+        yarn-site.xml.
+    </description>
+  </property>
+  <property>
     <name>llama.am.core.queues</name>
     <value></value>
     <description>
