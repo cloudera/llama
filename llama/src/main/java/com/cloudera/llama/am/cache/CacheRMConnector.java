@@ -106,6 +106,11 @@ public class CacheRMConnector implements RMConnector,
   }
 
   @Override
+  public boolean hasResources() {
+    return connector.hasResources();
+  }
+
+  @Override
   public void setRMListener(RMListener listener) {
     this.callback = listener;
   }
