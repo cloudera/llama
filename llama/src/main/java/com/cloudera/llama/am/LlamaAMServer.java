@@ -153,6 +153,14 @@ public class LlamaAMServer extends
 
       // For mapping reservations to queues and checking queue ACLs
       YarnConfiguration yarnConf = new YarnConfiguration();
+
+      // Check the token renew interval and set the default here so that we can
+      // renew the RMConnectors properly.
+      long renewInterval = yarnConf.getLong(YarnConfiguration
+          .DELEGATION_TOKEN_MAX_LIFETIME_KEY,
+          YarnConfiguration.DELEGATION_TOKEN_RENEW_INTERVAL_DEFAULT);
+      LlamaAM.RM_CONNECTOR_RECYCLE_INTERVAL_DEFAULT = renewInterval * 3 / 4;
+
       allocConf = new AtomicReference<AllocationConfiguration>();
       allocsLoader = new AllocationFileLoaderService();
       allocsLoader.init(yarnConf);

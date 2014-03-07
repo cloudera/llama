@@ -114,12 +114,13 @@ public class TestPhasingOutRMConnector extends TestCase {
     rmConnector.run();
 
     connectors = rmConnector.getConnectors();
+    Assert.assertEquals(connectors.length, 1);
     Assert.assertTrue(!connectors[0].equals(activeMockRMConnector));
-    Assert.assertTrue(connectors[1].equals(activeMockRMConnector));
     Assert.assertTrue(!connectors[0].equals(phasedOutMockRMConnector));
-    Assert.assertTrue(!connectors[1].equals(phasedOutMockRMConnector));
 
     // are two new connectors and the old one should have been stopped.
+    Assert.assertEquals("stop", activeMockRMConnector.
+        invoked.get(activeMockRMConnector.invoked.size()-1));
     Assert.assertEquals("stop", phasedOutMockRMConnector.
         invoked.get(phasedOutMockRMConnector.invoked.size()-1));
   }
