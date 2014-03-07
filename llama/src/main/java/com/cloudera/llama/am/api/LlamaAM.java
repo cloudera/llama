@@ -61,8 +61,10 @@ public abstract class LlamaAM {
 
   public static final String RM_CONNECTOR_RECYCLE_INTERVAL_KEY =
       PREFIX_KEY + "rm.connector.recycle.interval.mins";
-  public static final int RM_CONNECTOR_RECYCLE_INTERVAL_DEFAULT =
-      3*24*60; // 3 days
+  /** Default recycle interval level for rm connectors. This is overridden
+   * by yarn configuration whenever present. */
+  public static long RM_CONNECTOR_RECYCLE_INTERVAL_DEFAULT =
+      20*60; // 20 hours.
 
   public static final String CORE_QUEUES_KEY = PREFIX_KEY +
       "core.queues";

@@ -28,6 +28,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
@@ -182,18 +183,24 @@ public class PhasingOutRMConnector implements RMConnector, Runnable {
     newConnector.setRMListener(listener);
     newConnector.setMetricRegistry(metricRegistry);
 
-    RMConnector old;
+    List<RMConnector> oldConnectors = new ArrayList<RMConnector>();
     synchronized (this) {
-      old = previous;
+      oldConnectors.add(previous);
+      if (!active.hasResources()) {
+        oldConnectors.add(active);
+        active = null;
+      }
       previous = active;
       active = newConnector;
     }
-    if (old != null) {
-      if (old.hasResources()) {
-        LOG.warn("The previous RMConnector for queue still has resources which " +
-            "were not released yet.");
+    for(RMConnector old : oldConnectors) {
+      if (old != null) {
+        if (old.hasResources()) {
+          LOG.warn("The previous RMConnector for queue still has resources which " +
+              "were not released yet.");
+        }
+        old.stop();
       }
-      old.stop();
     }
   }
 }
