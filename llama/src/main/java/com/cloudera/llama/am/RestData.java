@@ -478,7 +478,7 @@ public class RestData implements LlamaAMListener,
       jgen.writeObjectField("handle", value.getHandle());
       jgen.writeStringField("queue", value.getQueue());
       jgen.writeObjectField("reservationId", value.getReservationId());
-      jgen.writeObjectField("rmResourceId", value.getRmResourceId());
+      jgen.writeObjectField("rmResourceId", value.getRmResourceId().toString());
       jgen.writeStringField("actualLocation", value.getLocation());
       jgen.writeNumberField("actualCpuVCores", value.getCpuVCores());
       jgen.writeNumberField("actualMemoryMb", value.getMemoryMbs());
