@@ -18,6 +18,7 @@
 package com.cloudera.llama.am.impl;
 
 import com.cloudera.llama.am.api.LlamaAM;
+import com.cloudera.llama.am.api.Resource;
 import com.cloudera.llama.am.cache.CacheRMConnector;
 import com.cloudera.llama.util.ErrorCode;
 import com.cloudera.llama.util.LlamaException;
@@ -490,7 +491,22 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
     } else {
       switch (reservation.getStatus()) {
         case ALLOCATED:
-          event.addResource(resource);
+          // Check if there are any existing resources, which are not lost.
+          boolean allResourcesLost = true;
+          for (PlacedResource r : reservation.getPlacedResources()) {
+            if (r.getStatus() != PlacedResource.Status.LOST) {
+              allResourcesLost = false;
+              break;
+            }
+          }
+          if (allResourcesLost) {
+            reservation = _deleteReservation(reservationId,
+                PlacedReservation.Status.LOST);
+            toRelease = reservation.getPlacedResourceImpls();
+            event.addReservation(reservation);
+          } else {
+            event.addResource(resource);
+          }
           break;
         case PARTIAL:
           if (reservation.isGang()) {

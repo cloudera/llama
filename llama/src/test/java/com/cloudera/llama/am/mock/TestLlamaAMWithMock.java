@@ -90,7 +90,8 @@ public class TestLlamaAMWithMock {
           UUID.randomUUID(), "u", "q1", a4, true)));
       Thread.sleep(100);
       //for gang reservations, ALLOCATED to PREEMPTED/LOST don't finish reservation
-      Assert.assertEquals(8,
+      // and there is an extra even for lost reservation.
+      Assert.assertEquals(9,
           TestUtils.getReservations(listener.events, null, true).size());
       Set<UUID> allocated = new HashSet<UUID>();
       allocated.add(pr1.getPlacedResources().get(0).getResourceId());
@@ -188,10 +189,13 @@ public class TestLlamaAMWithMock {
       llama.start();
       llama.addListener(listener);
       while (!hasAllStatus(listener.events)) {
-        Resource a1 = TestUtils.createResource("h0",
-            Resource.Locality.DONT_CARE, 1, 1);
+        List<Resource> resources = new ArrayList<Resource>();
+        resources.add(TestUtils.createResource("h0",
+            Resource.Locality.DONT_CARE, 1, 1));
+        resources.add(TestUtils.createResource("h1",
+            Resource.Locality.DONT_CARE, 1, 1));
         llama.reserve(TestUtils.createReservation(UUID.randomUUID(), "u", "q1",
-            a1, false));
+            resources, false));
       }
     } finally {
       llama.stop();
