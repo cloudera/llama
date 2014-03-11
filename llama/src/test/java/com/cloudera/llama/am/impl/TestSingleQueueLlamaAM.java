@@ -864,16 +864,15 @@ public class TestSingleQueueLlamaAM {
       List<PlacedResource> resources = TestUtils.getResources(listener.events.get(0),
           PlacedResource.Status.LOST);
       List<PlacedReservation> reservations = TestUtils.getReservations(
-          listener.events.get(0), PlacedReservation.Status.PREEMPTED);
-      Assert.assertEquals(1, resources.size());
-      Assert.assertEquals(0, reservations.size());
+          listener.events.get(0), PlacedReservation.Status.LOST);
+      Assert.assertEquals(0, resources.size());
+      Assert.assertEquals(1, reservations.size());
       reservations = TestUtils.getReservations(
           listener.events.get(0), PlacedReservation.Status.REJECTED);
       Assert.assertEquals(0, reservations.size());
       PlacedReservation reservation = llama.getReservation(reservationId);
-      Assert.assertNotNull(reservation);
-      Assert.assertEquals(PlacedReservation.Status.ALLOCATED,
-          reservation.getStatus());
+      // The reservation is removed if all the resources are lost.
+      Assert.assertNull(reservation);
     } finally {
       llama.stop();
     }
@@ -902,16 +901,15 @@ public class TestSingleQueueLlamaAM {
       List<PlacedResource> resources = TestUtils.getResources(listener.events.get(0),
           PlacedResource.Status.LOST);
       List<PlacedReservation> reservations = TestUtils.getReservations(
-          listener.events.get(0), PlacedReservation.Status.PREEMPTED);
-      Assert.assertEquals(1, resources.size());
-      Assert.assertEquals(0, reservations.size());
+          listener.events.get(0), PlacedReservation.Status.LOST);
+      Assert.assertEquals(0, resources.size());
+      // The reservation is lost if all the resources are lost.
+      Assert.assertEquals(1, reservations.size());
       reservations = TestUtils.getReservations(
           listener.events.get(0), PlacedReservation.Status.REJECTED);
       Assert.assertEquals(0, reservations.size());
       PlacedReservation reservation = llama.getReservation(reservationId);
-      Assert.assertNotNull(reservation);
-      Assert.assertEquals(PlacedReservation.Status.ALLOCATED,
-          reservation.getStatus());
+      Assert.assertNull(reservation);
     } finally {
       llama.stop();
     }
@@ -987,6 +985,32 @@ public class TestSingleQueueLlamaAM {
       UUID reservationId3 = llama.reserve(TestUtils.createReservation(cId2, "u",
           "queue", Arrays.asList(RESOURCE3), true));
       llama.loseAllReservations();
+      Assert.assertNull(llama._getReservation(reservationId1));
+      Assert.assertNull(llama._getReservation(reservationId2));
+      Assert.assertNull(llama._getReservation(reservationId3));
+      Assert.assertEquals(3, TestUtils.getReservations(listener.events,
+          PlacedReservation.Status.LOST, false).size());
+    } finally {
+      llama.stop();
+    }
+  }
+
+  @Test
+  public void testStoppedByRm() throws Exception {
+    SingleQueueLlamaAM llama = createLlamaAM();
+    DummyLlamaAMListener listener = new DummyLlamaAMListener();
+    try {
+      llama.start();
+      llama.addListener(listener);
+      UUID cId1 = UUID.randomUUID();
+      UUID cId2 = UUID.randomUUID();
+      UUID reservationId1 = llama.reserve(TestUtils.createReservation(cId1, "u",
+          "queue", Arrays.asList(RESOURCE1), true));
+      UUID reservationId2 = llama.reserve(TestUtils.createReservation(cId1, "u",
+          "queue", Arrays.asList(RESOURCE2), true));
+      UUID reservationId3 = llama.reserve(TestUtils.createReservation(cId2, "u",
+          "queue", Arrays.asList(RESOURCE3), true));
+      llama.stoppedByRM();
       Assert.assertNull(llama._getReservation(reservationId1));
       Assert.assertNull(llama._getReservation(reservationId2));
       Assert.assertNull(llama._getReservation(reservationId3));
