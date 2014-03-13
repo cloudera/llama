@@ -100,10 +100,15 @@ public class TestLlamaAMWithMock {
       Set<UUID> rejected = new HashSet<UUID>();
       rejected.add(pr2.getPlacedResources().get(0).getResourceId());
       Set<UUID> lost = new HashSet<UUID>();
-      lost.add(pr4.getPlacedResources().get(0).getResourceId());
+      lost.add(pr4.getReservationId());
       Set<UUID> preempted = new HashSet<UUID>();
       preempted.add(pr3.getPlacedResources().get(0).getResourceId());
       for (LlamaAMEvent event : listener.events) {
+        for (PlacedReservation r : event.getReservationChanges()) {
+          if (r.getStatus() == PlacedReservation.Status.LOST) {
+            lost.remove(r.getReservationId());
+          }
+        }
         for (PlacedResource r : event.getResourceChanges()) {
           if (r.getStatus() == PlacedResource.Status.ALLOCATED) {
             allocated.remove(r.getResourceId());
