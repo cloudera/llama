@@ -21,8 +21,11 @@ import com.cloudera.llama.am.api.Expansion;
 import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.LlamaAMEvent;
 import com.cloudera.llama.am.api.PlacedReservation;
+import com.cloudera.llama.am.api.PlacedResource;
 import com.cloudera.llama.am.api.Reservation;
 import com.cloudera.llama.am.api.TestUtils;
+import com.cloudera.llama.am.spi.RMConnector;
+import com.cloudera.llama.am.spi.RMEvent;
 import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.util.UUID;
 import com.codahale.metrics.MetricRegistry;
@@ -32,6 +35,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import java.util.Arrays;
+import java.util.concurrent.Executors;
 
 public class TestExpansionReservationsLlamaAM {
 
@@ -43,16 +47,20 @@ public class TestExpansionReservationsLlamaAM {
     ExpansionReservationsLlamaAM eAm = new ExpansionReservationsLlamaAM(am);
     try {
       UUID r1 = UUID.randomUUID();
+
+      UUID handle1 = UUID.randomUUID();
       UUID e1 = UUID.randomUUID();
+
+      UUID handle2 = UUID.randomUUID();
       UUID e2 = UUID.randomUUID();
 
       Assert.assertNull(eAm.getExpansions(null));
       Assert.assertNull(eAm.getExpansions(r1));
 
-      eAm.add(r1, e1);
+      eAm.add(r1, e1, handle1);
       Assert.assertEquals(Arrays.asList(e1), eAm.getExpansions(r1));
 
-      eAm.add(r1, e2);
+      eAm.add(r1, e2, handle2);
       Assert.assertEquals(Arrays.asList(e1, e2), eAm.getExpansions(r1));
 
       eAm.removeExpansion(r1, e1);
@@ -61,7 +69,7 @@ public class TestExpansionReservationsLlamaAM {
       eAm.removeExpansionsOf(r1);
       Assert.assertNull(eAm.getExpansions(r1));
 
-      eAm.add(r1, e1);
+      eAm.add(r1, e1, handle1);
       eAm.removeExpansion(r1, e1);
       Assert.assertNull(eAm.getExpansions(r1));
 
@@ -259,9 +267,68 @@ public class TestExpansionReservationsLlamaAM {
 
       eAm.releaseReservation(pr.getHandle(), pr.getReservationId(), false);
 
-      Mockito.verify(am).releaseReservation(Mockito.eq(LlamaAM.WILDCARD_HANDLE),
+      Mockito.verify(am).releaseReservation(Mockito.eq(e.getHandle()),
           Mockito.eq(eId), Mockito.eq(false));
 
+      Assert.assertNull(eAm.getExpansions(pr.getReservationId()));
+
+    } finally {
+      eAm.stop();
+    }
+  }
+
+  public static class DummySingleQueueLlamaAMCallback implements
+      IntraLlamaAMsCallback {
+
+    @Override
+    public void discardReservation(UUID reservationId) {
+    }
+
+    @Override
+    public void discardAM(String queue) {
+    }
+  }
+
+  @Test
+  public void testReleaseReservationWithExpansionMultipleClients() throws Exception {
+    Configuration conf = new Configuration(false);
+    conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, RecordingMockRMConnector.class,
+        RMConnector.class);
+    conf.setBoolean(LlamaAM.NORMALIZING_ENABLED_KEY, false);
+    conf.setBoolean(LlamaAM.CACHING_ENABLED_KEY, false);
+    SingleQueueLlamaAM am = new SingleQueueLlamaAM(conf, "queue",
+        Executors.newScheduledThreadPool(4));
+    am.setCallback(new DummySingleQueueLlamaAMCallback());
+
+    ExpansionReservationsLlamaAM eAm = new ExpansionReservationsLlamaAM(am);
+    try {
+      eAm.start();
+      Reservation r = TestUtils.createReservation(true);
+      PlacedReservation pr = TestUtils.createPlacedReservation(r,
+          PlacedReservation.Status.ALLOCATED);
+
+      eAm.reserve(pr.getReservationId(), r);
+
+      UUID resource1Id = pr.getPlacedResources().get(0).getResourceId();
+      RMEvent change = RMEvent.createStatusChangeEvent
+          (resource1Id, PlacedResource.Status.ALLOCATED);
+      am.onEvent(Arrays.asList(change));
+
+      Expansion e1 = TestUtils.createExpansion(pr);
+      UUID eId1 = eAm.expand(e1);
+      Assert.assertNotNull(eId1);
+
+      Assert.assertEquals(Arrays.asList(eId1),
+          eAm.getExpansions(pr.getReservationId()));
+
+      Expansion e2 = TestUtils.createExpansion(pr);
+      UUID eId2 = eAm.expand(e2);
+      Assert.assertNotNull(eId2);
+
+      Assert.assertEquals(Arrays.asList(eId1, eId2),
+          eAm.getExpansions(pr.getReservationId()));
+
+      eAm.releaseReservation(pr.getHandle(), pr.getReservationId(), false);
       Assert.assertNull(eAm.getExpansions(pr.getReservationId()));
 
     } finally {
@@ -298,7 +365,7 @@ public class TestExpansionReservationsLlamaAM {
       Mockito.verify(am).releaseReservationsForHandle(Mockito.eq(pr.getHandle()),
           Mockito.eq(false));
 
-      Mockito.verify(am).releaseReservation(Mockito.eq(LlamaAM.WILDCARD_HANDLE),
+      Mockito.verify(am).releaseReservation(Mockito.eq(e.getHandle()),
           Mockito.eq(eId), Mockito.eq(false));
 
       Assert.assertNull(eAm.getExpansions(pr.getReservationId()));
@@ -370,7 +437,7 @@ public class TestExpansionReservationsLlamaAM {
 
       eAm.onEvent(event);
 
-      Mockito.verify(am).releaseReservation(Mockito.eq(LlamaAM.WILDCARD_HANDLE),
+      Mockito.verify(am).releaseReservation(Mockito.eq(e.getHandle()),
           Mockito.eq(eId), Mockito.eq(false));
 
       Assert.assertNull(eAm.getExpansions(pr.getReservationId()));
