@@ -372,7 +372,7 @@ public class LlamaClient {
     TTransport transport = new TSocket(host, port);
     if (secure) {
       Map<String, String> saslProperties = new HashMap<String, String>();
-      saslProperties.put(Sasl.QOP, "auth-conf");
+      saslProperties.put(Sasl.QOP, "auth-conf,auth-int,auth");
       transport = new TSaslClientTransport("GSSAPI", null, "llama", host,
           saslProperties, null, transport);
     }
