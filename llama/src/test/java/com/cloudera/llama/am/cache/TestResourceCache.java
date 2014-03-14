@@ -111,9 +111,9 @@ public class TestResourceCache {
       manualClock.increment(LlamaAM.EVICTION_IDLE_TIMEOUT_DEFAULT + 1);
       Thread.sleep(100); //to ensure eviction thread runs
       Resource r1 = TestUtils.createResource("l1",
-          Resource.Locality.MUST, 1, 1024);
+          Resource.Locality.MUST, 0, 1024);
       PlacedResourceImpl pr1 = TestUtils.createPlacedResourceImpl(r1);
-      pr1.setAllocationInfo("l1", 1, 1024);
+      pr1.setAllocationInfo("l1", 0, 1024);
       pr1.setRmResourceId("rm1");
       cache.add(Entry.createCacheEntry(pr1));
       Assert.assertNull(listener.resourceEvicted);
@@ -136,9 +136,9 @@ public class TestResourceCache {
       Assert.assertEquals(0, cache.getSize());
 
       Resource r1 = TestUtils.createResource("l1",
-          Resource.Locality.MUST, 1, 1024);
+          Resource.Locality.MUST, 0, 1024);
       PlacedResourceImpl pr1 = TestUtils.createPlacedResourceImpl(r1);
-      pr1.setAllocationInfo("l1", 1, 1024);
+      pr1.setAllocationInfo("l1", 0, 1024);
       pr1.setRmResourceId("rm1");
       cache.add(Entry.createCacheEntry(pr1));
 
@@ -150,7 +150,7 @@ public class TestResourceCache {
       Assert.assertNull(listener.resourceEvicted);
       Assert.assertEquals(1, cache.getSize());
 
-      pr1.setAllocationInfo("l1", 1, 1024);
+      pr1.setAllocationInfo("l1", 0, 1024);
       pr1.setRmResourceId("rm2");
       cache.add(Entry.createCacheEntry(pr1));
 
@@ -183,15 +183,15 @@ public class TestResourceCache {
       cache.start();
 
       Resource r1 = TestUtils.createResource("l1",
-          Resource.Locality.MUST, 1, 1024);
+          Resource.Locality.MUST, 0, 1024);
       PlacedResourceImpl pr1 = TestUtils.createPlacedResourceImpl(r1);
-      pr1.setAllocationInfo("l1", 1, 1024);
+      pr1.setAllocationInfo("l1", 0, 1024);
       pr1.setRmResourceId("rm1");
       Entry entry = Entry.createCacheEntry(pr1);
       UUID id1 = entry.getResourceId();
       cache.add(entry);
 
-      pr1.setAllocationInfo("l1", 1, 1024);
+      pr1.setAllocationInfo("l1", 0, 1024);
       pr1.setRmResourceId("rm2");
       entry = Entry.createCacheEntry(pr1);
       UUID id2 = entry.getResourceId();

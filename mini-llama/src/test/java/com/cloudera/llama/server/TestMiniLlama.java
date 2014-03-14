@@ -41,6 +41,7 @@ import junit.framework.Assert;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.transport.TSocket;
@@ -158,6 +159,11 @@ public class TestMiniLlama {
       Assert.assertEquals(new HashSet<String>(server.getDataNodes()),
           new HashSet<String>(tgnRes.getNodes()));
 
+      reserveExpandRelease(trRes, server, client, callbackServer, 1, 74);
+      reserveExpandRelease(trRes, server, client, callbackServer, 1, 0);
+      reserveExpandRelease(trRes, server, client, callbackServer, 2, 74);
+      reserveExpandRelease(trRes, server, client, callbackServer, 1, 0);
+
       //reserve
       TLlamaAMReservationRequest tresReq = new TLlamaAMReservationRequest();
       tresReq.setVersion(TLlamaServiceVersion.V1);
@@ -220,5 +226,53 @@ public class TestMiniLlama {
       callbackServer.stop();
     }
   }
+
+  private void reserveExpandRelease(TLlamaAMRegisterResponse trRes, MiniLlama
+      server, LlamaAMService.Client client, NotificationEndPoint callbackServer,
+                                   int cpusAsk, int memoryAsk) throws
+      InterruptedException, TException {
+    //reserve
+    TLlamaAMReservationRequest tresReq = new TLlamaAMReservationRequest();
+    tresReq.setVersion(TLlamaServiceVersion.V1);
+    tresReq.setAm_handle(trRes.getAm_handle());
+    tresReq.setUser(getUserName());
+    tresReq.setQueue("queue1");
+    TResource tResource = new TResource();
+    tResource.setClient_resource_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
+    tResource.setAskedLocation(server.getDataNodes().get(0));
+    tResource.setV_cpu_cores((short) cpusAsk);
+    tResource.setMemory_mb(memoryAsk);
+    tResource.setEnforcement(TLocationEnforcement.MUST);
+    tresReq.setResources(Arrays.asList(tResource));
+    tresReq.setGang(true);
+    TLlamaAMReservationResponse tresRes = client.Reserve(tresReq);
+    Assert.assertEquals(TStatusCode.OK, tresRes.getStatus().getStatus_code());
+    //check notification delivery
+    while (callbackServer.notifications.isEmpty()) {
+      Thread.sleep(300);
+    }
+    boolean allocated = false;
+    while (!allocated) {
+      List<TLlamaAMNotificationRequest> list =
+          new ArrayList<TLlamaAMNotificationRequest>(callbackServer
+              .notifications);
+      for (TLlamaAMNotificationRequest notif : list) {
+        if (notif.isSetAllocated_resources()) {
+          allocated = true;
+        }
+      }
+      if (!allocated) {
+        Thread.sleep(300);
+      }
+    }
+    //release
+    TLlamaAMReleaseRequest trelReq = new TLlamaAMReleaseRequest();
+    trelReq.setVersion(TLlamaServiceVersion.V1);
+    trelReq.setAm_handle(trRes.getAm_handle());
+    trelReq.setReservation_id(tresRes.getReservation_id());
+    TLlamaAMReleaseResponse trelRes = client.Release(trelReq);
+    Assert.assertEquals(TStatusCode.OK, trelRes.getStatus().getStatus_code());
+  }
+
 
 }

@@ -187,6 +187,9 @@ public class MiniLlama {
         ServerConfiguration.HTTP_ADDRESS_KEY), "localhost:0");
     conf.setBoolean(YarnConfiguration.RM_SCHEDULER_INCLUDE_PORT_IN_NODE_NAME,
         true);
+    conf.setInt(YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_VCORES, 0);
+    conf.setInt(YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_MB, 0);
+
     conf.set(YarnRMConnector.HADOOP_USER_NAME_KEY,
         System.getProperty("user.name"));
     return conf;
@@ -367,6 +370,9 @@ public class MiniLlama {
     miniYarn = new MiniYARNCluster("minillama", clusterNodes, 1, 1);
     conf.setBoolean(YarnConfiguration.RM_SCHEDULER_INCLUDE_PORT_IN_NODE_NAME,
         true);
+    conf.setInt(YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_VCORES, 0);
+    conf.setInt(YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_MB, 0);
+
     miniYarn.init(conf);
     miniYarn.start();
     conf = miniYarn.getConfig();

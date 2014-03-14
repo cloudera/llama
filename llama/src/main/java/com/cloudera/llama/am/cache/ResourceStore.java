@@ -25,39 +25,41 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.NavigableMap;
+import java.util.Set;
 import java.util.TreeMap;
 
 public class ResourceStore {
   private static final Logger LOG = LoggerFactory.getLogger(ResourceStore.class);
 
-  private final NavigableMap<Key, List<Entry>> store;
+  private static int VCORE_LIST = 0;
+  private static int MEM_LIST = 1;
+
+  private final Map<String, List<Entry>[]> nodeToEntries;
   private final Map<UUID, Entry> idToEntryMap;
 
   public ResourceStore() {
-    store = new TreeMap<Key, List<Entry>>();
+    nodeToEntries = new TreeMap<String, List<Entry>[]>();
     idToEntryMap = new HashMap<UUID, Entry>();
   }
 
   public synchronized void add(Entry entry) {
     entry.setValid(true);
     idToEntryMap.put(entry.getResourceId(), entry);
-    Key key = new Key(entry);
-    List<Entry> list = store.get(key);
-    if (list == null) {
-      list = new ArrayList<Entry>();
-      store.put(key, list);
+
+    String node = entry.getLocation();
+    List<Entry>[] entries = nodeToEntries.get(node);
+    if (entries == null) {
+      entries = new List[] {
+        new LinkedList<Entry>(),
+        new LinkedList<Entry>()
+      };
+      nodeToEntries.put(node, entries);
     }
-    int idx = Collections.binarySearch(list, entry);
-    if (idx >= 0) {
-      list.add(idx, entry);
-    } else {
-      list.add(- (idx + 1), entry);
-    }
+    addEntry(entries, entry);
   }
 
   private enum Mode {SAME_REF, STRICT_LOCATION, ANY_LOCATION}
@@ -66,49 +68,80 @@ public class ResourceStore {
     ParamChecker.notNull(entry, "entry");
     ParamChecker.notNull(mode, "mode");
     Entry found = null;
-    Key key = new Key(entry);
-    Map.Entry<Key, List<Entry>> cacheEntry = store.ceilingEntry(key);
-    List<Entry> list = (cacheEntry != null) ? cacheEntry.getValue() : null;
-    if (list != null) {
-      int idx = Collections.binarySearch(list, entry);
-      if (idx >= 0) {
-        switch (mode) {
-          case SAME_REF:
-            for (int i = idx; i < list.size() && entry.compareTo(list.get(i)) == 0; i++) {
-              if (entry == list.get(i)) {
-                found = entry;
-                list.remove(i);
-                break;
-              }
-            }
+
+    switch (mode) {
+    case STRICT_LOCATION:
+      List<Entry>[] entries = nodeToEntries.get(entry.getLocation());
+      found = removeEntry(entries, entry);
+      break;
+    case SAME_REF:
+      entries = nodeToEntries.get(entry.getLocation());
+      if (entries != null) {
+        List<Entry> list =
+            (entry.getCpuVCores() > 0) ? entries[VCORE_LIST] : entries[MEM_LIST];
+
+        for (int i = 0; i < list.size(); i++) {
+          Entry e = list.get(i);
+          if (e == entry) {
+            list.remove(i);
+            found = e;
             break;
-          case STRICT_LOCATION:
-          case ANY_LOCATION:
-            found = list.remove(idx);
-            break;
-        }
-      } else {
-        switch (mode) {
-          case SAME_REF:
-            throw new RuntimeException("Inconsistent state");
-          case STRICT_LOCATION:
-            break;
-          case ANY_LOCATION:
-            if ( -(idx + 1) <= list.size()) {
-              found = list.remove(- (idx + 1) - 1);
-            }
-            break;
+          }
         }
       }
-      if (found != null) {
-        idToEntryMap.remove(found.getResourceId());
-        if (list.isEmpty()) {
-          store.remove(key);
-        }
-        found.setValid(false);
+      break;
+    case ANY_LOCATION:
+      // Lets try to give in the location that asked for or else
+      // return from the first one..
+      if (entry.getLocation() != null) {
+        entries = nodeToEntries.get(entry.getLocation());
+        found = removeEntry(entries, entry);
+      }
+      if (found == null && nodeToEntries.size() > 0) {
+        Set<String> key = nodeToEntries.keySet();
+        found = removeEntry(nodeToEntries.get(key.iterator().next()), entry);
+      }
+      break;
+    }
+
+    if (found != null) {
+      idToEntryMap.remove(found.getResourceId());
+      found.setValid(false);
+
+      if (found.getCpuVCores() != entry.getCpuVCores() &&
+          found.getMemoryMbs() != entry.getMemoryMbs()) {
+        LOG.error("Cache store inconsistent state: Ask cpu: {}, mem: {}. " +
+            "Give cpu: {}, mem {}",
+            entry.getCpuVCores(),
+            entry.getMemoryMbs(),
+            found.getCpuVCores(), found.getMemoryMbs());
       }
     }
     return found;
+  }
+
+  private void addEntry(List<Entry>[] entries, Entry entry) {
+    if (entry.getCpuVCores() > 0 && entry.getMemoryMbs() > 0) {
+      throw new IllegalArgumentException("Cannot add entries which have both cpu and memory");
+    }
+    if (entry.getCpuVCores() > 0) {
+      entries[VCORE_LIST].add(entry);
+    }
+    if (entry.getMemoryMbs() > 0) {
+      entries[MEM_LIST].add(entry);
+    }
+  }
+
+  private Entry removeEntry(List<Entry>[] entries, Entry entry) {
+    if (entries != null) {
+      if (entry.getCpuVCores() > 0 && entries[0].size() > 0) {
+        return entries[VCORE_LIST].remove(0);
+      } else if (entry.getMemoryMbs() > 0 && entries[1].size() > 0) {
+        return entries[MEM_LIST].remove(0);
+
+      }
+    }
+    return null;
   }
 
   public synchronized Entry findAndRemove(RMResource resource) {
@@ -134,6 +167,7 @@ public class ResourceStore {
   public synchronized List<RMResource> emptyStore() {
     List<RMResource> list = new ArrayList<RMResource>(idToEntryMap.values());
     idToEntryMap.clear();
+    nodeToEntries.clear();
     return list;
   }
 

@@ -35,6 +35,8 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 import java.util.concurrent.Executors;
 
 public class TestExpansionReservationsLlamaAM {
@@ -58,13 +60,13 @@ public class TestExpansionReservationsLlamaAM {
       Assert.assertNull(eAm.getExpansions(r1));
 
       eAm.add(r1, e1, handle1);
-      Assert.assertEquals(Arrays.asList(e1), eAm.getExpansions(r1));
+      assertExpansions(eAm, r1, e1);
 
       eAm.add(r1, e2, handle2);
-      Assert.assertEquals(Arrays.asList(e1, e2), eAm.getExpansions(r1));
+      assertExpansions(eAm, r1, e1, e2);
 
       eAm.removeExpansion(r1, e1);
-      Assert.assertEquals(Arrays.asList(e2), eAm.getExpansions(r1));
+      assertExpansions(eAm, r1, e2);
 
       eAm.removeExpansionsOf(r1);
       Assert.assertNull(eAm.getExpansions(r1));
@@ -76,6 +78,11 @@ public class TestExpansionReservationsLlamaAM {
     } finally {
       eAm.stop();
     }
+  }
+
+  private void assertExpansions(ExpansionReservationsLlamaAM eAm, UUID r1,
+                                UUID...expansions) {
+    Assert.assertEquals(new HashSet<UUID>(Arrays.asList(expansions)), eAm.getExpansions(r1));
   }
 
   @Test
@@ -206,9 +213,7 @@ public class TestExpansionReservationsLlamaAM {
       UUID eId = eAm.expand(e);
       Assert.assertNotNull(eId);
 
-      Assert.assertEquals(Arrays.asList(eId),
-          eAm.getExpansions(pr.getReservationId()));
-
+      assertExpansions(eAm, pr.getReservationId(), eId);
     } finally {
       eAm.stop();
     }
@@ -232,9 +237,7 @@ public class TestExpansionReservationsLlamaAM {
       UUID eId = eAm.expand(e);
       Assert.assertNotNull(eId);
 
-      Assert.assertEquals(Arrays.asList(eId),
-          eAm.getExpansions(pr.getReservationId()));
-
+      assertExpansions(eAm, pr.getReservationId(), eId);
       eAm.releaseReservation(e.getHandle(), eId, false);
 
       Assert.assertNull(eAm.getExpansions(pr.getReservationId()));
@@ -262,9 +265,7 @@ public class TestExpansionReservationsLlamaAM {
       UUID eId = eAm.expand(e);
       Assert.assertNotNull(eId);
 
-      Assert.assertEquals(Arrays.asList(eId),
-          eAm.getExpansions(pr.getReservationId()));
-
+      assertExpansions(eAm, pr.getReservationId(), eId);
       eAm.releaseReservation(pr.getHandle(), pr.getReservationId(), false);
 
       Mockito.verify(am).releaseReservation(Mockito.eq(e.getHandle()),
@@ -318,14 +319,14 @@ public class TestExpansionReservationsLlamaAM {
       UUID eId1 = eAm.expand(e1);
       Assert.assertNotNull(eId1);
 
-      Assert.assertEquals(Arrays.asList(eId1),
+      Assert.assertEquals(new HashSet<UUID>(Arrays.asList(eId1)),
           eAm.getExpansions(pr.getReservationId()));
 
       Expansion e2 = TestUtils.createExpansion(pr);
       UUID eId2 = eAm.expand(e2);
       Assert.assertNotNull(eId2);
 
-      Assert.assertEquals(Arrays.asList(eId1, eId2),
+      Assert.assertEquals(new HashSet<UUID>(Arrays.asList(eId1, eId2)),
           eAm.getExpansions(pr.getReservationId()));
 
       eAm.releaseReservation(pr.getHandle(), pr.getReservationId(), false);
@@ -354,8 +355,7 @@ public class TestExpansionReservationsLlamaAM {
       UUID eId = eAm.expand(e);
       Assert.assertNotNull(eId);
 
-      Assert.assertEquals(Arrays.asList(eId),
-          eAm.getExpansions(pr.getReservationId()));
+      assertExpansions(eAm, pr.getReservationId(), eId);
 
       Mockito.when(am.releaseReservationsForHandle(pr.getHandle(), false)).
           thenReturn(Arrays.asList(pr));
@@ -393,8 +393,7 @@ public class TestExpansionReservationsLlamaAM {
       UUID eId = eAm.expand(e);
       Assert.assertNotNull(eId);
 
-      Assert.assertEquals(Arrays.asList(eId),
-          eAm.getExpansions(pr.getReservationId()));
+      assertExpansions(eAm, pr.getReservationId(), eId);
 
       Mockito.when(am.releaseReservationsForQueue(pr.getQueue(), false)).
           thenReturn(Arrays.asList(pr));
@@ -429,8 +428,7 @@ public class TestExpansionReservationsLlamaAM {
       UUID eId = eAm.expand(e);
       Assert.assertNotNull(eId);
 
-      Assert.assertEquals(Arrays.asList(eId),
-          eAm.getExpansions(pr.getReservationId()));
+      assertExpansions(eAm, pr.getReservationId(), eId);
 
       ((PlacedReservationImpl)pr).setStatus(PlacedReservation.Status.PREEMPTED);
       LlamaAMEvent event = LlamaAMEventImpl.createEvent(false, pr);

@@ -25,99 +25,112 @@ import junit.framework.Assert;
 import org.junit.Test;
 
 public class TestResourceStore {
+  @Test
+  public void testDifferentDimensions() throws Exception {
+      ResourceStore store = new ResourceStore();
+      Resource r1 = TestUtils.createResource("l1", Resource.Locality.MUST, 0, 1024);
+      PlacedResourceImpl pr1 = TestUtils.createPlacedResourceImpl(r1);
+      pr1.setAllocationInfo("l1", 0, 1024);
+      pr1.setRmResourceId("rm1");
+      Entry entry = Entry.createCacheEntry(pr1);
+      store.add(entry);
+      PlacedResourceImpl resource = TestUtils.createPlacedResourceImpl("l1",
+              Resource.Locality.MUST, 1, 0);
+      UUID id2 = entry.getResourceId();
+      CacheRMResource cr1 = store.findAndRemove(resource);
+      Assert.assertNull(cr1);
+  }
 
   @Test
   public void testCacheRemoveById() throws Exception {
     ResourceStore store = new ResourceStore();
-    Resource r1 = TestUtils.createResource("l1", Resource.Locality.MUST, 1, 1024);
+    Resource r1 = TestUtils.createResource("l1", Resource.Locality.MUST, 0, 1024);
     PlacedResourceImpl pr1 = TestUtils.createPlacedResourceImpl(r1);
-    pr1.setAllocationInfo("l1", 1, 1024);
+    pr1.setAllocationInfo("l1", 0, 1024);
     pr1.setRmResourceId("rm1");
-    Entry entry = Entry.createCacheEntry(pr1);
-    UUID id1 = entry.getResourceId();
-    store.add(entry);
+    Entry entry1 = Entry.createCacheEntry(pr1);
+    UUID id1 = entry1.getResourceId();
+    store.add(entry1);
 
-    pr1.setAllocationInfo("l1", 1, 1024);
-    pr1.setRmResourceId("rm2");
-    entry = Entry.createCacheEntry(pr1);
-    UUID id2 = entry.getResourceId();
-    store.add(entry);
+    pr1.setAllocationInfo("l1", 0, 1024);
+    pr1.setRmResourceId("rm1");
+    Entry entry2 = Entry.createCacheEntry(pr1);
+    UUID id2 = entry2.getResourceId();
+    store.add(entry2);
 
     Assert.assertEquals(2, store.getSize());
 
-    CacheRMResource cr1 = store.findAndRemove(id1);
-    Assert.assertNotNull(cr1);
-    Assert.assertEquals("rm1", cr1.getRmResourceId());
-
-    Assert.assertEquals(1, store.getSize());
-
-    Assert.assertNull(store.findAndRemove(id1));
-
     CacheRMResource cr2 = store.findAndRemove(id2);
     Assert.assertNotNull(cr2);
-    Assert.assertEquals("rm2", cr2.getRmResourceId());
+    Assert.assertEquals(entry2, cr2);
+
+    Assert.assertEquals(1, store.getSize());
+    Assert.assertNull(store.findAndRemove(id2));
+
+    CacheRMResource cr1 = store.findAndRemove(id1);
+    Assert.assertNotNull(cr1);
+    Assert.assertEquals(entry1, cr1);
 
     Assert.assertEquals(0, store.getSize());
-
-    Assert.assertNull(store.findAndRemove(id2));
+    Assert.assertNull(store.findAndRemove(id1));
   }
 
   @Test
   public void testCacheBiggerFindMustLocation() throws Exception {
     ResourceStore store = new ResourceStore();
 
-    Resource r1 = TestUtils.createResource("l1", Resource.Locality.MUST, 1, 512);
+    Resource r1 = TestUtils.createResource("l1", Resource.Locality.MUST, 0, 1024);
     PlacedResourceImpl pr1 = TestUtils.createPlacedResourceImpl(r1);
-    pr1.setAllocationInfo("l1", 1, 512);
+    pr1.setAllocationInfo("l1", 0, 1024);
     pr1.setRmResourceId("rm1");
     store.add(Entry.createCacheEntry(pr1));
 
     r1 = TestUtils.createResource("l1",
-        Resource.Locality.MUST, 2, 1024);
+        Resource.Locality.MUST, 0, 1024);
     pr1 = TestUtils.createPlacedResourceImpl(r1);
-    pr1.setAllocationInfo("l1", 2, 1024);
+    pr1.setAllocationInfo("l1", 0, 1024);
     pr1.setRmResourceId("rm2");
     store.add(Entry.createCacheEntry(pr1));
 
     Resource r2 = TestUtils.createResource("l1",
-        Resource.Locality.MUST, 1, 1024);
+        Resource.Locality.MUST, 0, 1024);
     PlacedResourceImpl pr2 = TestUtils.createPlacedResourceImpl(r2);
 
     CacheRMResource cr = store.findAndRemove(pr2);
     Assert.assertNotNull(cr);
 
-    Assert.assertEquals("rm2", cr.getRmResourceId());
+    Assert.assertEquals("rm1", cr.getRmResourceId());
   }
 
   @Test
   public void testCacheBiggerFindAnyPreferredLocation() throws Exception {
     ResourceStore store = new ResourceStore();
 
-    Resource r1 = TestUtils.createResource("l1", Resource.Locality.MUST, 1, 512);
+    Resource r1 = TestUtils.createResource("l1", Resource.Locality.MUST, 0, 1024);
     PlacedResourceImpl pr1 = TestUtils.createPlacedResourceImpl(r1);
-    pr1.setAllocationInfo("l1", 1, 512);
+    pr1.setAllocationInfo("l1", 0, 1024);
     pr1.setRmResourceId("rm1");
     store.add(Entry.createCacheEntry(pr1));
 
     r1 = TestUtils.createResource("l1",
-        Resource.Locality.MUST, 2, 1024);
+        Resource.Locality.MUST, 0, 1024);
     pr1 = TestUtils.createPlacedResourceImpl(r1);
-    pr1.setAllocationInfo("l1", 2, 1024);
+    pr1.setAllocationInfo("l1", 0, 1024);
     pr1.setRmResourceId("rm2");
     store.add(Entry.createCacheEntry(pr1));
 
     Resource r2 = TestUtils.createResource("l2",
-        Resource.Locality.PREFERRED, 1, 1024);
+        Resource.Locality.PREFERRED, 0, 1024);
     PlacedResourceImpl pr2 = TestUtils.createPlacedResourceImpl(r2);
 
     CacheRMResource cr1 = store.findAndRemove(pr2);
     Assert.assertNotNull(cr1);
-    Assert.assertEquals("rm2", cr1.getRmResourceId());
+    Assert.assertEquals("rm1", cr1.getRmResourceId());
 
     store.add(Entry.createCacheEntry(pr1));
 
     Resource r3 = TestUtils.createResource("l2",
-        Resource.Locality.DONT_CARE, 1, 1024);
+        Resource.Locality.DONT_CARE, 0, 1024);
     PlacedResourceImpl pr3 = TestUtils.createPlacedResourceImpl(r3);
 
     CacheRMResource cr2 = store.findAndRemove(pr3);
@@ -130,21 +143,21 @@ public class TestResourceStore {
   public void testCacheExactFindPreferredAndAnyLocation() throws Exception {
     ResourceStore store = new ResourceStore();
 
-    Resource r1 = TestUtils.createResource("l1", Resource.Locality.MUST, 1, 1024);
+    Resource r1 = TestUtils.createResource("l1", Resource.Locality.MUST, 0, 1024);
     PlacedResourceImpl pr1 = TestUtils.createPlacedResourceImpl(r1);
-    pr1.setAllocationInfo("l1", 1, 1024);
+    pr1.setAllocationInfo("l1", 0, 1024);
     pr1.setRmResourceId("rm1");
     store.add(Entry.createCacheEntry(pr1));
     store.add(Entry.createCacheEntry(pr1));
 
     Resource r2 = TestUtils.createResource("l2",
-        Resource.Locality.PREFERRED, 1, 1024);
+        Resource.Locality.PREFERRED, 0, 1024);
     PlacedResourceImpl pr2 = TestUtils.createPlacedResourceImpl(r2);
     CacheRMResource cr = store.findAndRemove(pr2);
     Assert.assertNotNull(cr);
 
     Resource r3 = TestUtils.createResource("l2",
-        Resource.Locality.DONT_CARE, 1, 1024);
+        Resource.Locality.DONT_CARE, 0, 1024);
     PlacedResourceImpl pr3 = TestUtils.createPlacedResourceImpl(r3);
     cr = store.findAndRemove(pr3);
     Assert.assertNotNull(cr);
@@ -159,55 +172,55 @@ public class TestResourceStore {
   public void testCacheMissMustLocation() throws Exception {
     ResourceStore store = new ResourceStore();
 
-    Resource r1 = TestUtils.createResource("l1", Resource.Locality.MUST, 1, 1024);
+    Resource r1 = TestUtils.createResource("l1", Resource.Locality.MUST, 0, 1024);
     PlacedResourceImpl pr1 = TestUtils.createPlacedResourceImpl(r1);
-    pr1.setAllocationInfo("l1", 1, 1024);
+    pr1.setAllocationInfo("l1", 0, 1024);
     pr1.setRmResourceId("rm1");
     store.add(Entry.createCacheEntry(pr1));
 
     Resource r2 = TestUtils.createResource("l1",
-        Resource.Locality.MUST, 2, 1024);
+        Resource.Locality.MUST, 2, 0);
     PlacedResourceImpl pr2 = TestUtils.createPlacedResourceImpl(r2);
 
     Assert.assertNull(store.findAndRemove(pr2));
 
     Resource r3 = TestUtils.createResource("l1",
-        Resource.Locality.MUST, 1, 2048);
+        Resource.Locality.MUST, 0, 1024);
     PlacedResourceImpl pr3 = TestUtils.createPlacedResourceImpl(r3);
 
-    Assert.assertNull(store.findAndRemove(pr3));
+    Assert.assertNotNull(store.findAndRemove(pr3));
 
     Resource r4 = TestUtils.createResource("l2",
-        Resource.Locality.MUST, 1, 1024);
+        Resource.Locality.MUST, 0, 1024);
     PlacedResourceImpl pr4 = TestUtils.createPlacedResourceImpl(r4);
 
     Assert.assertNull(store.findAndRemove(pr4));
 
-    Assert.assertEquals(1, store.getSize());
+    Assert.assertEquals(0, store.getSize());
   }
 
   @Test
   public void testCacheMissPreferredAndAnyLocation() throws Exception {
     ResourceStore store = new ResourceStore();
 
-    Resource r1 = TestUtils.createResource("l1", Resource.Locality.MUST, 1, 1024);
+    Resource r1 = TestUtils.createResource("l1", Resource.Locality.MUST, 0, 1024);
     PlacedResourceImpl pr1 = TestUtils.createPlacedResourceImpl(r1);
-    pr1.setAllocationInfo("l1", 1, 1024);
+    pr1.setAllocationInfo("l1", 0, 1024);
     pr1.setRmResourceId("rm1");
     store.add(Entry.createCacheEntry(pr1));
 
     Resource r2 = TestUtils.createResource("l2",
-        Resource.Locality.PREFERRED, 2, 1024);
+        Resource.Locality.PREFERRED, 0, 1024);
     PlacedResourceImpl pr2 = TestUtils.createPlacedResourceImpl(r2);
-    Assert.assertNull(store.findAndRemove(pr2));
+    Assert.assertNotNull(store.findAndRemove(pr2));
 
     Resource r3 = TestUtils.createResource("l1",
-        Resource.Locality.MUST, 1, 2048);
+        Resource.Locality.MUST, 0, 2048);
     PlacedResourceImpl pr3 = TestUtils.createPlacedResourceImpl(r3);
 
     Assert.assertNull(store.findAndRemove(pr3));
 
-    Assert.assertEquals(1, store.getSize());
+    Assert.assertEquals(0, store.getSize());
   }
 
 }
