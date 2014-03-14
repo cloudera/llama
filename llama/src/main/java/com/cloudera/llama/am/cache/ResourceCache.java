@@ -141,9 +141,11 @@ public class ResourceCache extends ResourceStore {
     }
   }
 
-  public synchronized void stop() {
-    running = false;
-    evictionThread.interrupt();
+  public void stop() {
+    synchronized (this) {
+      running = false;
+      evictionThread.interrupt();
+    }
     try {
       evictionThread.join();
     } catch (InterruptedException ex) {

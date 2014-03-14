@@ -194,6 +194,14 @@ public class CacheRMConnector implements RMConnector,
       CacheRMResource cached = cache.findAndRemove(resource);
       resourcesAsked.mark();
       if (cached != null) {
+        if (cached.getCpuVCores() != resource.getCpuVCoresAsk() &&
+            cached.getMemoryMbs() != resource.getMemoryMbsAsk()) {
+          LOG.error("Cache not working properly: Ask cpu: {}, mem: {}. " +
+              "Give cpu: {}, mem {}",
+              resource.getCpuVCoresAsk(),
+              resource.getMemoryMbsAsk(),
+              cached.getCpuVCores(), cached.getMemoryMbs());
+          }
         cacheHits.mark();
         LOG.debug("Using cached resource '{}' for placed resource '{}'",
             cached, resource);

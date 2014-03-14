@@ -148,12 +148,12 @@ public class ExpansionReservationsLlamaAM extends LlamaAMImpl
     }
   }
 
-  synchronized List<UUID> getExpansions(UUID reservationId) {
-    ArrayList<UUID> ret = null;
+  synchronized Set<UUID> getExpansions(UUID reservationId) {
+    HashSet<UUID> ret = null;
     Set<ExpansionId> expansions = reservationToExpansionsMap.get
         (reservationId);
     if (expansions != null) {
-      ret = new ArrayList<UUID>(expansions.size());
+      ret = new HashSet<UUID>();
       for(ExpansionId expansionId : expansions) {
         ret.add(expansionId.expansionId);
       }
