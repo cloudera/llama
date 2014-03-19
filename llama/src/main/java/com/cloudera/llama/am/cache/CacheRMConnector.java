@@ -232,9 +232,11 @@ public class CacheRMConnector implements RMConnector,
       Iterator<RMResource> it = list.iterator();
       while (it.hasNext()) {
         RMResource resource = it.next();
+        Entry pendingEntry = pending.findAndRemove(resource);
         if (resource.getRmResourceId() != null) {
-          Entry pendingEntry = pending.findAndRemove(resource);
           if (pendingEntry == null) {
+            LOG.trace("Release: Pending Entry is null. Trying to put " +
+                "resource {} in cache.", resource);
             Entry entry = Entry.createCacheEntry(resource);
             UUID cacheId = entry.getResourceId();
             cache.add(entry);
@@ -247,6 +249,8 @@ public class CacheRMConnector implements RMConnector,
                   "discarding it", resource.getResourceId());
             }
           } else {
+            LOG.trace("Release: There is a pending entry {}, trying to " +
+                "reuse resource {}.", pendingEntry, resource);
             connector.release(Arrays.asList((RMResource)pendingEntry), false);
             if (connector.reassignResource(resource.getRmResourceId(),
                 pendingEntry.getResourceId())) {
@@ -264,6 +268,8 @@ public class CacheRMConnector implements RMConnector,
                   resource.getResourceId());
             }
           }
+        } else {
+          LOG.trace("Resource {} was not allocated yet. Releasing it.", resource);
         }
       }
     }

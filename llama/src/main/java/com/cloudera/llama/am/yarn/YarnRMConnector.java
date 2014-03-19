@@ -581,6 +581,8 @@ public class YarnRMConnector implements RMConnector, Configurable,
         containerToResourceMap.remove(container.getId());
         queue(new ContainerHandler(ugi, resource, container, Action.STOP));
         released = true;
+      } else {
+        LOG.debug("Container was not allocated yet.");
       }
       if (!released) {
         LOG.debug("Missing RM payload, ignoring release of container " +
@@ -764,6 +766,10 @@ public class YarnRMConnector implements RMConnector, Configurable,
 
           queue(new ContainerHandler(ugi, resource, container, Action.START));
         }
+      } else {
+        LOG.error("No matching request for {}. Releasing the container.", container);
+        containerToResourceMap.remove(container.getId());
+        amRmClientAsync.releaseAssignedContainer(container.getId());
       }
     }
     llamaCallback.onEvent(changes);

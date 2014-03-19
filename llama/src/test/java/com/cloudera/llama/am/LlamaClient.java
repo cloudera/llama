@@ -29,6 +29,8 @@ import com.cloudera.llama.thrift.TLlamaAMRegisterRequest;
 import com.cloudera.llama.thrift.TLlamaAMRegisterResponse;
 import com.cloudera.llama.thrift.TLlamaAMReleaseRequest;
 import com.cloudera.llama.thrift.TLlamaAMReleaseResponse;
+import com.cloudera.llama.thrift.TLlamaAMReservationExpansionRequest;
+import com.cloudera.llama.thrift.TLlamaAMReservationExpansionResponse;
 import com.cloudera.llama.thrift.TLlamaAMReservationRequest;
 import com.cloudera.llama.thrift.TLlamaAMReservationResponse;
 import com.cloudera.llama.thrift.TLlamaAMUnregisterRequest;
@@ -75,6 +77,7 @@ public class LlamaClient {
   private static final String GET_NODES_CMD = "getnodes";
   private static final String RESERVE_CMD = "reserve";
   private static final String RELEASE_CMD = "release";
+  private static final String EXPAND_CMD = "expand";
   private static final String CALLBACK_SERVER_CMD = "callbackserver";
   private static final String LOAD_CMD = "load";
 
@@ -181,6 +184,7 @@ public class LlamaClient {
     options.addOption(secure);
     parser.addCommand(REGISTER_CMD, "", "register client", options, false);
 
+
     //unregister
     options = new Options();
     options.addOption(noLog);
@@ -211,6 +215,19 @@ public class LlamaClient {
     options.addOption(noGang);
     options.addOption(secure);
     parser.addCommand(RESERVE_CMD, "", "make a reservation", options, false);
+
+    //expand
+    options = new Options();
+    options.addOption(noLog);
+    options.addOption(llama);
+    options.addOption(handle);
+    options.addOption(reservation);
+    options.addOption(locations);
+    options.addOption(cpus);
+    options.addOption(memory);
+    options.addOption(relaxLocality);
+    options.addOption(secure);
+    parser.addCommand(EXPAND_CMD, "", "expand a reservation", options, false);
 
     //release
     options = new Options();
@@ -299,6 +316,24 @@ public class LlamaClient {
 
         UUID reservation = reserve(secure, getHost(llama), getPort(llama),
             handle, user, queue, locations, cpus, memory, relaxLocality, gang);
+        System.out.println(reservation);
+      } else if (command.getName().equals(EXPAND_CMD)) {
+        String llama = cl.getOptionValue(LLAMA);
+        UUID handle = UUID.fromString(cl.getOptionValue(HANDLE));
+        UUID expansionOf = UUID.fromString(cl.getOptionValue(RESERVATION));
+        String[] locations = cl.getOptionValue(LOCATIONS).split(",");
+        if (locations == null || locations.length != 1) {
+          System.err.println("Expansion can be done only for a single node.");
+          System.err.println();
+          System.err.println(parser.shortHelp());
+          System.exit(1);
+        }
+        int cpus = Integer.parseInt(cl.getOptionValue(CPUS));
+        int memory = Integer.parseInt(cl.getOptionValue(MEMORY));
+        boolean relaxLocality = cl.hasOption(RELAX_LOCALITY);
+
+        UUID reservation = expand(secure, getHost(llama), getPort(llama),
+            handle, expansionOf, locations[0], cpus, memory, relaxLocality);
         System.out.println(reservation);
       } else if (command.getName().equals(RELEASE_CMD)) {
         String llama = cl.getOptionValue(LLAMA);
@@ -492,6 +527,37 @@ public class LlamaClient {
     return TypeUtils.toUUID(res.getReservation_id());
   }
 
+  static UUID expand(LlamaAMService.Client client, UUID handle, UUID reservation,
+                     String location,
+                     boolean relaxLocality, int cpus, int memory) throws Exception {
+    TLlamaAMReservationExpansionRequest req = new TLlamaAMReservationExpansionRequest();
+    req.setVersion(TLlamaServiceVersion.V1);
+    req.setAm_handle(TypeUtils.toTUniqueId(handle));
+    req.setExpansion_of(TypeUtils.toTUniqueId(reservation));
+
+    TResource resource = new TResource();
+    resource.setClient_resource_id(TypeUtils.toTUniqueId(
+        UUID.randomUUID()));
+    resource.setAskedLocation(location);
+    resource.setV_cpu_cores((short) cpus);
+    resource.setMemory_mb(memory);
+    resource.setEnforcement((relaxLocality)
+        ? TLocationEnforcement.PREFERRED
+        : TLocationEnforcement.MUST);
+
+    req.setResource(resource);
+    TLlamaAMReservationExpansionResponse res = client.Expand(req);
+    if (res.getStatus().getStatus_code() != TStatusCode.OK) {
+      String status = res.getStatus().getStatus_code().toString();
+      int code = (res.getStatus().isSetError_code())
+          ? res.getStatus().getError_code() : 0;
+      String msg = (res.getStatus().isSetError_msgs())
+          ? res.getStatus().getError_msgs().get(0) : "";
+      throw new RuntimeException(status + " - " + code + " - " + msg);
+    }
+    return TypeUtils.toUUID(res.getReservation_id());
+  }
+
   static UUID reserve(final boolean secure, final String llamaHost,
       final int llamaPort, final UUID handle, final String user,
       final String queue, final String[] locations, final int cpus,
@@ -505,6 +571,23 @@ public class LlamaClient {
                 llamaPort);
             return reserve(client, handle, user, queue, locations,
                 relaxLocality, cpus, memory, gang);
+          }
+        });
+  }
+
+  static UUID expand(final boolean secure, final String llamaHost,
+                      final int llamaPort, final UUID handle, final UUID reservation,
+                      final String location, final int cpus,
+                      final int memory, final boolean relaxLocality)
+      throws Exception {
+    return Subject.doAs(getSubject(secure),
+        new PrivilegedExceptionAction<UUID>() {
+          @Override
+          public UUID run() throws Exception {
+            LlamaAMService.Client client = createClient(secure, llamaHost,
+                llamaPort);
+            return expand(client, handle, reservation, location,
+                relaxLocality, cpus, memory);
           }
         });
   }

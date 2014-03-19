@@ -403,11 +403,14 @@ public class ThrottleLlamaAM extends LlamaAMImpl
       try {
         pr.setQueued(false);
         pr.setStatus(PlacedReservation.Status.PENDING);
+        LOG.trace("Removed {} from queue and placing the reservation.", pr);
         am.reserve(pr.getReservationId(), pr);
         events.addReservation(pr);
         placed++;
         placedReservations++;
       } catch (Throwable ex) {
+        LOG.error("Reservation {} rejected with exception {}", pr,
+            ex.getMessage(), ex);
         pr.setStatus(PlacedReservation.Status.REJECTED);
         events.addReservation(pr);
         failed++;

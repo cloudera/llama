@@ -135,21 +135,23 @@ public class APIContractLlamaAM extends LlamaAM {
   @Override
   public void reserve(UUID reservationId, Reservation reservation)
       throws LlamaException {
+    LOG.trace("reserve({}): {}", reservation, reservationId);
+
     checkIsRunning();
     ParamChecker.notNull(reservationId, "reservationId");
     ParamChecker.notNull(reservation, "reservation");
     llamaAM.reserve(reservationId, reservation);
-    LOG.trace("reserve({}): {}", reservation, reservationId);
   }
 
   @Override
   public void expand(UUID expansionId, Expansion expansion)
       throws LlamaException {
+    LOG.trace("expand({}): {}", expansion, expansionId);
+
     checkIsRunning();
     ParamChecker.notNull(expansionId, "reservationId");
     ParamChecker.notNull(expansion, "reservation");
     llamaAM.expand(expansionId, expansion);
-    LOG.trace("expand({}): {}", expansion, expansionId);
   }
 
   @Override
@@ -166,12 +168,12 @@ public class APIContractLlamaAM extends LlamaAM {
   public PlacedReservation releaseReservation(UUID handle, UUID reservationId,
       boolean doNotCache)
       throws LlamaException {
+    LOG.trace("releaseReservation({}, {})", reservationId, doNotCache);
     checkIsRunning();
     ParamChecker.notNull(reservationId, "reservationId");
     ParamChecker.notNull(handle, "handle");
     PlacedReservation pr = llamaAM.releaseReservation(handle, reservationId,
         doNotCache);
-    LOG.trace("releaseReservation({}, {})", reservationId, doNotCache);
     return pr;
   }
 
@@ -179,11 +181,12 @@ public class APIContractLlamaAM extends LlamaAM {
   public List<PlacedReservation> releaseReservationsForHandle(UUID handle,
       boolean doNotCache)
       throws LlamaException {
+    LOG.trace("releaseReservationsForHandle({})", handle);
+
     checkIsRunning();
     ParamChecker.notNull(handle, "handle");
     List<PlacedReservation> ids = llamaAM.releaseReservationsForHandle(handle,
         doNotCache);
-    LOG.trace("releaseReservationsForHandle({})", handle);
     return ids;
   }
 

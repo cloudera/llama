@@ -429,6 +429,11 @@ public class RestData implements LlamaAMListener,
         throws IOException {
       jgen.writeStartObject();
       jgen.writeObjectField("reservationId", value.getReservationId());
+      if (value.getExpansionOf() != null) {
+        jgen.writeObjectField("expansionOfId", value.getExpansionOf());
+      } else {
+        jgen.writeNullField("expansionOfId");
+      }
       jgen.writeStringField("placedOn", formatDateTime(value.getPlacedOn()));
       jgen.writeObjectField("handle", value.getHandle());
       jgen.writeStringField("queue", value.getQueue());

@@ -24,6 +24,7 @@ import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.PlacedResource;
 import com.cloudera.llama.thrift.TLlamaAMNotificationRequest;
 import com.cloudera.llama.thrift.TLlamaAMNotificationResponse;
+import com.cloudera.llama.thrift.TUniqueId;
 import com.cloudera.llama.util.DelayedRunnable;
 import com.cloudera.llama.util.NamedThreadFactory;
 import com.cloudera.llama.util.UUID;
@@ -36,9 +37,12 @@ import javax.security.auth.Subject;
 import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.DelayQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -131,23 +135,31 @@ public class ClientNotifier implements LlamaAMListener {
         throw new IllegalStateException("Cannot handle LlamaAMEvents without a" +
             "NodeMapper implementation");
       }
+      Set<PlacedResource> resources =
+          new HashSet<PlacedResource>();
       Map<UUID, List<Object>> mapRR =
           new HashMap<UUID, List<Object>>();
+
       for (PlacedReservation rr : event.getReservationChanges()) {
-        List<Object> list = mapRR.get(rr.getHandle());
-        if (list == null) {
-          list = new ArrayList<Object>();
-          mapRR.put(rr.getHandle(), list);
+        addToList(rr.getHandle(), rr, mapRR);
+        // For a gang reservation, add all the placed resources.
+        if (rr.isGang() && rr.getStatus() == PlacedReservation.Status.ALLOCATED) {
+          resources.addAll(rr.getPlacedResources());
+          for(PlacedResource r : rr.getPlacedResources()) {
+            addToList(r.getHandle(), r, mapRR);
+          }
         }
-        list.add(rr);
       }
+
+      // Now add the loose reservations
       for (PlacedResource r : event.getResourceChanges()) {
-        List<Object> list = mapRR.get(r.getHandle());
-        if (list == null) {
-          list = new ArrayList<Object>();
-          mapRR.put(r.getHandle(), list);
+        // Skip all the pending resources for which there is a reservation
+        // that's allocated already.
+        if (!resources.contains(r) ||
+            (r.getStatus() != PlacedResource.Status.PENDING &&
+             r.getStatus() != PlacedResource.Status.ALLOCATED)) {
+          addToList(r.getHandle(), r, mapRR);
         }
-        list.add(r);
       }
       for (Map.Entry<UUID, List<Object>> entry : mapRR.entrySet()) {
         queueNotifier(new Notifier(entry.getKey(),
@@ -156,6 +168,15 @@ public class ClientNotifier implements LlamaAMListener {
 
       }
     }
+  }
+
+  private void addToList(UUID handle, Object rr, Map<UUID, List<Object>> mapRR) {
+    List<Object> list = mapRR.get(handle);
+    if (list == null) {
+      list = new ArrayList<Object>();
+      mapRR.put(handle, list);
+    }
+    list.add(rr);
   }
 
   private void notify(final ClientCaller clientCaller,
@@ -168,6 +189,16 @@ public class ClientNotifier implements LlamaAMListener {
           @Override
           public Void call() throws ClientException {
             try {
+              if (request.getAllocated_reservation_idsSize() > 0 &&
+                  LOG.isTraceEnabled()) {
+                List<TUniqueId> reservationIds = request
+                    .getAllocated_reservation_ids();
+                LOG.trace("Notifying the client for allocation. Handle {}, " +
+                    "Reservations {}, Request {}.", TypeUtils.toUUID(request.getAm_handle()),
+                    TypeUtils.toUUIDString(request
+                        .getAllocated_reservation_ids()));
+              }
+
               TLlamaAMNotificationResponse response =
                   getClient().AMNotification(request);
               if (!TypeUtils.isOK(response.getStatus())) {
