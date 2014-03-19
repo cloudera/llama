@@ -41,13 +41,19 @@ import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
 import com.cloudera.llama.util.ExceptionUtils;
 import com.cloudera.llama.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TypeUtils {
+  private static final Logger LOG =
+      LoggerFactory.getLogger(TypeUtils.class);
+
   public static final TStatus OK = new TStatus().setStatus_code(TStatusCode.OK);
 
   public static TStatus okWithMsgs(List<String> msgs) {
@@ -209,7 +215,7 @@ public class TypeUtils {
   }
 
   public static TLlamaAMNotificationRequest toAMNotification(UUID handle,
-      List<Object> rrList, NodeMapper nodeMapper) {
+      Collection<Object> rrList, NodeMapper nodeMapper) {
     TLlamaAMNotificationRequest request = new TLlamaAMNotificationRequest();
     request.setVersion(TLlamaServiceVersion.V1);
     request.setAm_handle(toTUniqueId(handle));
@@ -266,10 +272,22 @@ public class TypeUtils {
             rr.getClass());
       }
     }
+
+    LOG.trace("Prepearing the client request: " + request);
     return request;
   }
 
   public static boolean isOK(TStatus status) {
     return status.getStatus_code() == TStatusCode.OK;
+  }
+
+  public static String toUUIDString(List<TUniqueId> list) {
+    StringBuilder builder = new StringBuilder();
+    if (list != null) {
+      for(TUniqueId id : list) {
+        builder.append(toUUID(id));
+      }
+    }
+    return builder.toString();
   }
 }

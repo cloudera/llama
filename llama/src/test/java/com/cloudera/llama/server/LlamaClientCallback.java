@@ -85,27 +85,44 @@ public class LlamaClientCallback extends
     public TLlamaAMNotificationResponse AMNotification(
         TLlamaAMNotificationRequest request) throws TException {
       LOG.info(request.toString());
+
       if (request.isSetAllocated_reservation_ids()) {
+        LOG.trace("Allocated: " +
+            TypeUtils.toUUIDString(request.getAllocated_reservation_ids()));
         for (TUniqueId r : request.getAllocated_reservation_ids()) {
+          if (request.getAllocated_resourcesSize() < 3) {
+            LOG.trace(r + ":" + request.toString());
+          }
           notifyStatusChange(TypeUtils.toUUID(r));
         }
       }
       if (request.isSetPreempted_reservation_ids()) {
+        LOG.trace("PreEmpted: " +
+            TypeUtils.toUUIDString(request.getAllocated_reservation_ids()));
         for (TUniqueId r : request.getPreempted_reservation_ids()) {
           notifyStatusChange(TypeUtils.toUUID(r));
         }
       }
       if (request.isSetRejected_reservation_ids()) {
+        LOG.trace("Rejected: " +
+            TypeUtils.toUUIDString(request.getAllocated_reservation_ids()));
+
         for (TUniqueId r : request.getRejected_reservation_ids()) {
           notifyStatusChange(TypeUtils.toUUID(r));
         }
       }
       if (request.isSetLost_reservation_ids()) {
+        LOG.trace("Lost: " +
+            TypeUtils.toUUIDString(request.getAllocated_reservation_ids()));
+
         for (TUniqueId r : request.getLost_reservation_ids()) {
           notifyStatusChange(TypeUtils.toUUID(r));
         }
       }
       if (request.isSetAdmin_released_reservation_ids()) {
+        LOG.trace("Admin released: " +
+            TypeUtils.toUUIDString(request.getAllocated_reservation_ids()));
+
         for (TUniqueId r : request.getAdmin_released_reservation_ids()) {
           notifyStatusChange(TypeUtils.toUUID(r));
         }
