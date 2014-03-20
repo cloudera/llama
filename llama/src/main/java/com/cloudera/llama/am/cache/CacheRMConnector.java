@@ -208,6 +208,7 @@ public class CacheRMConnector implements RMConnector,
         it.remove();
         connector.reassignResource(cached.getRmResourceId(),
             resource.getResourceId());
+        resource.getRmData().putAll(cached.getRmData());
         RMEvent change = RMEvent.createAllocationEvent(
             resource.getResourceId(), cached.getLocation(),
             cached.getCpuVCores(), cached.getMemoryMbs(),
