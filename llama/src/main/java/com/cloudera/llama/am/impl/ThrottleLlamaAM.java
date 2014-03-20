@@ -70,12 +70,12 @@ public class ThrottleLlamaAM extends LlamaAMImpl
   public static final String MAX_PLACED_RESERVATIONS_KEY = LLAMA_PREFIX +
       "maximum.placed.reservations";
 
-  static final int MAX_PLACED_RESERVATIONS_DEFAULT = 20;
+  static final int MAX_PLACED_RESERVATIONS_DEFAULT = 10000;
 
   public static final String MAX_QUEUED_RESERVATIONS_KEY = LLAMA_PREFIX +
       "maximum.queued.reservations";
 
-  static final int MAX_QUEUED_RESERVATIONS_DEFAULT = 50;
+  static final int MAX_QUEUED_RESERVATIONS_DEFAULT = 0;
 
   static final String MAX_PLACED_RESERVATIONS_QUEUE_KEY =
       MAX_PLACED_RESERVATIONS_KEY + ".{}";
