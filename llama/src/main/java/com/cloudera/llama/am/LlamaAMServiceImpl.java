@@ -153,8 +153,7 @@ public class LlamaAMServiceImpl implements LlamaAMService.Iface {
     }
     if (queue == null) {
       throw new LlamaException(
-          ErrorCode.RESERVATION_USER_TO_QUEUE_MAPPING_NOT_FOUND, requestedQueue,
-          user);
+          ErrorCode.RESERVATION_USER_TO_QUEUE_MAPPING_NOT_FOUND, user, requestedQueue);
     }
     LOG.debug("Reservation from user " + user + " with requested queue " +
         requestedQueue + " resolved to queue " + queue);
