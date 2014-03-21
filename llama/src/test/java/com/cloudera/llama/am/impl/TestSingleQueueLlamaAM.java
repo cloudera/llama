@@ -19,6 +19,7 @@ package com.cloudera.llama.am.impl;
 
 import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.LlamaAMEvent;
+import com.cloudera.llama.am.api.NodeInfo;
 import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.api.LlamaAMListener;
 import com.cloudera.llama.am.api.PlacedReservation;
@@ -83,8 +84,8 @@ public class TestSingleQueueLlamaAM {
     }
 
     @Override
-    public List<String> getNodes() throws LlamaException {
-      return Arrays.asList("node");
+    public List<NodeInfo> getNodes() throws LlamaException {
+      return Arrays.asList(new NodeInfo("node", 8, 8192));
     }
 
     @Override
@@ -214,7 +215,7 @@ public class TestSingleQueueLlamaAM {
     try {
       llama.start();
       llama.reserve(RESERVATION1_NONGANG);
-      Assert.assertEquals(Arrays.asList("node"), llama.getNodes());
+      Assert.assertEquals(Arrays.asList(new NodeInfo("node", 8, 8192)), llama.getNodes());
     } finally {
       llama.stop();
     }

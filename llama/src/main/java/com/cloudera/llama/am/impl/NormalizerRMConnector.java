@@ -18,6 +18,7 @@
 package com.cloudera.llama.am.impl;
 
 import com.cloudera.llama.am.api.LlamaAM;
+import com.cloudera.llama.am.api.NodeInfo;
 import com.cloudera.llama.am.spi.RMResource;
 import com.cloudera.llama.am.spi.RMConnector;
 import com.cloudera.llama.am.spi.RMEvent;
@@ -107,7 +108,7 @@ public class NormalizerRMConnector implements RMConnector, RMListener {
   }
 
   @Override
-  public List<String> getNodes() throws LlamaException {
+  public List<NodeInfo> getNodes() throws LlamaException {
     return connector.getNodes();
   }
 

@@ -19,6 +19,7 @@ package com.cloudera.llama.am.impl;
 
 import com.cloudera.llama.am.AssertUtils;
 import com.cloudera.llama.am.api.LlamaAM;
+import com.cloudera.llama.am.api.NodeInfo;
 import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.api.LlamaAMListener;
 import com.cloudera.llama.am.api.PlacedReservation;
@@ -60,7 +61,7 @@ public class TestAPIContractLlamaAM {
 
     @Override
     @SuppressWarnings("unchecked")
-    public List<String> getNodes() throws LlamaException {
+    public List<NodeInfo> getNodes() throws LlamaException {
       return Collections.EMPTY_LIST;
     }
 

@@ -63,7 +63,15 @@ public class TestLlamaAMWithMock {
 
   @Test
   public void testMocks() throws Exception {
-    final LlamaAM llama = LlamaAM.create(getConfiguration());
+    Configuration conf = getConfiguration();
+    String nodesKey = "" +
+        MockLlamaAMFlags.ALLOCATE + "XX" + "," +
+        MockLlamaAMFlags.ALLOCATE + "h0" + "," +
+        MockLlamaAMFlags.REJECT + "h1" + "," +
+        MockLlamaAMFlags.PREEMPT + "h2" + "," +
+        MockLlamaAMFlags.LOSE + "h3";
+    conf.set(MockRMConnector.NODES_KEY, nodesKey);
+    final LlamaAM llama = LlamaAM.create(conf);
     MockListener listener = new MockListener();
     try {
       llama.start();
@@ -139,8 +147,6 @@ public class TestLlamaAMWithMock {
           true));
       Thread.sleep(100);
       Assert.assertEquals(2, TestUtils.getReservations(listener.events, null, true).size());
-      Assert.assertEquals(1, TestUtils.getReservations(listener.events, PlacedReservation.Status.REJECTED, false).size());
-      Assert.assertEquals(1, TestUtils.getResources(listener.events, PlacedResource.Status.REJECTED, false).size());
     } finally {
       llama.stop();
     }
@@ -148,7 +154,12 @@ public class TestLlamaAMWithMock {
 
   @Test(expected = IllegalArgumentException.class)
   public void testInvalidQueue() throws Exception {
-    final LlamaAM llama = LlamaAM.create(getConfiguration());
+    String nodesKey = "" +
+        MockLlamaAMFlags.ALLOCATE + "h0";
+    Configuration conf = getConfiguration();
+    conf.set(MockRMConnector.NODES_KEY, nodesKey);
+
+    final LlamaAM llama = LlamaAM.create(conf);
     try {
       llama.start();
       UUID c1 = UUID.randomUUID();

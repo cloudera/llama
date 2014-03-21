@@ -19,17 +19,10 @@ package com.cloudera.llama.am;
 
 
 import com.cloudera.llama.am.api.LlamaAM;
-import com.cloudera.llama.am.mock.MockRMConnector;
-import com.cloudera.llama.thrift.TAllocatedResource;
-import com.cloudera.llama.thrift.TLlamaAMNotificationRequest;
-import com.cloudera.llama.thrift.TLlamaAMReservationExpansionRequest;
-import com.cloudera.llama.thrift.TLlamaAMReservationExpansionResponse;
-import com.cloudera.llama.thrift.TLlamaNMNotificationRequest;
-import com.cloudera.llama.util.ErrorCode;
-import com.cloudera.llama.util.FastFormat;
 import com.cloudera.llama.am.impl.GangAntiDeadlockLlamaAM;
 import com.cloudera.llama.am.impl.SingleQueueLlamaAM;
 import com.cloudera.llama.am.mock.MockLlamaAMFlags;
+import com.cloudera.llama.am.mock.MockRMConnector;
 import com.cloudera.llama.am.spi.RMConnector;
 import com.cloudera.llama.server.ClientNotificationService;
 import com.cloudera.llama.server.ClientNotifier;
@@ -40,16 +33,20 @@ import com.cloudera.llama.server.TestAbstractMain;
 import com.cloudera.llama.server.TypeUtils;
 import com.cloudera.llama.thrift.LlamaAMAdminService;
 import com.cloudera.llama.thrift.LlamaAMService;
+import com.cloudera.llama.thrift.TAllocatedResource;
 import com.cloudera.llama.thrift.TLlamaAMAdminEmptyCacheRequest;
 import com.cloudera.llama.thrift.TLlamaAMAdminEmptyCacheResponse;
 import com.cloudera.llama.thrift.TLlamaAMAdminReleaseRequest;
 import com.cloudera.llama.thrift.TLlamaAMAdminReleaseResponse;
 import com.cloudera.llama.thrift.TLlamaAMGetNodesRequest;
 import com.cloudera.llama.thrift.TLlamaAMGetNodesResponse;
+import com.cloudera.llama.thrift.TLlamaAMNotificationRequest;
 import com.cloudera.llama.thrift.TLlamaAMRegisterRequest;
 import com.cloudera.llama.thrift.TLlamaAMRegisterResponse;
 import com.cloudera.llama.thrift.TLlamaAMReleaseRequest;
 import com.cloudera.llama.thrift.TLlamaAMReleaseResponse;
+import com.cloudera.llama.thrift.TLlamaAMReservationExpansionRequest;
+import com.cloudera.llama.thrift.TLlamaAMReservationExpansionResponse;
 import com.cloudera.llama.thrift.TLlamaAMReservationRequest;
 import com.cloudera.llama.thrift.TLlamaAMReservationResponse;
 import com.cloudera.llama.thrift.TLlamaAMUnregisterRequest;
@@ -59,6 +56,8 @@ import com.cloudera.llama.thrift.TLocationEnforcement;
 import com.cloudera.llama.thrift.TNetworkAddress;
 import com.cloudera.llama.thrift.TResource;
 import com.cloudera.llama.thrift.TStatusCode;
+import com.cloudera.llama.util.ErrorCode;
+import com.cloudera.llama.util.FastFormat;
 import com.cloudera.llama.util.UUID;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
@@ -127,7 +126,9 @@ public class TestLlamaAMThriftServer {
         RMConnector.class);
     conf.set(LlamaAM.CORE_QUEUES_KEY, "root.q1,root.q2");
     conf.set(MockRMConnector.QUEUES_KEY, "root.q1,root.q2");
-    conf.set(MockRMConnector.NODES_KEY, "n1,n2");
+    String nodesKey = "" +
+        MockLlamaAMFlags.ALLOCATE + "n1";
+    conf.set(MockRMConnector.NODES_KEY, nodesKey);
     conf.setInt(MockRMConnector.EVENTS_MIN_WAIT_KEY, 5);
     conf.setInt(MockRMConnector.EVENTS_MAX_WAIT_KEY, 10);
 
@@ -334,7 +335,8 @@ public class TestLlamaAMThriftServer {
           tgnReq.setAm_handle(trRes.getAm_handle());
           TLlamaAMGetNodesResponse tgnRes = client.GetNodes(tgnReq);
           Assert.assertEquals(TStatusCode.OK, tgnRes.getStatus().getStatus_code());
-          Assert.assertEquals(Arrays.asList("n1", "n2"), tgnRes.getNodes());
+          Assert.assertEquals(Arrays.asList(
+              MockLlamaAMFlags.ALLOCATE + "n1"), tgnRes.getNodes());
 
           //unregister
           TLlamaAMUnregisterRequest turReq = new TLlamaAMUnregisterRequest();
@@ -695,6 +697,7 @@ public class TestLlamaAMThriftServer {
       conf.setInt(sConf.getPropertyName(
           ServerConfiguration.TRANSPORT_TIMEOUT_KEY), 200);
       server.setConf(conf);
+
       server.start();
 
       Subject.doAs(getClientSubject(), new PrivilegedExceptionAction<Object>() {

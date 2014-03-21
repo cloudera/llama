@@ -18,6 +18,7 @@
 package com.cloudera.llama.am.impl;
 
 import com.cloudera.llama.am.api.LlamaAM;
+import com.cloudera.llama.am.api.NodeInfo;
 import com.cloudera.llama.am.spi.RMConnector;
 import com.cloudera.llama.am.spi.RMListener;
 import com.cloudera.llama.am.spi.RMResource;
@@ -141,7 +142,7 @@ public class PhasingOutRMConnector implements RMConnector, Runnable {
   }
 
   @Override
-  public List<String> getNodes() throws LlamaException {
+  public List<NodeInfo> getNodes() throws LlamaException {
     return active.getNodes();
   }
 
@@ -177,6 +178,7 @@ public class PhasingOutRMConnector implements RMConnector, Runnable {
 
   @Override
   public void run() {
+    LOG.trace("Running the phaseout for RM connector");
     // We need to create a new connector and discard the old one.
     RMConnector newConnector = null;
     newConnector = newConnectorCreator.create();
@@ -199,6 +201,7 @@ public class PhasingOutRMConnector implements RMConnector, Runnable {
           LOG.warn("The previous RMConnector for queue still has resources which " +
               "were not released yet.");
         }
+        LOG.trace("Stopping the old RM connector {}.", old);
         old.stop();
       }
     }

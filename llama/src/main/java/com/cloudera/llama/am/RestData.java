@@ -416,7 +416,7 @@ public class RestData implements LlamaAMListener,
       return createSchemaNode("object");
     }
   }
-    public class PlacedReservationSerializer extends
+  public class PlacedReservationSerializer extends
       SerializerBase<PlacedReservation> {
 
     protected PlacedReservationSerializer() {
@@ -429,11 +429,7 @@ public class RestData implements LlamaAMListener,
         throws IOException {
       jgen.writeStartObject();
       jgen.writeObjectField("reservationId", value.getReservationId());
-      if (value.getExpansionOf() != null) {
-        jgen.writeObjectField("expansionOfId", value.getExpansionOf());
-      } else {
-        jgen.writeNullField("expansionOfId");
-      }
+      jgen.writeObjectField("expansionOfId", value.getExpansionOf());
       jgen.writeStringField("placedOn", formatDateTime(value.getPlacedOn()));
       jgen.writeObjectField("handle", value.getHandle());
       jgen.writeStringField("queue", value.getQueue());

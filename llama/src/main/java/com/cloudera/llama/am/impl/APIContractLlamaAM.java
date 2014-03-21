@@ -19,6 +19,7 @@ package com.cloudera.llama.am.impl;
 
 import com.cloudera.llama.am.api.Expansion;
 import com.cloudera.llama.am.api.LlamaAM;
+import com.cloudera.llama.am.api.NodeInfo;
 import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.api.LlamaAMListener;
 import com.cloudera.llama.am.api.PlacedReservation;
@@ -98,7 +99,7 @@ public class APIContractLlamaAM extends LlamaAM {
   }
 
   @Override
-  public List<String> getNodes() throws LlamaException {
+  public List<NodeInfo> getNodes() throws LlamaException {
     checkIsRunning();
     LOG.trace("getNodes()");
     return llamaAM.getNodes();

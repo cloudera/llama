@@ -28,6 +28,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -61,8 +62,8 @@ public class TestLlamaAM {
     }
 
     @Override
-    public List<String> getNodes() throws LlamaException {
-      return null;
+    public List<NodeInfo> getNodes() throws LlamaException {
+      return Arrays.asList(new NodeInfo[] { new NodeInfo("n1", 8, 8096) });
     }
 
     @Override

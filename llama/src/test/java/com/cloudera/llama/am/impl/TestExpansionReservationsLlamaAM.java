@@ -20,6 +20,7 @@ package com.cloudera.llama.am.impl;
 import com.cloudera.llama.am.api.Expansion;
 import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.LlamaAMEvent;
+import com.cloudera.llama.am.api.NodeInfo;
 import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.PlacedResource;
 import com.cloudera.llama.am.api.Reservation;
@@ -44,9 +45,7 @@ public class TestExpansionReservationsLlamaAM {
   @Test
   public void testReservationToExpansionOperations() throws Exception {
     LlamaAM am = Mockito.mock(LlamaAM.class);
-    Configuration conf = new Configuration(false);
-    Mockito.when(am.getConf()).thenReturn(conf);
-    ExpansionReservationsLlamaAM eAm = new ExpansionReservationsLlamaAM(am);
+    ExpansionReservationsLlamaAM eAm = createExpansionAm(am);
     try {
       UUID r1 = UUID.randomUUID();
 
@@ -59,10 +58,12 @@ public class TestExpansionReservationsLlamaAM {
       Assert.assertNull(eAm.getExpansions(null));
       Assert.assertNull(eAm.getExpansions(r1));
 
-      eAm.add(r1, e1, handle1);
+      eAm.reserve(r1, Mockito.mock(Reservation.class));
+
+      eAm.addExpansion(r1, e1, handle1);
       assertExpansions(eAm, r1, e1);
 
-      eAm.add(r1, e2, handle2);
+      eAm.addExpansion(r1, e2, handle2);
       assertExpansions(eAm, r1, e1, e2);
 
       eAm.removeExpansion(r1, e1);
@@ -71,7 +72,7 @@ public class TestExpansionReservationsLlamaAM {
       eAm.removeExpansionsOf(r1);
       Assert.assertNull(eAm.getExpansions(r1));
 
-      eAm.add(r1, e1, handle1);
+      eAm.addExpansion(r1, e1, handle1);
       eAm.removeExpansion(r1, e1);
       Assert.assertNull(eAm.getExpansions(r1));
 
@@ -88,9 +89,7 @@ public class TestExpansionReservationsLlamaAM {
   @Test
   public void testDelegation() throws Exception {
     LlamaAM am = Mockito.mock(LlamaAM.class);
-    Configuration conf = new Configuration(false);
-    Mockito.when(am.getConf()).thenReturn(conf);
-    ExpansionReservationsLlamaAM eAm = new ExpansionReservationsLlamaAM(am);
+    ExpansionReservationsLlamaAM eAm = createExpansionAm(am);
     try {
       eAm.setMetricRegistry(new MetricRegistry());
       Mockito.verify(am).setMetricRegistry(Mockito.any(MetricRegistry.class));
@@ -126,9 +125,7 @@ public class TestExpansionReservationsLlamaAM {
   @Test(expected = LlamaException.class)
   public void testExpansionOfUnknownReservation() throws Exception {
     LlamaAM am = Mockito.mock(LlamaAM.class);
-    Configuration conf = new Configuration(false);
-    Mockito.when(am.getConf()).thenReturn(conf);
-    ExpansionReservationsLlamaAM eAm = new ExpansionReservationsLlamaAM(am);
+    ExpansionReservationsLlamaAM eAm = createExpansionAm(am);
 
     Reservation r = TestUtils.createReservation(true);
     PlacedReservation pr = TestUtils.createPlacedReservation(r,
@@ -150,9 +147,7 @@ public class TestExpansionReservationsLlamaAM {
   @Test(expected = LlamaException.class)
   public void testExpansionOfNotAllocatedReservation() throws Exception {
     LlamaAM am = Mockito.mock(LlamaAM.class);
-    Configuration conf = new Configuration(false);
-    Mockito.when(am.getConf()).thenReturn(conf);
-    ExpansionReservationsLlamaAM eAm = new ExpansionReservationsLlamaAM(am);
+    ExpansionReservationsLlamaAM eAm = createExpansionAm(am);
 
     Reservation r = TestUtils.createReservation(true);
     PlacedReservation pr = TestUtils.createPlacedReservation(r,
@@ -173,9 +168,7 @@ public class TestExpansionReservationsLlamaAM {
   @Test(expected = LlamaException.class)
   public void testExpansionOfExpansion() throws Exception {
     LlamaAM am = Mockito.mock(LlamaAM.class);
-    Configuration conf = new Configuration(false);
-    Mockito.when(am.getConf()).thenReturn(conf);
-    ExpansionReservationsLlamaAM eAm = new ExpansionReservationsLlamaAM(am);
+    ExpansionReservationsLlamaAM eAm = createExpansionAm(am);
 
     Reservation r = TestUtils.createReservation(true);
     PlacedReservation pr = TestUtils.createPlacedReservation(r,
@@ -198,9 +191,7 @@ public class TestExpansionReservationsLlamaAM {
   @Test
   public void testExpansion() throws Exception {
     LlamaAM am = Mockito.mock(LlamaAM.class);
-    Configuration conf = new Configuration(false);
-    Mockito.when(am.getConf()).thenReturn(conf);
-    ExpansionReservationsLlamaAM eAm = new ExpansionReservationsLlamaAM(am);
+    ExpansionReservationsLlamaAM eAm = createExpansionAm(am);
     try {
       Reservation r = TestUtils.createReservation(true);
       PlacedReservation pr = TestUtils.createPlacedReservation(r,
@@ -219,12 +210,21 @@ public class TestExpansionReservationsLlamaAM {
     }
   }
 
+  private ExpansionReservationsLlamaAM createExpansionAm(LlamaAM am)
+      throws LlamaException {
+    Configuration conf = new Configuration(false);
+    Mockito.when(am.getConf()).thenReturn(conf);
+    List<NodeInfo> nodes = Arrays.asList(new NodeInfo[] {
+        new NodeInfo("n1", 8, 8096), new NodeInfo("n2", 8, 8096)
+    });
+    Mockito.when(am.getNodes()).thenReturn(nodes);
+    return new ExpansionReservationsLlamaAM(am);
+  }
+
   @Test
   public void testReleaseExpansion() throws Exception {
     LlamaAM am = Mockito.mock(LlamaAM.class);
-    Configuration conf = new Configuration(false);
-    Mockito.when(am.getConf()).thenReturn(conf);
-    ExpansionReservationsLlamaAM eAm = new ExpansionReservationsLlamaAM(am);
+    ExpansionReservationsLlamaAM eAm = createExpansionAm(am);
     try {
       Reservation r = TestUtils.createReservation(true);
       PlacedReservation pr = TestUtils.createPlacedReservation(r,
@@ -250,9 +250,7 @@ public class TestExpansionReservationsLlamaAM {
   @Test
   public void testReleaseReservationWithExpansion() throws Exception {
     LlamaAM am = Mockito.mock(LlamaAM.class);
-    Configuration conf = new Configuration(false);
-    Mockito.when(am.getConf()).thenReturn(conf);
-    ExpansionReservationsLlamaAM eAm = new ExpansionReservationsLlamaAM(am);
+    ExpansionReservationsLlamaAM eAm = createExpansionAm(am);
     try {
       Reservation r = TestUtils.createReservation(true);
       PlacedReservation pr = TestUtils.createPlacedReservation(r,
@@ -340,9 +338,7 @@ public class TestExpansionReservationsLlamaAM {
   @Test
   public void testReleaseForHandleReservationWithExtensions() throws Exception {
     LlamaAM am = Mockito.mock(LlamaAM.class);
-    Configuration conf = new Configuration(false);
-    Mockito.when(am.getConf()).thenReturn(conf);
-    ExpansionReservationsLlamaAM eAm = new ExpansionReservationsLlamaAM(am);
+    ExpansionReservationsLlamaAM eAm = createExpansionAm(am);
     try {
       Reservation r = TestUtils.createReservation(true);
       PlacedReservation pr = TestUtils.createPlacedReservation(r,
@@ -378,9 +374,7 @@ public class TestExpansionReservationsLlamaAM {
   @Test
   public void testReleaseForQueueReservationWithExtensions() throws Exception {
     LlamaAM am = Mockito.mock(LlamaAM.class);
-    Configuration conf = new Configuration(false);
-    Mockito.when(am.getConf()).thenReturn(conf);
-    ExpansionReservationsLlamaAM eAm = new ExpansionReservationsLlamaAM(am);
+    ExpansionReservationsLlamaAM eAm = createExpansionAm(am);
     try {
       Reservation r = TestUtils.createReservation(true);
       PlacedReservation pr = TestUtils.createPlacedReservation(r,
@@ -413,9 +407,7 @@ public class TestExpansionReservationsLlamaAM {
   @Test
   public void testReleaseFromEvent() throws Exception {
     LlamaAM am = Mockito.mock(LlamaAM.class);
-    Configuration conf = new Configuration(false);
-    Mockito.when(am.getConf()).thenReturn(conf);
-    ExpansionReservationsLlamaAM eAm = new ExpansionReservationsLlamaAM(am);
+    ExpansionReservationsLlamaAM eAm = createExpansionAm(am);
     try {
       Reservation r = TestUtils.createReservation(true);
       PlacedReservation pr = TestUtils.createPlacedReservation(r,

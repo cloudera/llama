@@ -21,8 +21,10 @@ import com.cloudera.llama.am.api.Expansion;
 import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.LlamaAMEvent;
 import com.cloudera.llama.am.api.LlamaAMListener;
+import com.cloudera.llama.am.api.NodeInfo;
 import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.Reservation;
+import com.cloudera.llama.am.api.Resource;
 import com.cloudera.llama.util.ErrorCode;
 import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.util.UUID;
@@ -30,9 +32,7 @@ import com.codahale.metrics.MetricRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -87,11 +87,14 @@ public class ExpansionReservationsLlamaAM extends LlamaAMImpl
   }
   private Map<UUID, Set<ExpansionId>> reservationToExpansionsMap;
 
+  private Map<UUID, Map<String, NodeInfo>> reservationTotalAsk;
+
   public ExpansionReservationsLlamaAM(LlamaAM am) {
     super(am.getConf());
     this.am = am;
     am.addListener(this);
     reservationToExpansionsMap = new HashMap<UUID, Set<ExpansionId>>();
+    reservationTotalAsk = new HashMap<UUID, Map<String, NodeInfo>>();
   }
 
   @Override
@@ -116,26 +119,99 @@ public class ExpansionReservationsLlamaAM extends LlamaAMImpl
   }
 
   @Override
-  public List<String> getNodes() throws LlamaException {
+  public List<NodeInfo> getNodes() throws LlamaException {
     return am.getNodes();
   }
 
   @Override
   public void reserve(UUID reservationId, Reservation reservation)
       throws LlamaException {
+    checkAndUpdateCapacity(reservationId, null, reservation.getResources(),
+        _getNodes());
     am.reserve(reservationId, reservation);
   }
 
-  synchronized void add(UUID reservationId, UUID expansionId, UUID handle) {
-    Set<ExpansionId> expansions = reservationToExpansionsMap.get(reservationId);
-    if (expansions == null) {
-      expansions = new HashSet<ExpansionId>();
-      reservationToExpansionsMap.put(reservationId, expansions);
+  private synchronized  void checkAndUpdateCapacity(UUID reservationId,
+                   UUID expansionId,
+                   List<Resource> askResources,
+                   Map<String, NodeInfo> nodeToNodeInfo) throws LlamaException {
+    if (askResources == null) {
+      return;
     }
-    expansions.add(new ExpansionId(expansionId, handle));
+
+    Map<String, NodeInfo> currentNodesAskMap;
+    if (expansionId != null) {
+      currentNodesAskMap = reservationTotalAsk.get(reservationId);
+    }  else {
+      // This is a new reservation
+      currentNodesAskMap = new HashMap<String, NodeInfo>();
+    }
+
+    for(Resource resource : askResources) {
+      NodeInfo node = nodeToNodeInfo.get(resource.getLocationAsk());
+      if (node == null) {
+        throw new LlamaException(ErrorCode.RESERVATION_ASKING_UNKNOWN_NODE,
+            reservationId, expansionId, resource.getLocationAsk());
+      }
+
+      int newCpusAsk = resource.getCpuVCoresAsk();
+      int newMemoryAsk = resource.getMemoryMbsAsk();
+      NodeInfo currentAsk = currentNodesAskMap.get(node.getLocation());
+      if (currentAsk != null) {
+        newCpusAsk += currentAsk.getCpusVCores();
+        newMemoryAsk += currentAsk.getMemoryMB();
+      }
+
+      if (newCpusAsk > node.getCpusVCores()) {
+        throw new LlamaException(ErrorCode.RESERVATION_ASKING_MORE_VCORES,
+            reservationId, expansionId, newCpusAsk, node.getCpusVCores(), node.getLocation());
+      }
+      if (newMemoryAsk > node.getMemoryMB()) {
+        throw new LlamaException(ErrorCode.RESERVATION_ASKING_MORE_MB,
+            reservationId, expansionId, newMemoryAsk, node.getMemoryMB(), node.getLocation());
+      }
+
+      // Now update the currentNodesAskMap info.
+      if (currentAsk == null) {
+        currentAsk = new NodeInfo(resource.getLocationAsk());
+        currentNodesAskMap.put(resource.getLocationAsk(), currentAsk);
+      }
+      currentAsk.setCpus(newCpusAsk);
+      currentAsk.setMemoryMB(newMemoryAsk);
+    }
+    // Finally put it in the map.
+    reservationTotalAsk.put(reservationId, currentNodesAskMap);
+  }
+
+  private Map<String, NodeInfo> _getNodes() throws LlamaException {
+    Map<String, NodeInfo> nodeToNodeInfo = new HashMap<String, NodeInfo>();
+    List<NodeInfo> nodes = getNodes();
+    if (nodes != null) {
+      for (NodeInfo node : nodes) {
+        nodeToNodeInfo.put(node.getLocation(), node);
+      }
+    }
+    return  nodeToNodeInfo;
+  }
+
+  synchronized boolean addExpansion(UUID reservationId,
+                                    UUID expansionId, UUID handle) {
+    if (reservationTotalAsk.get(reservationId) != null) {
+      Set<ExpansionId> expansions = reservationToExpansionsMap.get(reservationId);
+      if (expansions == null) {
+        expansions = new HashSet<ExpansionId>();
+        reservationToExpansionsMap.put(reservationId, expansions);
+      }
+      expansions.add(new ExpansionId(expansionId, handle));
+      return true;
+    }
+
+    // The reservation has been removed already..so dont add it and just return
+    return false;
   }
 
   synchronized Set<ExpansionId> removeExpansionsOf(UUID reservationId) {
+    reservationTotalAsk.remove(reservationId);
     return reservationToExpansionsMap.remove(reservationId);
   }
 
@@ -166,6 +242,17 @@ public class ExpansionReservationsLlamaAM extends LlamaAMImpl
   public void expand(UUID expansionId, Expansion expansion)
       throws LlamaException {
     UUID reservationId = expansion.getExpansionOf();
+    synchronized (this) {
+      if (reservationTotalAsk.get(reservationId) == null) {
+        LOG.error("Expansion request for unknown reservation: " +
+            "Expansion Id: {}, Reservation Id: {}", expansionId, reservationId);
+        throw new LlamaException(ErrorCode.UNKNOWN_RESERVATION_FOR_EXPANSION,
+            reservationId);
+      }
+      checkAndUpdateCapacity(reservationId, expansionId,
+          Arrays.asList(expansion.getResource()),_getNodes());
+    }
+
     PlacedReservation originalReservation = am.getReservation(reservationId);
     if (originalReservation == null) {
       throw new LlamaException(ErrorCode.UNKNOWN_RESERVATION_FOR_EXPANSION,
@@ -183,8 +270,11 @@ public class ExpansionReservationsLlamaAM extends LlamaAMImpl
         PlacedReservationImpl.createReservationForExpansion(
             originalReservation, expansion);
     am.reserve(expansionId, reservation);
-    add(reservationId, expansionId, expansion.getHandle());
-    if (am.getReservation(reservationId) == null) {
+
+    // There could be a race condition that by the time we reach here,
+    // client could release the reservation, so we should check if its still
+    // valid and otherwise release it.
+    if (!addExpansion(reservationId, expansionId, expansion.getHandle())) {
       am.releaseReservation(expansion.getHandle(), expansionId, false);
       throw new LlamaException(ErrorCode.UNKNOWN_RESERVATION_FOR_EXPANSION,
           reservationId);
@@ -200,11 +290,12 @@ public class ExpansionReservationsLlamaAM extends LlamaAMImpl
   private void releaseExpansions(UUID reservationId, boolean doNotCache) {
     Set<ExpansionId> expansionIds = removeExpansionsOf(reservationId);
     if (expansionIds != null) {
-      LOG.debug("Releasing expansions for reservation '{}'", reservationId);
+      LOG.debug("Releasing '{}' expansions for reservation '{}'",
+          expansionIds.size(), reservationId);
       for (ExpansionId expansionId : expansionIds) {
         try {
-          LOG.debug("Releasing expansion {} for reservation '{}'",
-              expansionId, reservationId);
+          LOG.debug("Releasing expansion '{}' for reservation '{}'",
+              expansionId.expansionId, reservationId);
           //events generated by this release should never be echo
           am.releaseReservation(expansionId.handle, expansionId.expansionId, doNotCache);
         } catch (Exception ex) {

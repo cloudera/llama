@@ -18,6 +18,7 @@
 package com.cloudera.llama.am.mock;
 
 import com.cloudera.llama.am.api.LlamaAM;
+import com.cloudera.llama.am.api.NodeInfo;
 import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.api.PlacedResource;
 import com.cloudera.llama.am.spi.RMResource;
@@ -31,7 +32,9 @@ import com.codahale.metrics.MetricRegistry;
 
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -95,7 +98,7 @@ public class MockRMConnector
         status = entry.getValue();
       }
     }
-    if (!nodes.contains(getLocation(location))) {
+    if (!nodes.contains(location)) {
       status = PlacedResource.Status.REJECTED;
     } else if (status == null) {
       int r = RANDOM.nextInt(10);
@@ -180,9 +183,14 @@ public class MockRMConnector
   }
 
   @Override
-  public List<String> getNodes() throws LlamaException {
-    return Collections.unmodifiableList(Arrays.asList(getConf().
-        getStrings(NODES_KEY, NODES_DEFAULT)));
+  public List<NodeInfo> getNodes() throws LlamaException {
+    String[] nodeLocations = getConf().getStrings(NODES_KEY, NODES_DEFAULT);
+    List<NodeInfo> nodes = new ArrayList<NodeInfo>(nodeLocations.length);
+    for(String node : nodeLocations) {
+      nodes.add(new NodeInfo(node, (short) YarnConfiguration.DEFAULT_NM_VCORES,
+          YarnConfiguration.DEFAULT_NM_PMEM_MB));
+    }
+    return nodes;
   }
 
   @Override

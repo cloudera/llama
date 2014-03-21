@@ -18,18 +18,18 @@
 package com.cloudera.llama.am.yarn;
 
 import com.cloudera.llama.am.api.LlamaAM;
-import com.cloudera.llama.util.Clock;
-import com.cloudera.llama.util.ErrorCode;
-import com.cloudera.llama.util.LlamaException;
+import com.cloudera.llama.am.api.NodeInfo;
 import com.cloudera.llama.am.api.PlacedResource;
-import com.cloudera.llama.am.spi.RMResource;
 import com.cloudera.llama.am.spi.RMConnector;
 import com.cloudera.llama.am.spi.RMEvent;
 import com.cloudera.llama.am.spi.RMListener;
+import com.cloudera.llama.am.spi.RMResource;
+import com.cloudera.llama.util.Clock;
+import com.cloudera.llama.util.ErrorCode;
+import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.util.NamedThreadFactory;
 import com.cloudera.llama.util.UUID;
 import com.codahale.metrics.MetricRegistry;
-
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -134,14 +134,13 @@ public class YarnRMConnector implements RMConnector, Configurable,
   private AMRMClientAsync<LlamaContainerRequest> amRmClientAsync;
   private NMClient nmClient;
   private ApplicationId appId;
-  private final Map<String, Resource> nodes;
+  private Map<String, Resource> nodes;
   private Resource maxResource;
   private int containerHandlerQueueThreshold;
   private BlockingQueue<ContainerHandler> containerHandlerQueue;
   private ThreadPoolExecutor containerHandlerExecutor;
 
   public YarnRMConnector() {
-    nodes = Collections.synchronizedMap(new HashMap<String, Resource>());
   }
 
   @Override
@@ -308,6 +307,7 @@ public class YarnRMConnector implements RMConnector, Configurable,
             getConf().get(ADVERTISED_HOSTNAME_KEY, ""),
             getConf().getInt(ADVERTISED_PORT_KEY, 0), urlWithoutScheme);
     maxResource = response.getMaximumResourceCapability();
+    nodes = Collections.synchronizedMap(new HashMap<String, Resource>());
     for (NodeReport nodeReport : yarnClient.getNodeReports()) {
       if (nodeReport.getNodeState() == NodeState.RUNNING) {
         String nodeKey = getNodeName(nodeReport.getNodeId());
@@ -460,15 +460,31 @@ public class YarnRMConnector implements RMConnector, Configurable,
   }
 
   @Override
-  public List<String> getNodes() throws LlamaException {
-    List<String> nodes = new ArrayList<String>();
+  public List<NodeInfo> getNodes() throws LlamaException {
+    List<NodeInfo> ret = new ArrayList<NodeInfo>();
     try {
-      List<NodeReport> nodeReports = 
-          yarnClient.getNodeReports(NodeState.RUNNING);
-      for (NodeReport nodeReport : nodeReports) {
-        nodes.add(getNodeName(nodeReport.getNodeId()));
+      if (nodes == null) {
+        // Get it from the yarn client.
+        List<NodeReport> nodeReports =
+            yarnClient.getNodeReports(NodeState.RUNNING);
+        for (NodeReport nodeReport : nodeReports) {
+          Resource resource = nodeReport.getCapability();
+          NodeInfo nodeInfo = new NodeInfo(getNodeName(nodeReport.getNodeId()),
+              resource.getVirtualCores(), resource.getMemory());
+          ret.add(nodeInfo);
+        }
+      } else {
+        // Get it from the nodes structure which is being kept upto date.
+        synchronized (nodes) {
+          for(Map.Entry<String, Resource> entry : nodes.entrySet()) {
+            Resource nodeReport = entry.getValue();
+            NodeInfo nodeInfo = new NodeInfo(entry.getKey(),
+                nodeReport.getVirtualCores(), nodeReport.getMemory());
+            ret.add(nodeInfo);
+          }
+        }
       }
-      return nodes;
+      return ret;
     } catch (Throwable ex) {
       throw new LlamaException(ex, ErrorCode.AM_CANNOT_GET_NODES, appId);
     }
@@ -564,6 +580,9 @@ public class YarnRMConnector implements RMConnector, Configurable,
       YarnRMConnector connector =
           (YarnRMConnector) resource.getRmData().get(YARN_RM_CONNECTOR_KEY);
       if (connector == null || !connector.equals(this)) {
+        LOG.warn("Resource being released is not from this connector. " +
+            "Resource [{}], Resource connector [{}], this [{}]",
+            resource, connector, this);
         continue; // Not allocated by this connector.
       }
 
@@ -582,7 +601,7 @@ public class YarnRMConnector implements RMConnector, Configurable,
         queue(new ContainerHandler(ugi, resource, container, Action.STOP));
         released = true;
       } else {
-        LOG.debug("Container was not allocated yet.");
+        LOG.debug("Container was not allocated yet for '{}'.", resource);
       }
       if (!released) {
         LOG.debug("Missing RM payload, ignoring release of container " +
@@ -767,7 +786,8 @@ public class YarnRMConnector implements RMConnector, Configurable,
           queue(new ContainerHandler(ugi, resource, container, Action.START));
         }
       } else {
-        LOG.error("No matching request for {}. Releasing the container.", container);
+        LOG.error("No matching request for {}. Releasing the container.",
+            container);
         containerToResourceMap.remove(container.getId());
         amRmClientAsync.releaseAssignedContainer(container.getId());
       }

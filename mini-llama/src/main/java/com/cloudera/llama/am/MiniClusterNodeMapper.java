@@ -17,6 +17,7 @@
  */
 package com.cloudera.llama.am;
 
+import com.cloudera.llama.am.api.NodeInfo;
 import com.cloudera.llama.util.FastFormat;
 import com.cloudera.llama.server.NodeMapper;
 import org.apache.hadoop.conf.Configurable;
@@ -147,12 +148,12 @@ public class MiniClusterNodeMapper implements NodeMapper, Configurable {
   }
 
   @Override
-  public List<String> getDataNodes(List<String> nodeManagers) {
-    List<String> list = new ArrayList<String>();
-    for (String nodeManager : nodeManagers) {
-      list.add(getDataNode(nodeManager));
+  public List<NodeInfo> getDataNodes(List<NodeInfo> nodeManagers) {
+    List<NodeInfo> list = new ArrayList<NodeInfo>(nodeManagers.size());
+    for (NodeInfo node : nodeManagers) {
+      list.add(new NodeInfo(getDataNode(node.getLocation()), node.getCpusVCores(),
+          node.getMemoryMB()));
     }
     return list;
   }
-
 }
