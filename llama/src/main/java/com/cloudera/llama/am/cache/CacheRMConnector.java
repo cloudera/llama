@@ -18,6 +18,7 @@
 package com.cloudera.llama.am.cache;
 
 import com.cloudera.llama.am.api.LlamaAM;
+import com.cloudera.llama.am.api.NodeInfo;
 import com.cloudera.llama.am.api.PlacedResource;
 import com.cloudera.llama.am.impl.PlacedResourceImpl;
 import com.cloudera.llama.server.MetricUtil;
@@ -179,7 +180,7 @@ public class CacheRMConnector implements RMConnector,
   }
 
   @Override
-  public List<String> getNodes() throws LlamaException {
+  public List<NodeInfo> getNodes() throws LlamaException {
     return connector.getNodes();
   }
 
@@ -215,6 +216,7 @@ public class CacheRMConnector implements RMConnector,
             cached.getRmResourceId(), cached.getRmData());
         changes.add(change);
       } else {
+        LOG.trace("Adding a new pending entry in the cache: {}", resource);
         pending.add(Entry.createStoreEntry(resource));
       }
     }
@@ -229,52 +231,66 @@ public class CacheRMConnector implements RMConnector,
       throws LlamaException {
     List<RMResource> list = new ArrayList<RMResource>(resources);
     List<RMEvent> changes = new ArrayList<RMEvent>();
-    if (!doNotCache) {
-      Iterator<RMResource> it = list.iterator();
-      while (it.hasNext()) {
-        RMResource resource = it.next();
-        Entry pendingEntry = pending.findAndRemove(resource);
-        if (resource.getRmResourceId() != null) {
-          if (pendingEntry == null) {
-            LOG.trace("Release: Pending Entry is null. Trying to put " +
-                "resource {} in cache.", resource);
-            Entry entry = Entry.createCacheEntry(resource);
-            UUID cacheId = entry.getResourceId();
-            cache.add(entry);
-            if (connector.reassignResource(resource.getRmResourceId(), cacheId)) {
-              LOG.debug("Caching released resource '{}'", resource);
-              it.remove();
+    Iterator<RMResource> it = list.iterator();
+    while (it.hasNext()) {
+      RMResource resource = it.next();
+      // we cannot synchronize on the resource here since the pending entry is a
+      // copy which could be released independently.
+      synchronized (this) {
+        // Remove any existing entry for the exact current resource.
+        pending.findAndRemove(resource.getResourceId());
+
+        if (!doNotCache) {
+          if (resource.getRmResourceId() != null) {
+            // Find an existing pending entry that can be satisfied with this resource.
+            Entry pendingEntry = pending.findAndRemove(resource);
+
+            // Find something that can match the resource requirements and
+            // assign this rm resource
+            if (pendingEntry == null) {
+              LOG.trace("Release: Pending Entry is null. Trying to put " +
+                  "resource {} in cache.", resource);
+              Entry entry = Entry.createCacheEntry(resource);
+              UUID cacheId = entry.getResourceId();
+              cache.add(entry);
+              if (connector.reassignResource(resource.getRmResourceId(), cacheId)) {
+                LOG.debug("Caching released resource '{}'", resource);
+                it.remove();
+              } else {
+                cache.findAndRemove(cacheId);
+                LOG.warn("RMConnector did not reassign '{}', releasing and " +
+                    "discarding it", resource.getResourceId());
+              }
             } else {
-              cache.findAndRemove(cacheId);
-              LOG.warn("RMConnector did not reassign '{}', releasing and " +
-                  "discarding it", resource.getResourceId());
+              LOG.trace("Release: There is a pending entry {}, trying to " +
+                  "reuse resource {}.", pendingEntry, resource);
+              connector.release(Arrays.asList((RMResource)pendingEntry), false);
+              if (connector.reassignResource(resource.getRmResourceId(),
+                  pendingEntry.getResourceId())) {
+                LOG.debug(
+                    "Reassigning released resource '{}' to pending resource '{}'",
+                    resource, pendingEntry);
+                it.remove();
+                RMEvent change = RMEvent.createAllocationEvent(
+                    pendingEntry.getResourceId(), resource.getLocation(),
+                    resource.getCpuVCores(), resource.getMemoryMbs(),
+                    resource.getRmResourceId(), resource.getRmData());
+                changes.add(change);
+                pendingEntry.getRmData().putAll(resource.getRmData());
+              } else {
+                LOG.warn("RMConnector did not reassign '{}', discarding it",
+                    resource.getResourceId());
+              }
             }
           } else {
-            LOG.trace("Release: There is a pending entry {}, trying to " +
-                "reuse resource {}.", pendingEntry, resource);
-            connector.release(Arrays.asList((RMResource)pendingEntry), false);
-            if (connector.reassignResource(resource.getRmResourceId(),
-                pendingEntry.getResourceId())) {
-              LOG.debug(
-                  "Reassigning released resource '{}' to pending resource '{}'",
-                  resource, pendingEntry);
-              it.remove();
-              RMEvent change = RMEvent.createAllocationEvent(
-                  pendingEntry.getResourceId(), resource.getLocation(),
-                  resource.getCpuVCores(), resource.getMemoryMbs(),
-                  resource.getRmResourceId(), resource.getRmData());
-              changes.add(change);
-            } else {
-              LOG.warn("RMConnector did not reassign '{}', discarding it",
-                  resource.getResourceId());
-            }
+            LOG.trace("Resource {} was not allocated yet. Releasing it.", resource);
           }
         } else {
-          LOG.trace("Resource {} was not allocated yet. Releasing it.", resource);
+          LOG.trace("Not caching the resource {}. Releasing it.", resource);
         }
       }
     }
-    if (!list.isEmpty()) {
+  if (!list.isEmpty()) {
       connector.release(list, doNotCache);
     }
     callback.onEvent(changes);

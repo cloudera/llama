@@ -85,13 +85,18 @@ public class LlamaClientCallback extends
     public TLlamaAMNotificationResponse AMNotification(
         TLlamaAMNotificationRequest request) throws TException {
       LOG.info(request.toString());
+      System.out.println(request.toString());
 
       if (request.isSetAllocated_reservation_ids()) {
         LOG.trace("Allocated: " +
             TypeUtils.toUUIDString(request.getAllocated_reservation_ids()));
+        System.out.println("Allocated: " +
+            TypeUtils.toUUIDString(request.getAllocated_reservation_ids()));
+
         for (TUniqueId r : request.getAllocated_reservation_ids()) {
           if (request.getAllocated_resourcesSize() < 3) {
             LOG.trace(r + ":" + request.toString());
+            System.out.println(r + ":" + request.toString());
           }
           notifyStatusChange(TypeUtils.toUUID(r));
         }

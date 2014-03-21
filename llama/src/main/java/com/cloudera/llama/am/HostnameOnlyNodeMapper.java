@@ -17,6 +17,7 @@
  */
 package com.cloudera.llama.am;
 
+import com.cloudera.llama.am.api.NodeInfo;
 import com.cloudera.llama.server.NodeMapper;
 
 import java.util.ArrayList;
@@ -49,10 +50,11 @@ public class HostnameOnlyNodeMapper implements NodeMapper {
   }
 
   @Override
-  public List<String> getDataNodes(List<String> nodeManagers) {
-    List<String> list = new ArrayList<String>(nodeManagers.size());
-    for (String node : nodeManagers) {
-      list.add(getDataNode(node));
+  public List<NodeInfo> getDataNodes(List<NodeInfo> nodeManagers) {
+    List<NodeInfo> list = new ArrayList<NodeInfo>(nodeManagers.size());
+    for (NodeInfo node : nodeManagers) {
+      list.add(new NodeInfo(getDataNode(node.getLocation()), node.getCpusVCores(),
+          node.getMemoryMB()));
     }
     return list;
   }

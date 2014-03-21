@@ -220,7 +220,7 @@ public abstract class LlamaAM {
    * @throws LlamaException thrown if an error occurs while retrieving the
    * cluster node names.
    */
-  public abstract List<String> getNodes() throws LlamaException;
+  public abstract List<NodeInfo> getNodes() throws LlamaException;
 
   /**
    * Places a reservation in the <code>LlamaAM</code>.

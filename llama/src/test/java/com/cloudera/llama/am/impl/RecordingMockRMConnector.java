@@ -17,17 +17,18 @@
  */
 package com.cloudera.llama.am.impl;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-
-import com.cloudera.llama.am.spi.RMResource;
+import com.cloudera.llama.am.api.NodeInfo;
 import com.cloudera.llama.am.spi.RMConnector;
 import com.cloudera.llama.am.spi.RMListener;
+import com.cloudera.llama.am.spi.RMResource;
 import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.util.UUID;
 import com.codahale.metrics.MetricRegistry;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
 public class RecordingMockRMConnector implements RMConnector {
   List<String> invoked = new ArrayList<String>();
@@ -72,10 +73,13 @@ public class RecordingMockRMConnector implements RMConnector {
 
   @Override
   @SuppressWarnings("unchecked")
-  public List<String> getNodes() throws LlamaException {
+  public List<NodeInfo> getNodes() throws LlamaException {
     invoked.add("getNodes");
     args.add(null);
-    return Collections.EMPTY_LIST;
+    List<NodeInfo> nodes = Arrays.asList(new NodeInfo[]{
+        new NodeInfo("n1", 8, 8096), new NodeInfo("n2", 8, 8096)
+    });
+    return nodes;
   }
 
   @Override

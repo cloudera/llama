@@ -77,7 +77,7 @@ public class TestUtils {
     Expansion.Builder b = Builders.createExpansionBuilder();
     b.setHandle(UUID.randomUUID());
     b.setExpansionOf(r.getReservationId());
-    b.setResource(createResource("l"));
+    b.setResource(createResource("n1"));
     return b.build();
   }
 

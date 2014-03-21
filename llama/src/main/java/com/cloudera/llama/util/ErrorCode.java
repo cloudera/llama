@@ -39,6 +39,13 @@ public enum ErrorCode {
   UNKNOWN_RESERVATION_FOR_EXPANSION(170, "Unknown reservation '{}' for expansion"),
   CANNOT_EXPAND_AN_EXPANSION_RESERVATION(171, "Cannot expand an expansion reservation '{}'"),
   CANNOT_EXPAND_A_RESERVATION_NOT_ALLOCATED(172, "Cannot expand reservation '{}' not in ALLOCATED status, current status '{}'"),
+
+  RESERVATION_ASKING_MORE_VCORES(173, "Reservation '{}', expansion '{}' is asking for more cpu vcores '{}' than capacity '{}' on node '{}'."),
+  RESERVATION_ASKING_MORE_MB(174, "Reservation '{}', expansion '{}' is asking for more memory in mb '{}' than capacity '{}' on node '{}'."),
+  RESERVATION_ASKING_UNKNOWN_NODE(175, "Reservation '{}', expansion '{}' asking for a resource on node '{}' that does not exist."),
+  RESERVATION_ASKING_FOR_SAME_NODE(176, "Reservation '{}', expansion '{}' asking for a resource on node '{}' more than one time in the same request."),
+
+
   AM_CANNOT_START(300, "cannot start AM"),
   AM_CANNOT_REGISTER(301, "cannot register AM '{}' for queue '{}'"),
   AM_CANNOT_CREATE(302, "cannot create AM for queue '{}'"),

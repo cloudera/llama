@@ -18,7 +18,7 @@
 package com.cloudera.llama.am.impl;
 
 import com.cloudera.llama.am.api.LlamaAM;
-import com.cloudera.llama.am.api.Resource;
+import com.cloudera.llama.am.api.NodeInfo;
 import com.cloudera.llama.am.cache.CacheRMConnector;
 import com.cloudera.llama.util.ErrorCode;
 import com.cloudera.llama.util.LlamaException;
@@ -212,7 +212,7 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
   }
 
   @Override
-  public List<String> getNodes() throws LlamaException {
+  public List<NodeInfo> getNodes() throws LlamaException {
     return rmConnector.getNodes();
   }
 

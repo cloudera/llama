@@ -97,7 +97,6 @@ public class TestCacheRMConnector {
 
     cache.release(Arrays.asList((RMResource)pr1), false);
 
-    expected.add("release");
     expected.add("reassignResource");
     Assert.assertEquals(expected, connector.getInvoked());
 

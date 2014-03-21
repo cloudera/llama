@@ -17,6 +17,8 @@
  */
 package com.cloudera.llama.server;
 
+import com.cloudera.llama.am.api.NodeInfo;
+
 import java.util.List;
 
 public interface NodeMapper {
@@ -27,5 +29,5 @@ public interface NodeMapper {
 
   public String getDataNode(String nodeManager);
 
-  public List<String> getDataNodes(List<String> nodeManagers);
+  public List<NodeInfo> getDataNodes(List<NodeInfo> nodeManagers);
 }

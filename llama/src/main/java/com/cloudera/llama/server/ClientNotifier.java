@@ -151,7 +151,7 @@ public class ClientNotifier implements LlamaAMListener {
         }
       }
 
-      // Now add the loose reservations
+      // Now add the loose resources
       for (PlacedResource r : event.getResourceChanges()) {
         // Skip all the pending resources for which there is a reservation
         // that's allocated already.
@@ -193,10 +193,10 @@ public class ClientNotifier implements LlamaAMListener {
                   LOG.isTraceEnabled()) {
                 List<TUniqueId> reservationIds = request
                     .getAllocated_reservation_ids();
-                LOG.trace("Notifying the client for allocation. Handle {}, " +
+                LOG.trace("Notifying the client for reservation allocation. Handle {}, " +
                     "Reservations {}, Request {}.", TypeUtils.toUUID(request.getAm_handle()),
                     TypeUtils.toUUIDString(request
-                        .getAllocated_reservation_ids()));
+                        .getAllocated_reservation_ids()), request);
               }
 
               TLlamaAMNotificationResponse response =

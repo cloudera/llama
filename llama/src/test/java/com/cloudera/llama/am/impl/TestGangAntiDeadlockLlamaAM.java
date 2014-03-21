@@ -18,6 +18,7 @@
 package com.cloudera.llama.am.impl;
 
 import com.cloudera.llama.am.api.LlamaAM;
+import com.cloudera.llama.am.api.NodeInfo;
 import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.api.LlamaAMListener;
 import com.cloudera.llama.am.api.PlacedReservation;
@@ -113,7 +114,7 @@ public class TestGangAntiDeadlockLlamaAM {
     }
 
     @Override
-    public List<String> getNodes() throws LlamaException {
+    public List<NodeInfo> getNodes() throws LlamaException {
       invoked.add("getNodes");
       return null;
     }

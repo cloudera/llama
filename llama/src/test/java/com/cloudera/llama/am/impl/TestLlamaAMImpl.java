@@ -18,6 +18,7 @@
 package com.cloudera.llama.am.impl;
 
 import com.cloudera.llama.am.api.LlamaAMEvent;
+import com.cloudera.llama.am.api.NodeInfo;
 import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.api.LlamaAMListener;
 import com.cloudera.llama.am.api.PlacedReservation;
@@ -52,7 +53,7 @@ public class TestLlamaAMImpl {
     }
 
     @Override
-    public List<String> getNodes() throws LlamaException {
+    public List<NodeInfo> getNodes() throws LlamaException {
       return null;
     }
 

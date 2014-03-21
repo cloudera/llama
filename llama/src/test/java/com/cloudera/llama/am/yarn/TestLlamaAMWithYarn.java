@@ -19,6 +19,7 @@ package com.cloudera.llama.am.yarn;
 
 import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.LlamaAMEvent;
+import com.cloudera.llama.am.api.NodeInfo;
 import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.api.LlamaAMListener;
 import com.cloudera.llama.am.api.PlacedReservation;
@@ -132,7 +133,7 @@ public class TestLlamaAMWithYarn {
       LlamaAM llama = LlamaAM.create(conf);
       try {
         llama.start();
-        List<String> nodes = llama.getNodes();
+        List<NodeInfo> nodes = llama.getNodes();
         Assert.assertFalse(nodes.isEmpty());
       } finally {
         llama.stop();
@@ -151,9 +152,9 @@ public class TestLlamaAMWithYarn {
       try {
         llama.start();
         llama.addListener(listener);
-        List<String> nodes = llama.getNodes();
+        List<NodeInfo> nodes = llama.getNodes();
         Assert.assertFalse(nodes.isEmpty());
-        Resource a1 = TestUtils.createResource(nodes.get(0),
+        Resource a1 = TestUtils.createResource(nodes.get(0).getLocation(),
             Resource.Locality.MUST, 1, 1024);
         llama.reserve(TestUtils.createReservation(UUID.randomUUID(), "u",
             "root.queue1", a1, true));
@@ -187,9 +188,9 @@ public class TestLlamaAMWithYarn {
       try {
         llama.start();
         llama.addListener(listener);
-        List<String> nodes = llama.getNodes();
+        List<NodeInfo> nodes = llama.getNodes();
         Assert.assertFalse(nodes.isEmpty());
-        Resource a1 = TestUtils.createResource(nodes.get(0),
+        Resource a1 = TestUtils.createResource(nodes.get(0).getLocation(),
             Resource.Locality.MUST, 1, 1024);
         llama.reserve(TestUtils.createReservation(UUID.randomUUID(), "u",
             "root.queue1", a1, true));
@@ -222,17 +223,17 @@ public class TestLlamaAMWithYarn {
       try {
         llama.start();
         llama.addListener(listener);
-        List<String> nodes = llama.getNodes();
+        List<NodeInfo> nodes = llama.getNodes();
         Assert.assertFalse(nodes.isEmpty());
-        Resource r = TestUtils.createResource(nodes.get(0),
+        Resource r = TestUtils.createResource(nodes.get(0).getLocation(),
             Resource.Locality.MUST, 1, 1024);
         UUID pr1 = llama.reserve(TestUtils.createReservation(UUID.randomUUID(),
             "u", "root.queue1", Arrays.asList(r), true));
-        r = TestUtils.createResource(nodes.get(0),
+        r = TestUtils.createResource(nodes.get(0).getLocation(),
             Resource.Locality.PREFERRED, 1, 1024);
         UUID pr2 = llama.reserve(TestUtils.createReservation(UUID.randomUUID(),
             "u", "root.queue1", Arrays.asList(r), true));
-        r = TestUtils.createResource(nodes.get(0),
+        r = TestUtils.createResource(nodes.get(0).getLocation(),
             Resource.Locality.DONT_CARE, 1, 1024);
         UUID pr3 = llama.reserve(TestUtils.createReservation(UUID.randomUUID(),
             "u", "root.queue1", Arrays.asList(r), true));
@@ -274,7 +275,7 @@ public class TestLlamaAMWithYarn {
       try {
         llama.start();
         llama.addListener(listener);
-        List<String> nodes = llama.getNodes();
+        List<NodeInfo> nodes = llama.getNodes();
         Assert.assertEquals(2, nodes.size());
         miniYarn.getNodeManager(0).stop();
         long startTime = System.currentTimeMillis();
@@ -306,7 +307,7 @@ public class TestLlamaAMWithYarn {
       LlamaAM llama = LlamaAM.create(llamaConf);
       try {
         llama.start();
-        List<String> nodes = llama.getNodes();
+        List<NodeInfo> nodes = llama.getNodes();
 
         //invalid node
         try {
@@ -321,7 +322,7 @@ public class TestLlamaAMWithYarn {
 
         //over max cpus
         try {
-          Resource r = TestUtils.createResource(nodes.get(0),
+          Resource r = TestUtils.createResource(nodes.get(0).getLocation(),
               Resource.Locality.MUST, 3, 4096);
           llama.reserve(TestUtils.createReservation(UUID.randomUUID(), "u",
               "root.queue1", Arrays.asList(r), true));
@@ -332,7 +333,7 @@ public class TestLlamaAMWithYarn {
 
         //over max memory
         try {
-          Resource r = TestUtils.createResource(nodes.get(0),
+          Resource r = TestUtils.createResource(nodes.get(0).getLocation(),
               Resource.Locality.MUST, 1, 4097);
           llama.reserve(TestUtils.createReservation(UUID.randomUUID(), "u",
               "root.queue1", Arrays.asList(r), true));
@@ -343,7 +344,7 @@ public class TestLlamaAMWithYarn {
 
         //over node cpus
         try {
-          Resource r = TestUtils.createResource(nodes.get(0),
+          Resource r = TestUtils.createResource(nodes.get(0).getLocation(),
               Resource.Locality.MUST, 2, 4096);
           llama.reserve(TestUtils.createReservation(UUID.randomUUID(), "u",
               "root.queue1", Arrays.asList(r), true));
@@ -354,7 +355,7 @@ public class TestLlamaAMWithYarn {
 
         //over node memory
         try {
-          Resource r = TestUtils.createResource(nodes.get(0),
+          Resource r = TestUtils.createResource(nodes.get(0).getLocation(),
               Resource.Locality.MUST, 1, 5021);
           llama.reserve(TestUtils.createReservation(UUID.randomUUID(), "u",
               "root.queue1", Arrays.asList(r), true));

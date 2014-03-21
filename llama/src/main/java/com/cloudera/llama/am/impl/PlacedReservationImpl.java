@@ -102,7 +102,7 @@ public class PlacedReservationImpl implements PlacedReservation, Expansion {
         reservation.getQueue(),
         reservation.isGang(),
         new ArrayList<PlacedResourceImpl>(),
-        null,
+        ((PlacedReservation) reservation).getExpansionOf(),
         -1, false);
     for (Resource resource : reservation.getResources()) {
       resources.add(PlacedResourceImpl.createPlaced(this, resource));

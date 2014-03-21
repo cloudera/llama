@@ -19,6 +19,7 @@ package com.cloudera.llama.am;
 
 import com.cloudera.llama.am.api.Expansion;
 import com.cloudera.llama.am.api.LlamaAM;
+import com.cloudera.llama.am.api.NodeInfo;
 import com.cloudera.llama.am.api.Reservation;
 import com.cloudera.llama.server.ClientNotificationService;
 import com.cloudera.llama.server.NodeMapper;
@@ -50,6 +51,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -220,7 +222,11 @@ public class LlamaAMServiceImpl implements LlamaAMService.Iface {
     try {
       UUID handle = TypeUtils.toUUID(request.getAm_handle());
       clientNotificationService.validateHandle(handle);
-      List<String> nodes = nodeMapper.getDataNodes(llamaAM.getNodes());
+      List<NodeInfo> nodeInfos = nodeMapper.getDataNodes(llamaAM.getNodes());
+      List<String> nodes = new ArrayList<String>();
+      for(NodeInfo nodeInfo : nodeInfos) {
+        nodes.add(nodeInfo.getLocation());
+      }
       response.setNodes(nodes);
       response.setStatus(TypeUtils.OK);
     } catch (Throwable ex) {

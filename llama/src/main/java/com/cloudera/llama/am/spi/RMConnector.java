@@ -17,6 +17,7 @@
  */
 package com.cloudera.llama.am.spi;
 
+import com.cloudera.llama.am.api.NodeInfo;
 import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.util.UUID;
 import com.codahale.metrics.MetricRegistry;
@@ -93,7 +94,7 @@ public interface RMConnector {
    * @throws LlamaException thrown if there was an error while retrieving the
    * nodes.
    */
-  public List<String> getNodes() throws LlamaException;
+  public List<NodeInfo> getNodes() throws LlamaException;
 
   /**
    * Submits a list of resource requests to the Resource Manager.
