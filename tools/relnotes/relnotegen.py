@@ -18,7 +18,7 @@ from relnotehtml import printRelNotes
 from utils import getJiraIssueXMLURL, getJiraList
 from pymongo import MongoClient
 
-mongoHost = "golden.jenkins.cloudera.com"
+mongoHost = "m0709.mtv.cloudera.com"
 mongoPort = 27017
 mongoDb = "jiras"
 
