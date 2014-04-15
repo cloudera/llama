@@ -1,6 +1,10 @@
 # Implicit targets
 SHELL := /bin/bash
 
+COMPONENT_HASH=$(shell cd $($(PKG)_GIT_REPO) && git rev-parse HEAD)
+PACKAGING_HASH=$(shell cd $(CDH_PACKAGE_GIT_REPO) && git rev-parse HEAD)
+CDH_HASH=$(shell git rev-parse HEAD)
+
 # Download
 $(BUILD_DIR)/%/.download:
 	mkdir -p $(@D)
@@ -22,6 +26,9 @@ $(BUILD_DIR)/%/.prep:
 	    $($(PKG)_PKG_VERSION) \
 	    $($(PKG)_RELEASE) \
 	    $(CDH_VERSION_STRING) \
+	    $(COMPONENT_HASH) \
+	    $(PACKAGING_HASH) \
+	    $(CDH_HASH) \
 	    $($(PKG)_SRC_PREFIX); \
 	else \
 	  mkdir -p $($(PKG)_SOURCE_DIR)/cloudera; \
@@ -34,7 +41,10 @@ $(BUILD_DIR)/%/.prep:
 	    $($(PKG)_PKG_VERSION) \
 	    $($(PKG)_RELEASE) \
 	    $($(PKG)_NAME) \
-	    $(CDH_VERSION_STRING); \
+	    $(CDH_VERSION_STRING) \
+	    $(COMPONENT_HASH) \
+	    $(PACKAGING_HASH) \
+	    $(CDH_HASH); \
 	fi ;
 	# Special logic below for cases with source we want to copy, but without pristine tarballs.
 	if [ -z "$($(PKG)_TARBALL_SRC)" ] && [ ! -z "$($(PKG)_TARBALL_DST)" ]; then \
@@ -63,6 +73,7 @@ $(BUILD_DIR)/%/.build:
 	  NODE_HOME=$(NODE_HOME) \
 	  GIT_REPO=$($(PKG)_GIT_REPO) \
 	  FULL_VERSION=$($(PKG)_FULL_VERSION) \
+	  COMPONENT_HASH=$(COMPONENT_HASH) \
 	  $($(PKG)_PACKAGE_GIT_REPO)/common/$($(PKG)_NAME)/do-component-build
 	mkdir -p $($(PKG)_OUTPUT_DIR)
 	[ -z "$($(PKG)_TARBALL_DST)" ] || \
@@ -81,6 +92,7 @@ $(BUILD_DIR)/%/.maven:
 	  NODE_HOME=$(NODE_HOME) \
 	  MAVEN_ONLY=true \
 	  FULL_VERSION=$($(PKG)_FULL_VERSION) \
+	  COMPONENT_HASH=$(COMPONENT_HASH) \
 	  $($(PKG)_PACKAGE_GIT_REPO)/common/$($(PKG)_NAME)/do-component-build
 	touch $@
 
@@ -105,6 +117,7 @@ $(EXTRA_VAR_DEFS) \
 %define $(subst -,_,$($(PKG)_NAME))_release $($(PKG)_RELEASE)%{?dist} \
 %define cdh_customer_patch p$(CDH_CUSTOMER_PATCH) \
 %define cdh_parcel_custom_version $($(PKG)_PKG_VERSION)-$($(PKG)_RELEASE)%{?dist}' $(PKG_BUILD_DIR)/rpm/SPECS/$($(PKG)_NAME).spec
+	env COMPONENT_HASH=$(COMPONENT_HASH) \
 	rpmbuild --define "_topdir $(PKG_BUILD_DIR)/rpm/" -bs --nodeps --buildroot="$(PKG_BUILD_DIR)/rpm/INSTALL" \
                                                                        $(PKG_BUILD_DIR)/rpm/SPECS/$($(PKG)_NAME).spec
 	$(PKG)_RELEASE_DIST=$(shell rpmbuild --eval '%{?dist}' 2>/dev/null); \
@@ -116,6 +129,7 @@ $(EXTRA_VAR_DEFS) \
 $(BUILD_DIR)/%/.rpm:
 	$(PKG)_RELEASE_DIST=$(shell rpmbuild --eval '%{?dist}' 2>/dev/null); \
 	SRCRPM=$($(PKG)_OUTPUT_DIR)/$($(PKG)_PKG_NAME)-$($(PKG)_PKG_VERSION)-$($(PKG)_RELEASE)$${$(PKG)_RELEASE_DIST}.src.rpm ; \
+	env COMPONENT_HASH=$(COMPONENT_HASH) \
 	rpmbuild --define "_topdir $(PKG_BUILD_DIR)/rpm/" --rebuild $${SRCRPM}
 	touch $@
 
@@ -143,6 +157,7 @@ $(BUILD_DIR)/%/.sdeb:
 	echo "BASE_VERSION=$($(PKG)_BASE_VERSION)" >> debian/tar_build_env.sh && \
 	echo "PKG_RELEASE=$($(PKG)_RELEASE)" >> debian/tar_build_env.sh && \
 	echo "CDH_CUSTOMER_PATCH=p$(CDH_CUSTOMER_PATCH)" >> debian/tar_build_env.sh && \
+	echo "COMPONENT_HASH=$(COMPONENT_HASH)" >> debian/tar_build_env.sh \
 	echo "CDH_PARCEL_CUSTOM_VERSION=$($(PKG)_PKG_VERSION)-$($(PKG)_RELEASE).$(shell lsb_release -sc)" >> debian/tar_build_env.sh && \
 	sed -i -e '/^#!/a\
 $(EXTRA_VAR_DEFS) \
@@ -178,6 +193,7 @@ $(BUILD_DIR)/%/.deb:
 	cd $($(PKG)_OUTPUT_DIR) && \
 		dpkg-source -x $(SRCDEB) && \
 		cd $($(PKG)_PKG_NAME)-$(PKG_PKG_VERSION) && \
+			env COMPONENT_HASH=$(COMPONENT_HASH) \
 			debuild \
 				--preserve-envvar PATH \
 				--preserve-envvar JAVA5_HOME --preserve-envvar FORREST_HOME --preserve-envvar MAVEN3_HOME \
