@@ -768,6 +768,13 @@ TODO: need license header
         <version>${cdh.oozie.version}</version>
       </dependency>
 
+      <!-- Sentry -->
+      <dependency>
+        <groupId>org.apache.sentry</groupId>
+        <artifactId>sentry</artifactId>
+        <version>${cdh.sentry.version}</version>
+      </dependency>
+
       <!-- Whirr -->
       <dependency>
         <groupId>org.apache.whirr</groupId>
