@@ -719,4 +719,59 @@
     </description>
   </property>
 
+  <!-- HA related configs -->
+  <property>
+    <name>llama.am.ha.enabled</name>
+    <value>false</value>
+    <description>
+      Enable Llama HA. When enabled, Llama starts in
+      Standby mode and participates in leader election. When elected leader,
+      it transitions to Active. When HA is enabled, one is required to set
+      llama.am.ha.zk-quorum.
+    </description>
+  </property>
+
+  <property>
+    <name>llama.am.ha.zk-quorum</name>
+    <!--value></value-->
+    <description>
+      The Zookeeper quorum to use for leader election and fencing when HA is
+      enabled.
+    </description>
+  </property>
+
+  <property>
+    <name>llama.am.ha.zk-base</name>
+    <value>llama</value>
+    <description>
+      The base znode to be used to store all HA-related information. If using
+      the same Zookeeper quorum for multiple Llama clusters, make sure each
+      Llama cluster has a separate base znode.
+    </description>
+  </property>
+
+  <property>
+    <name>llama.am.ha.zk-timeout-ms</name>
+    <value>10000</value>
+    <description>
+      The session timeout to be used for connections to the Zookeeper quorum.
+    </description>
+  </property>
+
+  <property>
+    <name>llama.am.ha.zk-acl</name>
+    <value>world:anyone:rwcda</value>
+    <description>
+      ACLs to control access to the Zookeeper quorum used for HA.
+    </description>
+  </property>
+
+  <property>
+    <name>llama.am.ha.zk-auth</name>
+    <!--value></value-->
+    <description>
+      Auth information to go with llama.am.ha.zk-acl
+    </description>
+  </property>
+
 </configuration>

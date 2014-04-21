@@ -157,7 +157,7 @@ public class TestSecureLlamaAMThriftServer extends TestLlamaAMThriftServer {
 
   @Test(expected = TTransportException.class)
   public void testUnauthorized() throws Throwable {
-    final LlamaAMServer server = new LlamaAMServer();
+    final LlamaAMServer server = new LlamaHAServer();
     try {
       Configuration conf = createLlamaConfiguration();
       conf.set("hadoop.security.group.mapping", MockGroupMapping.class.getName());
@@ -194,7 +194,7 @@ public class TestSecureLlamaAMThriftServer extends TestLlamaAMThriftServer {
 
   @Test
   public void testAuthorized() throws Exception {
-    final LlamaAMServer server = new LlamaAMServer();
+    final LlamaAMServer server = new LlamaHAServer();
     try {
       Configuration conf = createLlamaConfiguration();
       conf.set("hadoop.security.group.mapping", MockGroupMapping.class.getName());
@@ -231,7 +231,7 @@ public class TestSecureLlamaAMThriftServer extends TestLlamaAMThriftServer {
 
   @Test
   public void testAllAuthorized() throws Exception {
-    final LlamaAMServer server = new LlamaAMServer();
+    final LlamaAMServer server = new LlamaHAServer();
     try {
       Configuration conf = createLlamaConfiguration();
       conf.set("hadoop.security.group.mapping", MockGroupMapping.class.getName());
@@ -344,7 +344,7 @@ public class TestSecureLlamaAMThriftServer extends TestLlamaAMThriftServer {
 
   @Test(expected = TTransportException.class)
   public void testAdminUnauthorized() throws Throwable {
-    final LlamaAMServer server = new LlamaAMServer();
+    final LlamaAMServer server = new LlamaHAServer();
     try {
       Configuration conf = createLlamaConfiguration();
       conf.set("hadoop.security.group.mapping", MockGroupMapping.class.getName());
@@ -375,7 +375,7 @@ public class TestSecureLlamaAMThriftServer extends TestLlamaAMThriftServer {
 
   @Test(expected = TTransportException.class)
   public void testClientWithWrongQOP() throws Throwable {
-    final LlamaAMServer server = new LlamaAMServer();
+    final LlamaAMServer server = new LlamaHAServer();
     try {
       Configuration conf = createLlamaConfiguration();
       conf.set(amConf.getPropertyName(ServerConfiguration.THRIFT_QOP_KEY),

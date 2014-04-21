@@ -143,7 +143,7 @@ public class TestLlamaAMThriftServer {
 
   @Test
   public void testStartStop() throws Exception {
-    LlamaAMServer server = new LlamaAMServer();
+    LlamaAMServer server = new LlamaHAServer();
     try {
       server.setConf(createLlamaConfiguration());
       server.start();
@@ -184,7 +184,7 @@ public class TestLlamaAMThriftServer {
 
   @Test
   public void testRegister() throws Exception {
-    final LlamaAMServer server = new LlamaAMServer();
+    final LlamaAMServer server = new LlamaHAServer();
     try {
       server.setConf(createLlamaConfiguration());
       server.start();
@@ -250,7 +250,7 @@ public class TestLlamaAMThriftServer {
 
   @Test
   public void testUnregister() throws Exception {
-    final LlamaAMServer server = new LlamaAMServer();
+    final LlamaAMServer server = new LlamaHAServer();
     try {
       server.setConf(createLlamaConfiguration());
       server.start();
@@ -305,7 +305,7 @@ public class TestLlamaAMThriftServer {
 
   @Test
   public void testGetNodes() throws Exception {
-    final LlamaAMServer server = new LlamaAMServer();
+    final LlamaAMServer server = new LlamaHAServer();
     try {
       server.setConf(createLlamaConfiguration());
       server.start();
@@ -352,7 +352,7 @@ public class TestLlamaAMThriftServer {
     }
   }
 
-  private static class MyLlamaAMServer extends LlamaAMServer {
+  private static class MyLlamaAMServer extends LlamaHAServer {
 
     @Override
     public MetricRegistry getMetricRegistry() {
@@ -607,7 +607,7 @@ public class TestLlamaAMThriftServer {
 
   @Test
   public void testRelease() throws Exception {
-    final LlamaAMServer server = new LlamaAMServer();
+    final LlamaAMServer server = new LlamaHAServer();
     final NotificationEndPoint callbackServer = new NotificationEndPoint();
     try {
       callbackServer.setConf(createCallbackConfiguration());
@@ -679,7 +679,7 @@ public class TestLlamaAMThriftServer {
 
   @Test
   public void testDiscardReservationsOnMissingClient() throws Exception {
-    final LlamaAMServer server = new LlamaAMServer();
+    final LlamaAMServer server = new LlamaHAServer();
     final NotificationEndPoint callbackServer = new NotificationEndPoint();
     try {
       callbackServer.setConf(createCallbackConfiguration());

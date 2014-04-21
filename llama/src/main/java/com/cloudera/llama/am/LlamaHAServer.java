@@ -17,24 +17,43 @@
  */
 package com.cloudera.llama.am;
 
-import com.cloudera.llama.server.AbstractMain;
-import com.cloudera.llama.server.AbstractServer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class LlamaAMMain extends AbstractMain {
+public class LlamaHAServer extends LlamaAMServer {
+  private static final Logger LOG =
+      LoggerFactory.getLogger(LlamaHAServer.class);
+
+  private HAServerConfiguration conf;
+
+  LlamaHAServer() {
+    super();
+  }
 
   @Override
-  protected Class<? extends AbstractServer> getServerClass() {
-    return LlamaHAServer.class;
-  }
+  public void start() {
+    conf = new HAServerConfiguration();
+    conf.setConf(getConf());
 
-  public static void main(String[] args) throws Exception {
-    new LlamaAMMain().run(args);
-  }
-
-  public static class Service {
-    public static void main(String[] args) throws Exception {
-      AbstractMain.Service.run(LlamaAMMain.class, args);
+    if (!conf.isHAEnabled()) {
+      transitionToActive();
+      return;
+    } else {
+      LOG.error("HA is not yet supported. Shutting down!");
+      shutdown(1);
     }
   }
 
+  @Override
+  public void stop() {
+    transitionToStandby();
+  }
+
+  private void transitionToActive() {
+    super.start();
+  }
+
+  private void transitionToStandby() {
+    super.stop();
+  }
 }
