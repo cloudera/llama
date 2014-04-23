@@ -57,6 +57,7 @@
 
     <hadoop.version>${cdh.hadoop.version}</hadoop.version>
     <slf4j.version>${cdh.slf4j.version}</slf4j.version>
+    <zookeeper.version>${cdh.zookeeper.version}</zookeeper.version>
     <apacheds.version>2.0.0-M15</apacheds.version>
 
     <clover.license.file>${user.home}/.clover.license</clover.license.file>
@@ -130,6 +131,11 @@
         <groupId>com.cloudera.llama</groupId>
         <artifactId>llama-minikdc</artifactId>
         <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.zookeeper</groupId>
+        <artifactId>zookeeper</artifactId>
+        <version>${zookeeper.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.hadoop</groupId>

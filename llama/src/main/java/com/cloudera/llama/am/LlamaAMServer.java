@@ -87,6 +87,7 @@ public class LlamaAMServer extends
   protected void stopJMX() {
     reporter.stop();
     reporter.close();
+    reporter = null;
   }
 
   private void startHttpServer() {
@@ -201,8 +202,21 @@ public class LlamaAMServer extends
   @Override
   protected void stopService() {
     llamaAm.stop();
+    llamaAm = null;
+
     asyncListener.stop();
+    asyncListener = null;
+
+    allocsLoader.stop();
+    allocsLoader = null;
+
+    allocConf = null;
+
     clientNotificationService.stop();
+    clientNotificationService = null;
+
+    nodeMapper = null;
+
     stopHttpServer();
   }
 

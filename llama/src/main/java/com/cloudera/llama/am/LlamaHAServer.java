@@ -17,43 +17,123 @@
  */
 package com.cloudera.llama.am;
 
+import org.apache.hadoop.ha.ActiveStandbyElector;
+import org.apache.hadoop.ha.ServiceFailedException;
+import org.apache.hadoop.net.NetUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class LlamaHAServer extends LlamaAMServer {
+import java.security.SecureRandom;
+
+public class LlamaHAServer extends LlamaAMServer
+    implements ActiveStandbyElector.ActiveStandbyElectorCallback {
   private static final Logger LOG =
       LoggerFactory.getLogger(LlamaHAServer.class);
+  private final String randomComponent =
+      Long.toString(new SecureRandom().nextLong());
 
-  private HAServerConfiguration conf;
+  private ActiveStandbyElector elector;
+  private byte[] localNodeBytes;
+  private boolean active = false;
 
-  LlamaHAServer() {
-    super();
-  }
+  public LlamaHAServer() {}
 
   @Override
   public void start() {
-    conf = new HAServerConfiguration();
+    HAServerConfiguration conf = new HAServerConfiguration();
     conf.setConf(getConf());
 
     if (!conf.isHAEnabled()) {
       transitionToActive();
-      return;
     } else {
-      LOG.error("HA is not yet supported. Shutting down!");
-      shutdown(1);
+      fillLocalNodeBytes();
+      try {
+        elector = new ActiveStandbyElector(conf.getZkQuorum(),
+            (int) conf.getZKTimeout(), conf.getElectorZNode(),
+            conf.getZkAcls(), conf.getZkAuths(), this);
+        elector.ensureParentZNode();
+        elector.joinElection(localNodeBytes);
+        LOG.info("Join election");
+      } catch (Exception e) {
+        LOG.error("HA is enabled, but couldn't create leader elector", e);
+        this.shutdown(1);
+      }
     }
   }
 
   @Override
   public void stop() {
+    if (elector != null) {
+      elector.quitElection(false);
+      elector.terminateConnection();
+    }
     transitionToStandby();
   }
 
-  private void transitionToActive() {
-    super.start();
+  @Override
+  public void becomeActive() throws ServiceFailedException {
+    transitionToActive();
   }
 
-  private void transitionToStandby() {
-    super.stop();
+  @Override
+  public void becomeStandby() {
+    transitionToStandby();
+  }
+
+  @Override
+  public void enterNeutralMode() {
+    // Do nothing
+  }
+
+  @Override
+  public void notifyFatalError(String s) {
+    LOG.error("Shutting down! Fatal error: {}", s);
+    this.shutdown(1);
+  }
+
+  @Override
+  public void fenceOldActive(byte[] bytes) {
+    // TODO: Fence the old active
+  }
+
+  /** Helper method for tests */
+  void foregoActive(int sleepTime) {
+    if (elector != null) {
+      elector.quitElection(false);
+    }
+    transitionToStandby();
+    if (sleepTime > 0) {
+      try {
+        Thread.sleep(sleepTime);
+      } catch (InterruptedException e) {
+        LOG.error("Interrupted while waiting to rejoin election");
+      }
+    }
+    if (elector != null) {
+      elector.joinElection(localNodeBytes);
+    }
+  }
+
+  private synchronized void transitionToActive() {
+    if (!active) {
+      super.start();
+      active = true;
+    }
+  }
+
+  private synchronized void transitionToStandby() {
+    if (active) {
+      super.stop();
+      active = false;
+    }
+  }
+
+  public synchronized boolean isActive() {
+    return active;
+  }
+
+  private void fillLocalNodeBytes() {
+    localNodeBytes =
+        (NetUtils.getHostname() + "__" + randomComponent).getBytes();
   }
 }

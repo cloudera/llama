@@ -52,19 +52,24 @@ public class HAServerConfiguration implements Configurable {
 
   /** Base directory */
   public static final String ZK_BASE = ZK_PREFIX + "base";
+  public static final String ZK_BASE_DEFAULT = "/llama";
   private String zkBase;
-  private String getZkBase() {
+  private String getZkBase() throws LlamaException {
     if (zkBase == null) {
-      zkBase = conf.get(ZK_BASE, "llama");
+      zkBase = conf.get(ZK_BASE, ZK_BASE_DEFAULT);
+    }
+    if (!zkBase.startsWith("/")) {
+      throw new LlamaException(ErrorCode.ILLEGAL_ARGUMENT, ZK_BASE,
+          " should start with '/'");
     }
     return zkBase;
   }
 
-  public String getElectorZNode() {
+  public String getElectorZNode() throws LlamaException {
     return getZkBase() + "/leader-election";
   }
 
-  public String getFencingZNode() {
+  public String getFencingZNode() throws LlamaException {
     return getZkBase() + "/fencing";
   }
 
@@ -81,14 +86,17 @@ public class HAServerConfiguration implements Configurable {
 
   /** More ZK confs */
   public static final String ZK_TIMEOUT_MS = ZK_PREFIX + "timeout-ms";
-  public long getZKTimeout() {
-    return conf.getLong(ZK_TIMEOUT_MS, 10 * 1000);
+  public static final int ZK_TIMEOUT_MS_DEFAULT = 10 * 1000;
+  public long getZKTimeout()
+  {
+    return conf.getLong(ZK_TIMEOUT_MS, ZK_TIMEOUT_MS_DEFAULT);
   }
 
   public static final String ZK_ACL = ZK_PREFIX + "acl";
+  public static final String ZK_ACL_DEFAULT = "world:anyone:rwcda";
   public List<ACL> getZkAcls() throws LlamaException {
     // Parse authentication from configuration.
-    String zkAclConf = conf.get(ZK_ACL, "world:anyone:rwcda");
+    String zkAclConf = conf.get(ZK_ACL, ZK_ACL_DEFAULT);
     try {
       zkAclConf = ZKUtil.resolveConfIndirection(zkAclConf);
       return ZKUtil.parseACLs(zkAclConf);

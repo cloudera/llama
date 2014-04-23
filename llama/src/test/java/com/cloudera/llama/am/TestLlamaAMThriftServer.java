@@ -70,6 +70,7 @@ import org.apache.thrift.transport.TTransport;
 import org.junit.Test;
 
 import javax.security.auth.Subject;
+import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.PrivilegedExceptionAction;
@@ -141,42 +142,47 @@ public class TestLlamaAMThriftServer {
     return conf;
   }
 
+  public static void checkLlamaStarted(LlamaAMServer server)
+      throws IOException {
+    Assert.assertNotSame(0, server.getAddressPort());
+    Assert.assertEquals("localhost", server.getAddressHost());
+    Assert.assertNotNull(server.getHttpJmxEndPoint());
+    HttpURLConnection conn = (HttpURLConnection)
+        new URL(server.getHttpJmxEndPoint()).openConnection();
+    Assert.assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+
+    Assert.assertNotNull(server.getHttpLlamaUI());
+    conn = (HttpURLConnection) new URL(server.getHttpLlamaUI()).
+        openConnection();
+    Assert.assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+    conn = (HttpURLConnection) new URL(server.getHttpLlamaUI() + "foo").
+        openConnection();
+    Assert.assertEquals(HttpURLConnection.HTTP_NOT_FOUND,
+        conn.getResponseCode());
+    conn = (HttpURLConnection) new URL(server.getHttpLlamaUI() +
+        "loggers").openConnection();
+    Assert.assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+    conn = (HttpURLConnection) new URL(server.getHttpLlamaUI() +
+        "json").openConnection();
+    Assert.assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+    conn = (HttpURLConnection) new URL(server.getHttpLlamaUI() +
+        "json/v1").openConnection();
+    Assert.assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+    conn = (HttpURLConnection) new URL(server.getHttpLlamaUI() +
+        "json/v1/summary").openConnection();
+    Assert.assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+    conn = (HttpURLConnection) new URL(server.getHttpLlamaUI() +
+        "json/v1/all").openConnection();
+    Assert.assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+  }
+
   @Test
   public void testStartStop() throws Exception {
     LlamaAMServer server = new LlamaHAServer();
     try {
       server.setConf(createLlamaConfiguration());
       server.start();
-      Assert.assertNotSame(0, server.getAddressPort());
-      Assert.assertEquals("localhost", server.getAddressHost());
-      Assert.assertNotNull(server.getHttpJmxEndPoint());
-      HttpURLConnection conn = (HttpURLConnection)
-          new URL(server.getHttpJmxEndPoint()).openConnection();
-      Assert.assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
-
-      Assert.assertNotNull(server.getHttpLlamaUI());
-      conn = (HttpURLConnection) new URL(server.getHttpLlamaUI()).
-          openConnection();
-      Assert.assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
-      conn = (HttpURLConnection) new URL(server.getHttpLlamaUI() + "foo").
-          openConnection();
-      Assert.assertEquals(HttpURLConnection.HTTP_NOT_FOUND,
-          conn.getResponseCode());
-      conn = (HttpURLConnection) new URL(server.getHttpLlamaUI() +
-          "loggers").openConnection();
-      Assert.assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
-      conn = (HttpURLConnection) new URL(server.getHttpLlamaUI() +
-          "json").openConnection();
-      Assert.assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
-      conn = (HttpURLConnection) new URL(server.getHttpLlamaUI() +
-          "json/v1").openConnection();
-      Assert.assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
-      conn = (HttpURLConnection) new URL(server.getHttpLlamaUI() +
-          "json/v1/summary").openConnection();
-      Assert.assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
-      conn = (HttpURLConnection) new URL(server.getHttpLlamaUI() +
-          "json/v1/all").openConnection();
-      Assert.assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+      checkLlamaStarted(server);
     } finally {
       server.stop();
     }

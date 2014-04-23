@@ -742,11 +742,12 @@
 
   <property>
     <name>llama.am.ha.zk-base</name>
-    <value>llama</value>
+    <value>/llama</value>
     <description>
       The base znode to be used to store all HA-related information. If using
       the same Zookeeper quorum for multiple Llama clusters, make sure each
-      Llama cluster has a separate base znode.
+      Llama cluster has a separate base znode. Also, make sure the path is
+      absolute, i.e., starts with "/".
     </description>
   </property>
 

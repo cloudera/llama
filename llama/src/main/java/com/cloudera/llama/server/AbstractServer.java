@@ -179,7 +179,7 @@ public abstract class AbstractServer implements Configurable {
       Security.logout(serverSubject);
     }
     LOG.info("Llama shutdown!");
-    runLevel = -1;
+    runLevel = 0;
   }
 
   private MetricRegistry metrics = new MetricRegistry();
