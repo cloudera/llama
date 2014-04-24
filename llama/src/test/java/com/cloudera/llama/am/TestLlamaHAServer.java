@@ -47,7 +47,6 @@ public class TestLlamaHAServer {
     conf.setBoolean(HAServerConfiguration.HA_ENABLED, true);
     server = new LlamaHAServer();
     server.setConf(conf);
-    server.start();
   }
 
   @Test

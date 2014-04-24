@@ -35,6 +35,7 @@ public class LlamaHAServer extends LlamaAMServer
   // Unique identifier for leader election
   private final byte[] localNodeBytes;
   private boolean active = false; // protected by object-wide lock
+  LlamaHAFencer fencer;
 
   public LlamaHAServer() {
     localNodeBytes = (NetUtils.getHostname() + "__" +
@@ -54,10 +55,16 @@ public class LlamaHAServer extends LlamaAMServer
             (int) conf.getZKTimeout(), conf.getElectorZNode(),
             conf.getZkAcls(), conf.getZkAuths(), this);
         elector.ensureParentZNode();
+
+        // Create fencer before joining election but after creating base dirs
+        fencer = new LlamaHAFencer(this, conf);
+
+        // Join election
         elector.joinElection(localNodeBytes);
         LOG.info("Join election");
       } catch (Exception e) {
-        LOG.error("HA is enabled, but couldn't create leader elector", e);
+        LOG.error(
+            "HA is enabled, but couldn't create leader elector or fencer", e);
         this.shutdown(1);
       }
     }
@@ -95,10 +102,10 @@ public class LlamaHAServer extends LlamaAMServer
 
   @Override
   public void fenceOldActive(byte[] bytes) {
-    // TODO: Fence the old active
+    // We are not using an explicit fencing mechanism.
+    // No point trying to fence here.
   }
 
-  /** Helper method for tests */
   void foregoActive(int sleepTime) {
     if (elector != null) {
       elector.quitElection(false);
@@ -118,15 +125,31 @@ public class LlamaHAServer extends LlamaAMServer
 
   private synchronized void transitionToActive() {
     if (!active) {
+      if (fencer != null) {
+        try {
+          fencer.fenceOthers();
+        }catch(Exception e){
+          LOG.error("Couldn't fence other nodes", e);
+          notifyFatalError("Couldn't fence other nodes");
+        }
+        fencer.startFenceChecker();
+      }
       super.start();
       active = true;
+    } else {
+      LOG.info("Asked to transition to active, when already in active mode.");
     }
   }
 
   private synchronized void transitionToStandby() {
     if (active) {
       super.stop();
+      if (fencer != null) {
+        fencer.stopFenceChecker();
+      }
       active = false;
+    } else {
+      LOG.info("Asked to transition to standby, when already in standby mode.");
     }
   }
 

@@ -65,6 +65,10 @@ public class TestLlamaHA extends ClientBaseWithFixes {
     conf.set(HAServerConfiguration.ZK_QUORUM, hostPort);
   }
 
+  /**
+   * Wait until TIMEOUT_MS for the passed LlamaHAServer to become Active.
+   * Fail the test if it doesn't.
+   */
   private void waitAndCheckActive(LlamaHAServer server)
       throws InterruptedException, IOException {
     // Wait for server to become Active
@@ -128,6 +132,36 @@ public class TestLlamaHA extends ClientBaseWithFixes {
         server2.foregoActive(100);
         waitAndCheckActive(server1);
       }
+    } finally {
+      server1.stop();
+      server2.stop();
+    }
+  }
+
+  @Test (timeout = 300000)
+  public void testFencing() throws Exception {
+    LlamaHAServer server1 = new LlamaHAServer();
+    LlamaHAServer server2 = new LlamaHAServer();
+
+    try {
+      server1.setConf(conf);
+      server2.setConf(conf);
+
+      server1.start();
+      waitAndCheckActive(server1);
+      boolean server1Fenced = false;
+
+      server2.start();
+      server2.fencer.fenceOthers();
+
+      for (int i = 0; i < TIMEOUT_MS/100; i++) {
+        if (!server1.isActive()) {
+          server1Fenced = true;
+          break;
+        }
+        Thread.sleep(100);
+      }
+      assertTrue("Server 1 should be fenced and standby", server1Fenced);
     } finally {
       server1.stop();
       server2.stop();
