@@ -56,7 +56,7 @@ TODO: need license header
     <cdh.whirr.version>0.9.0-cdh5.1.0-SNAPSHOT</cdh.whirr.version>
     <cdh.flume.version>0.9.4-cdh5.1.0-SNAPSHOT</cdh.flume.version>
     <cdh.flume-ng.version>1.4.0-cdh5.1.0-SNAPSHOT</cdh.flume-ng.version>
-    <cdh.mahout.version>0.8-cdh5.1.0-SNAPSHOT</cdh.mahout.version>
+    <cdh.mahout.version>0.9-cdh5.1.0-SNAPSHOT</cdh.mahout.version>
     <cdh.hue.version>3.5.0-cdh5.1.0-SNAPSHOT</cdh.hue.version>
     <cdh.datafu.version>1.1.0-cdh5.1.0-SNAPSHOT</cdh.datafu.version>
     <cdh.solr.version>4.4.0-cdh5.1.0-SNAPSHOT</cdh.solr.version>

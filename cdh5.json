@@ -22,7 +22,7 @@
      "datafu": {"track-branch": "cdh5-1.1.0", "dir": "repos/cdh5/datafu", "remotes": ["origin"]},
      "hive": {"track-branch": "cdh5-0.12.0", "dir": "repos/cdh5/hive", "remotes": ["origin", "apache"]},
      "flume-ng": {"track-branch": "cdh5-1.4.0", "dir": "repos/cdh5/flume-ng", "remotes": ["origin"]},
-     "mahout": {"track-branch": "cdh5-0.8", "dir": "repos/cdh5/mahout", "remotes": ["origin", "apache"]},
+     "mahout": {"track-branch": "cdh5-0.9", "dir": "repos/cdh5/mahout", "remotes": ["origin", "apache"]},
      "oozie": {"track-branch": "cdh5-4.0.0", "dir": "repos/cdh5/oozie", "remotes": ["origin"]},
      "whirr": {"track-branch": "cdh5-0.9.0", "dir": "repos/cdh5/whirr", "remotes": ["origin"]},
      "hue": {"track-branch": "cdh5-3.5.0", "dir": "repos/cdh5/hue", "remotes": ["origin"]},
