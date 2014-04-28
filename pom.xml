@@ -1866,8 +1866,27 @@ TODO: need license header
           <automatic>true</automatic>
         </configuration>
       </plugin>
+
+      <!-- maven-remote-resources-plugin copied from org.apache:apache:13 -->
+      <!-- We want to package up license resources in the JARs produced -->
+      <plugin>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-remote-resources-plugin</artifactId>
+      <executions>
+        <execution>
+        <goals>
+          <goal>process</goal>
+        </goals>
+        <configuration>
+          <resourceBundles>
+          <resourceBundle>org.apache:apache-jar-resource-bundle:1.4</resourceBundle>
+          </resourceBundles>
+        </configuration>
+        </execution>
+      </executions>
+      </plugin>
     </plugins>
   </build>
-  
+
 </project>
 
