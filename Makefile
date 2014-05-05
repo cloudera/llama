@@ -4,12 +4,22 @@ DL_DIR    ?=$(BASE_DIR)/dl
 OUTPUT_DIR?=$(BASE_DIR)/output
 REPO_DIR  ?=$(BASE_DIR)/repos
 CONFIG    ?=$(BASE_DIR)/config.mk
-CDH       ?=cdh5
-CDH_VERSION_STRING ?= cdh5.1.0-SNAPSHOT
-CDH_REL_STRING ?= cdh5.1.0
+
+MAJOR_VERSION ?= 5
+LONG_VERSION ?= 5.1.0
+
+CDH       ?=cdh$(MAJOR_VERSION)
+GPLEXTRAS ?=gplextras$(MAJOR_VERSION)
+CDH_VERSION_STRING ?= cdh$(LONG_VERSION)-SNAPSHOT
+CDH_REL_STRING ?= cdh$(LONG_VERSION)
+GPLEXTRAS_REL_STRING ?= gplextras$(LONG_VERSION)
+
 # Only defined if we are doing a beta release. This will
 # show up in the release identifier
-#CDH_BETA_REL_STRING ?= cdh5b2
+#BETA_VERSION=5b2
+#CDH_BETA_REL_STRING ?= cdh$(BETA_VERSION)
+#GPLEXTRAS_BETA_REL_STRING ?= gplextras$(BETA_VERSION)
+
 CDH_MAKEFILE:=$(CDH).mk
 
 REQUIRED_DIRS = $(BUILD_DIR) $(DL_DIR) $(OUTPUT_DIR)
