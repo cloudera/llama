@@ -29,14 +29,17 @@ public class LlamaHAServer extends LlamaAMServer
     implements ActiveStandbyElector.ActiveStandbyElectorCallback {
   private static final Logger LOG =
       LoggerFactory.getLogger(LlamaHAServer.class);
-  private final String randomComponent =
-      Long.toString(new SecureRandom().nextLong());
 
   private ActiveStandbyElector elector;
-  private byte[] localNodeBytes;
-  private boolean active = false;
 
-  public LlamaHAServer() {}
+  // Unique identifier for leader election
+  private final byte[] localNodeBytes;
+  private boolean active = false; // protected by object-wide lock
+
+  public LlamaHAServer() {
+    localNodeBytes = (NetUtils.getHostname() + "__" +
+        new SecureRandom().nextLong()).getBytes();
+  }
 
   @Override
   public void start() {
@@ -46,7 +49,6 @@ public class LlamaHAServer extends LlamaAMServer
     if (!conf.isHAEnabled()) {
       transitionToActive();
     } else {
-      fillLocalNodeBytes();
       try {
         elector = new ActiveStandbyElector(conf.getZkQuorum(),
             (int) conf.getZKTimeout(), conf.getElectorZNode(),
@@ -88,7 +90,7 @@ public class LlamaHAServer extends LlamaAMServer
   @Override
   public void notifyFatalError(String s) {
     LOG.error("Shutting down! Fatal error: {}", s);
-    this.shutdown(1);
+    shutdown(1);
   }
 
   @Override
@@ -130,10 +132,5 @@ public class LlamaHAServer extends LlamaAMServer
 
   public synchronized boolean isActive() {
     return active;
-  }
-
-  private void fillLocalNodeBytes() {
-    localNodeBytes =
-        (NetUtils.getHostname() + "__" + randomComponent).getBytes();
   }
 }

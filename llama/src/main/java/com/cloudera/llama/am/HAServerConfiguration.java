@@ -43,6 +43,7 @@ public class HAServerConfiguration implements Configurable {
 
   /** Enabled HA */
   public static final String HA_ENABLED = KEY_PREFIX + "enabled";
+
   public boolean isHAEnabled() {
     return conf.getBoolean(HA_ENABLED, false);
   }
@@ -54,6 +55,7 @@ public class HAServerConfiguration implements Configurable {
   public static final String ZK_BASE = ZK_PREFIX + "base";
   public static final String ZK_BASE_DEFAULT = "/llama";
   private String zkBase;
+
   private String getZkBase() throws LlamaException {
     if (zkBase == null) {
       zkBase = conf.get(ZK_BASE, ZK_BASE_DEFAULT);
@@ -75,6 +77,7 @@ public class HAServerConfiguration implements Configurable {
 
   /** ZK quorum */
   public static final String ZK_QUORUM = ZK_PREFIX + "quorum";
+
   public String getZkQuorum() throws LlamaException {
     String zkQuorum = conf.get(ZK_QUORUM);
     if (zkQuorum == null || zkQuorum.equals("")) {
@@ -87,13 +90,14 @@ public class HAServerConfiguration implements Configurable {
   /** More ZK confs */
   public static final String ZK_TIMEOUT_MS = ZK_PREFIX + "timeout-ms";
   public static final int ZK_TIMEOUT_MS_DEFAULT = 10 * 1000;
-  public long getZKTimeout()
-  {
+
+  public long getZKTimeout() {
     return conf.getLong(ZK_TIMEOUT_MS, ZK_TIMEOUT_MS_DEFAULT);
   }
 
   public static final String ZK_ACL = ZK_PREFIX + "acl";
   public static final String ZK_ACL_DEFAULT = "world:anyone:rwcda";
+
   public List<ACL> getZkAcls() throws LlamaException {
     // Parse authentication from configuration.
     String zkAclConf = conf.get(ZK_ACL, ZK_ACL_DEFAULT);
@@ -107,6 +111,7 @@ public class HAServerConfiguration implements Configurable {
   }
 
   public static final String ZK_AUTH = ZK_PREFIX + "auth";
+
   public List<ZKUtil.ZKAuthInfo> getZkAuths() throws LlamaException {
     String zkAuthConf = conf.get(ZK_AUTH);
     try {

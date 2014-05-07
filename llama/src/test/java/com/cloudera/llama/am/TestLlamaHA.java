@@ -68,7 +68,7 @@ public class TestLlamaHA extends ClientBaseWithFixes {
   private void waitAndCheckActive(LlamaHAServer server)
       throws InterruptedException, IOException {
     // Wait for server to become Active
-    for (int i = 0; i < TIMEOUT_MS /100; i++) {
+    for (int i = 0; i < TIMEOUT_MS / 100; i++) {
       if (server.isActive()) {
         break;
       }
