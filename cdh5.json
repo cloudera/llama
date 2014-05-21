@@ -44,6 +44,6 @@
           "repos/cdh5/cdh-package", "remotes": ["origin"]},
 
      "hadoop-lzo": {"track-branch": "cdh5-0.4.15", "dir": "repos/cdh5/hadoop-lzo", "remotes": ["origin"]},
-     "impala-lzo": {"track-branch": "cdh5-1.3.1",  "dir": "repos/cdh5/impala-lzo", "remotes": ["impala-lzo"]}
+     "impala-lzo": {"track-branch": "cdh5-trunk",  "dir": "repos/cdh5/impala-lzo", "remotes": ["impala-lzo"]}
     }
 }
