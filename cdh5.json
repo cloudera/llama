@@ -7,7 +7,8 @@
      "common": { "fetch": "git://github.sf.cloudera.com/Mirrors/apache-hadoop-common.git" },
      "yahoo": { "fetch": "git://github.sf.cloudera.com/Mirrors/yahoo-%(name)s.git" },
      "impala": { "fetch": "git://github.sf.cloudera.com/CDH/Impala.git" },
-     "impala-lzo": { "fetch": "git://github.sf.cloudera.com/CDH/Impala-lzo.git" }},
+     "impala-lzo": { "fetch": "git://github.sf.cloudera.com/CDH/Impala-lzo.git" },
+     "parcel-build": { "fetch": "git://github.sf.cloudera.com/Kitchen/parcel-build.git" }},
 
   "projects":
   {
@@ -44,6 +45,7 @@
           "repos/cdh5/cdh-package", "remotes": ["origin"]},
 
      "hadoop-lzo": {"track-branch": "cdh5-0.4.15", "dir": "repos/cdh5/hadoop-lzo", "remotes": ["origin"]},
-     "impala-lzo": {"track-branch": "cdh5-trunk",  "dir": "repos/cdh5/impala-lzo", "remotes": ["impala-lzo"]}
+     "impala-lzo": {"track-branch": "cdh5-trunk",  "dir": "repos/cdh5/impala-lzo", "remotes": ["impala-lzo"]},
+     "parcel-build": {"track-branch": "cdh5",  "dir": "repos/cdh5/parcel-build", "remotes": ["parcel-build"]}
     }
 }
