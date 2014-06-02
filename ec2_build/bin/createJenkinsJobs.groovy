@@ -114,7 +114,7 @@ components.each { component, config ->
 
 
 def downstreamParcelJobs = jenkinsJson.platforms.collect { p ->
-    JenkinsDslUtils.platformToJob(p, "", true)
+    JenkinsDslUtils.platformToJob(p, "", true, true)
 }
 
 // Parcel job
