@@ -94,7 +94,7 @@ components.each { component, config ->
                                                      config.skipMiscBits ? true : false,
                                                      config.version ?: ""))
 
-            componentChildren(delegate, downstreamJobs, component, jenkinsJson.java7)
+            componentChildren(delegate, downstreamJobs, component, crepoJson.projects.'parcel-build'?.'track-branch', jenkinsJson.java7)
 
             conditionalRepoUpdate(delegate, jobPrefix)
         }
@@ -144,7 +144,7 @@ job {
         shell(JobDslConstants.SHELL_SCRIPT_CLEAN_CACHES)
         shell(JenkinsDslUtils.parcelBuildStep(jenkinsJson['short-release']))
 
-        componentChildren(delegate, downstreamParcelJobs, "cdh-parcel", jenkinsJson.java7)
+        componentChildren(delegate, downstreamParcelJobs, "cdh-parcel", crepoJson.projects.'parcel-build'?.'track-branch', jenkinsJson.java7)
 
         conditionalRepoUpdate(delegate, jobPrefix)
     }
@@ -339,7 +339,7 @@ def componentParams(Object delegate, String release) {
     }
 }
 
-def componentChildren(Object delegate, List<String> jobs, String pkg, boolean java7 = true) {
+def componentChildren(Object delegate, List<String> jobs, String pkg, String parcelBranch, boolean java7 = true) {
     return delegate.downstreamParameterized {
         trigger(jobs.join(", "), "ALWAYS", false,
                 ["buildStepFailure": "FAILURE",
@@ -347,7 +347,8 @@ def componentChildren(Object delegate, List<String> jobs, String pkg, boolean ja
             predefinedProps(['PARENT_BUILD_ID': '${JOB_NAME}-${BUILD_ID}',
                              'PACKAGES': pkg,
                              'CDH_RELEASE': '${RELEASE_CODENAME}',
-                             'JAVA7_BUILD': java7 ? "true" : ""])
+                             'JAVA7_BUILD': java7 ? "true" : "",
+			     'PARCEL_BUILD_BRANCH': "origin/${parcelBranch}"])
         }
     }
 }
