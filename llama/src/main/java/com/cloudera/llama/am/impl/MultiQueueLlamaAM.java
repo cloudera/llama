@@ -78,7 +78,7 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
   // Maps queue name to AM info. Visible for testing.
   final Map<String, SingleQueueAMInfo> ams;
   private final ScheduledExecutorService stp;
-  private SingleQueueLlamaAM llamaAMForGetNodes;
+  private SingleQueueLlamaAM queueAgnosticLlamaAM;
   private final Map<UUID, String> reservationToQueue;
   private volatile boolean running;
   private final int queueExpireMs;
@@ -184,6 +184,10 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
 
   @Override
   public void start() throws LlamaException {
+    queueAgnosticLlamaAM = new SingleQueueLlamaAM(getConf(), null, stp);
+    queueAgnosticLlamaAM.start();
+    queueAgnosticLlamaAM.deleteAllYarnApplications();
+
     for (String queue :
         getConf().getTrimmedStringCollection(CORE_QUEUES_KEY)) {
       try {
@@ -193,8 +197,6 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
         throw ex;
       }
     }
-    llamaAMForGetNodes = new SingleQueueLlamaAM(getConf(), null, stp);
-    llamaAMForGetNodes.start();
 
     running = true;
     expireThread.start();
@@ -258,8 +260,8 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
         am.am.stop();
       }
     }
-    if (llamaAMForGetNodes != null) {
-      llamaAMForGetNodes.stop();
+    if (queueAgnosticLlamaAM != null) {
+      queueAgnosticLlamaAM.stop();
     }
   }
 
@@ -270,7 +272,7 @@ public class MultiQueueLlamaAM extends LlamaAMImpl implements LlamaAMListener,
 
   @Override
   public List<NodeInfo> getNodes() throws LlamaException {
-    return llamaAMForGetNodes.getNodes();
+    return queueAgnosticLlamaAM.getNodes();
   }
 
   @SuppressWarnings("deprecation")

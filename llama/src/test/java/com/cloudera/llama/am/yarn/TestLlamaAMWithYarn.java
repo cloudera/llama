@@ -19,19 +19,22 @@ package com.cloudera.llama.am.yarn;
 
 import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.LlamaAMEvent;
-import com.cloudera.llama.am.api.NodeInfo;
-import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.api.LlamaAMListener;
+import com.cloudera.llama.am.api.NodeInfo;
 import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.Resource;
 import com.cloudera.llama.am.api.TestUtils;
+import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.util.UUID;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.ProxyUsers;
+import org.apache.hadoop.yarn.api.records.YarnApplicationState;
+import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.server.MiniYARNCluster;
-import org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.FairScheduler;
+import org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair
+    .FairScheduler;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.bridge.SLF4JBridgeHandler;
@@ -39,6 +42,7 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -143,7 +147,6 @@ public class TestLlamaAMWithYarn {
     }
   }
 
-
   private void testReserve(boolean usePortInName) throws Exception {
     try {
       startYarn(createMiniYarnConfig(usePortInName));
@@ -177,6 +180,55 @@ public class TestLlamaAMWithYarn {
   @Test(timeout = 60000)
   public void testReserveWithoutPortInName() throws Exception {
     testReserve(false);
+  }
+
+  /**
+   * Test to verify Llama deletes old reservations on startup.
+   */
+  @Test(timeout = 60000)
+  public void testLlamaDeletesOldReservationsOnStartup() throws Exception {
+    YarnClient client = null;
+    LlamaAM llamaAM1 = null, llamaAM2 = null, llamaAM3 = null;
+    EnumSet<YarnApplicationState> running =
+        EnumSet.of(YarnApplicationState.RUNNING);
+    try {
+      startYarn(createMiniYarnConfig(false));
+
+      client = YarnClient.createYarnClient();
+      client.init(miniYarn.getConfig());
+      client.start();
+      Assert.assertEquals("Non-zero YARN apps even before any reservations",
+          0, client.getApplications().size());
+
+      llamaAM1 = LlamaAM.create(getLlamaConfiguration());
+      llamaAM1.start();
+      Assert.assertEquals("Mismatch between #YARN apps and #Queues",
+          2, client.getApplications(running).size());
+
+      // Start another Llama of the same cluster-id to see if old YARN apps
+      // are deleted.
+      llamaAM2 = LlamaAM.create(getLlamaConfiguration());
+      llamaAM2.start();
+      Assert.assertEquals("Mismatch between #YARN apps and #Queues. Only apps" +
+              " from the latest started Llama should be running.",
+          2, client.getApplications(running).size());
+
+      // Start Llama of different cluster-id to see old YARN apps are not
+      // deleted.
+      Configuration confWithDifferentCluserId = getLlamaConfiguration();
+      confWithDifferentCluserId.set(LlamaAM.CLUSTER_ID, "new-cluster");
+      llamaAM3 = LlamaAM.create(confWithDifferentCluserId);
+      llamaAM3.start();
+      Assert.assertEquals("Mismatch between #YARN apps and #Queues for " +
+              "multiple clusters", 4, client.getApplications(running).size());
+
+    } finally {
+      client.stop();
+      llamaAM1.stop();
+      llamaAM2.stop();
+      llamaAM3.stop();
+      stopYarn();
+    }
   }
 
   @Test(timeout = 60000)

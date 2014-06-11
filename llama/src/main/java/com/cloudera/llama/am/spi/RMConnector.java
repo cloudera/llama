@@ -157,4 +157,9 @@ public interface RMConnector {
    * <code>FALSE</code> otherwise.
    */
   public boolean hasResources();
+
+  /**
+   * Delete all YARN applications created by this Llama cluster
+   */
+  public void deleteAllReservations() throws LlamaException;
 }

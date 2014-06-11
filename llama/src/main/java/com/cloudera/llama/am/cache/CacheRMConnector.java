@@ -112,6 +112,11 @@ public class CacheRMConnector implements RMConnector,
   }
 
   @Override
+  public void deleteAllReservations() throws LlamaException {
+    connector.deleteAllReservations();
+  }
+
+  @Override
   public void setRMListener(RMListener listener) {
     this.callback = listener;
   }
