@@ -56,6 +56,9 @@ public abstract class LlamaAM {
 
   public static final String METRIC_PREFIX = "llama.am.";
 
+  public static final String CLUSTER_ID = PREFIX_KEY + "cluster.id";
+  public static final String CLUSTER_ID_DEFAULT = "llama";
+
   public static final String RM_CONNECTOR_CLASS_KEY = PREFIX_KEY +
       "rm.connector.class";
 

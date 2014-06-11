@@ -115,4 +115,9 @@ public class RecordingMockRMConnector implements RMConnector {
   public boolean hasResources() {
     return false;
   }
+
+  @Override
+  public void deleteAllReservations() {
+    invoked.add("deleteAllReservations");
+  }
 }

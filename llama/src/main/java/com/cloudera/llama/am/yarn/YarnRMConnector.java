@@ -134,6 +134,7 @@ public class YarnRMConnector implements RMConnector, Configurable,
   private AMRMClientAsync<LlamaContainerRequest> amRmClientAsync;
   private NMClient nmClient;
   private ApplicationId appId;
+  private String appType;
   private Map<String, Resource> nodes;
   private Resource maxResource;
   private int containerHandlerQueueThreshold;
@@ -153,11 +154,32 @@ public class YarnRMConnector implements RMConnector, Configurable,
   }
 
   @Override
+  public void deleteAllReservations() throws LlamaException {
+    try {
+      ugi.doAs(new PrivilegedExceptionAction<Void>() {
+        @Override
+        public Void run() throws Exception {
+          List<ApplicationReport> apps =
+              yarnClient.getApplications(Collections.singleton(appType),
+                  EnumSet.of(YarnApplicationState.RUNNING));
+          for (ApplicationReport app : apps) {
+            yarnClient.killApplication(app.getApplicationId());
+          }
+          return null;
+        }
+      });
+    } catch (Throwable ex) {
+      throw new LlamaException(ex, ErrorCode.AM_CANNOT_START);
+    }
+  }
+
+  @Override
   public void setConf(Configuration conf) {
     this.conf = conf;
     includePortInNodeName = getConf().getBoolean
         (YarnConfiguration.RM_SCHEDULER_INCLUDE_PORT_IN_NODE_NAME,
             YarnConfiguration.DEFAULT_RM_SCHEDULER_USE_PORT_FOR_NODE_NAME);
+    appType = getConf().get(LlamaAM.CLUSTER_ID, LlamaAM.CLUSTER_ID_DEFAULT);
     yarnConf = new YarnConfiguration();
     for (Map.Entry entry : getConf()) {
       yarnConf.set((String) entry.getKey(), (String) entry.getValue());
@@ -338,7 +360,7 @@ public class YarnRMConnector implements RMConnector, Configurable,
       // set the application name
       appContext.setApplicationName("Llama for " + queue);
 
-      appContext.setApplicationType("LLAMA");
+      appContext.setApplicationType(appType);
 
       // Set the priority for the application master
       Priority pri = Records.newRecord(Priority.class);

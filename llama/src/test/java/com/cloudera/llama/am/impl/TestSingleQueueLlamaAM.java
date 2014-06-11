@@ -117,6 +117,10 @@ public class TestSingleQueueLlamaAM {
     public boolean hasResources() {
       return false;
     }
+
+    @Override
+    public void deleteAllReservations() {
+    }
   }
 
   public static class DummyLlamaAMListener implements LlamaAMListener {

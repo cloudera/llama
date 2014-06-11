@@ -297,4 +297,8 @@ public class MockRMConnector
   public boolean hasResources() {
     return false;
   }
+
+  @Override
+  public void deleteAllReservations() {
+  }
 }

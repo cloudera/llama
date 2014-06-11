@@ -83,6 +83,11 @@ public class NormalizerRMConnector implements RMConnector, RMListener {
   }
 
   @Override
+  public void deleteAllReservations() throws LlamaException {
+    connector.deleteAllReservations();
+  }
+
+  @Override
   public void setRMListener(RMListener listener) {
     this.listener = listener;
   }

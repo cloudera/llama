@@ -108,6 +108,11 @@ public class PhasingOutRMConnector implements RMConnector, Runnable {
   }
 
   @Override
+  public void deleteAllReservations() throws LlamaException {
+    active.deleteAllReservations();
+  }
+
+  @Override
   public void setRMListener(RMListener listener) {
     this.listener = listener;
     for(RMConnector connector : getConnectors()) {

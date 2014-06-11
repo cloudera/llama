@@ -92,6 +92,10 @@ public class TestLlamaAM {
     public boolean hasResources() {
       return false;
     }
+
+    @Override
+    public void deleteAllReservations() {
+    }
   }
 
   private void testCreate(Configuration conf) throws Exception {

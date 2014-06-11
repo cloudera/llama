@@ -244,6 +244,10 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
     return reservation;
   }
 
+  public void deleteAllYarnApplications() throws LlamaException {
+    rmConnector.deleteAllReservations();
+  }
+
   @Override
   @SuppressWarnings("unchecked")
   public void reserve(UUID reservationId,
