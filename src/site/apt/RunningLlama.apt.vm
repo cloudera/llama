@@ -115,11 +115,11 @@ Running Llama
 $ bin/llama
 2013-08-02 06:57:32,743 INFO  Main - -----------------------------------------------------------------
 2013-08-02 06:57:32,746 INFO  Main -   Java runtime version : 1.6.0_51-b11-457-11M4509
-2013-08-02 06:57:32,747 INFO  Main -   Llama version        : 1.0.0-cdh5.0.2
+2013-08-02 06:57:32,747 INFO  Main -   Llama version        : 1.0.0-cdh5.0.3-SNAPSHOT
 2013-08-02 06:57:32,747 INFO  Main -   Llama built date     : 2013-08-02T13:43Z
 2013-08-02 06:57:32,747 INFO  Main -   Llama built by       : tucu
 2013-08-02 06:57:32,747 INFO  Main -   Llama revision       : ba875da60c9865cceb70c352eb062f4fd1dfa309
-2013-08-02 06:57:32,784 INFO  Main -   Hadoop version       : 2.1.0-cdh5.0.2
+2013-08-02 06:57:32,784 INFO  Main -   Hadoop version       : 2.1.0-cdh5.0.3-SNAPSHOT
 2013-08-02 06:57:32,784 INFO  Main - -----------------------------------------------------------------
 2013-08-02 06:57:32,784 INFO  Main - Configuration directory: /Users/tucu/llama/conf
 2013-08-02 06:57:32,878 INFO  Main - Server: com.cloudera.llama.am.LlamaAMServer
