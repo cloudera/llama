@@ -194,6 +194,7 @@ public class TestMiniLlama {
     tresReq.setAm_handle(trRes.getAm_handle());
     tresReq.setUser(getUserName());
     tresReq.setQueue("queue1");
+    tresReq.setReservation_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
     TResource tResource = new TResource();
     tResource.setClient_resource_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
     tResource.setAskedLocation(server.getDataNodes().get(0));
