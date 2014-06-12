@@ -56,6 +56,7 @@ import com.cloudera.llama.thrift.TLocationEnforcement;
 import com.cloudera.llama.thrift.TNetworkAddress;
 import com.cloudera.llama.thrift.TResource;
 import com.cloudera.llama.thrift.TStatusCode;
+import com.cloudera.llama.thrift.TUniqueId;
 import com.cloudera.llama.util.ErrorCode;
 import com.cloudera.llama.util.FastFormat;
 import com.cloudera.llama.util.UUID;
@@ -425,15 +426,26 @@ public class TestLlamaAMThriftServer {
           tResource.setEnforcement(TLocationEnforcement.MUST);
           tresReq.setResources(Arrays.asList(tResource));
           tresReq.setGang(true);
+
+          // Check that user is passing the reservation id
           TLlamaAMReservationResponse tresRes = client.Reserve(tresReq);
-          Assert.assertEquals(TStatusCode.OK, 
+          Assert.assertEquals(TStatusCode.REQUEST_ERROR, tresRes.getStatus()
+                .getStatus_code());
+          Assert.assertEquals(ErrorCode.RESERVATION_NO_ID_PROVIDED.getCode(),
+                tresRes.getStatus().getError_code());
+
+          TUniqueId reservation_id = TypeUtils.toTUniqueId(UUID.randomUUID());
+          tresReq.setReservation_id(reservation_id);
+
+          tresRes = client.Reserve(tresReq);
+          Assert.assertEquals(TStatusCode.OK,
               tresRes.getStatus().getStatus_code());
           //check notification delivery
           Thread.sleep(300);
           Assert.assertEquals(1, callbackServer.notifications.size());
 
-          HttpURLConnection conn = (HttpURLConnection) 
-              new URL(server.getHttpLlamaUI() + "json/v1/reservation/" + 
+          HttpURLConnection conn = (HttpURLConnection)
+              new URL(server.getHttpLlamaUI() + "json/v1/reservation/" +
                   TypeUtils.toUUID(tresRes.getReservation_id()).toString())
                   .openConnection();
           Assert.assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
@@ -445,6 +457,7 @@ public class TestLlamaAMThriftServer {
           conn = (HttpURLConnection) new URL(server.getHttpLlamaUI() +
               "json/v1/node/n1").openConnection();
           Assert.assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+          Assert.assertEquals(tresRes.getReservation_id(), reservation_id);
 
           //invalid reservation
           tresReq = new TLlamaAMReservationRequest();
@@ -452,6 +465,7 @@ public class TestLlamaAMThriftServer {
           tresReq.setAm_handle(trRes.getAm_handle());
           tresReq.setUser(getUserName());
           tresReq.setQueue("q1");
+          tresReq.setReservation_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
           tResource = new TResource();
           tResource.setClient_resource_id(TypeUtils.toTUniqueId(UUID
               .randomUUID()));
@@ -485,7 +499,7 @@ public class TestLlamaAMThriftServer {
           turReq.setVersion(TLlamaServiceVersion.V1);
           turReq.setAm_handle(trRes.getAm_handle());
           TLlamaAMUnregisterResponse turRes = client.Unregister(turReq);
-          Assert.assertEquals(TStatusCode.OK, 
+          Assert.assertEquals(TStatusCode.OK,
               turRes.getStatus().getStatus_code());
 
           //test metric registration
@@ -533,6 +547,7 @@ public class TestLlamaAMThriftServer {
           tresReq.setAm_handle(trRes.getAm_handle());
           tresReq.setUser(getUserName());
           tresReq.setQueue("q1");
+          tresReq.setReservation_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
           TResource tResource = new TResource();
           tResource.setClient_resource_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
           tResource.setAskedLocation(MockLlamaAMFlags.ALLOCATE + "n1");
@@ -550,7 +565,7 @@ public class TestLlamaAMThriftServer {
 
           callbackServer.notifications.clear();
 
-          //valid expansion
+          //Setup expansion request
           TLlamaAMReservationExpansionRequest tresExReq =
               new TLlamaAMReservationExpansionRequest();
           tresExReq.setVersion(TLlamaServiceVersion.V1);
@@ -564,10 +579,29 @@ public class TestLlamaAMThriftServer {
           tResource.setEnforcement(TLocationEnforcement.MUST);
           tresExReq.setResource(tResource);
 
+          // First check that error is returned if user forgot to set the
+          // expansion_id
           TLlamaAMReservationExpansionResponse tresExRes =
+              client.Expand(tresExReq);
+          Assert.assertEquals(TStatusCode.REQUEST_ERROR, tresExRes.getStatus()
+              .getStatus_code());
+          Assert.assertEquals(ErrorCode
+                  .EXPANSION_NO_EXPANSION_ID_PROVIDED.getCode(),
+              tresExRes.getStatus().getError_code());
+
+          // Now actually set the expansion id and verify it works
+          TUniqueId expansion_id = TypeUtils.toTUniqueId(UUID
+              .randomUUID());
+          tresExReq.setExpansion_id(expansion_id);
+
+          tresExRes =
               client.Expand(tresExReq);
           Assert.assertEquals(TStatusCode.OK,
               tresExRes.getStatus().getStatus_code());
+
+          // Verify the returned reservationId is the same as passed in
+          Assert.assertEquals(expansion_id, tresExRes.getReservation_id());
+
           //check notification delivery
           Thread.sleep(300);
           Assert.assertEquals(1, callbackServer.notifications.size());
@@ -585,6 +619,8 @@ public class TestLlamaAMThriftServer {
           tResource.setEnforcement(TLocationEnforcement.MUST);
           tresExReq.setResource(tResource);
 
+          tresExReq.setExpansion_id(TypeUtils.toTUniqueId(UUID
+              .randomUUID()));
           tresExRes = client.Expand(tresExReq);
           Assert.assertEquals(TStatusCode.REQUEST_ERROR, tresExRes.getStatus()
               .getStatus_code());
@@ -645,6 +681,7 @@ public class TestLlamaAMThriftServer {
           tresReq.setAm_handle(trRes.getAm_handle());
           tresReq.setUser(getUserName());
           tresReq.setQueue("q1");
+          tresReq.setReservation_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
           TResource tResource = new TResource();
           tResource.setClient_resource_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
           tResource.setAskedLocation(MockLlamaAMFlags.ALLOCATE + "n1");
@@ -733,6 +770,7 @@ public class TestLlamaAMThriftServer {
           TResource tResource = new TResource();
           tResource.setClient_resource_id(
               TypeUtils.toTUniqueId(UUID.randomUUID()));
+          tresReq.setReservation_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
           tResource.setAskedLocation(MockLlamaAMFlags.ALLOCATE + "n1");
           tResource.setV_cpu_cores((short) 1);
           tResource.setMemory_mb(1024);
@@ -848,6 +886,7 @@ public class TestLlamaAMThriftServer {
               tresReq.setAm_handle(trRes.getAm_handle());
               tresReq.setUser(getUserName());
               tresReq.setQueue("q1");
+              tresReq.setReservation_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
               TResource tResource = new TResource();
               tResource.setClient_resource_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
               tResource.setAskedLocation(MockLlamaAMFlags.ALLOCATE + "n1");
@@ -863,6 +902,7 @@ public class TestLlamaAMThriftServer {
               tResource.setClient_resource_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
               tresReq.setUser(getUserName());
               tresReq.setQueue("q2");
+              tresReq.setReservation_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
               TLlamaAMReservationResponse tresRes2 = client.Reserve(tresReq);
               Assert.assertEquals(TStatusCode.OK,
                   tresRes2.getStatus().getStatus_code());

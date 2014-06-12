@@ -500,6 +500,7 @@ public class LlamaClient {
     req.setAm_handle(TypeUtils.toTUniqueId(handle));
     req.setUser(user);
     req.setQueue(queue);
+    req.setReservation_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
     req.setGang(gang);
     List<TResource> resources = new ArrayList<TResource>();
     for (String location : locations) {
@@ -546,6 +547,7 @@ public class LlamaClient {
         : TLocationEnforcement.MUST);
 
     req.setResource(resource);
+    req.setExpansion_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
     TLlamaAMReservationExpansionResponse res = client.Expand(req);
     if (res.getStatus().getStatus_code() != TStatusCode.OK) {
       String status = res.getStatus().getStatus_code().toString();

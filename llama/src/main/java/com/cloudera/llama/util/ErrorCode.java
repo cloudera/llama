@@ -44,7 +44,8 @@ public enum ErrorCode {
   RESERVATION_ASKING_MORE_MB(174, "Reservation '{}', expansion '{}' is asking for more memory in mb '{}' than capacity '{}' on node '{}'."),
   RESERVATION_ASKING_UNKNOWN_NODE(175, "Reservation '{}', expansion '{}' asking for a resource on node '{}' that does not exist."),
   RESERVATION_ASKING_FOR_SAME_NODE(176, "Reservation '{}', expansion '{}' asking for a resource on node '{}' more than one time in the same request."),
-
+  RESERVATION_NO_ID_PROVIDED(177, "reservation_id is required to be set on the reservation request and should not be left unassigned"),
+  EXPANSION_NO_EXPANSION_ID_PROVIDED(178, "expansion_id is required to be set on the expansion request and should not be left unassigned"),
 
   AM_CANNOT_START(300, "cannot start AM"),
   AM_CANNOT_REGISTER(301, "cannot register AM '{}' for queue '{}'"),

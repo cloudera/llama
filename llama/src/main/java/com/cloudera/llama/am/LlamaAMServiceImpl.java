@@ -38,6 +38,7 @@ import com.cloudera.llama.thrift.TLlamaAMReservationResponse;
 import com.cloudera.llama.thrift.TLlamaAMUnregisterRequest;
 import com.cloudera.llama.thrift.TLlamaAMUnregisterResponse;
 import com.cloudera.llama.thrift.TNetworkAddress;
+import com.cloudera.llama.thrift.TUniqueId;
 import com.cloudera.llama.util.ErrorCode;
 import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.util.UUID;
@@ -115,6 +116,12 @@ public class LlamaAMServiceImpl implements LlamaAMService.Iface {
       throws TException {
     TLlamaAMReservationResponse response = new TLlamaAMReservationResponse();
     try {
+      TUniqueId reservation_id = request.getReservation_id();
+      if (null == reservation_id) {
+        throw new LlamaException(ErrorCode.RESERVATION_NO_ID_PROVIDED);
+      }
+
+      UUID reservationId = TypeUtils.toUUID(reservation_id);
       UUID handle = TypeUtils.toUUID(request.getAm_handle());
       clientNotificationService.validateHandle(handle);
 
@@ -122,7 +129,8 @@ public class LlamaAMServiceImpl implements LlamaAMService.Iface {
       checkAccess(request.getUser(), queue, request.getQueue());
 
       Reservation reservation = TypeUtils.toReservation(request, nodeMapper, queue);
-      UUID reservationId = llamaAM.reserve(reservation);
+      llamaAM.reserve(reservationId, reservation);
+
       response.setReservation_id(TypeUtils.toTUniqueId(reservationId));
       response.setStatus(TypeUtils.OK);
     } catch (Throwable ex) {
@@ -185,11 +193,18 @@ public class LlamaAMServiceImpl implements LlamaAMService.Iface {
     TLlamaAMReservationExpansionResponse response =
         new TLlamaAMReservationExpansionResponse();
     try {
+      TUniqueId expansion_id = request.getExpansion_id();
+      if (null == expansion_id) {
+        throw new LlamaException(ErrorCode.EXPANSION_NO_EXPANSION_ID_PROVIDED);
+      }
+
+      UUID expansionId = TypeUtils.toUUID(expansion_id);
       UUID handle = TypeUtils.toUUID(request.getAm_handle());
       clientNotificationService.validateHandle(handle);
       Expansion expansion = TypeUtils.toExpansion(request, nodeMapper);
-      UUID reservationId = llamaAM.expand(expansion);
-      response.setReservation_id(TypeUtils.toTUniqueId(reservationId));
+      llamaAM.expand(expansionId, expansion);
+
+      response.setReservation_id(TypeUtils.toTUniqueId(expansionId));
       response.setStatus(TypeUtils.OK);
     } catch (Throwable ex) {
       LOG.warn("Expand() error: {}", ex.toString(), ex);
