@@ -17,6 +17,10 @@
  */
 package com.cloudera.llama.am;
 
+import com.cloudera.llama.am.api.LlamaAM;
+import com.cloudera.llama.am.mock.MockLlamaAMFlags;
+import com.cloudera.llama.am.mock.MockRMConnector;
+import com.cloudera.llama.am.spi.RMConnector;
 import com.cloudera.llama.server.ServerConfiguration;
 import com.cloudera.llama.server.TestAbstractMain;
 import org.apache.hadoop.conf.Configuration;
@@ -35,6 +39,15 @@ public class TestLlamaHAServer {
     Configuration conf = new Configuration(false);
     conf.set(
         ServerConfiguration.CONFIG_DIR_KEY, TestAbstractMain.createTestDir());
+    conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MockRMConnector.class,
+        RMConnector.class);
+    conf.set(LlamaAM.CORE_QUEUES_KEY, "root.q1,root.q2");
+    conf.set(MockRMConnector.QUEUES_KEY, "root.q1,root.q2");
+    String nodesKey = "" +
+        MockLlamaAMFlags.ALLOCATE + "n1";
+    conf.set(MockRMConnector.NODES_KEY, nodesKey);
+    conf.setInt(MockRMConnector.EVENTS_MIN_WAIT_KEY, 5);
+    conf.setInt(MockRMConnector.EVENTS_MAX_WAIT_KEY, 10);
 
     ServerConfiguration sConf = new AMServerConfiguration(conf);
     conf.set(sConf.getPropertyName(ServerConfiguration.SERVER_ADDRESS_KEY),
