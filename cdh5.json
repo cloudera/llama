@@ -22,7 +22,7 @@
      "sqoop2": {"track-branch": "cdh5-1.99.3", "dir": "repos/cdh5/sqoop2", "remotes": ["origin"]},
      "pig": {"track-branch": "cdh5-0.12.0", "dir": "repos/cdh5/pig", "remotes": ["origin", "apache"]},
      "datafu": {"track-branch": "cdh5-1.1.0", "dir": "repos/cdh5/datafu", "remotes": ["origin"]},
-     "hive": {"track-branch": "cdh5-0.12.0", "dir": "repos/cdh5/hive", "remotes": ["origin", "apache"]},
+     "hive": {"track-branch": "cdh5-0.13.1", "dir": "repos/cdh5/hive", "remotes": ["origin", "apache"]},
      "flume-ng": {"track-branch": "cdh5-1.5.0", "dir": "repos/cdh5/flume-ng", "remotes": ["origin"]},
      "mahout": {"track-branch": "cdh5-0.9", "dir": "repos/cdh5/mahout", "remotes": ["origin", "apache"]},
      "oozie": {"track-branch": "cdh5-4.0.0", "dir": "repos/cdh5/oozie", "remotes": ["origin"]},
