@@ -216,8 +216,8 @@ job {
 
     steps {
         shell(JenkinsDslUtils.constructRepoUpdateStep(jenkinsJson['repo-category'],
-                                                      jenkinsJson['c5-parcel'],
-                                                      jenkinsJson.platforms))
+                                                      "", jenkinsJson['c5-parcel'],
+                                                      "", jenkinsJson.platforms))
         shell("""#!/bin/bash
 rm /data/4/repos/cdh5-nightly/parcels/*.parcel
 rm /data/4/repos/cdh5-nightly/parcels/manifest.json
