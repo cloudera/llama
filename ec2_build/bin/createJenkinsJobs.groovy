@@ -256,7 +256,7 @@ job {
         }
         parentCall(delegate, JenkinsDslUtils.componentJobName(jobPrefix, "Parcel"))
         shell(JenkinsDslUtils.repoGenFullBuildStep(jenkinsJson['repo-category'], jenkinsJson['c5-parcel'],
-                                                   jenkinsJson.platforms, jenkinsJson['base-repo']))
+                                                   false, jenkinsJson.platforms, [], true, null, jenkinsJson['base-repo']))
         shell(JenkinsDslUtils.updateStaticRepoFullBuildStep(jenkinsJson['repo-category']))
         shell("""#!/bin/bash
 rsync -av --link-dest=/data/4/repos/cdh5-nightly/parcels/latest/ /data/4/repos/cdh5-nightly/parcels/latest/* /data/4/repos/cdh5-nightly/parcels/
