@@ -80,7 +80,7 @@ TODO: need license header
     <cdh.tika.version>1.4</cdh.tika.version>
     <!-- Use this property in your subprojects's pom. -->
     <cdh.tomcat.major.version>6</cdh.tomcat.major.version>
-    <cdh.tomcat.minor.version>0.37</cdh.tomcat.minor.version>
+    <cdh.tomcat.minor.version>0.41</cdh.tomcat.minor.version>
     <cdh.tomcat.version>${cdh.tomcat.major.version}.${cdh.tomcat.minor.version}</cdh.tomcat.version>
     <cdh.hadoop-snappy.version>1.0.4.1</cdh.hadoop-snappy.version>
     <cdh.thrift.version>0.9.0</cdh.thrift.version>
