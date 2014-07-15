@@ -1,8 +1,11 @@
 {
     "repo-category": "cdh5-nightly",
+    "gpl-repo-category": "cdh5-gpl-nightly",
+    "gpl-prefix": "gplextras",
+    "core-prefix": "cdh",
+    "release-base": "5.2.0",
+    "short-release-base": "5",
 
-    "release": "cdh5.2.0",
-    "short-release": "cdh5",
     "cdh-branch": "cdh5",
     
     "components": {
@@ -50,6 +53,12 @@
             "makefileAsMetadata": true,
             "display-name": "Tomcat"
         },
+        "impala-lzo": {
+            "step": 2,
+            "is-gpl": true,
+            "skipBinaryTarball": true,
+            "job-suffix": "-impala"
+        },
 
         "hbase": {
             "step": 3,
@@ -61,6 +70,12 @@
         },
         "parquet": {
             "step": 3
+        },
+
+        "hadoop-lzo": {
+            "step": 3,
+            "is-gpl": true,
+            "skipBinaryTarball": true
         },
 
         "crunch": {
@@ -126,6 +141,7 @@
             "step": 7,
             "mailto": "builds-access-integration@cloudera.com"
         }
+
     },
 
     "c5-parcel": true,
@@ -133,6 +149,8 @@
     "java7": true,
 
     "platforms": [ "centos5", "rhel6", "sles11", "precise", "wheezy" ],
+
+    "update-static": true,
 
     "update-nightly": true,
 
