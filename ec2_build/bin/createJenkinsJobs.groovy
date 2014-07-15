@@ -354,7 +354,7 @@ job {
       parentCall(delegate, p.collect { it.value['job-name'] }.join(", "), jenkinsJson.java7)
     }
     if (jenkinsJson.'c5-parcel') {
-        parentCall(delegate, ["Parcel", "GPLExtras-Parcel"].collect { JenkinsDslUtils.componentJobName(jobPrefix, it) })
+        parentCall(delegate, ["Parcel", "GPLExtras-Parcel"].collect { JenkinsDslUtils.componentJobName(jobPrefix, it) }.join(","))
     }
     shell(JenkinsDslUtils.repoGenFullBuildStep(jenkinsJson['repo-category'], jenkinsJson['c5-parcel'],
             false, jenkinsJson.platforms, gplProjects, false, "${jenkinsJson['core-prefix']}${jenkinsJson.'release-base'}", jenkinsJson['base-repo']))
