@@ -108,6 +108,9 @@ install-pom:
 components:
 	@echo $(shell echo $(TARGETS) | sed -e 's/ [^ ]*-lzo//g' | sed -e 's/ gplextras-parcel//' | sed -e 's/ /,/g')
 
+gpl-components:
+	@echo "hadoop-lzo,impala-lzo"
+
 src-parcel:
 	rm -rf $(CDH_PARCEL_OUTPUT_DIR)
 	mkdir -p $(CDH_PARCEL_OUTPUT_DIR)
@@ -117,7 +120,16 @@ src-parcel:
 	@echo "CDH_PARCEL_VERSION=\"$(REL_STRING)\"" >> $(CDH_PARCEL_OUTPUT_DIR)/cdh-parcel.props
 	@echo "CDH_PARCEL_RELEASE=\"$(CDH_PARCEL_RELEASE)\"" >> $(CDH_PARCEL_OUTPUT_DIR)/cdh-parcel.props
 
+gpl-src-parcel:
+	rm -rf $(GPLEXTRAS_PARCEL_OUTPUT_DIR)
+	mkdir -p $(GPLEXTRAS_PARCEL_OUTPUT_DIR)
+	@echo "PKG_GPLEXTRAS_VERSION=\"$(GPLEXTRAS_PARCEL_BASE_VERSION)\"" > $(GPLEXTRAS_PARCEL_OUTPUT_DIR)/gplextras-parcel.props
+	@echo "GPLEXTRAS_PARCEL_BASE_VERSION=\"$(GPLEXTRAS_REL_STRING)\"" >> $(GPLEXTRAS_PARCEL_OUTPUT_DIR)/gplextras-parcel.props
+	@echo "CDH_CUSTOMER_PATCH=\"$(CDH_CUSTOMER_PATCH)\"" >> $(GPLEXTRAS_PARCEL_OUTPUT_DIR)/gplextras-parcel.props
+	@echo "GPLEXTRAS_PARCEL_VERSION=\"$(REL_STRING)\"" >> $(GPLEXTRAS_PARCEL_OUTPUT_DIR)/gplextras-parcel.props
+	@echo "GPLEXTRAS_PARCEL_RELEASE=\"$(GPLEXTRAS_PARCEL_RELEASE)\"" >> $(GPLEXTRAS_PARCEL_OUTPUT_DIR)/gplextras-parcel.props
 
 .DEFAULT_GOAL:= help
-.PHONY: realclean clean distclean package-help help-header packages all world help tgz srpm sdeb install-pom relnotes components src-parcel
+.PHONY: realclean clean distclean package-help help-header packages all world help tgz srpm sdeb install-pom relnotes components src-parcel gpl-components gpl-src-parcel
+
 
