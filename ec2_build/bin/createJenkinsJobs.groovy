@@ -186,10 +186,6 @@ if (jenkinsJson.'c5-parcel') {
 
     jdk JobDslConstants.PACKAGING_JOB_JDK
 
-    triggers {
-      cron("0 23 * * *")
-    }
-
     steps {
       shell(JobDslConstants.SHELL_SCRIPT_CLEAN_CACHES)
       shell(JenkinsDslUtils.parcelBuildStep("${jenkinsJson['core-prefix']}${jenkinsJson['short-release-base']}", true))
@@ -197,7 +193,7 @@ if (jenkinsJson.'c5-parcel') {
       componentChildren(delegate, downstreamParcelJobs, "gplextras-parcel", jenkinsJson.java7,
                         "origin/${crepoJson.projects.'parcel-build'.'track-branch'}".replaceAll("cdh", "gplextras"))
 
-      conditionalRepoUpdate(delegate, jobPrefix, false)
+      conditionalRepoUpdate(delegate, jobPrefix, true)
     }
 
     publishers {
