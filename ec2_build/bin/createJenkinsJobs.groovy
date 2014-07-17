@@ -325,6 +325,31 @@ job {
     }
 }
 
+// Repo promotion job
+job {
+  name jobPrefix.toUpperCase() + "-Promote-Repository"
+
+  logRotator(-1, 15, -1, -1)
+
+  scm {
+    cdhGit(delegate, jenkinsJson['cdh-branch'])
+  }
+
+  label JobDslConstants.FULL_AND_REPO_JOBS_LABEL
+
+  jdk JobDslConstants.PACKAGING_JOB_JDK
+
+  parameters {
+    stringParam("REPO_PARENT", "", "Parent directory of the original repo (under repos.jenkins.cloudera.com")
+    stringParam("CATEGORY", "", "The category to promote to, i.e., cdh5.1.1-nightly")
+    stringParam("REPO_BUILD_ID", "", "The repository build ID to promote")
+  }
+
+  steps {
+    shell(JenkinsDslUtils.boilerPlatePromoteStep(jenkinsJson['core-prefix'], jenkinsJson['release-base']))
+  }
+}
+
 // Full build job
 
 job {
