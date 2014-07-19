@@ -104,7 +104,7 @@ components.each { component, config ->
         }
 
         publishers {
-            archiveArtifacts("output/**/${component}*/*.tar.gz") // ending comment thingie
+            //archiveArtifacts("output/**/${component}*/*.tar.gz") // ending comment thingie
             associatedFiles('/mnt/jenkins-staging/binary-staging/${JOB_NAME}-${BUILD_ID}')
 
             emailSetup(delegate, mailto)
@@ -156,7 +156,7 @@ if (jenkinsJson.'c5-parcel') {
     }
 
     publishers {
-      archiveArtifacts("output/**/cdh-parcel*/*.tar.gz") // ending comment thingie
+        //archiveArtifacts("output/**/cdh-parcel*/*.tar.gz") // ending comment thingie
       associatedFiles('/mnt/jenkins-staging/binary-staging/${JOB_NAME}-${BUILD_ID}')
 
       emailSetup(delegate, ["kitchen-build@cloudera.com"])
@@ -197,7 +197,7 @@ if (jenkinsJson.'c5-parcel') {
     }
 
     publishers {
-      archiveArtifacts("output/**/gplextras-parcel*/*.tar.gz") // ending comment thingie
+        //archiveArtifacts("output/**/gplextras-parcel*/*.tar.gz") // ending comment thingie
       associatedFiles('/mnt/jenkins-staging/binary-staging/${JOB_NAME}-${BUILD_ID}')
 
       emailSetup(delegate, ["kitchen-build@cloudera.com"])
@@ -246,7 +246,7 @@ if (jenkinsJson.'c5-parcel') {
     }
 
     publishers {
-      archiveArtifacts("output/**/${jenkinsJson.'parcel-type'.toLowerCase()}-parcel*/*.tar.gz") // ending comment thingie
+        //archiveArtifacts("output/**/${jenkinsJson.'parcel-type'.toLowerCase()}-parcel*/*.tar.gz") // ending comment thingie
       associatedFiles('/mnt/jenkins-staging/binary-staging/${JOB_NAME}-${BUILD_ID}')
 
       emailSetup(delegate, ["kitchen-build@cloudera.com"])
