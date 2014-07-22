@@ -109,6 +109,7 @@ $(BUILD_DIR)/%/.srpm:
 	  cp $($(PKG)_OUTPUT_DIR)/$($(PKG)_NAME)-$($(PKG)_FULL_VERSION).tar.gz $(PKG_BUILD_DIR)/rpm/SOURCES
 	[ -d $($(PKG)_PACKAGE_GIT_REPO)/common/$($(PKG)_NAME) ] && \
 		cp -r $($(PKG)_PACKAGE_GIT_REPO)/common/$($(PKG)_NAME)/* $(PKG_BUILD_DIR)/rpm/SOURCES
+	sed -i -e 's/^%build/%build\nexport COMPONENT_HASH=$(COMPONENT_HASH)/' $(PKG_BUILD_DIR)/rpm/SPECS/$($(PKG)_NAME).spec
 	sed -i -e '1i\
 $(EXTRA_VAR_DEFS) \
 %define $(subst -,_,$($(PKG)_NAME))_version $($(PKG)_PKG_VERSION) \
@@ -152,15 +153,16 @@ $(BUILD_DIR)/%/.sdeb:
           cp -r $($(PKG)_PACKAGE_GIT_REPO)/deb/$($(PKG)_NAME) debian && \
 	echo '#!/bin/bash' > debian/tar_build_env.sh && \
 	echo "$(EXTRA_VAR_DEFS)" >> debian/tar_build_env.sh && \
+	echo "export COMPONENT_HASH=$(COMPONENT_HASH)" >> debian/tar_build_env.sh \
 	echo "PKG_VERSION=$($(PKG)_PKG_VERSION)" >> debian/tar_build_env.sh && \
 	echo "FULL_VERSION=$($(PKG)_FULL_VERSION)" >> debian/tar_build_env.sh && \
 	echo "BASE_VERSION=$($(PKG)_BASE_VERSION)" >> debian/tar_build_env.sh && \
 	echo "PKG_RELEASE=$($(PKG)_RELEASE)" >> debian/tar_build_env.sh && \
 	echo "CDH_CUSTOMER_PATCH=p$(CDH_CUSTOMER_PATCH)" >> debian/tar_build_env.sh && \
-	echo "COMPONENT_HASH=$(COMPONENT_HASH)" >> debian/tar_build_env.sh \
 	echo "CDH_PARCEL_CUSTOM_VERSION=$($(PKG)_PKG_VERSION)-$($(PKG)_RELEASE).$(shell lsb_release -sc)" >> debian/tar_build_env.sh && \
 	sed -i -e '/^#!/a\
 $(EXTRA_VAR_DEFS) \
+export COMPONENT_HASH=$(COMPONENT_HASH) \
 $(PKG)_VERSION=$($(PKG)_PKG_VERSION) \
 $(PKG)_PATCHED_VERSION=$($(PKG)_FULL_VERSION) \
 $(PKG)_BASE_VERSION=$($(PKG)_BASE_VERSION) \
