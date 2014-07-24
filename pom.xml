@@ -62,7 +62,7 @@ TODO: need license header
     <cdh.solr.version>4.4.0-cdh5.2.0-SNAPSHOT</cdh.solr.version>
     <cdh.search.version>1.0.0-cdh5.2.0-SNAPSHOT</cdh.search.version>
     <cdh.hbase-solr.version>1.5-cdh5.2.0-SNAPSHOT</cdh.hbase-solr.version>
-    <cdh.kite.version>0.10.0-cdh5.2.0-SNAPSHOT</cdh.kite.version>
+    <cdh.kite.version>0.15.0-cdh5.2.0-SNAPSHOT</cdh.kite.version>
     <cdh.impala.version>1.4.0-cdh5.2.0-SNAPSHOT</cdh.impala.version>
     <cdh.llama.version>1.0.0-cdh5.2.0-SNAPSHOT</cdh.llama.version>
     <cdh.cdh-parcel.version>5.2.0-SNAPSHOT</cdh.cdh-parcel.version>
