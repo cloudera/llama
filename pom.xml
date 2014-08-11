@@ -1296,6 +1296,11 @@ TODO: need license header
         <artifactId>apache-rat-tasks</artifactId>
         <version>0.6</version>
       </dependency>
+      <dependency>
+        <groupId>org.jboss.netty</groupId>
+        <artifactId>netty</artifactId>
+        <version>3.2.2.Final</version>
+      </dependency>
       
       <!-- Hbase -->
       <dependency>
