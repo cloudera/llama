@@ -75,6 +75,7 @@ TODO: need license header
     
     <cdh.hadoop-lzo.version>0.4.15-cdh5.2.0-SNAPSHOT</cdh.hadoop-lzo.version>
     <cdh.impala-lzo.version>2.0.0-cdh5.2.0-SNAPSHOT</cdh.impala-lzo.version>
+    <cdh.impala-jdbc.version>0.12.0-cdh5.2.0-SNAPSHOT</cdh.impala-jdbc.version>
 
     <!-- Versions of the dependencies we manage -->
     <cdh.tika.version>1.4</cdh.tika.version>

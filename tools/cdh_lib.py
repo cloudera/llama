@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # (c) Copyright 2009 Cloudera, Inc.
 
+import os
 import re
 import subprocess
 import unittest
@@ -96,8 +97,11 @@ def cdh_get_version(rev, no_patch_count, prefix='cdh', cdh_rel_string=''):
   else:
     cur_branch = remove_underscore_suffix(cdh_best_branch(rev))
   assert cur_branch == 'master' or cur_branch.startswith(prefix + separator)
-    
-  base_version = re.sub('^' + prefix + separator, '', cur_branch)
+
+  if 'BASE_VERSION' in os.environ:
+    base_version = os.environ['BASE_VERSION']
+  else:
+    base_version = re.sub('^' + prefix + separator, '', cur_branch)
   if no_patch_count:
     return base_version
   
