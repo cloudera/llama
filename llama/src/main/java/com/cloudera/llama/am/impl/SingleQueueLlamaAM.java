@@ -237,7 +237,10 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
         resourcesMap.remove(resource.getResourceId());
       }
     }
-    callback.discardReservation(reservationId);
+    IntraLlamaAMsCallback localReference = this.callback;
+    if (localReference != null) {
+      localReference.discardReservation(reservationId);
+    }
     if (reservation != null) {
       reservation.setStatus(status);
     }
@@ -602,7 +605,10 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
   public void stoppedByRM() {
     LOG.warn("Stopped by '{}'", rmConnector.getClass().getSimpleName());
     loseAllReservations();
-    callback.discardAM(queue);
+    IntraLlamaAMsCallback localReference = this.callback;
+    if (localReference != null) {
+      localReference.discardAM(queue);
+    }
   }
 
 }

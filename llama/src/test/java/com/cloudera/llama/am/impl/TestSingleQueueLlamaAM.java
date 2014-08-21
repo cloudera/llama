@@ -132,19 +132,7 @@ public class TestSingleQueueLlamaAM {
     }
   }
 
-  public static class DummySingleQueueLlamaAMCallback implements
-      IntraLlamaAMsCallback {
-
-    @Override
-    public void discardReservation(UUID reservationId) {
-    }
-
-    @Override
-    public void discardAM(String queue) {
-    }
-  }
-
-  private SingleQueueLlamaAM createLlamaAM() {
+  public static SingleQueueLlamaAM createLlamaAM() {
     Configuration conf = new Configuration(false);
     conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MyRMConnector.class,
         RMConnector.class);
@@ -152,7 +140,6 @@ public class TestSingleQueueLlamaAM {
     conf.setBoolean(LlamaAM.CACHING_ENABLED_KEY, false);
     SingleQueueLlamaAM am = new SingleQueueLlamaAM(conf, "queue",
         Executors.newScheduledThreadPool(4));
-    am.setCallback(new DummySingleQueueLlamaAMCallback());
     return am;
   }
 

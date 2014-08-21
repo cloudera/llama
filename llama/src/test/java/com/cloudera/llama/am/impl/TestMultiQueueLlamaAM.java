@@ -107,6 +107,19 @@ public class TestMultiQueueLlamaAM {
     Configuration conf = new Configuration(false);
     conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MyRMConnector.class,
         RMConnector.class);
+    multiQueueTestImpl(conf);
+  }
+
+  @Test
+  public void testMultiQueueDelegationWithoutThrottling() throws Exception {
+    Configuration conf = new Configuration(false);
+    conf.setClass(LlamaAM.RM_CONNECTOR_CLASS_KEY, MyRMConnector.class,
+        RMConnector.class);
+    conf.setBoolean(LlamaAM.THROTTLING_ENABLED_KEY, false);
+    multiQueueTestImpl(conf);
+  }
+
+  private void multiQueueTestImpl(Configuration conf) throws Exception {
     LlamaAM am = LlamaAM.create(conf);
     try {
       am.start();
