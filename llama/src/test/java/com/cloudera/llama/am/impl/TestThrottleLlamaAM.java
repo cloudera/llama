@@ -37,6 +37,7 @@ import org.mockito.internal.verification.VerificationModeFactory;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Executors;
 
 public class TestThrottleLlamaAM {
   private ManualClock manualClock = new ManualClock();
@@ -456,7 +457,44 @@ public class TestThrottleLlamaAM {
     } finally {
       tAm.stop();
     }
-
   }
 
+  @Test
+  public void testReleaseReservationWithNullCallback() throws
+      Exception {
+    Configuration conf = new Configuration(false);
+    UUID handle = UUID.randomUUID();
+    Reservation r1 = TestUtils.createReservation(handle, 1, false);
+    PlacedReservation pr1 = TestUtils.createPlacedReservation(r1,
+        PlacedReservation.Status.PENDING);
+
+    SingleQueueLlamaAM am = TestSingleQueueLlamaAM.createLlamaAM();
+    ThrottleLlamaAM tAm = new ThrottleLlamaAM(conf, "q", am);
+    try {
+      am.start();
+      tAm.start();
+      tAm.reserve(pr1.getReservationId(), r1);
+      tAm.releaseReservationsForHandle(handle, false);
+    } finally {
+      tAm.stop();
+      am.stop();
+    }
+  }
+
+  @Test
+  public void testDiscardAMWithNullCallback() throws
+      Exception {
+    Configuration conf = new Configuration(false);
+    SingleQueueLlamaAM am = TestSingleQueueLlamaAM.createLlamaAM();
+    ThrottleLlamaAM tAm = new ThrottleLlamaAM(conf, "q", am);
+    try {
+      am.start();
+      tAm.start();
+
+      am.stoppedByRM();
+    } finally {
+      tAm.stop();
+      am.stop();
+    }
+  }
 }

@@ -131,12 +131,18 @@ public class ThrottleLlamaAM extends LlamaAMImpl
 
   @Override
   public void discardReservation(UUID reservationId) {
-    callback.discardReservation(reservationId);
+    IntraLlamaAMsCallback localReference = this.callback;
+    if (localReference != null) {
+      localReference.discardReservation(reservationId);
+    }
   }
 
   @Override
   public void discardAM(String queue) {
-    callback.discardAM(queue);
+    IntraLlamaAMsCallback localReference = this.callback;
+    if (localReference != null) {
+      localReference.discardAM(queue);
+    }
   }
 
   int getMaxPlacedReservations() {
