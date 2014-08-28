@@ -49,7 +49,7 @@ TODO: need license header
     <cdh.zookeeper.version>3.4.5-cdh5.2.0-SNAPSHOT</cdh.zookeeper.version>
     <cdh.hbase.version>0.98.5-cdh5.2.0-SNAPSHOT</cdh.hbase.version>
     <cdh.pig.version>0.12.0-cdh5.2.0-SNAPSHOT</cdh.pig.version>
-    <cdh.sqoop.version>1.4.4-cdh5.2.0-SNAPSHOT</cdh.sqoop.version>
+    <cdh.sqoop.version>1.4.5-cdh5.2.0-SNAPSHOT</cdh.sqoop.version>
     <cdh.sqoop2.version>1.99.3-cdh5.2.0-SNAPSHOT</cdh.sqoop2.version>
     <cdh.hive.version>0.13.1-cdh5.2.0-SNAPSHOT</cdh.hive.version>
     <cdh.oozie.version>4.0.0-cdh5.2.0-SNAPSHOT</cdh.oozie.version>
