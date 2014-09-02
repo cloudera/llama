@@ -85,6 +85,10 @@
             "step": 4,
             "mailto": "builds-access-integration@cloudera.com"
         },
+        "impala-jdbc": {
+            "step": 4,
+            "mailto": "impala-jenkins@cloudera.com"
+        },
         "pig": {
             "step": 4
         },
