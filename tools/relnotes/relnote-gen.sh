@@ -38,10 +38,15 @@ function relnote_gen {
   local package_changes_file=$gen_dir/$6.package.CHANGES.txt
   local package_changes_since_last_file=$gen_dir/$6.package.since.last.release.CHANGES.txt
   local relnote_file=$gen_dir/$6.releasenotes.html
+  local relnote_since_last_file=$gen_dir/$6.since.last.release.releasenotes.html
   echo "pushd $2 >& /dev/null"
   if [ ! -d $gen_dir ]; then
     mkdir -p $gen_dir
   fi
+  virtualenv --clear $gen_dir/virtualenv
+  . $gen_dir/virtualenv/bin/activate
+  pip install pymongo
+
   pushd $2 >& /dev/null
   git log --pretty=oneline --no-color $3 > $commit_log
   git log --pretty=medium --no-color $3 > $changes_file
@@ -52,6 +57,7 @@ function relnote_gen {
   if git rev-list HEAD | grep -q $(git rev-parse $previous_release); then 
       git log --pretty=oneline --no-color ${11} > $commit_since_last_log
       git log --pretty=medium --no-color ${11} > $changes_since_last_file
+      python ./tools/relnotes/relnotegen.py -l $commit_since_last_log -r "$4" -a $5 -c $6 -n "$7" > $relnote_since_last_file
   fi
   popd >& /dev/null
   pushd $8 >& /dev/null
@@ -60,9 +66,6 @@ function relnote_gen {
   git ls-files | grep -E "(common|deb|rpm)/$9" | xargs git log --pretty=oneline --no-color ${11} > $package_commit_since_last_log
   git ls-files | grep -E "(common|deb|rpm)/$9" | xargs git log --pretty=medium --no-color ${11} > $package_changes_since_last_file
   popd >& /dev/null
-  virtualenv --clear $gen_dir/virtualenv
-  . $gen_dir/virtualenv/bin/activate
-  pip install pymongo
   python ./tools/relnotes/relnotegen.py -l $commit_log -r "$4" -a $5 -c $6 -n "$7" > $relnote_file
   deactivate
 }

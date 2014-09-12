@@ -81,7 +81,7 @@ def parseJiras(commitLog, mongoJira):
 
     # A git object identifier is 40 chars
     jiras = "|".join(getJiraList())
-    jiraReg = r"^\w{40} ("+jiras+")[- ](\d+)"
+    jiraReg = r"^\w{40} .*("+jiras+")[- ](\d+)"
     for m in re.finditer(jiraReg, commitLog, re.M):
         proj = m.group(1)
         num  = m.group(2)
