@@ -26,7 +26,7 @@ def getApacheJiraList():
     return getApacheJiraMap().keys()
 
 def getClouderaJiraMap():
-    return {"DISTRO" : "CDH", "HUE" : "Hue"}
+    return {"DISTRO" : "CDH", "HUE" : "Hue", "IMPALA": "Impala"}
 
 def getClouderaJiraList():
     return getClouderaJiraMap().keys()
