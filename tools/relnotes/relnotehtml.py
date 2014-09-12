@@ -60,10 +60,13 @@ change can be found in the cloudera/patches directory in the release tarball.
          'cdhProjectVersion' : cdhProjectVersion,
          'cdhProjectName' : cdhProjectName }
 
-def printFooter(jiraCount):
+def printFooter(jiraCount, sinceLast):
 
     if not jiraCount:
-        print "No patches have been applied that are not in the upstream version."
+        if sinceLast:
+            print "No patches have been applied that are not in the upstream version or in the previous CDH release."
+        else:
+            print "No patches have been applied that are not in the upstream version."
 
     print "</body>"
     print "</html>"
@@ -115,4 +118,4 @@ def printRelNotes(cdhReleaseVersion, baseVersion, cdhProjectVersion,
     for k in jiraMap:
         jiraCount += printProject(jiraDict, k, jiraMap[k]) 
     
-    printFooter(jiraCount)
+    printFooter(jiraCount, sinceLastRelease)
