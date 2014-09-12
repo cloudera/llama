@@ -57,7 +57,6 @@ function relnote_gen {
   if git rev-list HEAD | grep -q $(git rev-parse $previous_release); then 
       git log --pretty=oneline --no-color ${11} > $commit_since_last_log
       git log --pretty=medium --no-color ${11} > $changes_since_last_file
-      python ./tools/relnotes/relnotegen.py -l $commit_since_last_log -r "$4" -a $5 -c $6 -n "$7" > $relnote_since_last_file
   fi
   popd >& /dev/null
   pushd $8 >& /dev/null
@@ -67,6 +66,9 @@ function relnote_gen {
   git ls-files | grep -E "(common|deb|rpm)/$9" | xargs git log --pretty=medium --no-color ${11} > $package_changes_since_last_file
   popd >& /dev/null
   python ./tools/relnotes/relnotegen.py -l $commit_log -r "$4" -a $5 -c $6 -n "$7" > $relnote_file
+  if [ -f $commit_since_last_log ]; then
+      python ./tools/relnotes/relnotegen.py -l $commit_since_last_log -r "$4" -a $5 -c $6 -n "$7" > $relnote_since_last_file
+  fi
   deactivate
 }
 
