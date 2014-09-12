@@ -39,6 +39,7 @@ def parse_args():
   parser.add_argument('-r','--cdh_release_version',required=True)
   parser.add_argument('-c','--cdh_project_version', required=True)
   parser.add_argument('-n','--cdh_project_name', required=True)
+  parser.add_argument('--since_last', action='store_true')
   return parser.parse_args()
 
 
@@ -120,7 +121,8 @@ def main():
                   args.apache_base_version,
                   args.cdh_project_version,
                   args.cdh_project_name,
-                  jiraDict)
+                  jiraDict,
+                  args.since_last)
 
 
 if __name__ == "__main__":

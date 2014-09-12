@@ -67,7 +67,7 @@ function relnote_gen {
   popd >& /dev/null
   python ./tools/relnotes/relnotegen.py -l $commit_log -r "$4" -a $5 -c $6 -n "$7" > $relnote_file
   if [ -f $commit_since_last_log ]; then
-      python ./tools/relnotes/relnotegen.py -l $commit_since_last_log -r "$4" -a $5 -c $6 -n "$7" > $relnote_since_last_file
+      python ./tools/relnotes/relnotegen.py -l $commit_since_last_log -r "$4" -a $5 -c $6 -n "$7" --since_last > $relnote_since_last_file
   fi
   deactivate
 }
