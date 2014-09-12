@@ -20,13 +20,17 @@ def getApacheJiraMap():
             "LUCENE" : "Lucene",
             "AVRO" : "Avro",
             "MAHOUT" : "Mahout",
-            "SPARK" : "Spark" }
+            "SPARK" : "Spark",
+            "PARQUET": "Parquet"}
 
 def getApacheJiraList():
     return getApacheJiraMap().keys()
 
 def getClouderaJiraMap():
-    return {"DISTRO" : "CDH", "HUE" : "Hue", "IMPALA": "Impala"}
+    return {"DISTRO" : "CDH",
+            "HUE" : "Hue",
+            "IMPALA": "Impala",
+            "CDK": "Kite"}
 
 def getClouderaJiraList():
     return getClouderaJiraMap().keys()
