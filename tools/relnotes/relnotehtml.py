@@ -49,8 +49,7 @@ TABLE {margin-left: 7mm}
 <h1>%(cdhReleaseVersion)s Release Notes</h1>
 
 The following lists all %(cdhProjectName)s Jiras included in %(cdhReleaseVersion)s
-that are not included in the %(cdhProjectName)s base version %(baseVersion)s or the
-previous release of CDH. The <a href='%(cdhProjectVersion)s.since.last.release.CHANGES.txt'>%(cdhProjectVersion)s.since.last.release.CHANGES.txt</a>
+that are fixed in %(cdhProjectName)s. The <a href='%(cdhProjectVersion)s.since.last.release.CHANGES.txt'>%(cdhProjectVersion)s.since.last.release.CHANGES.txt</a>
 file lists all changes included in %(cdhReleaseVersion)s. The patch for each
 change can be found in the cloudera/patches directory in the release tarball.
 

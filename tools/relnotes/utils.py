@@ -21,7 +21,8 @@ def getApacheJiraMap():
             "AVRO" : "Avro",
             "MAHOUT" : "Mahout",
             "SPARK" : "Spark",
-            "PARQUET": "Parquet"}
+            "PARQUET": "Parquet",
+            "DATAFU": "DataFu"}
 
 def getApacheJiraList():
     return getApacheJiraMap().keys()
