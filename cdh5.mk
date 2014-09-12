@@ -1,6 +1,6 @@
 CDH_VERSION=5
 CDH_CUSTOMER_PATCH=0
-PREV_RELEASE_TAG=cdh5.0.0-release
+PREV_RELEASE_TAG=cdh5.1.0-release
 export IVY_MIRROR_PROP=http://azov01.sf.cloudera.com:8081/artifactory/cloudera-mirrors/
 
 CDH_PACKAGE_GIT_REPO=$(REPO_DIR)/cdh5/cdh-package
