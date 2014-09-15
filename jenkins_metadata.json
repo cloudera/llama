@@ -152,7 +152,7 @@
 
     "java7": true,
 
-    "platforms": [ "centos5", "rhel6", "sles11", "precise", "wheezy" ],
+    "platforms": [ "centos5", "rhel6", "sles11", "precise", "wheezy", "trusty" ],
 
     "update-static": true,
 
