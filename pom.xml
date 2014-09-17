@@ -102,6 +102,8 @@ TODO: need license header
 
     <cdh.protobuf.version>2.5.0</cdh.protobuf.version> 
     <cdh.jets3t.version>0.9.0</cdh.jets3t.version>
+    <!-- Adding Kafka as external dependency until we start packaging it ourselves -->
+    <cdh.kafka.version>0.8.1.1</cdh.kafka.version>
   </properties>
   
   <!-- crepo info -->    
