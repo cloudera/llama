@@ -382,7 +382,7 @@ job {
     shell(JenkinsDslUtils.repoGenFullBuildStep(jenkinsJson['gpl-repo-category'], jenkinsJson['c5-parcel'],
             true, jenkinsJson.platforms, gplProjects, true, "${jenkinsJson['gpl-prefix']}${jenkinsJson.'release-base'}", jenkinsJson['base-repo']))
     if (jenkinsJson.'update-static') {
-//      shell(JenkinsDslUtils.updateStaticRepoFullBuildStep(jenkinsJson['repo-category']))
+      shell(JenkinsDslUtils.updateStaticRepoFullBuildStep(jenkinsJson['repo-category']))
       downstreamParameterized {
         trigger(jobPrefix.toUpperCase() + "-Promote-Repository", "ALWAYS", false) {
           predefinedProps(['REPO_BUILD_ID': '${JOB_NAME}-${BUILD_ID}',
