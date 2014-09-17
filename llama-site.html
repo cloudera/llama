@@ -25,11 +25,13 @@
 <tr>
 <td><a name="llama.am.server.thrift.server.max.threads">llama.am.server.thrift.server.max.threads</a></td><td>50</td><td>
       Maximum number of threads used by the LlamaAM server uses for serving
-      client requests.
+      client requests. This should be to to the size of the cluster plus a
+      buffer (thrift synch IO requires one thread per connection, we need one
+      connection per impalad node).
     </td>
 </tr>
 <tr>
-<td><a name="llama.am.server.thrift.transport.timeout.ms">llama.am.server.thrift.transport.timeout.ms</a></td><td>3600000</td><td>
+<td><a name="llama.am.server.thrift.transport.timeout.ms">llama.am.server.thrift.transport.timeout.ms</a></td><td>60000</td><td>
       Socket time, in milliseconds, used LlamaAM server for all its server and 
       client Thrift connections.
     </td>
@@ -159,6 +161,15 @@
     </td>
 </tr>
 <tr>
+<td><a name="llama.am.cluster.id">llama.am.cluster.id</a></td><td>llama</td><td>
+      Identification of a Llama (or an Active/Standby pair). YARN resources
+      are grouped by this ID. When multiple applications on a YARN cluster
+      use their own Llamas, it is recommended that they use different values
+      for this config. On Llama restart, all YARN applications corresponding
+      to this cluster-id are killed.
+    </td>
+</tr>
+<tr>
 <td><a name="llama.am.rm.connector.class">llama.am.rm.connector.class</a></td><td>com.cloudera.llama.am.yarn.YarnRMConnector</td><td>
       Backing LlamaAM implementation to use.
       Available for functional testing:
@@ -166,9 +177,22 @@
     </td>
 </tr>
 <tr>
+<td><a name="llama.am.rm.connector.recycle.interval.mins">llama.am.rm.connector.recycle.interval.mins</a></td><td>1380</td><td>
+        Yarn AM-RM protocol does not have a way of renewing long lasting tokens.
+        So, Llama recycles the yarn connectors to avoid any failures due to
+        invalid tokens. By default its set to 75% of the value
+        yarn.resourcemanager.delegation.token.renew-interval in yarn-site.xml.
+        It can be overridden here but it should always be less than the yarn
+        configured value.
+    </td>
+</tr>
+<tr>
 <td><a name="llama.am.core.queues">llama.am.core.queues</a></td><td></td><td>
       Queues LlamaAM should connect to at start up. Unlike queues that are
       created in response to a reservation, these queues will never expire.
+      IMPORTANT: all queue names should be canonical queue names, this is
+      prefixed with "root.". This is required because Yarn normalizes queue
+      names to their canonical name.
     </td>
 </tr>
 <tr>
@@ -218,19 +242,19 @@
     </td>
 </tr>
 <tr>
-<td><a name="llama.am.throttling.maximum.placed.reservations">llama.am.throttling.maximum.placed.reservations</a></td><td>20</td><td>
+<td><a name="llama.am.throttling.maximum.placed.reservations">llama.am.throttling.maximum.placed.reservations</a></td><td>10000</td><td>
       Global maximum number of reservations per queue. Once this number of
       reservations is reached for a queue, reservations are queued up.
     </td>
 </tr>
 <tr>
-<td><a name="llama.am.throttling.maximum.queued.reservations">llama.am.throttling.maximum.queued.reservations</a></td><td>50</td><td>
+<td><a name="llama.am.throttling.maximum.queued.reservations">llama.am.throttling.maximum.queued.reservations</a></td><td>0</td><td>
       Global maximum number of queued reservations per queue. Once this number
       of reservations is reached for a queue, new reservations are rejected.
     </td>
 </tr>
 <tr>
-<td><a name="llama.am.throttling.maximum.placed.reservations.#QUEUE#">llama.am.throttling.maximum.placed.reservations.#QUEUE#</a></td><td>20</td><td>
+<td><a name="llama.am.throttling.maximum.placed.reservations.#QUEUE#">llama.am.throttling.maximum.placed.reservations.#QUEUE#</a></td><td>10000</td><td>
       Maximum number of reservations for #QUEUE# queue. Once this number of
       reservations is reached for the #QUEUE# queue, reservations are queued up.
       If this property is not set for the #QUEUE#, the global configuration
@@ -238,7 +262,7 @@
     </td>
 </tr>
 <tr>
-<td><a name="llama.am.throttling.maximum.queued.reservations.#QUEUE#">llama.am.throttling.maximum.queued.reservations.#QUEUE#</a></td><td>50</td><td>
+<td><a name="llama.am.throttling.maximum.queued.reservations.#QUEUE#">llama.am.throttling.maximum.queued.reservations.#QUEUE#</a></td><td>0</td><td>
       Maximum number of queued reservations for #QUEUE# queue. Once this number
       of reservations is reached for the #QUEUE# queue, new reservations are
       rejected.
@@ -493,6 +517,43 @@
       containing the user-&gt;group mapping. When this duration has expired,
       then the implementation of the group mapping provider is invoked to get
       the groups of the user and then cached back.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.ha.enabled">llama.am.ha.enabled</a></td><td>false</td><td>
+      Enable Llama HA. When enabled, Llama starts in
+      Standby mode and participates in leader election. When elected leader,
+      it transitions to Active. When HA is enabled, one is required to set
+      llama.am.ha.zk-quorum.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.ha.zk-quorum">llama.am.ha.zk-quorum</a></td><td></td><td>
+      The Zookeeper quorum to use for leader election and fencing when HA is
+      enabled.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.ha.zk-base">llama.am.ha.zk-base</a></td><td>/llama</td><td>
+      The base znode to be used to store all HA-related information. If using
+      the same Zookeeper quorum for multiple Llama clusters, make sure each
+      Llama cluster has a separate base znode. Also, make sure the path is
+      absolute, i.e., starts with "/".
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.ha.zk-timeout-ms">llama.am.ha.zk-timeout-ms</a></td><td>10000</td><td>
+      The session timeout to be used for connections to the Zookeeper quorum.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.ha.zk-acl">llama.am.ha.zk-acl</a></td><td>world:anyone:rwcda</td><td>
+      ACLs to control access to the Zookeeper quorum used for HA.
+    </td>
+</tr>
+<tr>
+<td><a name="llama.am.ha.zk-auth">llama.am.ha.zk-auth</a></td><td></td><td>
+      Auth information to go with llama.am.ha.zk-acl
     </td>
 </tr>
 </table>
