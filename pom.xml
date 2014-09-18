@@ -70,7 +70,7 @@ TODO: need license header
     <cdh.parquet.version>1.5.0-cdh5.2.0-SNAPSHOT</cdh.parquet.version>
     <cdh.parquet-format.version>2.1.0-cdh5.2.0-SNAPSHOT</cdh.parquet-format.version>
     <cdh.spark.version>1.1.0-cdh5.2.0-SNAPSHOT</cdh.spark.version>
-    <cdh.crunch.version>0.11.0-cdh5.2.0-SNAPSHOT</cdh.crunch.version>
+    <cdh.crunch.version>0.10.0-cdh5.2.0-SNAPSHOT</cdh.crunch.version>
     <cdh.avro.version>1.7.6-cdh5.2.0-SNAPSHOT</cdh.avro.version>
     
     <cdh.hadoop-lzo.version>0.4.15-cdh5.2.0-SNAPSHOT</cdh.hadoop-lzo.version>
