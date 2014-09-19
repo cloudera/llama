@@ -1656,7 +1656,7 @@ TODO: need license header
             <dependency>
               <groupId>com.cloudera.kitchen</groupId>
               <artifactId>maven-scm-provider-crepo</artifactId>
-              <version>1.1</version>
+              <version>1.2</version>
             </dependency>
           </dependencies>
         </plugin>
@@ -1664,17 +1664,17 @@ TODO: need license header
         <plugin>
           <groupId>com.cloudera.kitchen</groupId>
           <artifactId>maven-deps-to-props-plugin</artifactId>
-          <version>1.1</version>
+          <version>1.2</version>
         </plugin>
         <plugin>
           <groupId>com.cloudera.kitchen</groupId>
           <artifactId>maven-build-repo-setup-plugin</artifactId>
-          <version>1.1</version>
+          <version>1.2</version>
         </plugin>
         <plugin>
           <groupId>com.cloudera.kitchen</groupId>
           <artifactId>maven-build-repo-addto-plugin</artifactId>
-          <version>1.1</version>
+          <version>1.2</version>
         </plugin>
         
         <plugin>
