@@ -917,7 +917,15 @@ TODO: need license header
         <artifactId>parquet-thrift</artifactId>
         <version>${cdh.parquet.version}</version>
       </dependency>
-        
+
+
+      <!-- Kite - just one here for now for Ant/Ivy magic -->
+      <dependency>
+        <groupId>org.kitesdk</groupId>
+        <artifactId>kite-data-core</artifactId>
+        <version>${cdh.kite.version}</version>
+      </dependency>
+      
       <!-- External dependencies consumed by the different projects-->
       
       <!-- Hadoop -->
