@@ -83,7 +83,7 @@ TODO: need license header
     <cdh.tomcat.minor.version>0.41</cdh.tomcat.minor.version>
     <cdh.tomcat.version>${cdh.tomcat.major.version}.${cdh.tomcat.minor.version}</cdh.tomcat.version>
     <cdh.hadoop-snappy.version>1.0.4.1</cdh.hadoop-snappy.version>
-    <cdh.thrift.version>0.9.0</cdh.thrift.version>
+    <cdh.thrift.version>0.9.0-cdh5-2</cdh.thrift.version>
     <cdh.httpcomponents.version>4.2.5</cdh.httpcomponents.version>
     <cdh.jackson.version>1.9.13</cdh.jackson.version>
     <!--
