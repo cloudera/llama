@@ -63,7 +63,25 @@ Running Llama
   in Llama should be kept in sync.
 
 ** Hadoop Yarn Configuration for Llama AM (Required)
-    
+
+  Llama uses only CPU (zero memory) or only Memory containers (zero vcores).
+  Yarn needs to be configured to allow container allocations with minimum
+  memory of zero MB and minimum CPU of zero vcores.
+
+  Hadoop's <<<yarn-site.xml>>> must include the following 2 configuration
+  properties:
+
++----+
+  <property>
+    <name>yarn.scheduler.minimum-allocation-mb</name>
+    <value>0</value>
+  </property>
+  <property>
+    <name>yarn.scheduler.minimum-allocation-vcores</name>
+    <value>0</value>
+  </property>
++----+
+
   The user running LlamaAM must be configured in Hadoop as a proxy user for 
   itself.
   
