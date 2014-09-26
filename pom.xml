@@ -1533,7 +1533,7 @@ TODO: need license header
       <dependency>
         <groupId>org.apache.thrift</groupId>
         <artifactId>libthrift</artifactId>
-        <version>0.9.0</version>
+        <version>${cdh.thrift.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.thrift</groupId>
