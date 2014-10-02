@@ -85,7 +85,7 @@ TODO: need license header
     <cdh.hadoop-snappy.version>1.0.4.1</cdh.hadoop-snappy.version>
     <cdh.thrift.version>0.9.0-cdh5-2</cdh.thrift.version>
     <cdh.httpcomponents.version>4.2.5</cdh.httpcomponents.version>
-    <cdh.jackson.version>1.9.13</cdh.jackson.version>
+    <cdh.jackson.version>1.8.8</cdh.jackson.version>
     <!--
       The httpcore rev should be drawn from the httpcomponents-client POM (the parent POM
       of the httpclient POM - see the comment above) - the httpclient version and the httpcore
