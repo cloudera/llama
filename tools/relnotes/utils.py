@@ -37,7 +37,7 @@ def getClouderaJiraList():
     return getClouderaJiraMap().keys()
 
 def getJiraMap():
-    return dict(getApacheJiraMap().items() + getApacheJiraMap().items())
+    return dict(getApacheJiraMap().items() + getClouderaJiraMap().items())
 
 def getJiraList():
     return getApacheJiraList() + getClouderaJiraList()
