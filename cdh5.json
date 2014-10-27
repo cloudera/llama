@@ -27,7 +27,7 @@
      "mahout": {"track-branch": "cdh5-0.9", "dir": "repos/cdh5/mahout", "remotes": ["origin", "apache"]},
      "oozie": {"track-branch": "cdh5-4.0.0", "dir": "repos/cdh5/oozie", "remotes": ["origin"]},
      "whirr": {"track-branch": "cdh5-0.9.0", "dir": "repos/cdh5/whirr", "remotes": ["origin"]},
-     "hue": {"track-branch": "cdh5-3.6.0", "dir": "repos/cdh5/hue", "remotes": ["origin"]},
+     "hue": {"track-branch": "cdh5-3.7.0", "dir": "repos/cdh5/hue", "remotes": ["origin"]},
      "sentry": {"track-branch": "cdh5-1.4.0", "dir": "repos/cdh5/sentry", "remotes": ["origin"]},
      "solr": {"track-branch": "cdh5-4.4.0", "dir": "repos/cdh5/solr", "remotes": ["origin"], "remote-project-name": "lucene-solr"},
      "impala": { "track-branch": "cdh5-trunk", "dir": "repos/cdh5/impala", "remotes": ["impala"]},
