@@ -342,7 +342,7 @@ job {
   }
 
   steps {
-    shell(JenkinsDslUtils.boilerPlatePromoteStep(jenkinsJson['core-prefix'], "5"))
+    shell(JenkinsDslUtils.boilerPlatePromoteStep(jenkinsJson['core-prefix'], jenkinsJson["release-base"]))
   }
 }
 
