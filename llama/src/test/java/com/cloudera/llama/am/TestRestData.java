@@ -192,7 +192,7 @@ public class TestRestData {
 
   @Test
   public void testLifeCycleAndSelectors() throws Exception {
-    RestData restData = new RestData();
+    RestData restData = new RestData(null);
     UUID id1 = UUID.randomUUID();
     final UUID handle1 = UUID.randomUUID();
     PlacedReservationImpl pr1 = createReservation(id1, handle1, "q1",
@@ -320,7 +320,7 @@ public class TestRestData {
   };
   @Test
   public void testEmptyBean() throws Exception {
-    RestData restData = new RestData();
+    RestData restData = new RestData(null);
     StringWriter writer = new StringWriter();
     EmptyBean obj = new EmptyBean();
     restData.writeAsJson("Test", obj, writer);
@@ -329,7 +329,7 @@ public class TestRestData {
   }
     @Test
   public void testAll() throws Exception {
-    RestData restData = new RestData();
+    RestData restData = new RestData(null);
     UUID id1 = UUID.randomUUID();
     final UUID handle1 = UUID.randomUUID();
     PlacedReservationImpl pr1 = createReservation(id1, handle1, "q1",
@@ -403,7 +403,7 @@ public class TestRestData {
 
   @Test
   public void testSummary() throws Exception {
-    RestData restData = new RestData();
+    RestData restData = new RestData(null);
 
     StringWriter writer = new StringWriter();
     restData.writeSummaryAsJson(writer);
