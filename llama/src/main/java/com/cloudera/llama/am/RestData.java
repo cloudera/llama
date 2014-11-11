@@ -95,6 +95,7 @@ public class RestData implements LlamaAMListener,
   static final String NODES_CROSSREF = "nodesCrossref";
   static final String HANDLES_CROSSREF = "handlesCrossref";
   static final String QUEUES_CROSSREF = "queuesCrossref";
+  static final String HA_SERVER_STATUS = "llamaAMServerStatus";
 
   static final String CLIENT_INFO = "clientInfo";
   static final String QUEUE = "queue";
@@ -108,7 +109,7 @@ public class RestData implements LlamaAMListener,
   private final Map<String, List<PlacedReservation>> nodeReservationsMap;
   private final Map<UUID, ClientInfo> clientInfoMap;
   private final Set<UUID> hasBeenBackedOff;
-
+  private final LlamaAMServer llamaAMServer;
 
   private ObjectMapper createJsonMapper() {
     ObjectMapper mapper = new ObjectMapper();
@@ -123,7 +124,7 @@ public class RestData implements LlamaAMListener,
     return mapper;
   }
 
-  public RestData() {
+  public RestData(LlamaAMServer llamaAMServer) {
     jsonMapper = createJsonMapper();
     lock = new ReentrantReadWriteLock(true);
     reservationsMap = new LinkedHashMap<UUID, PlacedReservation>();
@@ -132,6 +133,7 @@ public class RestData implements LlamaAMListener,
     nodeReservationsMap = new TreeMap<String, List<PlacedReservation>>();
     clientInfoMap = new LinkedHashMap<UUID, ClientInfo>();
     hasBeenBackedOff = new HashSet<UUID>();
+    this.llamaAMServer = llamaAMServer;
   }
 
   public void onRegister(ClientInfo clientInfo) {
@@ -584,6 +586,16 @@ public class RestData implements LlamaAMListener,
       summary.put(CLIENTS_SUMMARY_KEY, createClientInfoSummary());
       summary.put(NODES_SUMMARY_KEY, createMapSummaryList(NODE,
           nodeReservationsMap));
+      if (llamaAMServer != null) {
+        if (llamaAMServer instanceof LlamaHAServer) {
+          // HA enabled
+          summary.put(HA_SERVER_STATUS,
+              ((LlamaHAServer) llamaAMServer).isActive() ? "active" : "standby");
+        } else {
+          // HA disabled
+          summary.put(HA_SERVER_STATUS, "active");
+        }
+      }
       writeAsJson(SUMMARY_DATA, summary, out);
     } finally {
       lock.readLock().unlock();
@@ -620,6 +632,16 @@ public class RestData implements LlamaAMListener,
       all.put(QUEUES_CROSSREF, createCrossRef(queueReservationsMap));
       all.put(HANDLES_CROSSREF, createCrossRef(handleReservationsMap));
       all.put(NODES_CROSSREF, createCrossRef(nodeReservationsMap));
+      if (llamaAMServer != null) {
+        if (llamaAMServer instanceof LlamaHAServer) {
+          // HA enabled
+          all.put(HA_SERVER_STATUS,
+              ((LlamaHAServer) llamaAMServer).isActive() ? "active" : "standby");
+        } else {
+          // HA disabled
+          all.put(HA_SERVER_STATUS, "active");
+        }
+      }
       writeAsJson(ALL_DATA, all, out);
     } finally {
       lock.readLock().unlock();

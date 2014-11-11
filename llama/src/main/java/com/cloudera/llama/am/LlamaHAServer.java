@@ -50,6 +50,8 @@ public class LlamaHAServer extends LlamaAMServer
     if (!conf.isHAEnabled()) {
       transitionToActive();
     } else {
+      startHttpServer();
+
       try {
         elector = new ActiveStandbyElector(conf.getZkQuorum(),
             (int) conf.getZKTimeout(), conf.getElectorZNode(),
