@@ -90,8 +90,12 @@ public class LlamaAMServer extends
     reporter = null;
   }
 
-  private void startHttpServer() {
-    restData = new RestData();
+  protected synchronized void startHttpServer() {
+    if (httpServer != null && httpServer.isRunning()) {
+      return;
+    }
+
+    restData = new RestData(this);
     httpServer = new Server();
     QueuedThreadPool qtp = new QueuedThreadPool(JETTY_MAX_THREADS);
     qtp.setName("llama-jetty");
@@ -216,8 +220,6 @@ public class LlamaAMServer extends
     clientNotificationService = null;
 
     nodeMapper = null;
-
-    stopHttpServer();
   }
 
   @Override
