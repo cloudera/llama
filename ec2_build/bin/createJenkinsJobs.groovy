@@ -101,6 +101,8 @@ components.each { component, config ->
             componentChildren(delegate, downstreamJobs, component, jenkinsJson.java7, null)
 
             conditionalRepoUpdate(delegate, jobPrefix, config["is-gpl"] != null ? true : false)
+
+            incrementalFullRepoUpdate(delegate, jobPrefix, false, config["is-gpl"] != null ? true : false)
         }
 
         publishers {
@@ -153,6 +155,8 @@ if (jenkinsJson.'c5-parcel') {
               "origin/${crepoJson.projects.'parcel-build'.'track-branch'}")
 
       conditionalRepoUpdate(delegate, jobPrefix, false)
+
+      incrementalFullRepoUpdate(delegate, jobPrefix, true, false)
     }
 
     publishers {
@@ -194,6 +198,8 @@ if (jenkinsJson.'c5-parcel') {
                         "origin/${crepoJson.projects.'parcel-build'.'track-branch'}".replaceAll("cdh", "gplextras"))
 
       conditionalRepoUpdate(delegate, jobPrefix, true)
+
+      incrementalFullRepoUpdate(delegate, jobPrefix, true, true)
     }
 
     publishers {
@@ -321,6 +327,39 @@ job {
     }
 }
 
+// Incremental population of full repo job
+
+job {
+    name JenkinsDslUtils.componentJobName(jobPrefix, "Incremental-Full-Repo")
+    
+    logRotator(-1, 15, -1, -1)
+    
+    //dissabled(true)
+
+    scm { 
+        cdhGit(delegate, jenkinsJson['cdh-branch'])
+    }
+
+    label JobDslConstants.FULL_AND_REPO_JOBS_LABEL
+    
+    jdk JobDslConstants.PACKAGING_JOB_JDK
+
+    parameters {
+      stringParam("PARENT_BUILD_ID", "", "Build ID of parent job whose artifacts will be added to the repo.")
+      stringParam("SUPER_PARENT_BUILD_ID", "", "Build ID of super parent job for incremental full build repo population")
+      stringParam("IS_GPL", "false", "Whether this is updating GPL bits")
+    }
+
+    steps {
+        shell(JenkinsDslUtils.constructRepoUpdateStep(jenkinsJson['repo-category'],
+                                                      jenkinsJson['gpl-repo-category'],
+                                                      true,
+                                                      jenkinsJson['c5-parcel'],
+                                                      "${jenkinsJson['gpl-prefix']}${jenkinsJson['release-base']}",
+                                                      jenkinsJson.platforms))
+    }
+}
+
 // Repo promotion job
 job {
   name jobPrefix.toUpperCase() + "-Promote-Repository"
@@ -342,7 +381,7 @@ job {
   }
 
   steps {
-      shell(JenkinsDslUtils.boilerPlatePromoteStep(jenkinsJson['core-prefix'], jobPrefix.toLowerCase()))
+      shell(JenkinsDslUtils.boilerPlatePromoteStep(jenkinsJson['core-prefix'], jobPrefix.toLowerCase().replaceAll(jenkinsJson['core-prefix'], "")))
   }
 }
 
@@ -378,9 +417,11 @@ job {
         parentCall(delegate, ["Parcel", "GPLExtras-Parcel"].collect { JenkinsDslUtils.componentJobName(jobPrefix, it) }.join(","))
     }
     shell(JenkinsDslUtils.repoGenFullBuildStep(jenkinsJson['repo-category'], jenkinsJson['c5-parcel'],
-            false, jenkinsJson.platforms, gplProjects, false, "${jenkinsJson['core-prefix']}${jenkinsJson.'release-base'}", jenkinsJson['base-repo']))
+                                               false, jenkinsJson.platforms, gplProjects, false, true,
+                                               "${jenkinsJson['core-prefix']}${jenkinsJson.'release-base'}", jenkinsJson['base-repo']))
     shell(JenkinsDslUtils.repoGenFullBuildStep(jenkinsJson['gpl-repo-category'], jenkinsJson['c5-parcel'],
-            true, jenkinsJson.platforms, gplProjects, true, "${jenkinsJson['gpl-prefix']}${jenkinsJson.'release-base'}", jenkinsJson['base-repo']))
+                                               true, jenkinsJson.platforms, gplProjects, true, true,
+                                               "${jenkinsJson['gpl-prefix']}${jenkinsJson.'release-base'}", jenkinsJson['base-repo']))
     if (jenkinsJson.'update-static') {
       shell(JenkinsDslUtils.updateStaticRepoFullBuildStep(jenkinsJson['repo-category']))
       downstreamParameterized {
@@ -520,6 +561,36 @@ def conditionalRepoUpdate(Object delegate, String jobPrefix, boolean isGpl = fal
             trigger(JenkinsDslUtils.componentJobName(jobPrefix, "Update-Repos"), "ALWAYS", false) { 
                 predefinedProps(['PARENT_BUILD_ID': '${JOB_NAME}-${BUILD_ID}',
                                  'IS_GPL': "${isGpl}"])
+            }
+        }
+    } 
+}
+
+def incrementalFullRepoUpdate(Object delegate, String jobPrefix, boolean isParcel = false, boolean isGpl = false) {
+    def params = ['PARENT_BUILD_ID': '${JOB_NAME}-${BUILD_ID}',
+                  'SUPER_PARENT_BUILD_ID': '${FULL_PARENT_BUILD_ID}',
+                  'IS_GPL': "${isGpl}"]
+
+    def updateJobName = JenkinsDslUtils.componentJobName(jobPrefix, "Incremental-Full-Repo")
+
+    // Note that we block for parcel builds, but not for anything else.
+    return delegate.conditionalSteps {
+        condition {
+            stringsMatch('${ENV,var="CHILD_BUILD"}', "true", false)
+        }
+        runner("Fail")
+        downstreamParameterized {
+            if (isParcel) { 
+                trigger(updateJobName, "ALWAYS", false,
+                        ["buildStepFailure": "FAILURE",
+                         "failure": "FAILURE"]) {
+                    predefinedProps(params)
+                }
+            } else {
+                trigger(updateJobName, "ALWAYS", false) { 
+                    predefinedProps(params)
+                }
+                
             }
         }
     } 
