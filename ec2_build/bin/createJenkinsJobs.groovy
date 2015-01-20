@@ -378,6 +378,7 @@ job {
     stringParam("REPO_PARENT", "", "Parent directory of the original repo (under repos.jenkins.cloudera.com")
     stringParam("CATEGORY", "", "The category to promote to, i.e., cdh5.1.1-nightly")
     stringParam("REPO_BUILD_ID", "", "The repository build ID to promote")
+    stringParam("DO_STATIC", "true", "If true, update the static repo symlink.")
   }
 
   steps {
@@ -422,18 +423,29 @@ job {
     shell(JenkinsDslUtils.repoGenFullBuildStep(jenkinsJson['gpl-repo-category'], jenkinsJson['c5-parcel'],
                                                true, jenkinsJson.platforms, gplProjects, true, true,
                                                "${jenkinsJson['gpl-prefix']}${jenkinsJson.'release-base'}", jenkinsJson['base-repo']))
-    if (jenkinsJson.'update-static') {
-      shell(JenkinsDslUtils.updateStaticRepoFullBuildStep(jenkinsJson['repo-category']))
-      downstreamParameterized {
+    downstreamParameterized {
         trigger(jobPrefix.toUpperCase() + "-Promote-Repository", "ALWAYS", false) {
-          predefinedProps(['REPO_BUILD_ID': '${JOB_NAME}-${BUILD_ID}',
-                           'REPO_PARENT': "${jenkinsJson['repo-category']}-repos",
-                           'CATEGORY': jenkinsJson['repo-category']])
-
+            predefinedProps(['REPO_BUILD_ID': '${JOB_NAME}-${BUILD_ID}',
+                            'REPO_PARENT': "${jenkinsJson['gpl-repo-category']}-repos",
+                            'CATEGORY': jenkinsJson['gpl-repo-category'],
+                            'DO_STATIC': 'false' ])
+            
         }
-      }
     }
-
+    
+    if (jenkinsJson.'update-static') {
+        shell(JenkinsDslUtils.updateStaticRepoFullBuildStep(jenkinsJson['repo-category']))
+        downstreamParameterized {
+            trigger(jobPrefix.toUpperCase() + "-Promote-Repository", "ALWAYS", false) {
+                predefinedProps(['REPO_BUILD_ID': '${JOB_NAME}-${BUILD_ID}',
+                                'REPO_PARENT': "${jenkinsJson['repo-category']}-repos",
+                                'CATEGORY': jenkinsJson['repo-category'],
+                                'DO_STATIC': 'true'])
+                
+            }
+        }
+    }
+    
     if (!jenkinsJson.'c5-parcel') {
       parentCall(delegate, JenkinsDslUtils.componentJobName(jobPrefix, "Parcel"))
     }
