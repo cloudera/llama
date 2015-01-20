@@ -409,6 +409,11 @@ job {
   repoThrottle(delegate, jobPrefix)
 
   steps {
+    downstreamParameterized {
+        trigger("pre-heat-package-slaves", "ALWAYS", false)
+    }
+    
+
     shell(JenkinsDslUtils.firstFullBuildStep("${jenkinsJson['core-prefix']}${jenkinsJson.'release-base'}"))
     parentCall(delegate, JenkinsDslUtils.componentJobName(jobPrefix, "Parent-POM"), false)
     phases.each { p ->
