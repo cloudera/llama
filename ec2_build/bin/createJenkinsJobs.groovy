@@ -406,7 +406,7 @@ job {
     cron("13 1 * * 1,3,6")
   }
 
-  repoThrottle(delegate, jobPrefix)
+  repoThrottle(delegate, jobPrefix, true)
 
   steps {
     downstreamParameterized {
@@ -468,6 +468,19 @@ job {
         }
       }
     }
+
+    downstreamParameterized {
+        trigger("purge-failed-full-build-repos", "ALWAYS", false) {
+            predefinedProp('PARENT_JOB', '${JOB_NAME}')
+        }
+    }
+
+  }
+  publishers {
+      associatedFiles('/mnt/jenkins-repos/' + jenkinsJson['repo-category'] + '-repos/${JOB_NAME}-${BUILD_ID}',
+                      '/mnt/jenkins-repos/' + jenkinsJson['repo-category'].replaceAll("nightly", "static")
+                        + '-repos/${JOB_NAME}-${BUILD_ID}')
+
   }
 
 }
@@ -512,11 +525,15 @@ def packageGit(Object delegate, pkgGitInfo) {
     }
 }
 
-def repoThrottle(Object delegate, String shortRel) {
+def repoThrottle(Object delegate, String shortRel, boolean isFullBuild = false) {
+    def throttleCategories = ["${shortRel.toUpperCase()}-repo-update"]
+    if (isFullBuild) {
+        throttleCategories << "cdh-full-build-throttle"
+    }
     return delegate.throttleConcurrentBuilds {
         maxPerNode 0
         maxTotal 0
-        categories(["${shortRel.toUpperCase()}-repo-update"])
+        categories(throttleCategories)
     }
 }
 
