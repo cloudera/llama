@@ -477,9 +477,9 @@ job {
 
   }
   publishers {
-      associatedFiles('/mnt/jenkins-repos/' + jenkinsJson['repo-category'] + '-repos/${JOB_NAME}-${BUILD_ID}',
-                      '/mnt/jenkins-repos/' + jenkinsJson['repo-category'].replaceAll("nightly", "static")
-                        + '-repos/${JOB_NAME}-${BUILD_ID}')
+      associatedFiles('/mnt/jenkins-repos/' + jenkinsJson['repo-category'] + '-repos/${JOB_NAME}-${BUILD_ID},'
+                      + '/mnt/jenkins-repos/' + jenkinsJson['repo-category'].replaceAll("nightly", "static")
+                      + '-repos/${JOB_NAME}-${BUILD_ID}')
 
   }
 
