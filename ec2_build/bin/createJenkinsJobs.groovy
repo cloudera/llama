@@ -383,9 +383,10 @@ job {
 
   steps {
       shell(JenkinsDslUtils.boilerPlatePromoteStep(jenkinsJson['core-prefix'], jobPrefix.toLowerCase().replaceAll(jenkinsJson['core-prefix'], "")))
-      remoteTrigger("qe.jenkins.cloudera.com",
-                    "docker-clean_hosts_for_bvt")
-                    
+      if (jenkinsJson['call-bvts']) { 
+          remoteTrigger("qe.jenkins.cloudera.com",
+                        "docker-clean_hosts_for_bvt")
+      }
   }
 }
 
