@@ -461,7 +461,7 @@ job {
     if (jenkinsJson['update-nightly']) {
       conditionalSteps {
         condition {
-          status('Success', 'Success')
+          status('SUCCESS', 'SUCCESS')
         }
         runner("Fail")
         downstreamParameterized {
