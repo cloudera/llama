@@ -387,6 +387,13 @@ job {
           remoteTrigger("qe.jenkins.cloudera.com",
                         "docker-clean_hosts_for_bvt")
       }
+      if (jenkinsJson['call-nightly-qa']) {
+          remoteTrigger("qe.jenkins.cloudera.com",
+                        jenkinsJson['nightly-qa'])
+          remoteTrigger("qe.jenkins.cloudera.com",
+                        jenkinsJson['sanity-qa'])
+          
+      }
   }
 }
 
