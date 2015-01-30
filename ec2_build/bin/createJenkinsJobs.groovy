@@ -144,7 +144,7 @@ if (jenkinsJson.'c5-parcel') {
     jdk JobDslConstants.PACKAGING_JOB_JDK
 
     triggers {
-      cron("0 23 * * *")
+        //      cron("0 23 * * *")
     }
 
     steps {
@@ -403,7 +403,7 @@ job {
   jdk JobDslConstants.PACKAGING_JOB_JDK
 
   triggers {
-    cron("13 1 * * 1,3,6")
+    cron("0 23 * * *")
   }
 
   repoThrottle(delegate, jobPrefix, true)
