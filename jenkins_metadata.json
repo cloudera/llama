@@ -156,5 +156,11 @@
 
     "unit-test-aggregate": "CDH5-Unit-Tests-Aggregate",
 
-    "call-bvts": true
+    "call-bvts": true,
+
+    "call-nightly-qa": true,
+
+    "nightly-qa": "CDH5-Nightly",
+
+    "sanity-qa": "CDH5-Sanity",
 }
