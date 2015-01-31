@@ -383,16 +383,28 @@ job {
 
   steps {
       shell(JenkinsDslUtils.boilerPlatePromoteStep(jenkinsJson['core-prefix'], jobPrefix.toLowerCase().replaceAll(jenkinsJson['core-prefix'], "")))
-      if (jenkinsJson['call-bvts']) { 
-          remoteTrigger("qe.jenkins.cloudera.com",
-                        "docker-clean_hosts_for_bvt")
-      }
-      if (jenkinsJson['call-nightly-qa']) {
-          remoteTrigger("qe.jenkins.cloudera.com",
-                        jenkinsJson['nightly-qa'])
-          remoteTrigger("qe.jenkins.cloudera.com",
-                        jenkinsJson['sanity-qa'])
-          
+      
+      conditionalSteps {
+          condition {
+              stringsMatch('${ENV,var="DO_STATIC"}', "true", false)
+          }
+          runner("Fail")
+          if (jenkinsJson['call-bvts']) { 
+              remoteTrigger("qe.jenkins.cloudera.com",
+                        "docker-clean_hosts_for_bvt") {
+                  shouldNotFailBuild(true)
+              }
+          }
+          if (jenkinsJson['call-nightly-qa']) {
+              remoteTrigger("qe.jenkins.cloudera.com",
+                            jenkinsJson['nightly-qa']) {
+                                shouldNotFailBuild(true)
+              }
+              remoteTrigger("qe.jenkins.cloudera.com",
+                            jenkinsJson['sanity-qa']) {
+                  shouldNotFailBuild(true)
+              }
+          }
       }
   }
 }
