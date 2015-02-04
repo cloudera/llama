@@ -51,7 +51,7 @@ TODO: need license header
     <cdh.pig.version>0.12.0-cdh5.4.0-SNAPSHOT</cdh.pig.version>
     <cdh.sqoop.version>1.4.5-cdh5.4.0-SNAPSHOT</cdh.sqoop.version>
     <cdh.sqoop2.version>1.99.3-cdh5.4.0-SNAPSHOT</cdh.sqoop2.version>
-    <cdh.hive.version>0.13.1-cdh5.4.0-SNAPSHOT</cdh.hive.version>
+    <cdh.hive.version>1.1.0-cdh5.4.0-SNAPSHOT</cdh.hive.version>
     <cdh.oozie.version>4.1.0-cdh5.4.0-SNAPSHOT</cdh.oozie.version>
     <cdh.whirr.version>0.9.0-cdh5.4.0-SNAPSHOT</cdh.whirr.version>
     <cdh.flume.version>0.9.4-cdh5.4.0-SNAPSHOT</cdh.flume.version>
@@ -83,7 +83,7 @@ TODO: need license header
     <cdh.tomcat.minor.version>0.41</cdh.tomcat.minor.version>
     <cdh.tomcat.version>${cdh.tomcat.major.version}.${cdh.tomcat.minor.version}</cdh.tomcat.version>
     <cdh.hadoop-snappy.version>1.0.4.1</cdh.hadoop-snappy.version>
-    <cdh.thrift.version>0.9.0-cdh5-2</cdh.thrift.version>
+    <cdh.thrift.version>0.9.2</cdh.thrift.version>
     <cdh.httpcomponents.version>4.2.5</cdh.httpcomponents.version>
     <cdh.jackson.version>1.8.8</cdh.jackson.version>
     <!--
@@ -1413,7 +1413,7 @@ TODO: need license header
       <dependency>
         <groupId>jline</groupId>
         <artifactId>jline</artifactId>
-        <version>0.9.94</version>
+        <version>2.11</version>
       </dependency>
       <dependency>
         <groupId>com.jcraft</groupId>
@@ -1538,7 +1538,7 @@ TODO: need license header
       <dependency>
         <groupId>org.apache.thrift</groupId>
         <artifactId>libfb303</artifactId>
-        <version>0.9.0</version>
+        <version>0.9.2</version>
       </dependency>
       <dependency>
         <groupId>org.json</groupId>
