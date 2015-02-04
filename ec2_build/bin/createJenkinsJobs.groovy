@@ -505,6 +505,11 @@ job {
       associatedFiles('/mnt/jenkins-repos/' + jenkinsJson['repo-category'] + '-repos/${JOB_NAME}-${BUILD_ID},'
                       + '/mnt/jenkins-repos/' + jenkinsJson['repo-category'].replaceAll("nightly", "static")
                       + '-repos/${JOB_NAME}-${BUILD_ID}')
+      downstreamParameterized{
+          trigger("relaunch-cdh-full-build-for-transients", "FAILURE") {
+              predefinedProps([PARENT_JOB: '${JOB_NAME}', PARENT_BUILD: '${BUILD_NUMBER}'])
+          }
+      }
 
   }
 
