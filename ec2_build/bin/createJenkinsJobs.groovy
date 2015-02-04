@@ -506,7 +506,7 @@ job {
                       + '/mnt/jenkins-repos/' + jenkinsJson['repo-category'].replaceAll("nightly", "static")
                       + '-repos/${JOB_NAME}-${BUILD_ID}')
       downstreamParameterized{
-          trigger("relaunch-cdh-full-build-for-transients", "FAILURE") {
+          trigger("relaunch-cdh-full-build-for-transients", "FAILED") {
               predefinedProps([PARENT_JOB: '${JOB_NAME}', PARENT_BUILD: '${BUILD_NUMBER}'])
           }
       }
