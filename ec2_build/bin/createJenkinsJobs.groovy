@@ -113,7 +113,7 @@ components.each { component, config ->
         }
 
         wrappers {
-            timeout(120)
+            timeout(75)
         }
     }
 }
@@ -167,7 +167,7 @@ if (jenkinsJson.'c5-parcel') {
     }
 
     wrappers {
-      timeout(120)
+      timeout(45)
     }
   }
 
@@ -210,7 +210,7 @@ if (jenkinsJson.'c5-parcel') {
     }
 
     wrappers {
-      timeout(120)
+      timeout(30)
     }
   }
 } else {
@@ -510,7 +510,7 @@ job {
               predefinedProps([PARENT_JOB: '${JOB_NAME}', PARENT_BUILD: '${BUILD_NUMBER}'])
           }
       }
-
+      emailSetup(delegate, ["kitchen-build@cloudera.com"])
   }
 
 }
