@@ -59,7 +59,7 @@ TODO: need license header
     <cdh.mahout.version>0.9-cdh5.4.0-SNAPSHOT</cdh.mahout.version>
     <cdh.hue.version>3.7.0-cdh5.4.0-SNAPSHOT</cdh.hue.version>
     <cdh.datafu.version>1.1.0-cdh5.4.0-SNAPSHOT</cdh.datafu.version>
-    <cdh.solr.version>4.4.0-cdh5.4.0-SNAPSHOT</cdh.solr.version>
+    <cdh.solr.version>4.10.3-cdh5.4.0-SNAPSHOT</cdh.solr.version>
     <cdh.search.version>1.0.0-cdh5.4.0-SNAPSHOT</cdh.search.version>
     <cdh.hbase-solr.version>1.5-cdh5.4.0-SNAPSHOT</cdh.hbase-solr.version>
     <cdh.kite.version>0.15.0-cdh5.4.0-SNAPSHOT</cdh.kite.version>
@@ -77,7 +77,7 @@ TODO: need license header
     <cdh.impala-lzo.version>2.0.0-cdh5.4.0-SNAPSHOT</cdh.impala-lzo.version>
 
     <!-- Versions of the dependencies we manage -->
-    <cdh.tika.version>1.4</cdh.tika.version>
+    <cdh.tika.version>1.5</cdh.tika.version>
     <!-- Use this property in your subprojects's pom. -->
     <cdh.tomcat.major.version>6</cdh.tomcat.major.version>
     <cdh.tomcat.minor.version>0.41</cdh.tomcat.minor.version>
