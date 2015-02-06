@@ -428,7 +428,7 @@ job {
   jdk JobDslConstants.PACKAGING_JOB_JDK
 
   triggers {
-    cron("57 22 * * *")
+    cron("57 20 * * *")
   }
 
   repoThrottle(delegate, jobPrefix, true)
