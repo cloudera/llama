@@ -105,7 +105,7 @@ TODO: need license header
     <cdh.kafka.version>0.8.1.1</cdh.kafka.version>
 
     <!-- The logredactor code is Cloudera-internal, but managed as a third party lib -->
-    <cdh.logredactor.version>1.0.0</cdh.logredactor.version>
+    <cdh.logredactor.version>3.0.0</cdh.logredactor.version>
   </properties>
   
   <!-- crepo info -->    
@@ -1632,13 +1632,6 @@ TODO: need license header
         <groupId>org.testng</groupId>
         <artifactId>testng</artifactId>
         <version>6.2</version>
-      </dependency>
-
-      <!-- The logredactor code is Cloudera-internal, but managed as a third party lib -->
-      <dependency>
-        <groupId>com.cloudera.logredactor</groupId>
-        <artifactId>logredactor</artifactId>
-        <version>${cdh.logredactor.version}</version>
       </dependency>
 
     </dependencies>
