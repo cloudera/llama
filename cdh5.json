@@ -12,7 +12,7 @@
 
   "projects":
   {
-     "hadoop": { "track-branch": "cdh5-2.5.0", "dir":"repos/cdh5/hadoop",
+     "hadoop": { "track-branch": "cdh5-2.6.0", "dir":"repos/cdh5/hadoop",
                       "remotes": ["origin", "common"],
                       "remote-project-name": "hadoop" },
 
