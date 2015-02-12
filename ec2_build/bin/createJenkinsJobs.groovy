@@ -389,6 +389,13 @@ job {
               stringsMatch('${ENV,var="DO_STATIC"}', "true", false)
           }
           runner("Fail")
+          downstreamParameterized {
+              trigger("Populate-EC2-Repos", "ALWAYS", false,
+                      ["buildStepFailure": "FAILURE",
+                       "failure": "FAILURE"]) {
+                  predefinedProps(["DIRS_TO_SYNC": '${CATEGORY}'])
+              }
+          }
           if (jenkinsJson['call-bvts']) { 
               remoteTrigger("qe.jenkins.cloudera.com",
                         "docker-clean_hosts_for_bvt") {
