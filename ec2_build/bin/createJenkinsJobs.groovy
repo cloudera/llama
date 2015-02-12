@@ -389,13 +389,29 @@ job {
               stringsMatch('${ENV,var="DO_STATIC"}', "true", false)
           }
           runner("Fail")
-          downstreamParameterized {
+          def lines = []
+
+          lines << '#!/bin/bash -x'
+          lines << ' '
+
+          lines << 'STATIC_REPO=$(echo $CATEGORY|sed -e "s/\\-nightly/-static/")'
+          lines << 'ssh repos2.vpc.cloudera.com "mkdir -p /data/4/repos/${STATIC_REPO}"'
+
+          lines << 'ssh repos2.vpc.cloudera.com "rsync -av --progress --delete --link-dest=/data/4/repos/${REPO_PARENT}/${REPO_BUILD_ID}/ /data/4/repos/${REPO_PARENT}/${REPO_BUILD_ID}/ /data/4/repos/${STATIC_REPO}/"'
+
+          lines << 'ssh repos2.vpc.cloudera.com "find /data/4/repos/${REPO_PARENT}/${REPO_BUILD_ID}/ -name *.list -o -name *.repo -o -name mirrors|xargs perl -pi -e \'s/repos\\.jenkins/repos2.vpc/g; s/\\-nightly/-static/g\'"'
+
+          lines << 'ssh repos2.vpc.cloudera.com "rm -rf /data/4/repos/${REPO_PARENT}/*"'
+
+          shell(lines.join("\n"))
+                
+          /*          downstreamParameterized {
               trigger("Populate-EC2-Repos", "ALWAYS", false,
                       ["buildStepFailure": "FAILURE",
                        "failure": "FAILURE"]) {
                   predefinedProps(["DIRS_TO_SYNC": '${CATEGORY}'])
               }
-          }
+              }*/
           if (jenkinsJson['call-bvts']) { 
               remoteTrigger("qe.jenkins.cloudera.com",
                         "docker-clean_hosts_for_bvt") {
