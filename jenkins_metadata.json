@@ -160,7 +160,7 @@
 
     "call-nightly-qa": true,
 
-    "nightly-qa": "CDH5-Nightly",
+    "nightly-qa": "CDH5-Sanity-Nightly-Driver",
 
-    "sanity-qa": "CDH5-Sanity",
+    "sanity-qa": "CDH5-Sanity-Nightly-Driver",
 }

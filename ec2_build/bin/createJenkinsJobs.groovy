@@ -421,12 +421,12 @@ job {
           if (jenkinsJson['call-nightly-qa']) {
               remoteTrigger("qe.jenkins.cloudera.com",
                             jenkinsJson['nightly-qa']) {
-                  parameter("CDEP_HASH", "origin/master")
+                  parameter("RUN_SANITY", "false")
                   shouldNotFailBuild(true)
               }
               remoteTrigger("qe.jenkins.cloudera.com",
                             jenkinsJson['sanity-qa']) {
-                  parameter("CDEP_HASH", "origin/master")
+                  parameter("RUN_SANITY", "true")
                   shouldNotFailBuild(true)
               }
           }
