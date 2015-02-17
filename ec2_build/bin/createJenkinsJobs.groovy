@@ -167,7 +167,7 @@ if (jenkinsJson.'c5-parcel') {
     }
 
     wrappers {
-      timeout(45)
+      timeout(75)
     }
   }
 
@@ -210,7 +210,7 @@ if (jenkinsJson.'c5-parcel') {
     }
 
     wrappers {
-      timeout(30)
+      timeout(60)
     }
   }
 } else {
