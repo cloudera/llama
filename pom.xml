@@ -104,8 +104,11 @@ TODO: need license header
     <!-- Adding Kafka as external dependency until we start packaging it ourselves -->
     <cdh.kafka.version>0.8.1.1</cdh.kafka.version>
 
-    <!-- The logredactor code is Cloudera-internal, but managed as a third party lib -->
-    <cdh.logredactor.version>3.0.0</cdh.logredactor.version>
+    <!-- The logredactor implementation is currently only needed at
+         runtime, but managed as a third party lib proactively for when
+         it gets used directly by components in the future.
+    -->
+    <cdh.logredactor.version>1.0.0</cdh.logredactor.version>
   </properties>
   
   <!-- crepo info -->    
@@ -928,7 +931,14 @@ TODO: need license header
         <artifactId>kite-data-core</artifactId>
         <version>${cdh.kite.version}</version>
       </dependency>
-      
+
+      <!-- Log redactor -->
+      <dependency>
+        <groupId>org.cloudera.logredactor</groupId>
+        <artifactId>logredactor</artifactId>
+        <version>${cdh.logredactor.version}</version>
+      </dependency>
+
       <!-- External dependencies consumed by the different projects-->
       
       <!-- Hadoop -->
