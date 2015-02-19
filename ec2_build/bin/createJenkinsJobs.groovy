@@ -538,35 +538,38 @@ job {
 
 }
 
-// Populate staging job
-job {
-  name jobPrefix.toUpperCase() + "-Populate-Staging-Repos"
+// Populate staging job. Only created for release branches.
 
-  logRotator(-1, 15, -1, -1)
-
-  scm {
-    cdhGit(delegate, jenkinsJson['cdh-branch'])
-  }
-
-  label JobDslConstants.FULL_AND_REPO_JOBS_LABEL
-
-  jdk JobDslConstants.PACKAGING_JOB_JDK
-
-  parameters {
-    stringParam("REPO_BUILD_ID", "", "The repository build ID to populate into the staging repos")
-  }
-
-  steps {
-    shell(JenkinsDslUtils.repoGenFullBuildStep("staging/${jenkinsJson['core-prefix']}${jenkinsJson.'short-release-base'}", jenkinsJson['c5-parcel'],
-                                               false, jenkinsJson.platforms, gplProjects, false, false,
-                                               "${jenkinsJson['core-prefix']}${jenkinsJson.'release-base'}", jenkinsJson['base-repo'],
-                                               true, jenkinsJson['not-latest-release'] ? true : false, null))
-    shell(JenkinsDslUtils.repoGenFullBuildStep("staging/${jenkinsJson['gpl-prefix']}${jenkinsJson.'short-release-base'}", jenkinsJson['c5-parcel'],
-                                               true, jenkinsJson.platforms, gplProjects, false, false,
-                                               "${jenkinsJson['gpl-prefix']}${jenkinsJson.'release-base'}", jenkinsJson['base-repo'],
-                                               true, jenkinsJson['not-latest-release'] ? true : false, null))
-
-  }
+if (jenkinsJson['cdh-branch'] =~ /cdh\d_\d\.\d\.\d/) { 
+    job {
+        name jobPrefix.toUpperCase() + "-Populate-Staging-Repos"
+        
+        logRotator(-1, 15, -1, -1)
+        
+        scm {
+            cdhGit(delegate, jenkinsJson['cdh-branch'])
+        }
+        
+        label JobDslConstants.FULL_AND_REPO_JOBS_LABEL
+        
+        jdk JobDslConstants.PACKAGING_JOB_JDK
+        
+        parameters {
+            stringParam("REPO_BUILD_ID", "", "The repository build ID to populate into the staging repos")
+        }
+        
+        steps {
+            shell(JenkinsDslUtils.repoGenFullBuildStep("staging/${jenkinsJson['core-prefix']}${jenkinsJson.'short-release-base'}", jenkinsJson['c5-parcel'],
+                                                       false, jenkinsJson.platforms, gplProjects, false, false,
+                                                       "${jenkinsJson['core-prefix']}${jenkinsJson.'release-base'}", jenkinsJson['base-repo'],
+                                                       true, jenkinsJson['not-latest-release'] ? true : false, null))
+            shell(JenkinsDslUtils.repoGenFullBuildStep("staging/${jenkinsJson['gpl-prefix']}${jenkinsJson.'short-release-base'}", jenkinsJson['c5-parcel'],
+                                                       true, jenkinsJson.platforms, gplProjects, false, false,
+                                                       "${jenkinsJson['gpl-prefix']}${jenkinsJson.'release-base'}", jenkinsJson['base-repo'],
+                                                       true, jenkinsJson['not-latest-release'] ? true : false, null))
+            
+        }
+    }
 }
 
 def parentCall(Object delegate, String components, boolean useParams = true) {
