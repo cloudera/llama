@@ -540,7 +540,7 @@ job {
 
 // Populate staging job
 job {
-  name jobPrefix.toUpperCase() + "-Populating-Staging-Repos"
+  name jobPrefix.toUpperCase() + "-Populate-Staging-Repos"
 
   logRotator(-1, 15, -1, -1)
 
