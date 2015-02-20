@@ -19,7 +19,7 @@
      "zookeeper": {"track-branch": "cdh5-3.4.5", "dir": "repos/cdh5/zookeeper", "remotes": ["origin", "apache"]},
      "hbase": {"track-branch": "cdh5-1.0.0", "dir": "repos/cdh5/hbase", "remotes": ["origin","apache"]},
      "sqoop": {"track-branch": "cdh5-1.4.5", "dir": "repos/cdh5/sqoop", "remotes": ["origin"]},
-     "sqoop2": {"track-branch": "cdh5-1.99.4", "dir": "repos/cdh5/sqoop2", "remotes": ["origin"]},
+     "sqoop2": {"track-branch": "cdh5-1.99.5", "dir": "repos/cdh5/sqoop2", "remotes": ["origin"]},
      "pig": {"track-branch": "cdh5-0.12.0", "dir": "repos/cdh5/pig", "remotes": ["origin", "apache"]},
      "datafu": {"track-branch": "cdh5-1.1.0", "dir": "repos/cdh5/datafu", "remotes": ["origin"]},
      "hive": {"track-branch": "cdh5-1.1.0", "dir": "repos/cdh5/hive", "remotes": ["origin", "apache"]},
