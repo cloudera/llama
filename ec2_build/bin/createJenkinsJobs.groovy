@@ -553,6 +553,12 @@ if (jenkinsJson['cdh-branch'] =~ /cdh\d_\d\.\d\.\d/) {
             stringParam("REPO_BUILD_ID", "", "The repository build ID to populate into the staging repos")
         }
         
+        throttleConcurrentBuilds {
+            maxPerNode 0
+            maxTotal 0
+            categories(["populate-staging"])
+        }
+        
         steps {
             shell(JenkinsDslUtils.repoGenFullBuildStep("staging/${jenkinsJson['core-prefix']}${jenkinsJson.'short-release-base'}", jenkinsJson['c5-parcel'],
                                                        false, jenkinsJson.platforms, gplProjects, false, false,
