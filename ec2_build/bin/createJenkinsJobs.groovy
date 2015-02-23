@@ -424,11 +424,6 @@ job {
                   parameter("RUN_SANITY", "false")
                   shouldNotFailBuild(true)
               }
-              remoteTrigger("qe.jenkins.cloudera.com",
-                            jenkinsJson['sanity-qa']) {
-                  parameter("RUN_SANITY", "true")
-                  shouldNotFailBuild(true)
-              }
           }
       }
   }
