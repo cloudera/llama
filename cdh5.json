@@ -37,7 +37,7 @@
      "avro": {"track-branch": "cdh5-1.7.6", "dir": "repos/cdh5/avro", "remotes": ["origin"]},
      "parquet": {"track-branch": "cdh5-1.5.0", "dir": "repos/cdh5/parquet", "remotes": ["origin"]},
      "parquet-format": {"track-branch": "cdh5-2.1.0", "dir": "repos/cdh5/parquet-format", "remotes": ["origin"]},
-     "spark": {"track-branch": "cdh5-1.2.0", "dir": "repos/cdh5/spark", "remotes": ["origin"]},
+     "spark": {"track-branch": "cdh5-1.3.0", "dir": "repos/cdh5/spark", "remotes": ["origin"]},
      "crunch": {"track-branch": "cdh5-0.11.0", "dir": "repos/cdh5/crunch", "remotes": ["origin"]},
      "kite": {"track-branch": "cdh5-0.15.0", "dir": "repos/cdh5/kite", "remotes": ["origin"] },
 
