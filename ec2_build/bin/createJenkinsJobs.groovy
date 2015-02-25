@@ -402,7 +402,7 @@ job {
 
           lines << 'ssh repos2.vpc.cloudera.com "find /data/4/repos/${REPO_PARENT}/${REPO_BUILD_ID}/ -name *.list -o -name *.repo -o -name mirrors|xargs perl -pi -e \'s/repos\\.jenkins/repos2.vpc/g; s/\\-nightly/-static/g\'"'
 
-          lines << 's3cmd sync --skip-existing --recursive -v --cache-file /tmp/s3cache --exclude="*.html" --exclude="*.gif" --exclude="*.jpg" --exclude="*.png" --exclude="*.js" --exclude="*.css" --no-check-md5 --delete-removed /data/4/repos/${REPO_PARENT}/${REPO_BUILD_ID} s3://repos.jenkins/${REPO_PARENT}/'
+          //          lines << 's3cmd sync --skip-existing --recursive -v --cache-file /tmp/s3cache --exclude="*.html" --exclude="*.gif" --exclude="*.jpg" --exclude="*.png" --exclude="*.js" --exclude="*.css" --no-check-md5 --delete-removed /data/4/repos/${REPO_PARENT}/${REPO_BUILD_ID} s3://repos.jenkins/${REPO_PARENT}/'
 
           lines << 's3cmd sync --skip-existing --recursive -v --cache-file /tmp/s3cache --no-check-md5 --delete-removed s3://repos.jenkins/${REPO_PARENT}/${REPO_BUILD_ID} s3://repos.jenkins/${STATIC_PARENT}'
 
