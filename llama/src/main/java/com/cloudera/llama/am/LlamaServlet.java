@@ -41,4 +41,9 @@ public class LlamaServlet extends HttpServlet {
     }
   }
 
+  @Override
+  protected void doTrace(HttpServletRequest req, HttpServletResponse resp)
+      throws ServletException, IOException {
+    resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+  }
 }

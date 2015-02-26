@@ -126,6 +126,12 @@ public class LlamaJsonServlet extends HttpServlet {
     }
   }
 
+  @Override
+  protected void doTrace(HttpServletRequest req, HttpServletResponse resp)
+      throws ServletException, IOException {
+    resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+  }
+
   private StringBuffer getFullUrl(HttpServletRequest req) {
     StringBuffer sb = req.getRequestURL();
     String queryString = req.getQueryString();
