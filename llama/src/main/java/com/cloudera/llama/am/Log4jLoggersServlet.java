@@ -91,6 +91,12 @@ public class Log4jLoggersServlet extends HttpServlet {
     resp.getWriter().println(sb.toString());
   }
 
+  @Override
+  protected void doTrace(HttpServletRequest req, HttpServletResponse resp)
+      throws ServletException, IOException {
+    resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+  }
+
   private void doLoggersTable(StringBuilder sb, Map<String, String> loggerMap) {
     String info = (readOnly) ? " (READ ONLY)" : "";
     sb.append("<h2>Llama Loggers Config").append(info).append("</h2>");
