@@ -35,6 +35,12 @@ def updateMakefileAndParentPom(rootDir, oldVersion, newVersion) {
         def snapLessNew = newVersion.replaceAll("-SNAPSHOT", "")
         mfText = mfText.replaceAll("cdh${snapLessOld}", "cdh${snapLessNew}")
     }
+    if (newVersion.contains("SNAPSHOT")) {
+        mfText = mfText.replaceAll(/CDH_VERSION_STRING \?\= .*/, 'CDH_VERSION_STRING ?= cdh$(LONG_VERSION)-SNAPSHOT')
+    } else {
+        mfText = mfText.replaceAll(/CDH_VERSION_STRING \?\= .*/, 'CDH_VERSION_STRING ?= cdh$(LONG_VERSION)')
+    }
+    
     makeFile.write(mfText)
 
     File pom = new File(rootDir, "pom.xml")
