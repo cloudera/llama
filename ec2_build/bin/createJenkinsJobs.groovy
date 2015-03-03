@@ -667,6 +667,7 @@ def componentChildren(Object delegate, List<String> jobs, String pkg, boolean ja
 
   if (parcelBranch != null) {
     params['PARCEL_BUILD_BRANCH'] = parcelBranch
+    params['STRICT_SYMLINK_CHECKING'] =  true
   }
 
   return delegate.downstreamParameterized {
