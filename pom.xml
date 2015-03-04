@@ -9,32 +9,32 @@ TODO: need license header
   <artifactId>cdh-root</artifactId>
   <version>5.4.0-SNAPSHOT</version>
   <packaging>pom</packaging>
-  
+
   <name>CDH root</name>
   <description>CDH root</description>
-  
+
   <licenses>
     <license>
       <name>The Apache Software License, Version 2.0</name>
       <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
     </license>
   </licenses>
-  
+
   <organization>
     <name>Cloudera</name>
     <url>http://www.cloudera.com</url>
   </organization>
-  
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <!-- Used for MVN+ANT integration via maven-antrun-plugin -->
     <mvn.cmd>mvn</mvn.cmd>
     <ant.cmd>ant</ant.cmd>
-    
+
     <!-- Hudson builds must set this to a new temporary directory to ensure no old versions of JARs are -->
     <!-- picked up for any of the components being build                                                -->
     <ivy.cache.dir>${user.home}/.ivy2</ivy.cache.dir>
-    
+
     <!-- Used by Hadoop build -->
     <java5.home>${env.JAVA5_HOME}</java5.home>
     <forrest.home>${env.FORREST_HOME}</forrest.home>
@@ -63,7 +63,7 @@ TODO: need license header
     <cdh.search.version>1.0.0-cdh5.4.0-SNAPSHOT</cdh.search.version>
     <cdh.hbase-solr.version>1.5-cdh5.4.0-SNAPSHOT</cdh.hbase-solr.version>
     <cdh.kite.version>1.0.0-cdh5.4.0-SNAPSHOT</cdh.kite.version>
-    <cdh.impala.version>2.0.0-cdh5.4.0-SNAPSHOT</cdh.impala.version>
+    <cdh.impala.version>2.2.0-cdh5.4.0-SNAPSHOT</cdh.impala.version>
     <cdh.llama.version>1.0.0-cdh5.4.0-SNAPSHOT</cdh.llama.version>
     <cdh.cdh-parcel.version>5.4.0-SNAPSHOT</cdh.cdh-parcel.version>
     <cdh.sentry.version>1.4.0-cdh5.4.0-SNAPSHOT</cdh.sentry.version>
@@ -72,7 +72,7 @@ TODO: need license header
     <cdh.spark.version>1.3.0-cdh5.4.0-SNAPSHOT</cdh.spark.version>
     <cdh.crunch.version>0.11.0-cdh5.4.0-SNAPSHOT</cdh.crunch.version>
     <cdh.avro.version>1.7.6-cdh5.4.0-SNAPSHOT</cdh.avro.version>
-    
+
     <cdh.hadoop-lzo.version>0.4.15-cdh5.4.0-SNAPSHOT</cdh.hadoop-lzo.version>
     <cdh.impala-lzo.version>2.0.0-cdh5.4.0-SNAPSHOT</cdh.impala-lzo.version>
 
@@ -99,7 +99,7 @@ TODO: need license header
 
     <cdh.slf4j.version>1.7.5</cdh.slf4j.version>
 
-    <cdh.protobuf.version>2.5.0</cdh.protobuf.version> 
+    <cdh.protobuf.version>2.5.0</cdh.protobuf.version>
     <cdh.jets3t.version>0.9.0</cdh.jets3t.version>
     <!-- Adding Kafka as external dependency until we start packaging it ourselves -->
     <cdh.kafka.version>0.8.1.1</cdh.kafka.version>
@@ -110,13 +110,13 @@ TODO: need license header
     -->
     <cdh.logredactor.version>1.0.1</cdh.logredactor.version>
   </properties>
-  
-  <!-- crepo info -->    
+
+  <!-- crepo info -->
   <scm>
     <connection>scm:crepo:git@git.sf.cloudera.com:tucu.git</connection>
     <url>git@git.sf.cloudera.com:tucu.git</url>
   </scm>
-  
+
   <distributionManagement>
     <repository>
       <id>cdh.releases.repo</id>
@@ -129,7 +129,7 @@ TODO: need license header
       <name>CDH Snapshots Repository</name>
     </snapshotRepository>
   </distributionManagement>
-  
+
   <repositories>
     <repository>
       <id>cdh.releases.repo</id>
@@ -172,7 +172,7 @@ TODO: need license header
       <snapshots><enabled>false</enabled></snapshots>
     </repository>
   </repositories>
-  
+
   <pluginRepositories>
     <pluginRepository>
       <id>cdh.releases.repo</id>
@@ -194,9 +194,9 @@ TODO: need license header
 
   <dependencyManagement>
     <dependencies>
-      
+
       <!-- Root projects dependencies -->
-      
+
       <dependency>
         <groupId>com.cloudera.cdh</groupId>
         <artifactId>hadoop-root</artifactId>
@@ -293,9 +293,9 @@ TODO: need license header
         <version>${cdh.datafu.version}</version>
         <type>pom</type>
       </dependency>
-      
+
       <!-- Artifacts produced by the different projects -->
-      
+
       <!-- Hadoop -->
       <dependency>
         <groupId>org.apache.hadoop</groupId>
@@ -494,7 +494,7 @@ TODO: need license header
         <artifactId>hadoop-tarball</artifactId>
         <version>${cdh.mr1.version}</version>
       </dependency>
-      
+
       <!-- Zookeeper -->
       <dependency>
         <groupId>org.apache.zookeeper</groupId>
@@ -621,7 +621,7 @@ TODO: need license header
         <artifactId>pigsmoke</artifactId>
         <version>${cdh.pig.version}</version>
       </dependency>
-      
+
       <!--Sqoop-->
       <dependency>
         <groupId>org.apache.sqoop</groupId>
@@ -633,7 +633,7 @@ TODO: need license header
         <artifactId>sqoop-shim-cloudera</artifactId>
         <version>${cdh.sqoop.version}</version>
       </dependency>
-      
+
       <!--Hive-->
       <dependency>
         <groupId>org.apache.hive</groupId>
@@ -735,7 +735,7 @@ TODO: need license header
         <artifactId>hive-hbase-storage-handler</artifactId>
         <version>${cdh.hive.version}</version>
       </dependency>
- 
+
       <!-- Oozie -->
       <dependency>
         <groupId>com.yahoo.oozie</groupId>
@@ -940,7 +940,7 @@ TODO: need license header
       </dependency>
 
       <!-- External dependencies consumed by the different projects-->
-      
+
       <!-- Hadoop -->
       <dependency>
         <groupId>com.google.guava</groupId>
@@ -1313,7 +1313,7 @@ TODO: need license header
         <artifactId>ivy</artifactId>
         <version>2.0.0-rc2</version>
       </dependency>
-      
+
       <!-- Zookeeper -->
       <dependency>
         <groupId>org.apache.rat</groupId>
@@ -1325,7 +1325,7 @@ TODO: need license header
         <artifactId>netty</artifactId>
         <version>3.2.2.Final</version>
       </dependency>
-      
+
       <!-- Hbase -->
       <dependency>
         <groupId>org.apache.thrift</groupId>
@@ -1373,7 +1373,7 @@ TODO: need license header
         <artifactId>jackson-xc</artifactId>
         <version>${cdh.jackson.version}</version>
       </dependency>
-      
+
       <!-- Hcatalog -->
       <dependency>
         <groupId>org.apache.activemq</groupId>
@@ -1453,9 +1453,9 @@ TODO: need license header
         <artifactId>jansi</artifactId>
         <version>1.9</version>
       </dependency>
-      
+
       <!-- Sqoop -->
-      
+
       <dependency>
         <groupId>commons-io</groupId>
         <artifactId>commons-io</artifactId>
@@ -1466,7 +1466,7 @@ TODO: need license header
         <artifactId>ant-contrib</artifactId>
         <version>1.0b3</version>
       </dependency>
-      
+
       <!-- Hive -->
       <dependency>
         <groupId>com.github.stephenc.high-scale-lib</groupId>
@@ -1541,7 +1541,7 @@ TODO: need license header
         <artifactId>haivvreo</artifactId>
         <version>1.0.7-cdh-4</version>
       </dependency>
-      
+
       <!-- Backed depedendecies from checked in JARs in hive-root sub-projects -->
       <dependency>
         <groupId>org.apache.thrift</groupId>
@@ -1568,7 +1568,7 @@ TODO: need license header
         <artifactId>datanucleus-core</artifactId>
         <version>3.2.2</version>
       </dependency>
-      
+
       <!-- Oozie -->
       <dependency>
         <groupId>com.cloudera.alfredo</groupId>
@@ -1646,7 +1646,7 @@ TODO: need license header
 
     </dependencies>
   </dependencyManagement>
-  
+
   <build>
     <pluginManagement>
       <plugins>
@@ -1656,7 +1656,7 @@ TODO: need license header
           <artifactId>cobertura-maven-plugin</artifactId>
           <version>2.5.1</version>
         </plugin>
-        
+
         <!-- crepo provider setup -->
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -1673,7 +1673,7 @@ TODO: need license header
             </dependency>
           </dependencies>
         </plugin>
-        
+
         <plugin>
           <groupId>com.cloudera.kitchen</groupId>
           <artifactId>maven-deps-to-props-plugin</artifactId>
@@ -1689,7 +1689,7 @@ TODO: need license header
           <artifactId>maven-build-repo-addto-plugin</artifactId>
           <version>1.2</version>
         </plugin>
-        
+
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
@@ -1781,7 +1781,7 @@ TODO: need license header
           <artifactId>maven-jar-plugin</artifactId>
           <version>2.3.1</version>
         </plugin>
-        
+
         <!-- other plugins we'd like to pin down versions of -->
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -1826,9 +1826,9 @@ TODO: need license header
           <version>2.8</version>
         </plugin>
       </plugins>
-      
+
     </pluginManagement>
-    
+
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

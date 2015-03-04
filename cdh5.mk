@@ -243,7 +243,7 @@ HUE_PACKAGE_GIT_REPO=$(REPO_DIR)/cdh5/cdh-package/bigtop-packages/src
 HUE_SITE=$(CLOUDERA_ARCHIVE)
 $(eval $(call PACKAGE,hue,HUE))
 
-# DataFu 
+# DataFu
 DATAFU_NAME=datafu
 DATAFU_RELNOTES_NAME=Collection of user-defined functions
 DATAFU_PKG_NAME=pig-udf-datafu
@@ -273,7 +273,7 @@ SOLR_PACKAGE_GIT_REPO=$(REPO_DIR)/cdh5/cdh-package/bigtop-packages/src
 SOLR_SITE=$(CLOUDERA_ARCHIVE)
 $(eval $(call PACKAGE,solr,SOLR))
 
-# Search project 
+# Search project
 SEARCH_NAME=search
 SEARCH_RELNOTES_NAME=Cloudera Search Project
 SEARCH_PKG_NAME=search
@@ -316,7 +316,7 @@ KITE_PACKAGE_GIT_REPO=$(REPO_DIR)/cdh5/cdh-package/bigtop-packages/src
 KITE_SITE=$(CLOUDERA_ARCHIVE)
 $(eval $(call PACKAGE,kite,KITE))
 
-# Sentry 
+# Sentry
 SENTRY_NAME=sentry
 SENTRY_RELNOTES_NAME=Cloudera authorization component
 SENTRY_PKG_NAME=sentry
@@ -335,7 +335,7 @@ $(eval $(call PACKAGE,sentry,SENTRY))
 IMPALA_NAME=impala
 IMPALA_RELNOTES_NAME=Cloudera Impala
 IMPALA_PKG_NAME=impala
-IMPALA_BASE_VERSION=2.1.0
+IMPALA_BASE_VERSION=2.2.0
 IMPALA_PKG_VERSION=$(IMPALA_BASE_VERSION)+$(CDH_REL_STRING)+0
 IMPALA_RELEASE_VERSION=1
 IMPALA_BUILD_REF=HEAD
@@ -405,7 +405,7 @@ PARQUET_FORMAT_PACKAGE_GIT_REPO=$(REPO_DIR)/cdh5/cdh-package/bigtop-packages/src
 PARQUET_FORMAT_SITE=$(CLOUDERA_ARCHIVE)
 $(eval $(call PACKAGE,parquet-format,PARQUET_FORMAT))
 
-# Spark 
+# Spark
 SPARK_NAME=spark
 SPARK_RELNOTES_NAME=Lightning-Fast Cluster Computing
 SPARK_PKG_NAME=spark-core
@@ -471,7 +471,7 @@ $(eval $(call PACKAGE,hadoop-lzo,HADOOP_LZO))
 IMPALA_LZO_NAME=impala-lzo
 IMPALA_LZO_RELNOTES_NAME=Impala LZO
 IMPALA_LZO_PKG_NAME=impala-lzo
-IMPALA_LZO_BASE_VERSION=2.1.0
+IMPALA_LZO_BASE_VERSION=2.2.0
 IMPALA_LZO_PKG_VERSION=$(IMPALA_LZO_BASE_VERSION)+$(CDH_REL_STRING)+0
 IMPALA_LZO_RELEASE_VERSION=1
 IMPALA_LZO_TARBALL_DST=$(IMPALA_LZO_NAME)-$(IMPALA_LZO_BASE_VERSION).tar.gz
