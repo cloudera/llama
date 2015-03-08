@@ -29,16 +29,20 @@ def updateMakefileAndParentPom(rootDir, oldVersion, newVersion) {
     String mfText = makeFile.text
     mfText = mfText.replaceAll("cdh${oldVersion}",
             "cdh${newVersion}")
+    def snapLessOld = oldVersion.replaceAll("-SNAPSHOT", "")
+    def snapLessNew = newVersion.replaceAll("-SNAPSHOT", "")
     // Just in case, also replace any non-SNAPSHOT occurences
     if (oldVersion.contains("SNAPSHOT")) {
-        def snapLessOld = oldVersion.replaceAll("-SNAPSHOT", "")
-        def snapLessNew = newVersion.replaceAll("-SNAPSHOT", "")
         mfText = mfText.replaceAll("cdh${snapLessOld}", "cdh${snapLessNew}")
     }
     if (newVersion.contains("SNAPSHOT")) {
-        mfText = mfText.replaceAll(/CDH_VERSION_STRING \?\= .*/, 'CDH_VERSION_STRING ?= cdh$(LONG_VERSION)-SNAPSHOT')
+        mfText = mfText.replaceAll(/CDH_VERSION_STRING \?\= .*/, "CDH_VERSION_STRING ?= cdh\\\$(LONG_VERSION)-SNAPSHOT")
     } else {
-        mfText = mfText.replaceAll(/CDH_VERSION_STRING \?\= .*/, 'CDH_VERSION_STRING ?= cdh$(LONG_VERSION)')
+        mfText = mfText.replaceAll(/CDH_VERSION_STRING \?\= .*/, "CDH_VERSION_STRING ?= cdh\\\$(LONG_VERSION)")
+    }
+
+    if (!snapLessOld.equals(snapLessNew)) {
+        mfText = mfText.replaceAll("LONG_VERSION ?= ${snapLessOld}", "LONG_VERSION ?= ${snapLessNew}")
     }
     
     makeFile.write(mfText)
