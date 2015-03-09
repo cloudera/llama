@@ -1,12 +1,13 @@
 {
-    "repo-category": "cdh5-nightly",
-    "gpl-repo-category": "cdh5-gpl-nightly",
+    "repo-category": "cdh5.4.x-nightly",
+    "gpl-repo-category": "cdh5.4.x-gpl-nightly",
     "gpl-prefix": "gplextras",
     "core-prefix": "cdh",
     "release-base": "5.4.0",
     "short-release-base": "5",
 
-    "cdh-branch": "cdh5",
+    "job-prefix": "CDH5.4.x",
+    "cdh-branch": "cdh5_5.4.x",
     
     "components": {
         
@@ -152,13 +153,13 @@
 
     "update-static": true,
 
-    "update-nightly": true,
+    "update-nightly": false,
 
     "unit-test-aggregate": "CDH5-Unit-Tests-Aggregate",
 
-    "call-bvts": true,
+    "call-bvts": false,
 
-    "call-nightly-qa": true,
+    "call-nightly-qa": false,
 
     "nightly-qa": "CDH5-Sanity-Nightly-Driver",
 

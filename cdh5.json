@@ -12,40 +12,40 @@
 
   "projects":
   {
-     "hadoop": { "track-branch": "cdh5-2.6.0", "dir":"repos/cdh5/hadoop",
+     "hadoop": { "track-branch": "cdh5-2.6.0_5.4.x", "dir":"repos/cdh5/hadoop",
                       "remotes": ["origin", "common"],
                       "remote-project-name": "hadoop" },
 
-     "zookeeper": {"track-branch": "cdh5-3.4.5", "dir": "repos/cdh5/zookeeper", "remotes": ["origin", "apache"]},
-     "hbase": {"track-branch": "cdh5-1.0.0", "dir": "repos/cdh5/hbase", "remotes": ["origin","apache"]},
-     "sqoop": {"track-branch": "cdh5-1.4.5", "dir": "repos/cdh5/sqoop", "remotes": ["origin"]},
-     "sqoop2": {"track-branch": "cdh5-1.99.5", "dir": "repos/cdh5/sqoop2", "remotes": ["origin"]},
-     "pig": {"track-branch": "cdh5-0.12.0", "dir": "repos/cdh5/pig", "remotes": ["origin", "apache"]},
-     "datafu": {"track-branch": "cdh5-1.1.0", "dir": "repos/cdh5/datafu", "remotes": ["origin"]},
-     "hive": {"track-branch": "cdh5-1.1.0", "dir": "repos/cdh5/hive", "remotes": ["origin", "apache"]},
-     "flume-ng": {"track-branch": "cdh5-1.5.0", "dir": "repos/cdh5/flume-ng", "remotes": ["origin"]},
-     "mahout": {"track-branch": "cdh5-0.9", "dir": "repos/cdh5/mahout", "remotes": ["origin", "apache"]},
-     "oozie": {"track-branch": "cdh5-4.1.0", "dir": "repos/cdh5/oozie", "remotes": ["origin"]},
-     "whirr": {"track-branch": "cdh5-0.9.0", "dir": "repos/cdh5/whirr", "remotes": ["origin"]},
-     "hue": {"track-branch": "cdh5-3.7.0", "dir": "repos/cdh5/hue", "remotes": ["origin"]},
-     "sentry": {"track-branch": "cdh5-1.4.0", "dir": "repos/cdh5/sentry", "remotes": ["origin"]},
-     "solr": {"track-branch": "cdh5-4.10.3", "dir": "repos/cdh5/solr", "remotes": ["origin"], "remote-project-name": "lucene-solr"},
+     "zookeeper": {"track-branch": "cdh5-3.4.5_5.4.x", "dir": "repos/cdh5/zookeeper", "remotes": ["origin", "apache"]},
+     "hbase": {"track-branch": "cdh5-1.0.0_5.4.x", "dir": "repos/cdh5/hbase", "remotes": ["origin","apache"]},
+     "sqoop": {"track-branch": "cdh5-1.4.5_5.4.x", "dir": "repos/cdh5/sqoop", "remotes": ["origin"]},
+     "sqoop2": {"track-branch": "cdh5-1.99.5_5.4.x", "dir": "repos/cdh5/sqoop2", "remotes": ["origin"]},
+     "pig": {"track-branch": "cdh5-0.12.0_5.4.x", "dir": "repos/cdh5/pig", "remotes": ["origin", "apache"]},
+     "datafu": {"track-branch": "cdh5-1.1.0_5.4.x", "dir": "repos/cdh5/datafu", "remotes": ["origin"]},
+     "hive": {"track-branch": "cdh5-1.1.0_5.4.x", "dir": "repos/cdh5/hive", "remotes": ["origin", "apache"]},
+     "flume-ng": {"track-branch": "cdh5-1.5.0_5.4.x", "dir": "repos/cdh5/flume-ng", "remotes": ["origin"]},
+     "mahout": {"track-branch": "cdh5-0.9_5.4.x", "dir": "repos/cdh5/mahout", "remotes": ["origin", "apache"]},
+     "oozie": {"track-branch": "cdh5-4.1.0_5.4.x", "dir": "repos/cdh5/oozie", "remotes": ["origin"]},
+     "whirr": {"track-branch": "cdh5-0.9.0_5.4.x", "dir": "repos/cdh5/whirr", "remotes": ["origin"]},
+     "hue": {"track-branch": "cdh5-3.7.0_5.4.x", "dir": "repos/cdh5/hue", "remotes": ["origin"]},
+     "sentry": {"track-branch": "cdh5-1.4.0_5.4.x", "dir": "repos/cdh5/sentry", "remotes": ["origin"]},
+     "solr": {"track-branch": "cdh5-4.10.3_5.4.x", "dir": "repos/cdh5/solr", "remotes": ["origin"], "remote-project-name": "lucene-solr"},
      "impala": { "track-branch": "cdh5-2.2.0_5.4.x", "dir": "repos/cdh5/impala", "remotes": ["impala"]},
-     "llama": { "track-branch": "cdh5-1.0.0", "dir": "repos/cdh5/llama", "remotes": ["origin"]},
-     "search": {"track-branch": "cdh5-1.0.0", "dir": "repos/cdh5/search", "remotes": ["origin"]},
-     "hbase-solr": {"track-branch": "cdh5-1.5", "dir": "repos/cdh5/hbase-solr", "remotes": ["origin"], "remote-project-name": "hbase-indexer"},
-     "avro": {"track-branch": "cdh5-1.7.6", "dir": "repos/cdh5/avro", "remotes": ["origin"]},
-     "parquet": {"track-branch": "cdh5-1.5.0", "dir": "repos/cdh5/parquet", "remotes": ["origin"]},
-     "parquet-format": {"track-branch": "cdh5-2.1.0", "dir": "repos/cdh5/parquet-format", "remotes": ["origin"]},
-     "spark": {"track-branch": "cdh5-1.3.0", "dir": "repos/cdh5/spark", "remotes": ["origin"]},
-     "crunch": {"track-branch": "cdh5-0.11.0", "dir": "repos/cdh5/crunch", "remotes": ["origin"]},
-     "kite": {"track-branch": "cdh5-1.0.0", "dir": "repos/cdh5/kite", "remotes": ["origin"] },
+     "llama": { "track-branch": "cdh5-1.0.0_5.4.x", "dir": "repos/cdh5/llama", "remotes": ["origin"]},
+     "search": {"track-branch": "cdh5-1.0.0_5.4.x", "dir": "repos/cdh5/search", "remotes": ["origin"]},
+     "hbase-solr": {"track-branch": "cdh5-1.5_5.4.x", "dir": "repos/cdh5/hbase-solr", "remotes": ["origin"], "remote-project-name": "hbase-indexer"},
+     "avro": {"track-branch": "cdh5-1.7.6_5.4.x", "dir": "repos/cdh5/avro", "remotes": ["origin"]},
+     "parquet": {"track-branch": "cdh5-1.5.0_5.4.x", "dir": "repos/cdh5/parquet", "remotes": ["origin"]},
+     "parquet-format": {"track-branch": "cdh5-2.1.0_5.4.x", "dir": "repos/cdh5/parquet-format", "remotes": ["origin"]},
+     "spark": {"track-branch": "cdh5-1.3.0_5.4.x", "dir": "repos/cdh5/spark", "remotes": ["origin"]},
+     "crunch": {"track-branch": "cdh5-0.11.0_5.4.x", "dir": "repos/cdh5/crunch", "remotes": ["origin"]},
+     "kite": {"track-branch": "cdh5-1.0.0_5.4.x", "dir": "repos/cdh5/kite", "remotes": ["origin"] },
 
-     "cdh-package": { "track-branch": "cdh5-0.6.0", "dir":
+     "cdh-package": { "track-branch": "cdh5-0.6.0_5.4.x", "dir":
           "repos/cdh5/cdh-package", "remotes": ["origin"]},
 
-     "hadoop-lzo": {"track-branch": "cdh5-0.4.15", "dir": "repos/cdh5/hadoop-lzo", "remotes": ["origin"]},
-     "impala-lzo": {"track-branch": "cdh5-trunk",  "dir": "repos/cdh5/impala-lzo", "remotes": ["impala-lzo"]},
-     "parcel-build": {"track-branch": "cdh5",  "dir": "repos/cdh5/parcel-build", "remotes": ["parcel-build"]}
+     "hadoop-lzo": {"track-branch": "cdh5-0.4.15_5.4.x", "dir": "repos/cdh5/hadoop-lzo", "remotes": ["origin"]},
+     "impala-lzo": {"track-branch": "cdh5_5.4.x", "dir": "repos/cdh5/impala-lzo", "remotes": ["impala-lzo"]},
+     "parcel-build": {"track-branch": "cdh5_5.4.x",  "dir": "repos/cdh5/parcel-build", "remotes": ["parcel-build"]}
     }
 }
