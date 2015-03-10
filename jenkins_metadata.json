@@ -157,7 +157,7 @@
 
     "unit-test-aggregate": "CDH5-Unit-Tests-Aggregate",
 
-    "call-bvts": false,
+    "call-bvts": true,
 
     "call-nightly-qa": false,
 
