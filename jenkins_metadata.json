@@ -159,7 +159,7 @@
 
     "call-bvts": true,
 
-    "call-nightly-qa": false,
+    "call-nightly-qa": true,
 
     "nightly-qa": "CDH5-Sanity-Nightly-Driver",
 
