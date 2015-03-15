@@ -56,6 +56,15 @@ def updateMakefileAndParentPom(rootDir, oldVersion, newVersion) {
             "<cdh.cdh-parcel.version>${newVersion}</cdh.cdh-parcel.version>")
     pomText = pomText.replaceAll("cdh${oldVersion}", "cdh${newVersion}")
     pom.write(pomText)
+
+    if (!snapLessOld.equals(snapLessNew)) {
+        File cdhMk = new File (rootDir, "cdh5.mk")
+        
+        String cdhText = cdhMk.text
+        cdhText = cdhText.replaceAll(/GPLEXTRAS_PARCEL_BASE_VERSION\=.*/, "GPLEXTRAS_PARCEL_BASE_VERSION=${snapLessNew}")
+        cdhText = cdhText.replaceAll(/CDH_PARCEL_BASE_VERSION\=.*/, "CDH_PARCEL_BASE_VERSION=${snapLessNew}")
+        cdhMk.write(cdhText)
+    }
 }
 
 def replaceRootVersion(rootDir, oldVersion, newVersion) {
