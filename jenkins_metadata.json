@@ -12,7 +12,8 @@
     "components": {
         
         "avro": {
-            "step": 1
+            "step": 1,
+            "updateMavenVersion": true
         },
         "bigtop-utils": {
             "step": 1,
@@ -24,15 +25,19 @@
         },
         "parquet-format": {
             "step": 1,
-            "display-name": "Parquet-Format"
+            "display-name": "Parquet-Format",
+            "updateMavenVersion": true
         },
         "zookeeper": {
             "step": 1,
-            "display-name": "ZooKeeper"
+            "display-name": "ZooKeeper",
+            "updateMavenVersion": true
         },
 
         "hadoop": {
-            "step": 1
+            "step": 1,
+            "updateMavenVersion": true,
+            "mavenProps": "hadoop,mr1"
         },
         "impala": {
             "step": 1,
@@ -64,13 +69,16 @@
         "hbase": {
             "step": 1,
             "mailto": "int-hbase@cloudera.com",
-            "display-name": "HBase"
+            "display-name": "HBase",
+            "updateMavenVersion": true
         },
         "llama": {
-            "step": 1
+            "step": 1,
+            "updateMavenVersion": true
         },
         "parquet": {
-            "step": 1
+            "step": 1,
+            "updateMavenVersion": true
         },
 
         "hadoop-lzo": {
@@ -80,67 +88,84 @@
         },
 
         "crunch": {
-            "step": 1
+            "step": 1,
+            "updateMavenVersion": true
         },
         "hive": {
             "step": 1,
-            "mailto": "builds-access-integration@cloudera.com"
+            "mailto": "builds-access-integration@cloudera.com",
+            "updateMavenVersion": true
         },
         "pig": {
-            "step": 1
+            "step": 1,
+            "updateMavenVersion": true
         },
         "solr": {
-            "step": 1
+            "step": 1,
+            "updateMavenVersion": true
         },
         "spark": {
-            "step": 1
+            "step": 1,
+            "updateMavenVersion": true
         },
 
         "kite": {
             "step": 1,
-            "mailto": "int-cdk@cloudera.com"
+            "mailto": "int-cdk@cloudera.com",
+            "updateMavenVersion": true
         },
         "sentry": {
-            "step": 1
+            "step": 1,
+            "updateMavenVersion": true
         },
         "sqoop": {
-            "step": 1
+            "step": 1,
+            "updateMavenVersion": true
         },
         "sqoop2": {
-            "step": 1
+            "step": 1,
+            "updateMavenVersion": true
         },
 
         "flume-ng": {
             "step": 1,
             "mailto": "int-flume@cloudera.com,builds-access-integration@cloudera.com",
-            "display-name": "Flume-NG"
+            "display-name": "Flume-NG",
+            "updateMavenVersion": true
         },
         "hbase-solr": {
             "step": 1,
             "mailto": "int-search@cloudera.com",
-            "display-name": "HBase-solr"
+            "display-name": "HBase-solr",
+            "updateMavenVersion": true
         },
         "hue": {
             "step": 1,
-            "mailto": "hue-build@cloudera.com, builds-access-integration@cloudera.com"
+            "mailto": "hue-build@cloudera.com, builds-access-integration@cloudera.com",
+            "updateMavenVersion": true
         },
         "oozie": {
-            "step": 1
+            "step": 1,
+            "updateMavenVersion": true
         },
 
         "datafu": {
             "step": 1,
-            "display-name": "DataFu"
+            "display-name": "DataFu",
+            "updateMavenVersion": true
         },
         "whirr": {
-            "step": 1
+            "step": 1,
+            "updateMavenVersion": true
         },
         "search": {
-            "step": 1
+            "step": 1,
+            "updateMavenVersion": true
         },
         "mahout": {
             "step": 1,
-            "mailto": "builds-access-integration@cloudera.com"
+            "mailto": "builds-access-integration@cloudera.com",
+            "updateMavenVersion": true
         }
 
     },
