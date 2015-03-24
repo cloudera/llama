@@ -73,6 +73,8 @@ if (!opts.'incremental') {
             runCmd("mvn", ["-N", "deploy"], rootDir.canonicalPath)
             
             println " - building and deploying component ${c.component}"
+            runCmd("rm", ["-rf", "~/.ivy2/cache/org.apache.hadoop"], rootDir.canonicalPath)
+            runCmd("rm", ["-rf", "~/.ivy2/cache/org.apache.hbase"], rootDir.canonicalPath)
             runCmd("make", ["${c.component}-maven"], rootDir.canonicalPath, ["DO_MAVEN_DEPLOY=deploy"])
         }
     }
