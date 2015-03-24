@@ -126,6 +126,9 @@ def updateMakefileAndParentPom(rootDir, oldVersion, newVersion, boolean justPare
     // Just in case, also replace any non-SNAPSHOT occurences
     if (oldVersion.contains("SNAPSHOT")) {
         mfText = mfText.replaceAll("cdh${snapLessOld}", "cdh${snapLessNew}")
+        if (!newVersion.contains("SNAPSHOT")) {
+            mfText = mfText.replaceAll("-SNAPSHOT", "")
+        }
     }
     if (newVersion.contains("SNAPSHOT")) {
         mfText = mfText.replaceAll(/CDH_VERSION_STRING \?\= .*/, "CDH_VERSION_STRING ?= cdh\\\$(LONG_VERSION)-SNAPSHOT")
