@@ -1,0 +1,15 @@
+#!/usr/bin/env groovy
+
+/*
+ * All actual logic is in com.cloudera.kitchen.staging.PromoteMavenArtifacts.
+ */
+
+@GrabResolver(name='cloudera-snap', root='http://maven.jenkins.cloudera.com:8081/artifactory/cloudera-mirrors')
+@Grab(group='com.cloudera.kitchen', module='package-tools', version='0.5-SNAPSHOT')
+@Grab(group ="org.apache.ant", module = "ant-jsch", version ="1.9.2")
+@Grab(group ="com.jcraft", module = "jsch", version ="0.1.50")
+@GrabConfig(systemClassLoader = true)
+
+import com.cloudera.kitchen.staging.*
+
+new PromoteMavenArtifacts().callScript(this.args)
