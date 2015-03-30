@@ -139,7 +139,10 @@ def updateMakefileAndParentPom(rootDir, oldVersion, newVersion, boolean justPare
     }
 
     if (!snapLessOld.equals(snapLessNew)) {
-        mfText = mfText.replaceAll("LONG_VERSION ?= ${snapLessOld}", "LONG_VERSION ?= ${snapLessNew}")
+        println "Replacing LONG_VERSION ?= ${snapLessOld} with LONG_VERSION ?= ${snapLessNew}"
+        mfText = mfText.replaceAll(/LONG_VERSION \?\= ${snapLessOld}/, "LONG_VERSION ?= ${snapLessNew}")
+    } else {
+        println "...not replacing LONG_VERSION?"
     }
     
     makeFile.write(mfText)
