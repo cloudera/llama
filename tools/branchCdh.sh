@@ -31,7 +31,7 @@ for b in gplextras${CDH_MAJOR} cdh${CDH_MAJOR}; do
 
     git checkout ${OLD_BRANCH}
     git checkout -b ${NEW_PARCEL_BRANCH}
-#    git push parcel-build ${NEW_PARCEL_BRANCH}
+    git push parcel-build ${NEW_PARCEL_BRANCH}
 done
 
 # Return to $WORKSPACE/cdh
@@ -82,7 +82,7 @@ git add -u
 git commit -m "Branching for CDH${NEW_BRANCH_SUFFIX}"
 git pull --rebase origin ${OLD_CDH_BRANCH}
 git checkout -b ${NEW_CDH_BRANCH}
-#git push origin ${NEW_CDH_BRANCH}
+git push origin ${NEW_CDH_BRANCH}
 
 # Iterate over repositories, excluding parcel-build and optionally impala, and commit, pull/rebase, branch and push.
 cd repos/cdh${CDH_MAJOR}
@@ -108,7 +108,7 @@ for d in `ls`; do
         echo " - Checking out ${NEW_BRANCH} from ${PREV_BRANCH} with version changes (if appropriate)"
         git checkout -b ${NEW_BRANCH}
         echo " - Pushing to origin..."
-#        git push origin ${NEW_BRANCH}
+        git push origin ${NEW_BRANCH}
     fi
 done
 
