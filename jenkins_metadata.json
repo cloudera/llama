@@ -8,6 +8,7 @@
 
     "job-prefix": "CDH5.4.x",
     "cdh-branch": "cdh5_5.4.x",
+    "polling-enabled": true,
     
     "components": {
         

@@ -85,10 +85,12 @@ components.each { component, config ->
         
         jdk JobDslConstants.PACKAGING_JOB_JDK
 
-        triggers {
-            scm("*/10 * * * *")
+        if (jenkinsJson."polling-enabled") { 
+            triggers {
+                scm("*/10 * * * *")
+            }
         }
-
+        
         steps {
           shell(JobDslConstants.SHELL_SCRIPT_CLEAN_CACHES)
           shell(JenkinsDslUtils.constructBuildStep(component, "${jenkinsJson.'core-prefix'}${jenkinsJson['short-release-base']}",
@@ -237,8 +239,10 @@ if (jenkinsJson.'c5-parcel') {
 
     jdk JobDslConstants.PACKAGING_JOB_JDK
 
-    triggers {
-      cron("0 23 * * *")
+    if (jenkinsJson."polling-enabled") { 
+        triggers {
+            cron("0 23 * * *")
+        }
     }
 
     steps {
@@ -282,8 +286,10 @@ job {
     
     jdk JobDslConstants.PACKAGING_JOB_JDK
     
-    triggers {
-        scm("*/10 * * * *")
+    if (jenkinsJson."polling-enabled") { 
+        triggers {
+            scm("*/10 * * * *")
+        }
     }
 
     steps {
@@ -450,8 +456,10 @@ job {
 
   jdk JobDslConstants.PACKAGING_JOB_JDK
 
-  triggers {
-    cron("40 21 * * *")
+  if (jenkinsJson."polling-enabled") { 
+      triggers {
+          cron("40 21 * * *")
+      }
   }
 
   repoThrottle(delegate, jobPrefix, true)
