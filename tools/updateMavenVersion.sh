@@ -36,7 +36,7 @@ for d in `ls`; do
         cd $WORKSPACE/cdh/repos/cdh5/${d}
         COMPONENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
         git add -u
-        git commit -m "Updating Maven version to ${NEW_VERSION}"
+        git commit --allow-empty -m "Updating Maven version to ${NEW_VERSION}"
         git pull --rebase origin ${COMPONENT_BRANCH}
 
         echo " - Pushing to origin..."
