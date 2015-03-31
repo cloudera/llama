@@ -15,6 +15,9 @@ crepo.py -m cdh5.json sync
 # Updates POM files everywhere, and cdh.git/Makefile.
 groovy tools/bumpMavenVersion.groovy --root-dir=$PWD/ --old-version=$OLD_VERSION --new-version=$NEW_VERSION
 
+# Update jenkins_metadata.json's release-base field.
+perl -pi -e "s/\"${OLD_VERSION}\"/\"${NEW_VERSION}\"/g" jenkins_metadata.json
+
 # Commit, pull/rebase, branch and push.
 git add -u
 git commit -m "Updating Maven version to ${NEW_VERSION}"
