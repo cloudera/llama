@@ -135,8 +135,8 @@ public class MiniLlama {
         }
         llama.start();
         String clusterType = (command.getName().equals(MINICLUSTER_CMD))
-                             ? "external HDFS/Yarn cluster"
-                             : "embedded HDFS/Yarn mini-cluster";
+                             ? "embedded HDFS/Yarn mini-cluster"
+                             : "external HDFS/Yarn cluster";
         LOG.info("**************************************************************"
             + "*******************************************************");
         LOG.info("Mini Llama running with {} with {} nodes, " +

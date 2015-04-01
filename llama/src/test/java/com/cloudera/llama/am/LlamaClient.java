@@ -100,8 +100,10 @@ public class LlamaClient {
   private static final String CLIENTS = "clients";
   private static final String ROUNDS = "rounds";
   private static final String HOLD_TIME = "holdtime";
+  private static final String EXPAND_TIME = "expandtime";
   private static final String SLEEP_TIME = "sleeptime";
   private static final String ALLOCATION_TIMEOUT = "allocationtimeout";
+  private static final String EXPANSION_TIMEOUT = "expansionAllocationTimeout";
 
   private static CLIParser createParser() {
     CLIParser parser = new CLIParser("llamaclient", new String[0]);
@@ -157,14 +159,23 @@ public class LlamaClient {
             "allocation and release immediately), millisecs");
     holdTime.setRequired(true);
     holdTime.setType(PatternOptionBuilder.NUMBER_VALUE);
+    Option expandTime = new Option(EXPAND_TIME, true,
+        "time to expand a reservation and release once allocated " +
+            "(-1 to not expand), millisecs");
+    expandTime.setRequired(false);
+    expandTime.setType(PatternOptionBuilder.NUMBER_VALUE);
     Option sleepTime = new Option(SLEEP_TIME, true,
         "time to sleep between  reservations, millisecs");
     sleepTime.setRequired(true);
     sleepTime.setType(PatternOptionBuilder.NUMBER_VALUE);
     Option allocationTimeout = new Option(ALLOCATION_TIMEOUT, true,
         "allocation timeout, millisecs (default 10000)");
-    sleepTime.setRequired(false);
-    sleepTime.setType(PatternOptionBuilder.NUMBER_VALUE);
+    allocationTimeout.setRequired(false);
+    allocationTimeout.setType(PatternOptionBuilder.NUMBER_VALUE);
+    Option expansionAllocationTimeout = new Option(EXPANSION_TIMEOUT, true,
+            "expansion timeout, millisecs (default 10000)");
+    expansionAllocationTimeout.setRequired(false);
+    expansionAllocationTimeout.setType(PatternOptionBuilder.NUMBER_VALUE);
 
     //help
     Options options = new Options();
@@ -255,6 +266,7 @@ public class LlamaClient {
     options.addOption(callback);
     options.addOption(rounds);
     options.addOption(holdTime);
+    options.addOption(expandTime);
     options.addOption(sleepTime);
     options.addOption(user);
     options.addOption(queue);
@@ -349,6 +361,8 @@ public class LlamaClient {
         String callback = cl.getOptionValue(CALLBACK);
         int rounds = Integer.parseInt(cl.getOptionValue(ROUNDS));
         int holdTime = Integer.parseInt(cl.getOptionValue(HOLD_TIME));
+        int expandTime = (cl.hasOption(EXPAND_TIME))?
+          Integer.parseInt(cl.getOptionValue(EXPAND_TIME)) : -1;
         int sleepTime = Integer.parseInt(cl.getOptionValue(SLEEP_TIME));
         String user = cl.getOptionValue(USER);
         String queue = cl.getOptionValue(QUEUE);
@@ -359,10 +373,12 @@ public class LlamaClient {
         boolean relaxLocality = cl.hasOption(RELAX_LOCALITY);
         int allocationTimeout = (cl.hasOption(ALLOCATION_TIMEOUT))
             ? Integer.parseInt(cl.getOptionValue(ALLOCATION_TIMEOUT)) : 10000;
+        int expansionAllocationTimeout = (cl.hasOption(EXPANSION_TIMEOUT))
+            ? Integer.parseInt(cl.getOptionValue(EXPANSION_TIMEOUT)) : 10000;
         runLoad(secure, getHost(llama), getPort(llama), clients,
-            getHost(callback), getPort(callback), rounds, holdTime, sleepTime,
-            user, queue, locations, relaxLocality, cpus, memory, gang,
-            allocationTimeout);
+            getHost(callback), getPort(callback), rounds, holdTime, expandTime,
+            sleepTime, user, queue, locations, relaxLocality, cpus, memory,
+            gang, allocationTimeout, expansionAllocationTimeout);
       } else {
         System.err.println("Missing sub-command");
         System.err.println();
@@ -528,9 +544,9 @@ public class LlamaClient {
     return TypeUtils.toUUID(res.getReservation_id());
   }
 
-  static UUID expand(LlamaAMService.Client client, UUID handle, UUID reservation,
-                     String location,
-                     boolean relaxLocality, int cpus, int memory) throws Exception {
+  static UUID expand(LlamaAMService.Client client, UUID handle,
+      UUID reservation, String location, boolean relaxLocality, int cpus,
+      int memory) throws Exception {
     TLlamaAMReservationExpansionRequest req = new TLlamaAMReservationExpansionRequest();
     req.setVersion(TLlamaServiceVersion.V1);
     req.setAm_handle(TypeUtils.toTUniqueId(handle));
@@ -572,15 +588,15 @@ public class LlamaClient {
             LlamaAMService.Client client = createClient(secure, llamaHost,
                 llamaPort);
             return reserve(client, handle, user, queue, locations,
-                relaxLocality, cpus, memory, gang);
+              relaxLocality, cpus, memory, gang);
           }
         });
   }
 
   static UUID expand(final boolean secure, final String llamaHost,
-                      final int llamaPort, final UUID handle, final UUID reservation,
-                      final String location, final int cpus,
-                      final int memory, final boolean relaxLocality)
+      final int llamaPort, final UUID handle, final UUID reservation,
+      final String location, final int cpus,
+      final int memory, final boolean relaxLocality)
       throws Exception {
     return Subject.doAs(getSubject(secure),
         new PrivilegedExceptionAction<UUID>() {
@@ -615,7 +631,7 @@ public class LlamaClient {
           public Void run() throws Exception {
             LlamaAMService.Client client = createClient(secure, llamaHost,
                 llamaPort);
-            release(client, handle ,reservation);
+            release(client, handle, reservation);
             return null;
           }
         });
@@ -644,9 +660,10 @@ public class LlamaClient {
 
   static void runLoad(final boolean secure, String llamaHost, int llamaPort,
       int clients, String callbackHost, int callbackStartPort, int rounds,
-      int holdTime, int sleepTime, String user, String queue,
+      int holdTime, int expandTime, int sleepTime, String user, String queue,
       String[] locations, boolean relaxLocality, int cpus, int memory,
-      boolean gang, int allocationTimeout) throws Exception {
+      boolean gang, int allocationTimeout, int expansionAllocationTimeout)
+      throws Exception {
 
     //start callback servers
     for (int i = 0; i < clients; i++) {
@@ -681,17 +698,20 @@ public class LlamaClient {
     CountDownLatch startLatch = new CountDownLatch(1);
     CountDownLatch endLatch = new CountDownLatch(clients);
     AtomicInteger reservationErrorCount = new AtomicInteger();
+    AtomicInteger expansionErrorCount = new AtomicInteger();
     Timer[] timers = new Timer[TIMERS_COUNT];
     for (int i = 0; i < TIMERS_COUNT; i++) {
       timers[i] = new Timer();
     }
     AtomicInteger allocationTimeouts = new AtomicInteger();
+    AtomicInteger expansionAllocationTimeouts = new AtomicInteger();
     for (int i = 0; i < clients; i++) {
       runClientLoad(secure, llamaHost, llamaPort, callbackHost,
-          callbackStartPort + i, rounds, holdTime, sleepTime, user, queue,
-          locations, relaxLocality, cpus, memory, gang, registerLatch,
-          startLatch, endLatch, allocationTimeout, timers, allocationTimeouts,
-          reservationErrorCount);
+          callbackStartPort + i, rounds, holdTime, expandTime, sleepTime, user,
+          queue, locations, relaxLocality, cpus, memory, gang, registerLatch,
+          startLatch, endLatch, allocationTimeout, expansionAllocationTimeout, timers,
+          allocationTimeouts, expansionAllocationTimeouts, reservationErrorCount,
+          expansionErrorCount);
     }
     registerLatch.await();
     startLatch.countDown();
@@ -703,8 +723,11 @@ public class LlamaClient {
     System.out.println("  Number of clients         : " + clients);
     System.out.println("  Reservations per client   : " + rounds);
     System.out.println("  Hold allocations for      : " + holdTime + " ms");
+    System.out.println("  Expand allocations for    : " + expandTime + " ms");
     System.out.println("  Sleep between reservations: " + sleepTime + " ms");
     System.out.println("  Allocation timeout        : " + allocationTimeout +
+        " ms");
+    System.out.println("  Expansion timeout         : " + expansionAllocationTimeout +
         " ms");
     System.out.println();
     System.out.println("  Wall time                 : " + (end - start) + " ms");
@@ -713,19 +736,37 @@ public class LlamaClient {
     System.out.println();
     System.out.println("  Timed out allocations     : " + allocationTimeouts);
     System.out.println();
+    System.out.println("  Expansion errors          : " + expansionErrorCount);
+    System.out.println();
+    System.out.println("  Timed out expansion allocations     : " +
+            expansionAllocationTimeouts);
+    System.out.println();
     System.out.println("  Reservation rate          : " +
-        timers[RESERVE].getMeanRate() + " per sec");
+        timers[TIMER_TYPE.RESERVE.ordinal()].getMeanRate() + " per sec");
+    System.out.println("  Expansion rate            : " +
+        timers[TIMER_TYPE.EXPAND.ordinal()].getMeanRate() + " per sec");
     System.out.println();
     System.out.println("  Register time   (mean)    : " +
-        timers[REGISTER].getSnapshot().getMean() / 1000000 + " ms");
+        timers[TIMER_TYPE.REGISTER.ordinal()].getSnapshot().getMean() / 1000000 + " ms");
     System.out.println("  Reserve time    (mean)    : " +
-        timers[RESERVE].getSnapshot().getMean() / 1000000 + " ms");
+        timers[TIMER_TYPE.RESERVE.ordinal()].getSnapshot().getMean() / 1000000 + " ms");
     System.out.println("  Allocate time   (mean)    : " +
-        timers[ALLOCATE].getSnapshot().getMean() / 1000000 + " ms");
+        timers[TIMER_TYPE.ALLOCATE.ordinal()].getSnapshot().getMean() / 1000000 + " ms");
+    System.out.println("  Allocate Count            : " +
+        timers[TIMER_TYPE.ALLOCATE.ordinal()].getCount());
+    System.out.println("  Expand time   (mean)      : " +
+        timers[TIMER_TYPE.EXPAND.ordinal()].getSnapshot().getMean() / 1000000 + " ms");
+    System.out.println("  Expansion allocation time   (mean)    : " +
+        timers[TIMER_TYPE.EXPANSIONALLOCATE.ordinal()].getSnapshot().getMean() / 1000000 + " ms");
+    System.out.println("  Expansion allocation count            : " +
+        timers[TIMER_TYPE.EXPANSIONALLOCATE.ordinal()].getCount());
+    System.out.println("  Expansion release time (mean)    : " +
+        timers[TIMER_TYPE.EXPANSIONRELEASE.ordinal()].getSnapshot().getMean() /
+          1000000 + " ms");
     System.out.println("  Release time    (mean)    : " +
-        timers[RELEASE].getSnapshot().getMean() / 1000000 + " ms");
+        timers[TIMER_TYPE.RELEASE.ordinal()].getSnapshot().getMean() / 1000000 + " ms");
     System.out.println("  Unregister time (mean)    : " +
-        timers[UNREGISTER].getSnapshot().getMean() / 1000000 + " ms");
+        timers[TIMER_TYPE.UNREGISTER.ordinal()].getSnapshot().getMean() / 1000000 + " ms");
     System.out.println();
   }
 
@@ -738,22 +779,30 @@ public class LlamaClient {
     }
   }
 
-  private static final int TIMERS_COUNT = 5;
-  private static final int REGISTER = 0;
-  private static final int RESERVE = 1;
-  private static final int ALLOCATE = 2;
-  private static final int RELEASE = 3;
-  private static final int UNREGISTER = 4;
+  private enum TIMER_TYPE {
+    REGISTER,
+    RESERVE,
+    ALLOCATE,
+    RELEASE,
+    UNREGISTER,
+    EXPAND,
+    EXPANSIONALLOCATE,
+    EXPANSIONRELEASE,
+  }
+  private static final int TIMERS_COUNT = TIMER_TYPE.values().length;
 
   static void runClientLoad(final boolean secure, final String llamaHost,
       final int llamaPort, final String callbackHost, final int callbackPort,
-      final int rounds, final int holdTime, final int sleepTime, final String user,
-      final String queue, final String[] locations, final boolean relaxLocality,
-      final int cpus, final int memory, final boolean gang,
+      final int rounds, final int holdTime, final int expandTime, final int sleepTime,
+      final String user, final String queue, final String[] locations,
+      final boolean relaxLocality, final int cpus, final int memory, final boolean gang,
       final CountDownLatch registerLatch, final CountDownLatch startLatch,
       final CountDownLatch endLatch, final int allocationTimeout,
-      final Timer[] timers, final AtomicInteger allocationTimeouts,
-      final AtomicInteger reservationErrorCount) {
+      final int expansionAllocationTimeout, final Timer[] timers,
+      final AtomicInteger allocationTimeouts,
+      final AtomicInteger expansionAllocationTimeouts,
+      final AtomicInteger reservationErrorCount,
+      final AtomicInteger expansionErrorCount) {
     Thread t = new Thread("client@" + callbackPort) {
       @Override
       public void run() {
@@ -774,7 +823,8 @@ public class LlamaClient {
                     UUID handle = register(client, UUID.randomUUID(),
                         callbackHost, callbackPort);
                     long end = System.currentTimeMillis();
-                    timers[REGISTER].update(end - start, TimeUnit.MILLISECONDS);
+                    timers[TIMER_TYPE.REGISTER.ordinal()].update(
+                        end - start, TimeUnit.MILLISECONDS);
 
                     registerLatch.countDown();
                     startLatch.await();
@@ -789,33 +839,60 @@ public class LlamaClient {
                         reservation = reserve(client, handle, user,
                             queue, locations, relaxLocality, cpus, memory, gang);
                         end = System.currentTimeMillis();
-                        timers[RESERVE].update(end - start, TimeUnit.MILLISECONDS);
+                        timers[TIMER_TYPE.RESERVE.ordinal()].update(
+                            end - start, TimeUnit.MILLISECONDS);
                       } catch (RuntimeException ex) {
                         reservationErrorCount.incrementAndGet();
                         System.out.println("ERROR while reserve(): " + ex);
                       }
 
-                      CountDownLatch reservationLatch = null;
-                      if (reservation != null) {
-                        reservationLatch =
-                            LlamaClientCallback.getReservationLatch(reservation);
-                      }
+                      waitOnReservationOrExpansion(reservation, holdTime,
+                          allocationTimeouts, TIMER_TYPE.ALLOCATE.ordinal(),
+                          allocationTimeout);
 
-                      if (holdTime >=0 ) {
-                        //wait allocation
-                        start = System.currentTimeMillis();
-                        if (reservationLatch != null &&
-                            reservationLatch.await(allocationTimeout,
-                                TimeUnit.MILLISECONDS)) {
-                          end = System.currentTimeMillis();
-                          timers[ALLOCATE].update(end - start,
-                              TimeUnit.MILLISECONDS);
-                        } else {
-                          allocationTimeouts.incrementAndGet();
+                      if (expandTime >= 0) {
+                        for (final String location : locations) {
+                          try {
+                            int expandedCpu = cpus;
+                            int expandedMemory = memory;
+
+                            UUID expansion = null;
+
+                            //expand
+                            tickClientCall();
+                            try {
+                              start = System.currentTimeMillis();
+                              expansion = expand(client, handle, reservation,
+                                      location, false, expandedCpu,
+                                      expandedMemory);
+                              end = System.currentTimeMillis();
+                              timers[TIMER_TYPE.EXPAND.ordinal()].update(
+                                  end - start, TimeUnit.MILLISECONDS);
+                            } catch (RuntimeException ex) {
+                              expansionErrorCount.incrementAndGet();
+                              System.out.println("ERROR while expand(): " + ex);
+                            }
+
+                            waitOnReservationOrExpansion(expansion, expandTime,
+                                expansionAllocationTimeouts,
+                                TIMER_TYPE.EXPANSIONALLOCATE.ordinal(),
+                                expansionAllocationTimeout);
+
+                            if (expansion != null) {
+                              // release expansion
+                              tickClientCall();
+
+                              start = System.currentTimeMillis();
+                              release(client, handle, expansion);
+                              end = System.currentTimeMillis();
+                              timers[TIMER_TYPE.EXPANSIONRELEASE.ordinal()].
+                                  update(end - start, TimeUnit.MILLISECONDS);
+                            }
+                          } catch (Exception ex) {
+                            System.out.print(ex);
+                            throw new RuntimeException(ex);
+                          }
                         }
-
-                        //hold
-                        Thread.sleep(holdTime);
                       }
 
                       //release
@@ -825,7 +902,8 @@ public class LlamaClient {
                         start = System.currentTimeMillis();
                         release(client, handle, reservation);
                         end = System.currentTimeMillis();
-                        timers[RELEASE].update(end - start, TimeUnit.MILLISECONDS);
+                        timers[TIMER_TYPE.RELEASE.ordinal()].update(
+                            end - start, TimeUnit.MILLISECONDS);
                       }
 
                       //sleep
@@ -838,7 +916,8 @@ public class LlamaClient {
                     start = System.currentTimeMillis();
                     unregister(client, handle);
                     end = System.currentTimeMillis();
-                    timers[UNREGISTER].update(end - start, TimeUnit.MILLISECONDS);
+                    timers[TIMER_TYPE.UNREGISTER.ordinal()].update(
+                        end - start, TimeUnit.MILLISECONDS);
 
                     endLatch.countDown();
                   } catch (Exception ex) {
@@ -846,6 +925,35 @@ public class LlamaClient {
                     throw new RuntimeException(ex);
                   }
                   return null;
+                }
+
+                private void waitOnReservationOrExpansion(
+                    UUID reservation, int timeToWait, AtomicInteger timeouts,
+                    int timerType, int timeoutMsec) throws InterruptedException {
+                  long start;
+                  long end;
+                  CountDownLatch reservationLatch = null;
+                  if (reservation != null) {
+                    reservationLatch =
+                        LlamaClientCallback.getReservationLatch(reservation);
+                  }
+
+                  if (timeToWait >=0 ) {
+                    //wait allocation
+                    start = System.currentTimeMillis();
+                    if (reservationLatch != null &&
+                        reservationLatch.await(timeoutMsec,
+                            TimeUnit.MILLISECONDS)) {
+                      end = System.currentTimeMillis();
+                      timers[timerType].update(end - start,
+                              TimeUnit.MILLISECONDS);
+                    } else {
+                      timeouts.incrementAndGet();
+                    }
+
+                    //hold
+                    Thread.sleep(timeToWait);
+                  }
                 }
               });
         } catch (Throwable ex) {
