@@ -84,13 +84,12 @@ components.each { component, config ->
         label JobDslConstants.COMPONENT_PARENT_LABEL
         
         jdk JobDslConstants.PACKAGING_JOB_JDK
-
         if (jenkinsJson."polling-enabled") { 
             triggers {
                 scm("*/10 * * * *")
             }
         }
-        
+
         steps {
           shell(JobDslConstants.SHELL_SCRIPT_CLEAN_CACHES)
           shell(JenkinsDslUtils.constructBuildStep(component, "${jenkinsJson.'core-prefix'}${jenkinsJson['short-release-base']}",
@@ -115,7 +114,11 @@ components.each { component, config ->
         }
 
         wrappers {
-            timeout(75)
+            if (component.toLowerCase().equals("impala")) {
+                timeout(90)
+            } else { 
+                timeout(75)
+            }
         }
     }
 }
@@ -338,7 +341,7 @@ job {
 job {
     name JenkinsDslUtils.componentJobName(jobPrefix, "Incremental-Full-Repo")
     
-    logRotator(-1, 15, -1, -1)
+    logRotator(30, -1, -1, -1)
     
     //dissabled(true)
 
@@ -354,6 +357,7 @@ job {
       stringParam("PARENT_BUILD_ID", "", "Build ID of parent job whose artifacts will be added to the repo.")
       stringParam("SUPER_PARENT_BUILD_ID", "", "Build ID of super parent job for incremental full build repo population")
       stringParam("IS_GPL", "false", "Whether this is updating GPL bits")
+      stringParam("IS_PARCEL", "false", "Whether this is updating parcels, i.e., the end of the full build.")
     }
 
     steps {
@@ -363,6 +367,71 @@ job {
                                                       jenkinsJson['c5-parcel'],
                                                       "${jenkinsJson['gpl-prefix']}${jenkinsJson['release-base']}",
                                                       jenkinsJson.platforms))
+        if (jenkinsJson['remote-repo-hosts'] != null && jenkinsJson['remote-repo-hosts'].size() > 0) {
+            def remoteParams = ['SUPER_PARENT_BUILD_ID': '${SUPER_PARENT_BUILD_ID}', 'IS_GPL': '${IS_GPL}']
+
+            def remoteRepoUpdateJobNames = jenkinsJson['remote-repo-hosts'].collect { repoHost ->
+                JenkinsDslUtils.componentJobName(jobPrefix, "Remote-Repo-Update-${repoHost}")
+            }.join(",")
+
+            // Note that we block for parcel builds, but not for anything else.
+            conditionalSteps {
+                condition {
+                    stringsMatch('${ENV,var="IS_PARCEL"}', "true", false)
+                }
+                runner("Fail")
+                downstreamParameterized {
+                    trigger(remoteRepoUpdateJobNames, "ALWAYS", false,
+                            ["buildStepFailure": "FAILURE",
+                             "failure": "FAILURE"]) {
+                        predefinedProps(remoteParams)
+                    }
+                }
+            }
+            conditionalSteps {
+                condition {
+                    stringsMatch('${ENV,var="IS_PARCEL"}', "false", false)
+                }
+                runner("Fail")
+                downstreamParameterized { 
+                    trigger(remoteRepoUpdateJobNames, "ALWAYS", false) { 
+                        predefinedProps(remoteParams)
+                    }
+                    
+                }
+            }
+        }
+    }
+}
+
+
+
+// Incremental update of remote repos from full repo job
+jenkinsJson['remote-repo-hosts'].each { repoHost -> 
+    job {
+        name JenkinsDslUtils.componentJobName(jobPrefix, "Remote-Repo-Update-${repoHost}")
+        
+        logRotator(-1, 45, -1, -1)
+        
+        scm { 
+            cdhGit(delegate, jenkinsJson['cdh-branch'])
+        }
+        
+        label JobDslConstants.FULL_AND_REPO_JOBS_LABEL
+        
+        jdk JobDslConstants.PACKAGING_JOB_JDK
+        
+        parameters {
+            stringParam("SUPER_PARENT_BUILD_ID", "", "Build ID of super parent job for incremental full build repo population")
+            stringParam("IS_GPL", "false", "Whether this is updating GPL bits")
+        }
+        
+        steps {
+            shell(JenkinsDslUtils.updateRemoteRepo("${repoHost}.cloudera.com",
+                                                   jenkinsJson['repo-category'],
+                                                   jenkinsJson['gpl-repo-category'],
+                                                   "${jenkinsJson['gpl-prefix']}${jenkinsJson['release-base']}"))
+        }
     }
 }
 
@@ -402,27 +471,20 @@ job {
 
           lines << 'STATIC_REPO=$(echo $CATEGORY|sed -e "s/\\-nightly/-static/")'
           lines << 'STATIC_PARENT=$(echo REPO_PARENT|sed -e "s/\\-nightly/-static/")'
-          lines << 'ssh repos2.vpc.cloudera.com "mkdir -p /data/4/repos/${STATIC_REPO}"'
 
-          lines << 'ssh repos2.vpc.cloudera.com "rsync -av --progress --delete --link-dest=/data/4/repos/${REPO_PARENT}/${REPO_BUILD_ID}/ /data/4/repos/${REPO_PARENT}/${REPO_BUILD_ID}/ /data/4/repos/${STATIC_REPO}/"'
+          jenkinsJson['remote-repo-hosts'].each { r ->
+              lines << 'ssh REPO_HOST "mkdir -p /data/4/repos/${STATIC_REPO}"'.replaceAll("REPO_HOST", "${r}.cloudera.com")
 
-          lines << 'ssh repos2.vpc.cloudera.com "find /data/4/repos/${REPO_PARENT}/${REPO_BUILD_ID}/ -name *.list -o -name *.repo -o -name mirrors|xargs perl -pi -e \'s/repos\\.jenkins/repos2.vpc/g; s/\\-nightly/-static/g\'"'
+              lines << 'ssh REPO_HOST "rsync -av --progress --delete --link-dest=/data/4/repos/${REPO_PARENT}/${REPO_BUILD_ID}/ /data/4/repos/${REPO_PARENT}/${REPO_BUILD_ID}/ /data/4/repos/${STATIC_REPO}/"'.replaceAll("REPO_HOST", "${r}.cloudera.com")
 
-          //          lines << 's3cmd sync --skip-existing --recursive -v --cache-file /tmp/s3cache --exclude="*.html" --exclude="*.gif" --exclude="*.jpg" --exclude="*.png" --exclude="*.js" --exclude="*.css" --no-check-md5 --delete-removed /data/4/repos/${REPO_PARENT}/${REPO_BUILD_ID} s3://repos.jenkins/${REPO_PARENT}/'
+              lines << 'ssh REPO_HOST.cloudera.com "find /data/4/repos/${REPO_PARENT}/${REPO_BUILD_ID}/ -name *.list -o -name *.repo -o -name mirrors|xargs perl -pi -e \'s/repos\\.jenkins/REPO_HOST/g; s/\\-nightly/-static/g\'"'.replaceAll("REPO_HOST", r)
 
-          //          lines << 's3cmd sync --skip-existing --recursive -v --cache-file /tmp/s3cache --no-check-md5 --delete-removed s3://repos.jenkins/${REPO_PARENT}/${REPO_BUILD_ID} s3://repos.jenkins/${STATIC_PARENT}'
+              lines << 'ssh REPO_HOST "rm -rf /data/4/repos/${REPO_PARENT}/*"'.replaceAll("REPO_HOST", "${r}.cloudera.com")
 
-          lines << 'ssh repos2.vpc.cloudera.com "rm -rf /data/4/repos/${REPO_PARENT}/*"'
+          }
 
           shell(lines.join("\n"))
                 
-          /*          downstreamParameterized {
-              trigger("Populate-EC2-Repos", "ALWAYS", false,
-                      ["buildStepFailure": "FAILURE",
-                       "failure": "FAILURE"]) {
-                  predefinedProps(["DIRS_TO_SYNC": '${CATEGORY}'])
-              }
-              }*/
           if (jenkinsJson['call-bvts']) { 
               remoteTrigger("qe.jenkins.cloudera.com",
                         "docker-clean_hosts_for_bvt") {
@@ -458,10 +520,10 @@ job {
 
   if (jenkinsJson."polling-enabled") { 
       triggers {
-          cron("40 21 * * *")
+          cron("20 21 * * *")
       }
   }
-
+  
   repoThrottle(delegate, jobPrefix, true)
 
   steps {
@@ -716,7 +778,8 @@ def incrementalFullRepoUpdate(Object delegate, String jobPrefix, boolean isParce
         }
         runner("Fail")
         downstreamParameterized {
-            if (isParcel) { 
+            if (isParcel) {
+                params['IS_PARCEL'] = "true"
                 trigger(updateJobName, "ALWAYS", false,
                         ["buildStepFailure": "FAILURE",
                          "failure": "FAILURE"]) {
@@ -731,3 +794,4 @@ def incrementalFullRepoUpdate(Object delegate, String jobPrefix, boolean isParce
         }
     } 
 }
+

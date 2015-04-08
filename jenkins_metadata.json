@@ -190,4 +190,7 @@
     "nightly-qa": "CDH5-Sanity-Nightly-Driver",
 
     "sanity-qa": "CDH5-Sanity-Nightly-Driver",
+
+    "remote-repo-hosts": ["repos2.vpc"]
+
 }
