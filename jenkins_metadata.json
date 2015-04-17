@@ -183,9 +183,9 @@
 
     "unit-test-aggregate": "CDH5-Unit-Tests-Aggregate",
 
-    "call-bvts": false,
+    "call-bvts": true,
 
-    "call-nightly-qa": false,
+    "call-nightly-qa": true,
 
     "nightly-qa": "CDH5-Sanity-Nightly-Driver",
 
