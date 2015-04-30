@@ -487,7 +487,7 @@ job {
                 
           if (jenkinsJson['call-bvts']) { 
               remoteTrigger("qe.jenkins.cloudera.com",
-                        "docker-clean_hosts_for_bvt") {
+                            jobPrefix.toUpperCase().replaceAll(".X", ".x") + "-Build-Verification-Testing") { 
                   shouldNotFailBuild(true)
               }
           }
