@@ -487,7 +487,7 @@ job {
                 
           if (jenkinsJson['call-bvts']) { 
               remoteTrigger("qe.jenkins.cloudera.com",
-                            jobPrefix.toUpperCase().replaceAll(".X", ".x") + "-Build-Verification-Testing") { 
+                            jobPrefix.toUpperCase() + "-Build-Verification-Testing") { 
                   shouldNotFailBuild(true)
               }
           }
