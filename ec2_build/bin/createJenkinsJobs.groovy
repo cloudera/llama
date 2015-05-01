@@ -487,14 +487,7 @@ job {
                 
           if (jenkinsJson['call-bvts']) { 
               remoteTrigger("qe.jenkins.cloudera.com",
-                            jobPrefix.toUpperCase() + "-Build-Verification-Testing") { 
-                  shouldNotFailBuild(true)
-              }
-          }
-          if (jenkinsJson['call-nightly-qa']) {
-              remoteTrigger("qe.jenkins.cloudera.com",
-                            jenkinsJson['nightly-qa']) {
-                  parameter("RUN_SANITY", "false")
+                            jobPrefix.toUpperCase() + "-Nightly-Test-Driver") { 
                   shouldNotFailBuild(true)
               }
           }
