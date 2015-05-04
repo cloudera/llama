@@ -19,11 +19,11 @@
   <parent>
     <groupId>com.cloudera.llama</groupId>
     <artifactId>llama-main</artifactId>
-    <version>1.0.0-cdh5.4.1-SNAPSHOT</version>
+    <version>1.0.0-cdh5.4.1</version>
   </parent>
   <groupId>com.cloudera.llama</groupId>
   <artifactId>llama-minikdc</artifactId>
-  <version>1.0.0-cdh5.4.1-SNAPSHOT</version>
+  <version>1.0.0-cdh5.4.1</version>
   <description>Llama MiniKDC</description>
   <name>Llama MiniKDC</name>
   <packaging>jar</packaging>
