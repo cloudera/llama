@@ -166,7 +166,7 @@ def updateMakefileAndParentPom(rootDir, oldVersion, newVersion, boolean justPare
 
         cdhText = cdhText.replaceAll(/GPLEXTRAS_PARCEL_BASE_VERSION\=.*/, "GPLEXTRAS_PARCEL_BASE_VERSION=${snapLessNew}")
         cdhText = cdhText.replaceAll(/CDH_PARCEL_BASE_VERSION\=.*/, "CDH_PARCEL_BASE_VERSION=${snapLessNew}")
-        cdhText = cdhText.replaceAll(/PREV_RELEASE_TAG\=.*/, "PREV_RELEASE_TAG=${snapLessOld}")
+        cdhText = cdhText.replaceAll(/PREV_RELEASE_TAG\=.*/, "PREV_RELEASE_TAG=cdh${snapLessOld}-release")
         cdhMk.write(cdhText)
     }
 }
