@@ -3,7 +3,7 @@
     "gpl-repo-category": "cdh5.4.x-gpl-nightly",
     "gpl-prefix": "gplextras",
     "core-prefix": "cdh",
-    "release-base": "5.4.2",
+    "release-base": "5.4.3",
     "short-release-base": "5",
 
     "job-prefix": "CDH5.4.x",
