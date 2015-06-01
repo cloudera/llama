@@ -109,6 +109,12 @@ for d in `ls`; do
         git checkout -b ${NEW_BRANCH}
         echo " - Pushing to origin..."
         git push origin ${NEW_BRANCH}
+        if [ -n "${CREATE_DEV_BRANCHES}" ]; then
+            echo " - Checking out ${NEW_BRANCH}_dev from ${PREV_BRANCH} with version changes (if appropriate)"
+            git checkout -b ${NEW_BRANCH}_dev
+            echo " - Pushing to origin..."
+            git push origin ${NEW_BRANCH}_dev
+        fi
     fi
 done
 
