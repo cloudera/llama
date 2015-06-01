@@ -108,7 +108,7 @@ TODO: need license header
          runtime, but managed as a third party lib proactively for when
          it gets used directly by components in the future.
     -->
-    <cdh.logredactor.version>1.0.2</cdh.logredactor.version>
+    <cdh.logredactor.version>1.0.3</cdh.logredactor.version>
   </properties>
 
   <!-- crepo info -->
