@@ -482,7 +482,9 @@ job {
               lines << 'ssh REPO_HOST.cloudera.com "find /data/4/repos/${REPO_PARENT}/${REPO_BUILD_ID}/ -name *.list -o -name *.repo -o -name mirrors|xargs perl -pi -e \'s/repos\\.jenkins/REPO_HOST/g; s/\\-nightly/-static/g\'"'.replaceAll("REPO_HOST", r)
 
               if (!jobPrefix.toLowerCase().replaceAll(jenkinsJson['core-prefix'], "").equals(jenkinsJson['release-base'])) {
-                  lines << 'ACTUAL_STATIC_REPO=$(echo $STATIC_REPO|sed -e "s/OLD_VER/NEW_VER/")'.replaceAll("OLD_VER", Pattern.quote(jobPrefix.toLowerCase().replaceAll(jenkinsJson['core-prefix'], ""))).replaceAll("NEW_VER", jenkinsJson['release-base'])
+                  def actualStr = 'ACTUAL_STATIC_REPO=$(echo $STATIC_REPO|perl -pe "s/\\QOLD_VER\\E/NEW_VER/")'
+                  actualStr = actualStr.replaceAll("OLD_VER", jobPrefix.toLowerCase().replaceAll(jenkinsJson['core-prefix'], ""))
+                  lines << actualStr.replaceAll("NEW_VER", jenkinsJson['release-base'])
                   lines << 'ssh REPO_HOST "mkdir -p /data/4/repos/${ACTUAL_STATIC_REPO}"'.replaceAll("REPO_HOST", "${r}.cloudera.com")
                   lines << 'ssh REPO_HOST "rsync -av --progress --delete --link-dest=/data/4/repos/${STATIC_REPO}/ /data/4/repos/${STATIC_REPO}/ /data/4/repos/${ACTUAL_STATIC_REPO}/"'.replaceAll("REPO_HOST", "${r}.cloudera.com")
 
