@@ -5,6 +5,7 @@
 import groovy.json.JsonSlurper
 import com.cloudera.kitchen.jobdsl.JobDslConstants
 import com.cloudera.kitchen.jobdsl.JenkinsDslUtils
+import java.util.regex.Pattern
 
 def slurper = new JsonSlurper()
 def jenkinsJson = slurper.parseText(readFileFromWorkspace("jenkins_metadata.json"))
@@ -457,7 +458,8 @@ job {
   }
 
   steps {
-      shell(JenkinsDslUtils.boilerPlatePromoteStep(jenkinsJson['core-prefix'], jobPrefix.toLowerCase().replaceAll(jenkinsJson['core-prefix'], "")))
+      shell(JenkinsDslUtils.boilerPlatePromoteStep(jenkinsJson['core-prefix'], jobPrefix.toLowerCase().replaceAll(jenkinsJson['core-prefix'], ""),
+                                                  jenkinsJson['release-base']))
       
       conditionalSteps {
           condition {
@@ -479,10 +481,17 @@ job {
 
               lines << 'ssh REPO_HOST.cloudera.com "find /data/4/repos/${REPO_PARENT}/${REPO_BUILD_ID}/ -name *.list -o -name *.repo -o -name mirrors|xargs perl -pi -e \'s/repos\\.jenkins/REPO_HOST/g; s/\\-nightly/-static/g\'"'.replaceAll("REPO_HOST", r)
 
+              if (!jobPrefix.toLowerCase().replaceAll(jenkinsJson['core-prefix']).equals(jenkinsJson['release-base'])) {
+                  lines << 'ACTUAL_STATIC_REPO=$(echo $STATIC_REPO|sed -e "s/OLD_VER/NEW_VER/")'.replaceAll("OLD_VER", Pattern.quote(jobPrefix.toLowerCase().replaceAll(jenkinsJson['core-prefix']))).replaceAll("NEW_VER", jenkinsJson['release-base'])
+                  lines << 'ssh REPO_HOST "mkdir -p /data/4/repos/${ACTUAL_STATIC_REPO}"'.replaceAll("REPO_HOST", "${r}.cloudera.com")
+                  lines << 'ssh REPO_HOST "rsync -av --progress --delete --link-dest=/data/4/repos/${STATIC_REPO}/ /data/4/repos/${STATIC_REPO}/ /data/4/repos/${ACTUAL_STATIC_REPO}/"'.replaceAll("REPO_HOST", "${r}.cloudera.com")
+
+              }
+
               lines << 'ssh REPO_HOST "rm -rf /data/4/repos/${REPO_PARENT}/*"'.replaceAll("REPO_HOST", "${r}.cloudera.com")
 
           }
-
+      
           shell(lines.join("\n"))
                 
           if (jenkinsJson['call-bvts']) { 
