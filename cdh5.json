@@ -87,7 +87,7 @@
             ]
         },
         "impala-lzo": {
-            "track-branch": "cdh5_5.4.3",
+            "track-branch": "cdh5-2.2.0_5.4.3",
             "dir": "repos/cdh5/impala-lzo",
             "remotes": [
                 "impala-lzo"
