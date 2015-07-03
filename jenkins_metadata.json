@@ -6,7 +6,7 @@
     ],
     "gpl-prefix": "gplextras",
     "polling-enabled": false,
-    "gpl-repo-category": "cdh5.4.3-gpl-nightly",
+    "gpl-repo-category": "cdh5.4.4-gpl-nightly",
     "update-static": true,
     "core-prefix": "cdh",
     "update-nightly": false,
@@ -18,23 +18,23 @@
         "wheezy",
         "trusty"
     ],
-    "nightly-qa": "CDH5.4.3-Sanity-Nightly-Driver",
-    "call-bvts": true,
-    "job-prefix": "CDH5.4.3",
-    "cdh-branch": "cdh5_5.4.3",
+    "nightly-qa": "CDH5.4.4-Sanity-Nightly-Driver",
+    "call-bvts": false,
+    "job-prefix": "CDH5.4.4",
+    "cdh-branch": "cdh5_5.4.4",
     "c5-parcel": true,
+    "release-base": "5.4.4",
     "unit-test-aggregate": "CDH5-Unit-Tests-Aggregate",
-    "release-base": "5.4.3",
-    "short-release-base": "5",
     "java7": true,
-    "repo-category": "cdh5.4.3-nightly",
+    "short-release-base": "5",
+    "repo-category": "cdh5.4.4-nightly",
     "components": {
-        "crunch": {
+        "hive": {
+            "mailto": "builds-access-integration@cloudera.com",
             "updateMavenVersion": true,
             "step": 1
         },
-        "hive": {
-            "mailto": "builds-access-integration@cloudera.com",
+        "crunch": {
             "updateMavenVersion": true,
             "step": 1
         },
@@ -59,13 +59,13 @@
             "updateMavenVersion": true,
             "step": 1
         },
-        "search": {
-            "updateMavenVersion": true,
-            "step": 1
-        },
         "hbase": {
             "mailto": "int-hbase@cloudera.com",
             "display-name": "HBase",
+            "updateMavenVersion": true,
+            "step": 1
+        },
+        "search": {
             "updateMavenVersion": true,
             "step": 1
         },
@@ -75,16 +75,16 @@
         },
         "impala-lzo": {
             "skipBinaryTarball": true,
-            "job-suffix": "-impala",
             "is-gpl": true,
+            "job-suffix": "-impala",
+            "step": 1
+        },
+        "sqoop": {
+            "updateMavenVersion": true,
             "step": 1
         },
         "datafu": {
             "display-name": "DataFu",
-            "updateMavenVersion": true,
-            "step": 1
-        },
-        "sqoop": {
             "updateMavenVersion": true,
             "step": 1
         },
@@ -100,8 +100,8 @@
         },
         "bigtop-tomcat": {
             "makefileAsMetadata": true,
-            "display-name": "Tomcat",
             "skipRelNotes": true,
+            "display-name": "Tomcat",
             "step": 1,
             "version": "6.0.35"
         },
@@ -116,8 +116,8 @@
         },
         "bigtop-jsvc": {
             "makefileAsMetadata": true,
-            "display-name": "JSVC",
             "skipRelNotes": true,
+            "display-name": "JSVC",
             "step": 1,
             "version": "1.0.10"
         },
@@ -137,8 +137,8 @@
         "bigtop-utils": {
             "skipMiscBits": true,
             "skipBinaryTarball": true,
-            "display-name": "Bigtop-Utils",
             "skipRelNotes": true,
+            "display-name": "Bigtop-Utils",
             "step": 1,
             "version": "0.4"
         },
@@ -153,13 +153,13 @@
             "updateMavenVersion": true,
             "step": 1
         },
-        "mahout": {
-            "mailto": "builds-access-integration@cloudera.com",
+        "parquet-format": {
+            "display-name": "Parquet-Format",
             "updateMavenVersion": true,
             "step": 1
         },
-        "parquet-format": {
-            "display-name": "Parquet-Format",
+        "mahout": {
+            "mailto": "builds-access-integration@cloudera.com",
             "updateMavenVersion": true,
             "step": 1
         },

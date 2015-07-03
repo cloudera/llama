@@ -6,7 +6,7 @@ REPO_DIR  ?=$(BASE_DIR)/repos
 CONFIG    ?=$(BASE_DIR)/config.mk
 
 MAJOR_VERSION ?= 5
-LONG_VERSION ?= 5.4.3
+LONG_VERSION ?= 5.4.4
 
 CDH       ?=cdh$(MAJOR_VERSION)
 GPLEXTRAS ?=gplextras$(MAJOR_VERSION)
