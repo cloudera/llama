@@ -23,11 +23,11 @@
   <parent>
     <groupId>com.cloudera.llama</groupId>
     <artifactId>llama-main</artifactId>
-    <version>1.0.0-cdh5.3.6-SNAPSHOT</version>
+    <version>1.0.0-cdh5.3.7-SNAPSHOT</version>
   </parent>
   <groupId>com.cloudera.llama</groupId>
   <artifactId>llama-dist</artifactId>
-  <version>1.0.0-cdh5.3.6-SNAPSHOT</version>
+  <version>1.0.0-cdh5.3.7-SNAPSHOT</version>
   <description>Llama Dist</description>
   <name>Llama Dist</name>
   <packaging>jar</packaging>
