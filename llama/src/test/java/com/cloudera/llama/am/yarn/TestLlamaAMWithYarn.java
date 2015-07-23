@@ -92,6 +92,8 @@ public class TestLlamaAMWithYarn {
     miniYarn.init(conf);
     miniYarn.start();
     ProxyUsers.refreshSuperUserGroupsConfiguration(conf);
+    Assert.assertTrue("Wait for nodemanagers to connect failed on yarn startup",
+        miniYarn.waitForNodeManagersToConnect(5000));
   }
 
   private void startYarn(Configuration conf) throws Exception {
@@ -249,11 +251,9 @@ public class TestLlamaAMWithYarn {
         while (listener.events.size() < 2) {
           Thread.sleep(100);
         }
-        restartMiniYarn();
         listener.events.clear();
-        llama.reserve(TestUtils.createReservation(UUID.randomUUID(), "u",
-            "root.queue1", a1, true));
-        while (listener.events.size() < 2) {
+        restartMiniYarn();
+        while (listener.events.size() < 1) {
           Thread.sleep(100);
         }
         Assert.assertEquals(1, TestUtils.getReservations(listener.events,
