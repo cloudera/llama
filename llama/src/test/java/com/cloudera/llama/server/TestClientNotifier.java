@@ -29,6 +29,8 @@ import org.junit.Test;
 
 import com.cloudera.llama.util.UUID;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class TestClientNotifier {
 
   public static class NSServerConfiguration
@@ -79,7 +81,7 @@ public class TestClientNotifier {
       ClientNotifier.ClientRegistry {
 
     private ClientCaller clientCaller;
-    volatile int clientCallerCalls = 0;
+    AtomicInteger clientCallerCalls = new AtomicInteger(0);
     boolean maxFailures;
 
     public MyClientRegistry(ServerConfiguration conf, UUID clientId,
@@ -89,7 +91,7 @@ public class TestClientNotifier {
 
     @Override
     public ClientCaller getClientCaller(UUID handle) {
-      clientCallerCalls++;
+      clientCallerCalls.incrementAndGet();
       return clientCaller;
     }
 
@@ -186,7 +188,7 @@ public class TestClientNotifier {
       cn.start();
       cn.registerClientForHeartbeats(handle);
       Thread.sleep(100); //adding 70ms extra
-      Assert.assertEquals(3, cr.clientCallerCalls);
+      Assert.assertEquals(3, cr.clientCallerCalls.get());
       Assert.assertTrue(cr.maxFailures);
     } finally {
       cn.stop();
@@ -223,13 +225,13 @@ public class TestClientNotifier {
           PlacedReservation.Status.ALLOCATED));
       cn.onEvent(event);
       Thread.sleep(100); //adding 50ms extra
-      Assert.assertEquals(1, cr.clientCallerCalls);
+      Assert.assertEquals(1, cr.clientCallerCalls.get());
       Assert.assertFalse(cr.maxFailures);
-      cr.clientCallerCalls = 0;
+      cr.clientCallerCalls.set(0);
       notificationServer.delayResponse = 0;
       notificationServer.notifications.clear();
       Thread.sleep(250); //adding 50ms extra
-      Assert.assertEquals(1, cr.clientCallerCalls);
+      Assert.assertEquals(1, cr.clientCallerCalls.get());
       Assert.assertEquals(1, notificationServer.notifications.size());
       Assert.assertFalse(notificationServer.notifications.get(0).isHeartbeat());
       Assert.assertFalse(cr.maxFailures);
