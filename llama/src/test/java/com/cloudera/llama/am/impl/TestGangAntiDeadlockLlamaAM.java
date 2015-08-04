@@ -19,11 +19,13 @@ package com.cloudera.llama.am.impl;
 
 import com.cloudera.llama.am.api.LlamaAM;
 import com.cloudera.llama.am.api.NodeInfo;
+import com.cloudera.llama.util.Clock;
 import com.cloudera.llama.util.LlamaException;
 import com.cloudera.llama.am.api.LlamaAMListener;
 import com.cloudera.llama.am.api.PlacedReservation;
 import com.cloudera.llama.am.api.Reservation;
 import com.cloudera.llama.am.api.TestUtils;
+import com.cloudera.llama.util.ManualClock;
 import com.cloudera.llama.util.UUID;
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Assert;
@@ -59,6 +61,7 @@ public class TestGangAntiDeadlockLlamaAM {
   }
 
   private static Set<String> EXPECTED = new HashSet<String>();
+  private static ManualClock testClock = new ManualClock();
 
   static {
     EXPECTED.add("start");
@@ -72,6 +75,8 @@ public class TestGangAntiDeadlockLlamaAM {
     EXPECTED.add("addListener");
     EXPECTED.add("removeListener");
     EXPECTED.add("releaseReservationsForQueue");
+
+    Clock.setClock(testClock);
   }
 
   public class MyGangAntiDeadlockLlamaAM extends GangAntiDeadlockLlamaAM {
@@ -346,15 +351,15 @@ public class TestGangAntiDeadlockLlamaAM {
       Reservation reservation1 = TestUtils.createReservation(handle, 1, true);
       UUID id1 = gAm.reserve(reservation1);
       long placedOn1 = gAm.getReservation(id1).getPlacedOn();
-      Thread.sleep(1);
+      testClock.increment(1);
       Reservation reservation2 = TestUtils.createReservation(handle, 1, true);
       UUID id2 = gAm.reserve(reservation2);
       long placedOn2 = gAm.getReservation(id2).getPlacedOn();
-      Thread.sleep(1);
+      testClock.increment(1);
       Reservation reservation3 = TestUtils.createReservation(handle, 1, true);
       UUID id3 = gAm.reserve(reservation3);
       long placedOn3 = gAm.getReservation(id3).getPlacedOn();
-      Thread.sleep(1);
+      testClock.increment(1);
       Reservation reservation4 = TestUtils.createReservation(handle, 1, true);
       UUID id4 = gAm.reserve(reservation4);
       long placedOn4 = gAm.getReservation(id4).getPlacedOn();
@@ -378,6 +383,7 @@ public class TestGangAntiDeadlockLlamaAM {
       Assert.assertEquals(0, gAm.backedOffReservations.size());
       Assert.assertEquals(4, gAm.submittedReservations.size());
 
+
       //deadlock avoidance with victims
       gAm.timeOfLastAllocation = System.currentTimeMillis() -
           NO_ALLOCATION_LIMIT - 1;
@@ -387,6 +393,7 @@ public class TestGangAntiDeadlockLlamaAM {
       Assert.assertEquals(4, gAm.localReservations.size());
       Assert.assertEquals(2, gAm.backedOffReservations.size());
       Assert.assertEquals(2, gAm.submittedReservations.size());
+
 
       //2nd deadlock avoidance with victims
       gAm.timeOfLastAllocation = System.currentTimeMillis() -
@@ -410,6 +417,7 @@ public class TestGangAntiDeadlockLlamaAM {
       Assert.assertEquals(3, gAm.localReservations.size());
       Assert.assertEquals(3, gAm.backedOffReservations.size());
       Assert.assertEquals(0, gAm.submittedReservations.size());
+
 
       sleep = gAm.reReserveBackOffs(event2);
       Assert.assertTrue(BACKOFF_MAX_DELAY > sleep);
