@@ -62,7 +62,7 @@ public class LlamaClientCallback extends
   private static Map<UUID, CountDownLatch> latches =
       new ConcurrentHashMap<UUID, CountDownLatch>();
 
-  public static CountDownLatch getReservationLatch(UUID reservation) {
+  public static CountDownLatch createReservationLatch(UUID reservation) {
     CountDownLatch latch = new CountDownLatch(1);
     latches.put(reservation, latch);
     return latch;

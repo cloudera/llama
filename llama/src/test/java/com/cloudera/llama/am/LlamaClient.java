@@ -23,6 +23,7 @@ import com.cloudera.llama.server.LlamaClientCallback;
 import com.cloudera.llama.server.Security;
 import com.cloudera.llama.server.TypeUtils;
 import com.cloudera.llama.thrift.LlamaAMService;
+import com.cloudera.llama.thrift.LlamaAMService.Client;
 import com.cloudera.llama.thrift.TLlamaAMGetNodesRequest;
 import com.cloudera.llama.thrift.TLlamaAMGetNodesResponse;
 import com.cloudera.llama.thrift.TLlamaAMRegisterRequest;
@@ -42,6 +43,7 @@ import com.cloudera.llama.thrift.TResource;
 import com.cloudera.llama.thrift.TStatusCode;
 import com.cloudera.llama.util.CLIParser;
 import com.cloudera.llama.util.UUID;
+import com.codahale.metrics.Snapshot;
 import com.codahale.metrics.Timer;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
@@ -53,6 +55,7 @@ import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.transport.TSaslClientTransport;
 import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.security.auth.Subject;
@@ -281,6 +284,8 @@ public class LlamaClient {
     return parser;
   }
 
+  private static final Logger LOG = LoggerFactory.getLogger(LlamaClient.class);
+
   public static void main(String[] args) throws Exception {
     CLIParser parser = createParser();
     try {
@@ -507,7 +512,15 @@ public class LlamaClient {
         });
   }
 
-  static UUID reserve(LlamaAMService.Client client, UUID handle, String user,
+  static UUID reserve(LlamaAMService.Client client, UUID handle,
+      String user, String queue, String[] locations, boolean relaxLocality,
+      int cpus, int memory, boolean gang) throws Exception {
+    return reserve(client, handle, UUID.randomUUID(), user, queue, locations,
+        relaxLocality, cpus, memory, gang);
+  }
+
+  static UUID reserve(LlamaAMService.Client client, UUID handle,
+      UUID reservationId, String user,
       String queue, String[] locations, boolean relaxLocality, int cpus,
       int memory,
       boolean gang) throws Exception {
@@ -516,7 +529,7 @@ public class LlamaClient {
     req.setAm_handle(TypeUtils.toTUniqueId(handle));
     req.setUser(user);
     req.setQueue(queue);
-    req.setReservation_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
+    req.setReservation_id(TypeUtils.toTUniqueId(reservationId));
     req.setGang(gang);
     List<TResource> resources = new ArrayList<TResource>();
     for (String location : locations) {
@@ -544,8 +557,15 @@ public class LlamaClient {
     return TypeUtils.toUUID(res.getReservation_id());
   }
 
-  static UUID expand(LlamaAMService.Client client, UUID handle,
-      UUID reservation, String location, boolean relaxLocality, int cpus,
+  static UUID expand(Client client, UUID handle, UUID reservation,
+      String location, boolean relaxLocality, int cpus,
+      int memory) throws Exception {
+    return expand(client, handle, reservation, UUID.randomUUID(), location,
+        relaxLocality, cpus, memory);
+  }
+
+  static UUID expand(Client client, UUID handle, UUID reservation,
+      UUID expansion, String location, boolean relaxLocality, int cpus,
       int memory) throws Exception {
     TLlamaAMReservationExpansionRequest req = new TLlamaAMReservationExpansionRequest();
     req.setVersion(TLlamaServiceVersion.V1);
@@ -563,7 +583,7 @@ public class LlamaClient {
         : TLocationEnforcement.MUST);
 
     req.setResource(resource);
-    req.setExpansion_id(TypeUtils.toTUniqueId(UUID.randomUUID()));
+    req.setExpansion_id(TypeUtils.toTUniqueId(expansion));
     TLlamaAMReservationExpansionResponse res = client.Expand(req);
     if (res.getStatus().getStatus_code() != TStatusCode.OK) {
       String status = res.getStatus().getStatus_code().toString();
@@ -746,27 +766,43 @@ public class LlamaClient {
     System.out.println("  Expansion rate            : " +
         timers[TIMER_TYPE.EXPAND.ordinal()].getMeanRate() + " per sec");
     System.out.println();
-    System.out.println("  Register time   (mean)    : " +
-        timers[TIMER_TYPE.REGISTER.ordinal()].getSnapshot().getMean() / 1000000 + " ms");
-    System.out.println("  Reserve time    (mean)    : " +
-        timers[TIMER_TYPE.RESERVE.ordinal()].getSnapshot().getMean() / 1000000 + " ms");
-    System.out.println("  Allocate time   (mean)    : " +
-        timers[TIMER_TYPE.ALLOCATE.ordinal()].getSnapshot().getMean() / 1000000 + " ms");
-    System.out.println("  Allocate Count            : " +
-        timers[TIMER_TYPE.ALLOCATE.ordinal()].getCount());
-    System.out.println("  Expand time   (mean)      : " +
-        timers[TIMER_TYPE.EXPAND.ordinal()].getSnapshot().getMean() / 1000000 + " ms");
-    System.out.println("  Expansion allocation time   (mean)    : " +
-        timers[TIMER_TYPE.EXPANSIONALLOCATE.ordinal()].getSnapshot().getMean() / 1000000 + " ms");
-    System.out.println("  Expansion allocation count            : " +
-        timers[TIMER_TYPE.EXPANSIONALLOCATE.ordinal()].getCount());
-    System.out.println("  Expansion release time (mean)    : " +
+    System.out.println("  Client Register RPC time   (mean)    : " +
+        timers[TIMER_TYPE.REGISTER.ordinal()].getSnapshot().getMean() /
+            1000000 + " ms");
+    System.out.println("  Reserve RPC time    (mean)    : " +
+        timers[TIMER_TYPE.RESERVE.ordinal()].getSnapshot().getMean() /
+            1000000 + " ms");
+    printTimerDetails("Initial Reservation Allocation time",
+        timers[TIMER_TYPE.ALLOCATE.ordinal()]);
+
+    System.out.println("  Expand RPC time   (mean)      : " +
+        timers[TIMER_TYPE.EXPAND.ordinal()].getSnapshot().getMean() / 1000000
+        + " ms");
+    printTimerDetails("Expansion Allocation time",
+        timers[TIMER_TYPE.EXPANSIONALLOCATE.ordinal()]);
+
+    System.out.println("  Expansion release RPC time (mean)    : " +
         timers[TIMER_TYPE.EXPANSIONRELEASE.ordinal()].getSnapshot().getMean() /
           1000000 + " ms");
-    System.out.println("  Release time    (mean)    : " +
+    System.out.println("  Release RPC time    (mean)    : " +
         timers[TIMER_TYPE.RELEASE.ordinal()].getSnapshot().getMean() / 1000000 + " ms");
-    System.out.println("  Unregister time (mean)    : " +
+    System.out.println("  Unregister RPC time (mean)    : " +
         timers[TIMER_TYPE.UNREGISTER.ordinal()].getSnapshot().getMean() / 1000000 + " ms");
+    System.out.println();
+  }
+
+  private static void printTimerDetails(String name, Timer timer) {
+    System.out.println("  " + name + "    (details) :");
+    System.out.println("     Count            : " +
+        timer.getCount());
+    Snapshot snapshot = timer.getSnapshot();
+    System.out.println("     Mean " + snapshot.getMean() / 1000000 + " ms");
+    System.out.println("     75th percentile " +
+        snapshot.get75thPercentile() / 1000000 + " ms");
+    System.out.println("     99th percentile " +
+        snapshot.get99thPercentile() / 1000000 + " ms");
+    System.out.println("     999th percentile " +
+        snapshot.get999thPercentile() / 1000000 + " ms");
     System.out.println();
   }
 
@@ -833,10 +869,12 @@ public class LlamaClient {
                       //reserve
                       tickClientCall();
 
-                      UUID reservation = null;
+                      UUID reservation = UUID.randomUUID();
+                      CountDownLatch latch =
+                        LlamaClientCallback.createReservationLatch(reservation);
                       try {
                         start = System.currentTimeMillis();
-                        reservation = reserve(client, handle, user,
+                        reservation = reserve(client, handle, reservation, user,
                             queue, locations, relaxLocality, cpus, memory, gang);
                         end = System.currentTimeMillis();
                         timers[TIMER_TYPE.RESERVE.ordinal()].update(
@@ -848,7 +886,7 @@ public class LlamaClient {
 
                       waitOnReservationOrExpansion(reservation, holdTime,
                           allocationTimeouts, TIMER_TYPE.ALLOCATE.ordinal(),
-                          allocationTimeout);
+                          allocationTimeout, latch);
 
                       if (expandTime >= 0) {
                         for (final String location : locations) {
@@ -856,14 +894,17 @@ public class LlamaClient {
                             int expandedCpu = cpus;
                             int expandedMemory = memory;
 
-                            UUID expansion = null;
+                            UUID expansion = UUID.randomUUID();
+                            CountDownLatch expansionLatch =
+                              LlamaClientCallback.createReservationLatch(
+                                  expansion);
 
                             //expand
                             tickClientCall();
                             try {
                               start = System.currentTimeMillis();
                               expansion = expand(client, handle, reservation,
-                                      location, false, expandedCpu,
+                                      expansion, location, false, expandedCpu,
                                       expandedMemory);
                               end = System.currentTimeMillis();
                               timers[TIMER_TYPE.EXPAND.ordinal()].update(
@@ -876,7 +917,7 @@ public class LlamaClient {
                             waitOnReservationOrExpansion(expansion, expandTime,
                                 expansionAllocationTimeouts,
                                 TIMER_TYPE.EXPANSIONALLOCATE.ordinal(),
-                                expansionAllocationTimeout);
+                                expansionAllocationTimeout, expansionLatch);
 
                             if (expansion != null) {
                               // release expansion
@@ -929,25 +970,22 @@ public class LlamaClient {
 
                 private void waitOnReservationOrExpansion(
                     UUID reservation, int timeToWait, AtomicInteger timeouts,
-                    int timerType, int timeoutMsec) throws InterruptedException {
+                    int timerType, int timeoutMsec, CountDownLatch latch)
+                    throws InterruptedException {
                   long start;
                   long end;
-                  CountDownLatch reservationLatch = null;
-                  if (reservation != null) {
-                    reservationLatch =
-                        LlamaClientCallback.getReservationLatch(reservation);
-                  }
 
                   if (timeToWait >=0 ) {
                     //wait allocation
                     start = System.currentTimeMillis();
-                    if (reservationLatch != null &&
-                        reservationLatch.await(timeoutMsec,
+                    if (latch != null &&
+                        latch.await(timeoutMsec,
                             TimeUnit.MILLISECONDS)) {
                       end = System.currentTimeMillis();
                       timers[timerType].update(end - start,
                               TimeUnit.MILLISECONDS);
                     } else {
+                      LOG.warn("Timed out on " + reservation);
                       timeouts.incrementAndGet();
                     }
 
