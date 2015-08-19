@@ -704,12 +704,23 @@ public class LlamaClient {
     }
     //waiting until all callback servers are up.
     long start = System.currentTimeMillis();
+    long waitTime = 30 * 1000;
     for (int i = 0; i < clients; i++) {
-      try {
-        new Socket(callbackHost, callbackStartPort + i).close();
-      } catch (ConnectException ex) {
-        if (System.currentTimeMillis() - start > 30000) {
-          System.out.println("Callback servers cannot start, timedout :" + ex);
+      long individualWaitTime = 500;
+      long counts = waitTime / individualWaitTime;
+      for (int attempts = 0; attempts < counts; attempts++) {
+        try {
+          new Socket(callbackHost, callbackStartPort + i).close();
+          break;
+        } catch (ConnectException ex) {
+          if (System.currentTimeMillis() - start > waitTime) {
+            final String error = "Callback servers cannot start, timedout";
+            System.out.println(error);
+            throw new RuntimeException(error, ex);
+          } else {
+            System.out.println("Sleep for client " + i);
+            Thread.sleep(individualWaitTime);
+          }
         }
       }
     }
