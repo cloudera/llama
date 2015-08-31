@@ -18,4 +18,4 @@ fi
 
 rm -rf ~/.m2/repository
 
-mvn clean package -Pdist -Dtar -Dmaven.javadoc.skip=true -DskipTests
+mvn clean package -Pdist -Dtar -Dmaven.javadoc.skip=true -Dmaven.test.failure.ignore=true -Dtest.timeout=3000 site
