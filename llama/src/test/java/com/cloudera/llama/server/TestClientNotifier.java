@@ -23,15 +23,18 @@ import com.cloudera.llama.am.api.TestUtils;
 import com.cloudera.llama.am.impl.LlamaAMEventImpl;
 import junit.framework.Assert;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.cloudera.llama.util.UUID;
 
+import java.io.Console;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class TestClientNotifier {
+  static final Logger LOG = Logger.getLogger(TestClientNotifier.class);
 
   public static class NSServerConfiguration
       extends ServerConfiguration {
@@ -91,7 +94,8 @@ public class TestClientNotifier {
 
     @Override
     public ClientCaller getClientCaller(UUID handle) {
-      clientCallerCalls.incrementAndGet();
+      LOG.info(
+          "clientCallerCalls set to " + clientCallerCalls.incrementAndGet());
       return clientCaller;
     }
 
