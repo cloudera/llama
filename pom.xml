@@ -23,11 +23,11 @@
   <parent>
     <groupId>com.cloudera.cdh</groupId>
     <artifactId>cdh-root</artifactId>
-    <version>5.4.9-SNAPSHOT</version>
+    <version>5.4.9</version>
   </parent>
   <groupId>com.cloudera.llama</groupId>
   <artifactId>llama-main</artifactId>
-  <version>1.0.0-cdh5.4.9-SNAPSHOT</version>
+  <version>1.0.0-cdh5.4.9</version>
   <description>Llama Main</description>
   <name>Llama Main</name>
   <packaging>pom</packaging>
