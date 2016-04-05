@@ -122,6 +122,8 @@ public class SingleQueueLlamaAM extends LlamaAMImpl implements
           NORMALIZING_ENABLED_DEFAULT);
       caching = getConf().getBoolean(
           CACHING_ENABLED_KEY + "." + queue, caching);
+      normalizing = getConf().getBoolean(
+              NORMALIZING_ENABLED_KEY + "." + queue, normalizing);
       LOG.info("Caching for queue '{}' enabled '{}'", queue,
           caching);
       if (caching && normalizing) {

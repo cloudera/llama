@@ -473,6 +473,14 @@
     </description>
   </property>
   <property>
+    <name>llama.am.resource.normalizing.enabled.#QUEUE#</name>
+    <value>true</value>
+    <description>
+      Per queue setting that indicates whether to break resource requests into smaller requests of standard size
+      before the cache.
+    </description>
+  </property>
+  <property>
     <name>llama.am.resource.normalizing.standard.mbs</name>
     <value>1024</value>
     <description>
