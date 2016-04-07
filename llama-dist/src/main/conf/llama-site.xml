@@ -425,7 +425,7 @@
     <description>
       Per queue setting that indicates if Llama should cache allocated resources
       on release for the #QUEUE# queue. If not set, the
-      'llama.am.caching.enabled' is used.
+      'llama.am.cache.enabled' is used.
     </description>
   </property>
   <property>

@@ -776,6 +776,22 @@ public class YarnRMConnector implements RMConnector, Configurable,
         resources.getRmData());
   }
 
+  private void handleContainerMatchingRequest(Container container, LlamaContainerRequest req, List<RMEvent> changes) {
+    RMResource resource = req.getResourceAsk();
+
+    LOG.debug("New allocation for '{}' container '{}', node '{}'",
+            resource, container.getId(), container.getNodeId());
+
+    resource.getRmData().put("container", container);
+    containerToResourceMap.put(container.getId(),
+            resource.getResourceId());
+    changes.add(createResourceAllocation(resource, container));
+    amRmClientAsync.removeContainerRequest(req);
+    LOG.trace("Reservation resource '{}' removed from YARN", resource);
+
+    queue(new ContainerHandler(ugi, resource, container, Action.START));
+  }
+
   @Override
   public void onContainersAllocated(List<Container> containers) {
     List<RMEvent> changes = new ArrayList<RMEvent>();
@@ -802,22 +818,9 @@ public class YarnRMConnector implements RMConnector, Configurable,
           LOG.error("There was a match for container '{}', " +
               "LlamaContainerRequest cannot be NULL", container);
         } else {
-          RMResource resource = req.getResourceAsk();
-
-          LOG.debug("New allocation for '{}' container '{}', node '{}'",
-              resource, container.getId(), container.getNodeId());
-
-          resource.getRmData().put("container", container);
-          containerToResourceMap.put(container.getId(),
-              resource.getResourceId());
-          changes.add(createResourceAllocation(resource, container));
-          amRmClientAsync.removeContainerRequest(req);
-          LOG.trace("Reservation resource '{}' removed from YARN", resource);
-
-          queue(new ContainerHandler(ugi, resource, container, Action.START));
-
+          handleContainerMatchingRequest(container, req, changes);
           /*Remove the granted request from anyLocationResourceIdToRequestMap if it is there*/
-          anyLocationResourceIdToRequestMap.remove(resource.getResourceId());
+          anyLocationResourceIdToRequestMap.remove(req.getResourceAsk().getResourceId());
         }
       } else {
         LOG.debug("No strong request match for {}. Adding to the list of unclaimed containers.",
@@ -826,9 +829,8 @@ public class YarnRMConnector implements RMConnector, Configurable,
       }
     }
     /*Matching YARN resources against requests relaxing locality*/
-    /*Doing this in the separate loop as strong match should be preferred */
     for (Container container : unclaimedContainers) {
-      /*Find pending request that relax locality which can get use of unclaimed containers*/
+      /*Looking for requests with 'DONT_CARE' or 'PREFERRED' locality which match with the resources we've got*/
       boolean containerIsClaimed = false;
       Iterator<Map.Entry<UUID, LlamaContainerRequest>> iterator = anyLocationResourceIdToRequestMap.entrySet().iterator();
       while (iterator.hasNext()) {
@@ -837,21 +839,7 @@ public class YarnRMConnector implements RMConnector, Configurable,
         /*Matching by the capacity only*/
         if(request.getResourceAsk().getCpuVCoresAsk() == container.getResource().getVirtualCores() &&
                 request.getResourceAsk().getMemoryMbsAsk() == container.getResource().getMemory()) {
-
-          RMResource resource = request.getResourceAsk();
-
-          LOG.debug("New allocation for '{}' container '{}', node '{}'",
-                  resource, container.getId(), container.getNodeId());
-
-          resource.getRmData().put("container", container);
-          containerToResourceMap.put(container.getId(),
-                  resource.getResourceId());
-          changes.add(createResourceAllocation(resource, container));
-          amRmClientAsync.removeContainerRequest(request);
-          LOG.trace("Reservation resource '{}' removed from YARN", resource);
-
-          queue(new ContainerHandler(ugi, resource, container, Action.START));
-
+          handleContainerMatchingRequest(container, request, changes);
           iterator.remove();
           containerIsClaimed = true;
           break;
