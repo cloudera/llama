@@ -250,8 +250,13 @@ public class TestCacheRMConnector {
     Assert.assertFalse(connector.getInvoked().contains("release"));
 
     manualClock.increment(LlamaAM.EVICTION_IDLE_TIMEOUT_DEFAULT+1);
-    Thread.sleep(100);
 
+    for (int i = 0; i < 1000; i++) {
+      if (connector.getInvoked().contains("release")) {
+        break;
+      }
+      Thread.sleep(10);
+    }
     Assert.assertTrue(connector.getInvoked().contains("release"));
 
     cache.unregister();

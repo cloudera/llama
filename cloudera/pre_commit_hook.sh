@@ -19,3 +19,4 @@ fi
 rm -rf ~/.m2/repository
 
 mvn clean package -Pdist -Dtar -Dmaven.javadoc.skip=true -DskipTests
+mvn test
