@@ -573,6 +573,11 @@ public class YarnRMConnector implements RMConnector, Configurable,
       resource.getRmData().put("request", request);
 
       resource.getRmData().put(YARN_RM_CONNECTOR_KEY, this);
+
+      /*Keeping resources which relax locality in the separate map to handle them when possible*/
+      if(resource.getLocalityAsk()!= com.cloudera.llama.am.api.Resource.Locality.MUST) {
+        anyLocationResourceIdToRequestMap.put(resource.getResourceId(), request);
+      }
     }
   }
 
@@ -659,6 +664,9 @@ public class YarnRMConnector implements RMConnector, Configurable,
 
   ConcurrentHashMap<ContainerId, UUID> containerToResourceMap =
       new ConcurrentHashMap<ContainerId, UUID>();
+
+  ConcurrentHashMap<UUID, LlamaContainerRequest> anyLocationResourceIdToRequestMap =
+          new ConcurrentHashMap<UUID, LlamaContainerRequest>();
 
   @Override
   public void onContainersCompleted(List<ContainerStatus> containerStatuses) {
@@ -768,10 +776,27 @@ public class YarnRMConnector implements RMConnector, Configurable,
         resources.getRmData());
   }
 
+  private void handleContainerMatchingRequest(Container container, LlamaContainerRequest req, List<RMEvent> changes) {
+    RMResource resource = req.getResourceAsk();
+
+    LOG.debug("New allocation for '{}' container '{}', node '{}'",
+            resource, container.getId(), container.getNodeId());
+
+    resource.getRmData().put("container", container);
+    containerToResourceMap.put(container.getId(),
+            resource.getResourceId());
+    changes.add(createResourceAllocation(resource, container));
+    amRmClientAsync.removeContainerRequest(req);
+    LOG.trace("Reservation resource '{}' removed from YARN", resource);
+
+    queue(new ContainerHandler(ugi, resource, container, Action.START));
+  }
+
   @Override
   public void onContainersAllocated(List<Container> containers) {
     List<RMEvent> changes = new ArrayList<RMEvent>();
     // no need to use a ugi.doAs() as this is called from within Yarn client
+    List<Container> unclaimedContainers = new ArrayList<Container>();
     for (Container container : containers) {
       List<? extends Collection<LlamaContainerRequest>> matchingContainerReqs =
           amRmClientAsync.getMatchingRequests(container.getPriority(),
@@ -793,23 +818,36 @@ public class YarnRMConnector implements RMConnector, Configurable,
           LOG.error("There was a match for container '{}', " +
               "LlamaContainerRequest cannot be NULL", container);
         } else {
-          RMResource resource = req.getResourceAsk();
-
-          LOG.debug("New allocation for '{}' container '{}', node '{}'",
-              resource, container.getId(), container.getNodeId());
-
-          resource.getRmData().put("container", container);
-          containerToResourceMap.put(container.getId(),
-              resource.getResourceId());
-          changes.add(createResourceAllocation(resource, container));
-          amRmClientAsync.removeContainerRequest(req);
-          LOG.trace("Reservation resource '{}' removed from YARN", resource);
-
-          queue(new ContainerHandler(ugi, resource, container, Action.START));
+          handleContainerMatchingRequest(container, req, changes);
+          /*Remove the granted request from anyLocationResourceIdToRequestMap if it is there*/
+          anyLocationResourceIdToRequestMap.remove(req.getResourceAsk().getResourceId());
         }
       } else {
-        LOG.error("No matching request for {}. Releasing the container.",
+        LOG.debug("No strong request match for {}. Adding to the list of unclaimed containers.",
             container);
+        unclaimedContainers.add(container);
+      }
+    }
+    /*Matching YARN resources against requests relaxing locality*/
+    for (Container container : unclaimedContainers) {
+      /*Looking for requests with 'DONT_CARE' or 'PREFERRED' locality which match with the resources we've got*/
+      boolean containerIsClaimed = false;
+      Iterator<Map.Entry<UUID, LlamaContainerRequest>> iterator = anyLocationResourceIdToRequestMap.entrySet().iterator();
+      while (iterator.hasNext()) {
+        Map.Entry<UUID, LlamaContainerRequest> entry = iterator.next();
+        LlamaContainerRequest request = entry.getValue();
+        /*Matching by the capacity only*/
+        if(request.getResourceAsk().getCpuVCoresAsk() == container.getResource().getVirtualCores() &&
+                request.getResourceAsk().getMemoryMbsAsk() == container.getResource().getMemory()) {
+          handleContainerMatchingRequest(container, request, changes);
+          iterator.remove();
+          containerIsClaimed = true;
+          break;
+        }
+      }
+      if(!containerIsClaimed) {
+        LOG.error("No matching request for {}. Releasing the container.",
+                container);
         containerToResourceMap.remove(container.getId());
         amRmClientAsync.releaseAssignedContainer(container.getId());
       }

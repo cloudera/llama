@@ -95,7 +95,7 @@ public abstract class LlamaAM {
   public static final long GANG_ANTI_DEADLOCK_BACKOFF_MAX_DELAY_DEFAULT = 30000;
 
   public static final String CACHING_ENABLED_KEY =
-      PREFIX_KEY + "caching.enabled";
+      PREFIX_KEY + "cache.enabled";
   public static final boolean CACHING_ENABLED_DEFAULT = true;
 
   public static final String THROTTLING_ENABLED_KEY =
