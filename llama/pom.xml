@@ -243,7 +243,7 @@
                 <exec executable="thrift" failonerror="true">
                   <arg value="--gen"/>
                   <arg value="java"/>
-                  <arg value="-out"/>
+                  <arg value="--out"/>
                   <arg
                     value="${project.build.directory}/generated-sources/java"/>
                   <arg value="${basedir}/src/main/thrift/Llama.thrift"/>
